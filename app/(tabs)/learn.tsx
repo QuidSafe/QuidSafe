@@ -1,59 +1,101 @@
-import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '@/components/ui/Card';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { FontAwesome } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
 
-const articles = [
+type TagVariant = 'tag-n' | 'tag-ok' | 'tag-g';
+
+interface Article {
+  id: string;
+  tag: string;
+  tagVariant: TagVariant;
+  title: string;
+  description: string;
+  readMin: number;
+}
+
+const articles: Article[] = [
   {
     id: '1',
-    title: 'Self Assessment: The Basics',
-    summary: 'Everything you need to know about filing your first tax return as a sole trader.',
-    tag: 'Getting Started',
+    tag: 'MTD',
+    tagVariant: 'tag-n',
+    title: 'What is Making Tax Digital?',
+    description: 'Quarterly updates instead of one January panic...',
+    readMin: 3,
   },
   {
     id: '2',
-    title: 'What Expenses Can I Claim?',
-    summary: 'A plain-English guide to HMRC-allowable business expenses for sole traders.',
-    tag: 'Expenses',
+    tag: 'TAX BASICS',
+    tagVariant: 'tag-ok',
+    title: 'How much tax do I actually owe?',
+    description: 'Personal allowance, basic rate, NI...',
+    readMin: 4,
   },
   {
     id: '3',
-    title: 'Understanding National Insurance',
-    summary: 'Class 2 vs Class 4 NI — what you pay and when.',
-    tag: 'Tax',
+    tag: 'EXPENSES',
+    tagVariant: 'tag-ok',
+    title: 'What expenses can I claim?',
+    description: 'Fuel, phone, home office...',
+    readMin: 5,
   },
   {
     id: '4',
-    title: 'Making Tax Digital (MTD)',
-    summary: 'What MTD means for sole traders and how QuidSafe helps you comply.',
-    tag: 'MTD',
+    tag: 'SECURITY',
+    tagVariant: 'tag-g',
+    title: 'Is connecting my bank safe?',
+    description: 'FCA regulated, read-only, UK servers...',
+    readMin: 2,
   },
   {
     id: '5',
-    title: 'Quarterly Updates Explained',
-    summary: 'When to submit, what to include, and how to avoid penalties.',
-    tag: 'Deadlines',
+    tag: 'DEADLINES',
+    tagVariant: 'tag-n',
+    title: 'Key dates you can\'t miss',
+    description: 'Quarterly submissions, payment deadlines...',
+    readMin: 2,
+  },
+  {
+    id: '6',
+    tag: 'VAT',
+    tagVariant: 'tag-g',
+    title: 'When do I need to register for VAT?',
+    description: 'The £90k threshold, voluntary registration...',
+    readMin: 3,
   },
 ];
+
+const tagStyles: Record<TagVariant, { bg: string; color: string }> = {
+  'tag-n': { bg: '#DBEAFE', color: '#1E3A8A' },
+  'tag-ok': { bg: '#DCFCE7', color: '#16A34A' },
+  'tag-g': { bg: '#FEF9C3', color: '#A16207' },
+};
 
 export default function LearnScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Learn</Text>
-        <Text style={styles.subtitle}>Tax education in plain English</Text>
+        <Text style={styles.heading}>Learn</Text>
+        <Text style={styles.subtitle}>
+          Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
+        </Text>
 
-        {articles.map((article) => (
-          <Pressable key={article.id}>
-            <Card>
-              <View style={styles.tagContainer}>
-                <Text style={styles.tag}>{article.tag}</Text>
+        {articles.map((article) => {
+          const variant = tagStyles[article.tagVariant];
+          return (
+            <View key={article.id} style={styles.card}>
+              <View style={[styles.tagPill, { backgroundColor: variant.bg }]}>
+                <Text style={[styles.tagText, { color: variant.color }]}>{article.tag}</Text>
               </View>
-              <Text style={styles.articleTitle}>{article.title}</Text>
-              <Text style={styles.articleSummary}>{article.summary}</Text>
-            </Card>
-          </Pressable>
-        ))}
+              <Text style={styles.cardTitle}>{article.title}</Text>
+              <Text style={styles.cardDescription}>{article.description}</Text>
+              <View style={styles.meta}>
+                <FontAwesome name="clock-o" size={10.5} color={Colors.grey[400]} />
+                <Text style={styles.metaText}>{article.readMin} min read</Text>
+              </View>
+            </View>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -65,42 +107,65 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
   scroll: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    padding: 24,
+    gap: 14,
   },
-  title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 28,
-    color: Colors.light.text,
-  },
-  subtitle: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    marginBottom: Spacing.sm,
-  },
-  tagContainer: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.light.background,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.pill,
-    marginBottom: Spacing.sm,
-  },
-  tag: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
+  heading: {
+    fontSize: 19,
+    fontWeight: '800',
     color: Colors.primary,
   },
-  articleTitle: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 16,
-    color: Colors.light.text,
+  subtitle: {
+    fontSize: 12,
+    color: Colors.grey[500],
+    marginBottom: 4,
   },
-  articleSummary: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-    marginTop: 4,
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tagPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+    marginBottom: 8,
+  },
+  tagText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    letterSpacing: 0.05 * 9.5,
+    textTransform: 'uppercase',
+  },
+  cardTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  cardDescription: {
+    fontSize: 12,
+    color: Colors.grey[500],
+    lineHeight: 12 * 1.45,
+    marginBottom: 8,
+  },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: Colors.grey[400],
   },
 });
