@@ -6,7 +6,7 @@ compatibility_date = "2025-04-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "quidsafe-dev"
-database_id = "LOCAL"
+database_id = "8bd05366-7550-4fb2-8eb0-8ec5c90ae027"
 migrations_dir = "worker/migrations"
 
 # ─── Development ───────────────────────────────────────────
