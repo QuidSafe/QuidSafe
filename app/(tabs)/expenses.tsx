@@ -20,9 +20,9 @@ export default function ExpensesScreen() {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const handleAdd = async () => {
-    if (!amount || !description) return;
+    if (!amount || !description || !/^[0-9]+(\.[0-9]{1,2})?$/.test(amount)) return;
     await addExpense.mutateAsync({
-      amount: parseFloat(amount),
+      amount: Number(amount),
       description,
       date: new Date().toISOString().split('T')[0],
     });
@@ -102,7 +102,7 @@ export default function ExpensesScreen() {
         ) : (
           <Card>
             <View style={styles.emptyState}>
-              <FontAwesome name="receipt" size={32} color={Colors.grey[400]} />
+              <FontAwesome name="file-text-o" size={32} color={Colors.grey[400]} />
               <Text style={styles.emptyTitle}>No expenses yet</Text>
               <Text style={styles.emptyText}>
                 Add business expenses to reduce your tax bill. Every little helps!

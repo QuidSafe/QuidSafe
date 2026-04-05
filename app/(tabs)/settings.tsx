@@ -87,9 +87,9 @@ export default function SettingsScreen() {
         <Card>
           <Text style={styles.sectionTitle}>Connected Banks</Text>
           {bankData?.connections && bankData.connections.length > 0 ? (
-            bankData.connections.map((conn: Record<string, unknown>) => (
-              <View key={conn.id as string} style={styles.row}>
-                <Text style={styles.rowLabel}>{conn.bank_name as string}</Text>
+            bankData.connections.map((conn) => (
+              <View key={conn.id} style={styles.row}>
+                <Text style={styles.rowLabel}>{conn.bankName}</Text>
                 <View style={[styles.badge, { backgroundColor: Colors.secondary }]}>
                   <Text style={styles.badgeText}>Connected</Text>
                 </View>

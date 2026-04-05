@@ -215,7 +215,7 @@ export async function categoriseTransactions(
       try {
         const aiResults = await callClaude(prompt, anthropicApiKey);
         results.push(...aiResults);
-      } catch (err) {
+      } catch {
         // If AI fails, mark as uncategorised with low confidence
         for (const tx of batch) {
           results.push({

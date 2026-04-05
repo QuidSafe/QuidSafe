@@ -53,8 +53,8 @@ export default function BillingScreen() {
     try {
       const { url } = await api.createCheckout(selectedPlan);
       await Linking.openURL(url);
-    } catch {
-      // Handle error silently — user can retry
+    } catch (err) {
+      console.error('Stripe checkout error:', err);
     } finally {
       setLoading(false);
     }
@@ -65,8 +65,8 @@ export default function BillingScreen() {
     try {
       const { url } = await api.createPortalSession();
       await Linking.openURL(url);
-    } catch {
-      // Handle error silently
+    } catch (err) {
+      console.error('Stripe portal error:', err);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,7 @@
 // API client for QuidSafe Cloudflare Worker backend
 
+import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation } from './types';
+
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
 
 class ApiClient {
@@ -34,38 +36,26 @@ class ApiClient {
 
   // Auth
   signup(email: string, name?: string) {
-    return this.request('/auth/signup', { method: 'POST', body: JSON.stringify({ email, name }) });
+    return this.request<{ user: User }>('/auth/signup', { method: 'POST', body: JSON.stringify({ email, name }) });
   }
 
   getSession() {
-    return this.request<{ user: Record<string, unknown> }>('/auth/session', { method: 'POST' });
+    return this.request<{ user: User }>('/auth/session', { method: 'POST' });
   }
 
   completeOnboarding() {
-    return this.request('/auth/onboarding', { method: 'PUT' });
+    return this.request<{ success: boolean }>('/auth/onboarding', { method: 'PUT' });
   }
 
   deleteAccount() {
-    return this.request('/auth/account', { method: 'DELETE' });
+    return this.request<{ deleted: boolean }>('/auth/account', { method: 'DELETE' });
   }
 
   // Dashboard
   getDashboard() {
     return this.request<{
       user: { name: string; subscriptionTier: string };
-      tax: {
-        taxYear: string;
-        quarter: number;
-        totalIncome: number;
-        totalExpenses: number;
-        netProfit: number;
-        totalTaxOwed: number;
-        setAsideMonthly: number;
-        effectiveRate: number;
-        plainEnglish: string;
-        incomeTax: { basicRate: number; higherRate: number; additionalRate: number; total: number };
-        nationalInsurance: { class2: number; class4: number; total: number };
-      };
+      tax: TaxCalculation;
       income: {
         total: number;
         bySource: { name: string; amount: number; percentage: number }[];
@@ -80,15 +70,15 @@ class ApiClient {
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.offset) query.set('offset', String(params.offset));
     if (params?.category) query.set('category', params.category);
-    return this.request<{ transactions: Record<string, unknown>[]; total: number }>(`/transactions?${query}`);
+    return this.request<{ transactions: Transaction[]; total: number }>(`/transactions?${query}`);
   }
 
   getUncategorised() {
-    return this.request<{ transactions: Record<string, unknown>[] }>('/transactions/uncategorised');
+    return this.request<{ transactions: Transaction[] }>('/transactions/uncategorised');
   }
 
   overrideCategory(id: string, category: string, incomeSource?: string) {
-    return this.request(`/transactions/${id}/category`, {
+    return this.request<{ success: boolean }>(`/transactions/${id}/category`, {
       method: 'PUT',
       body: JSON.stringify({ category, incomeSource }),
     });
@@ -100,43 +90,43 @@ class ApiClient {
   }
 
   getConnections() {
-    return this.request<{ connections: Record<string, unknown>[] }>('/banking/connections');
+    return this.request<{ connections: BankConnection[] }>('/banking/connections');
   }
 
   disconnectBank(id: string) {
-    return this.request(`/banking/connections/${id}`, { method: 'DELETE' });
+    return this.request<{ disconnected: boolean }>(`/banking/connections/${id}`, { method: 'DELETE' });
   }
 
   // Tax
   getTaxCalculation() {
-    return this.request<Record<string, unknown>>('/tax/calculation');
+    return this.request<TaxCalculation>('/tax/calculation');
   }
 
   getQuarterlyBreakdown() {
-    return this.request<{ taxYear: string; quarters: Record<string, unknown>[] }>('/tax/quarterly');
+    return this.request<{ taxYear: string; quarters: { quarter: number; from: string; to: string; income: number; expenses: number }[] }>('/tax/quarterly');
   }
 
   // Expenses
   getExpenses() {
-    return this.request<{ expenses: Record<string, unknown>[] }>('/expenses');
+    return this.request<{ expenses: Expense[] }>('/expenses');
   }
 
   addExpense(data: { amount: number; description: string; categoryId?: number; hmrcCategory?: string; date: string }) {
-    return this.request<{ id: string }>('/expenses', { method: 'POST', body: JSON.stringify(data) });
+    return this.request<{ id: string; success: boolean }>('/expenses', { method: 'POST', body: JSON.stringify(data) });
   }
 
   deleteExpense(id: string) {
-    return this.request(`/expenses/${id}`, { method: 'DELETE' });
+    return this.request<{ deleted: boolean }>(`/expenses/${id}`, { method: 'DELETE' });
   }
 
   // Invoices
   getInvoices(status?: string) {
     const query = status ? `?status=${status}` : '';
-    return this.request<{ invoices: Record<string, unknown>[] }>(`/invoices${query}`);
+    return this.request<{ invoices: Invoice[] }>(`/invoices${query}`);
   }
 
   createInvoice(data: { clientName: string; clientEmail?: string; amount: number; description: string; dueDate: string }) {
-    return this.request<{ id: string }>('/invoices', { method: 'POST', body: JSON.stringify(data) });
+    return this.request<{ id: string; success: boolean }>('/invoices', { method: 'POST', body: JSON.stringify(data) });
   }
 
   // Billing
@@ -154,11 +144,11 @@ class ApiClient {
 
   // Settings
   getSettings() {
-    return this.request<{ user: Record<string, unknown> }>('/settings');
+    return this.request<{ user: User }>('/settings');
   }
 
   updateSettings(data: { name?: string }) {
-    return this.request<{ user: Record<string, unknown> }>('/settings', { method: 'PUT', body: JSON.stringify(data) });
+    return this.request<{ user: User }>('/settings', { method: 'PUT', body: JSON.stringify(data) });
   }
 }
 

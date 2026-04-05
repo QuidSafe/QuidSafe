@@ -2,9 +2,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { clerkAuth } from './middleware/auth';
-import { getConnectUrl, exchangeCode, encryptTokens, fetchTransactions } from './services/banking';
-import { categoriseTransactions } from './services/categoriser';
-import { calculateTax, getCurrentQuarter } from '../lib/tax-engine';
+import { getConnectUrl, exchangeCode, encryptTokens } from './services/banking';
+import { calculateTax, getCurrentQuarter, getQuarterDates } from '../lib/tax-engine';
 import { query, queryOne, execute } from '../lib/db';
 import {
   createCheckoutSession,
@@ -334,32 +333,25 @@ authed.get('/tax/calculation', async (c) => {
 authed.get('/tax/quarterly', async (c) => {
   const userId = c.get('userId');
   const { taxYear } = getCurrentQuarter();
-  const startYear = parseInt(taxYear.split('/')[0], 10);
-
-  const quarters = [
-    { q: 1, from: `${startYear}-04-06`, to: `${startYear}-07-05` },
-    { q: 2, from: `${startYear}-07-06`, to: `${startYear}-10-05` },
-    { q: 3, from: `${startYear}-10-06`, to: `${startYear + 1}-01-05` },
-    { q: 4, from: `${startYear + 1}-01-06`, to: `${startYear + 1}-04-05` },
-  ];
+  const quarterDates = getQuarterDates(taxYear);
 
   const breakdown = [];
-  for (const q of quarters) {
+  for (const q of quarterDates) {
     const income = await queryOne<{ total: number }>(
       c.env.DB,
       'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date BETWEEN ? AND ?',
-      [userId, q.from, q.to],
+      [userId, q.startDate, q.endDate],
     );
     const expenses = await queryOne<{ total: number }>(
       c.env.DB,
       'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date BETWEEN ? AND ?',
-      [userId, q.from, q.to],
+      [userId, q.startDate, q.endDate],
     );
 
     breakdown.push({
-      quarter: q.q,
-      from: q.from,
-      to: q.to,
+      quarter: q.quarter,
+      from: q.startDate,
+      to: q.endDate,
       income: income?.total ?? 0,
       expenses: expenses?.total ?? 0,
     });

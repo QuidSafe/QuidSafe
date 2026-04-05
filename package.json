@@ -16,7 +16,7 @@
     "d1:migrate:dev": "wrangler d1 migrations apply quidsafe-dev --remote",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
@@ -46,6 +46,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260405.1",
     "@types/react": "~19.1.0",
     "eslint": "^9.17.0",
     "eslint-config-expo": "~9.1.0",

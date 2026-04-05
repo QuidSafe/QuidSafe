@@ -1,7 +1,7 @@
 // Quarter timeline component — Visual Q1–Q4 progress tracker
 
 import { StyleSheet, View, Text } from 'react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing } from '@/constants/Colors';
 
 interface QuarterTimelineProps {
   currentQuarter: number;

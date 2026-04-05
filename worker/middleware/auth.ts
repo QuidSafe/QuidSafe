@@ -1,7 +1,7 @@
 // Clerk JWT verification middleware for Cloudflare Workers
 // Verifies the Bearer token from Clerk and attaches userId to context
 
-import { Context, MiddlewareHandler } from 'hono';
+import { MiddlewareHandler } from 'hono';
 import type { Env } from '../index';
 
 interface ClerkJWTPayload {
@@ -55,7 +55,7 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   const jwksUrl = `https://${clerkDomain}/.well-known/jwks.json`;
   const jwksResponse = await fetch(jwksUrl, {
     cf: { cacheTtl: 3600, cacheEverything: true },
-  });
+  } as RequestInit);
   if (!jwksResponse.ok) throw new Error('Failed to fetch Clerk JWKS');
 
   const jwks = (await jwksResponse.json()) as {
@@ -77,7 +77,12 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   // Verify signature
   const signatureBytes = base64urlDecode(parts[2]);
   const dataBytes = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, signatureBytes, dataBytes);
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    signatureBytes.buffer as ArrayBuffer,
+    dataBytes.buffer as ArrayBuffer,
+  );
 
   if (!valid) throw new Error('Invalid JWT signature');
 

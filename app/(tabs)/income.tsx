@@ -2,7 +2,7 @@ import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing } from '@/constants/Colors';
 import { useDashboard, useQuarterlyBreakdown, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
@@ -82,7 +82,7 @@ export default function IncomeScreen() {
             <Card>
               <Text style={styles.sectionTitle}>Quarterly Breakdown</Text>
               {quarterly?.quarters ? (
-                quarterly.quarters.map((q: { quarter: number; income: number; expenses: number; from: string }) => (
+                (quarterly.quarters as { quarter: number; income: number; expenses: number; from: string }[]).map((q) => (
                   <View key={q.quarter} style={styles.quarterRow}>
                     <Text style={styles.quarterLabel}>Q{q.quarter}</Text>
                     <View style={styles.quarterValues}>

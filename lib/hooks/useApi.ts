@@ -14,7 +14,7 @@ export function useApiToken() {
       const token = await getToken();
       api.setToken(token);
     })();
-  });
+  }, [getToken]);
 }
 
 export function useDashboard() {

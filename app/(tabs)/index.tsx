@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, Shadows, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { useDashboard, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
