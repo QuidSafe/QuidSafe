@@ -1,0 +1,55 @@
+name = "quidsafe-api"
+main = "worker/index.ts"
+compatibility_date = "2025-04-01"
+
+# Shared D1 binding name used in code — each env points to its own database
+[[d1_databases]]
+binding = "DB"
+database_name = "quidsafe-dev"
+database_id = "LOCAL"
+migrations_dir = "worker/migrations"
+
+# ─── Development ───────────────────────────────────────────
+[env.dev]
+name = "quidsafe-api-dev"
+
+[[env.dev.d1_databases]]
+binding = "DB"
+database_name = "quidsafe-dev"
+database_id = "REPLACE_WITH_DEV_DATABASE_ID"
+migrations_dir = "worker/migrations"
+
+[env.dev.vars]
+ENVIRONMENT = "development"
+CLERK_PUBLISHABLE_KEY = ""
+
+# ─── Staging ───────────────────────────────────────────────
+[env.staging]
+name = "quidsafe-api-staging"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "quidsafe-staging"
+database_id = "REPLACE_WITH_STAGING_DATABASE_ID"
+migrations_dir = "worker/migrations"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+CLERK_PUBLISHABLE_KEY = ""
+
+# ─── Production ────────────────────────────────────────────
+[env.production]
+name = "quidsafe-api"
+routes = [
+  { pattern = "api.quidsafe.co.uk", custom_domain = true }
+]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "quidsafe-production"
+database_id = "REPLACE_WITH_PRODUCTION_DATABASE_ID"
+migrations_dir = "worker/migrations"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+CLERK_PUBLISHABLE_KEY = ""
