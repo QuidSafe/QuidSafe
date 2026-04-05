@@ -1,14 +1,23 @@
 // Clerk auth initialisation for QuidSafe
 // Used by the Expo app — ClerkProvider wraps the root layout
 
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { Platform } from 'react-native';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
 
-if (!publishableKey) {
-  throw new Error(
-    'Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY — add it to .env.local (see .env.example)',
-  );
+let tokenCache: Parameters<typeof import('@clerk/clerk-expo')['ClerkProvider']>[0]['tokenCache'];
+
+async function initTokenCache() {
+  if (Platform.OS !== 'web') {
+    try {
+      const mod = await import('@clerk/clerk-expo/token-cache');
+      tokenCache = mod.tokenCache;
+    } catch {
+      // Fallback: no token cache on web/SSR
+    }
+  }
 }
+
+initTokenCache();
 
 export { publishableKey, tokenCache };

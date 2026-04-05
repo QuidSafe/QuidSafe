@@ -40,9 +40,10 @@ CLERK_PUBLISHABLE_KEY = ""
 # ─── Production ────────────────────────────────────────────
 [env.production]
 name = "quidsafe-api"
-routes = [
-  { pattern = "api.quidsafe.co.uk", custom_domain = true }
-]
+# Uncomment when api.quidsafe.co.uk is added to Cloudflare DNS:
+# routes = [
+#   { pattern = "api.quidsafe.co.uk", custom_domain = true }
+# ]
 
 [[env.production.d1_databases]]
 binding = "DB"
