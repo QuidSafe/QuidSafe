@@ -1,6 +1,16 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, TextInput, RefreshControl } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  TextInput,
+  RefreshControl,
+  Modal,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
@@ -8,16 +18,51 @@ import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useExpenses, useAddExpense, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
+const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; color: string }> = {
+  mileage: { icon: 'car', bg: '#EFF6FF', color: Colors.secondary },
+  phone: { icon: 'phone', bg: '#F0FDF4', color: Colors.success },
+  office: { icon: 'briefcase', bg: '#FEF9C3', color: Colors.gold[700] },
+  equipment: { icon: 'laptop', bg: '#F5F3FF', color: '#7C3AED' },
+  travel: { icon: 'plane', bg: '#FFF7ED', color: '#EA580C' },
+  food: { icon: 'cutlery', bg: '#FEF2F2', color: Colors.error },
+  software: { icon: 'code', bg: '#EFF6FF', color: Colors.secondary },
+  insurance: { icon: 'shield', bg: '#F0FDF4', color: Colors.success },
+  default: { icon: 'file-text-o', bg: '#F1F5F9', color: Colors.grey[600] },
+};
+
+function getCategoryMeta(category?: string) {
+  if (!category) return CATEGORY_ICONS.default;
+  const key = category.toLowerCase();
+  for (const k of Object.keys(CATEGORY_ICONS)) {
+    if (key.includes(k)) return CATEGORY_ICONS[k];
+  }
+  return CATEGORY_ICONS.default;
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
 export default function ExpensesScreen() {
   useApiToken();
+  const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const addExpense = useAddExpense();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
-  const expenses = (data?.expenses ?? []) as { id: string; amount: number; description: string; date: string; hmrc_category?: string }[];
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const expenses = (data?.expenses ?? []) as {
+    id: string;
+    amount: number;
+    description: string;
+    date: string;
+    hmrc_category?: string;
+  }[];
+  const totalClaimed = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const taxSaved = totalClaimed * 0.2;
 
   const handleAdd = async () => {
     if (!amount || !description || !/^[0-9]+(\.[0-9]{1,2})?$/.test(amount)) return;
@@ -36,30 +81,150 @@ export default function ExpensesScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.primary}
+          />
+        }
       >
+        {/* Header */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>Expenses</Text>
           <Pressable
-            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
-            onPress={() => setShowForm(!showForm)}
+            style={({ pressed }) => [styles.fabButton, pressed && styles.pressed]}
+            onPress={() => setShowForm(true)}
           >
-            <FontAwesome name="plus" size={14} color={Colors.white} />
-            <Text style={styles.addText}>Add</Text>
+            <FontAwesome name="plus" size={16} color={Colors.white} />
           </Pressable>
         </View>
 
-        {/* Total */}
-        <Card>
-          <Text style={styles.totalLabel}>Total Claimed</Text>
-          <Text style={styles.totalAmount}>{formatCurrency(totalExpenses)}</Text>
-          <Text style={styles.totalHint}>Tax saving: {formatCurrency(totalExpenses * 0.2)}</Text>
-        </Card>
+        {/* Metric Cards */}
+        <View style={styles.metricsRow}>
+          <Card style={styles.metricCard}>
+            <Text style={styles.metricLabel}>Total claimed</Text>
+            <Text style={[styles.metricValue, { color: Colors.success }]}>
+              {formatCurrency(totalClaimed)}
+            </Text>
+          </Card>
+          <Card style={styles.metricCard}>
+            <Text style={styles.metricLabel}>Tax saved</Text>
+            <Text style={[styles.metricValue, { color: Colors.secondary }]}>
+              {formatCurrency(taxSaved)}
+            </Text>
+          </Card>
+        </View>
 
-        {/* Add Form */}
-        {showForm && (
+        {/* Scan Receipt Button */}
+        <Pressable
+          style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}
+          onPress={() => setShowForm(true)}
+        >
+          <FontAwesome name="camera" size={16} color={Colors.white} />
+          <Text style={styles.scanButtonText}>Scan receipt</Text>
+        </Pressable>
+
+        {/* What Can I Claim Button */}
+        <Pressable
+          style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+          onPress={() => router.push('/(tabs)/learn')}
+        >
+          <FontAwesome name="info-circle" size={16} color={Colors.secondary} />
+          <Text style={styles.outlineButtonText}>What can I claim? See the full list</Text>
+        </Pressable>
+
+        {/* Claimed Expenses Section */}
+        {isLoading ? (
+          <SkeletonCard />
+        ) : expenses.length > 0 ? (
+          <>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Claimed expenses</Text>
+              <View style={styles.itemsBadge}>
+                <Text style={styles.itemsBadgeText}>{expenses.length} items</Text>
+              </View>
+            </View>
+
+            <Card style={styles.listCard}>
+              {expenses.map((exp, index) => {
+                const meta = getCategoryMeta(exp.hmrc_category);
+                return (
+                  <View
+                    key={exp.id}
+                    style={[
+                      styles.expenseRow,
+                      index < expenses.length - 1 && styles.expenseRowBorder,
+                    ]}
+                  >
+                    <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
+                      <FontAwesome name={meta.icon} size={16} color={meta.color} />
+                    </View>
+                    <View style={styles.expenseMiddle}>
+                      <Text style={styles.expenseDesc} numberOfLines={1}>
+                        {exp.description}
+                      </Text>
+                      <Text style={styles.expenseSub} numberOfLines={1}>
+                        {exp.hmrc_category || 'Expense'} · {formatDate(exp.date)}
+                      </Text>
+                    </View>
+                    <View style={styles.expenseRight}>
+                      <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
+                      <View style={styles.claimedBadge}>
+                        <Text style={styles.claimedBadgeText}>Claimed</Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+            </Card>
+          </>
+        ) : (
           <Card>
-            <Text style={styles.formTitle}>New Expense</Text>
+            <View style={styles.emptyState}>
+              <FontAwesome name="file-text-o" size={32} color={Colors.grey[400]} />
+              <Text style={styles.emptyTitle}>No expenses yet</Text>
+              <Text style={styles.emptyText}>
+                Add business expenses to reduce your tax bill. Every little helps!
+              </Text>
+            </View>
+          </Card>
+        )}
+
+        {/* Gold Insight Banner */}
+        <View style={styles.insightBanner}>
+          <FontAwesome name="lightbulb-o" size={18} color={Colors.gold[700]} style={styles.insightIcon} />
+          <Text style={styles.insightText}>
+            <Text style={styles.insightBold}>Tip: </Text>
+            Do you use your car for work? Track your mileage to claim up to 45p per mile in tax relief.
+          </Text>
+        </View>
+
+        {/* Auto Mileage Coming Soon Card */}
+        <View style={styles.comingSoonCard}>
+          <View style={styles.comingSoonContent}>
+            <FontAwesome name="map-marker" size={20} color={Colors.secondary} />
+            <View style={styles.comingSoonText}>
+              <Text style={styles.comingSoonTitle}>Auto mileage tracking</Text>
+              <Text style={styles.comingSoonSub}>Coming soon</Text>
+            </View>
+            <View style={styles.soonBadge}>
+              <Text style={styles.soonBadgeText}>SOON</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Add Expense Modal */}
+      <Modal visible={showForm} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.formTitle}>New Expense</Text>
+              <Pressable onPress={() => setShowForm(false)}>
+                <FontAwesome name="times" size={20} color={Colors.grey[500]} />
+              </Pressable>
+            </View>
             <TextInput
               style={styles.input}
               placeholder="Amount (e.g. 45.99)"
@@ -75,72 +240,320 @@ export default function ExpensesScreen() {
               value={description}
               onChangeText={setDescription}
             />
-            <Pressable style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]} onPress={handleAdd}>
+            <Pressable
+              style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
+              onPress={handleAdd}
+            >
               <Text style={styles.submitText}>
                 {addExpense.isPending ? 'Adding...' : 'Add Expense'}
               </Text>
             </Pressable>
-          </Card>
-        )}
-
-        {/* Expense List */}
-        {isLoading ? (
-          <SkeletonCard />
-        ) : expenses.length > 0 ? (
-          <Card>
-            <Text style={styles.sectionTitle}>Recent Expenses</Text>
-            {expenses.map((exp) => (
-              <View key={exp.id} style={styles.expenseRow}>
-                <View style={styles.expenseLeft}>
-                  <Text style={styles.expenseDesc}>{exp.description}</Text>
-                  <Text style={styles.expenseDate}>{exp.date}</Text>
-                </View>
-                <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
-              </View>
-            ))}
-          </Card>
-        ) : (
-          <Card>
-            <View style={styles.emptyState}>
-              <FontAwesome name="file-text-o" size={32} color={Colors.grey[400]} />
-              <Text style={styles.emptyTitle}>No expenses yet</Text>
-              <Text style={styles.emptyText}>
-                Add business expenses to reduce your tax bill. Every little helps!
-              </Text>
-            </View>
-          </Card>
-        )}
-      </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
-  scroll: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.xxl },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 28, color: Colors.light.text },
-  addButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.secondary, paddingVertical: 8, paddingHorizontal: 14, borderRadius: BorderRadius.pill, ...Shadows.soft },
-  addText: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: Colors.white },
-  pressed: { opacity: 0.85 },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scroll: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
 
-  totalLabel: { fontFamily: 'Manrope_500Medium', fontSize: 13, color: Colors.light.textSecondary },
-  totalAmount: { fontFamily: 'Manrope_800ExtraBold', fontSize: 28, color: Colors.primary, marginTop: 4 },
-  totalHint: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.secondary, marginTop: 4 },
+  /* Header */
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 19,
+    color: Colors.light.text,
+  },
+  fabButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.soft,
+  },
 
-  formTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: Colors.light.text, marginBottom: Spacing.md },
-  input: { backgroundColor: Colors.light.background, borderRadius: BorderRadius.input, paddingVertical: 14, paddingHorizontal: Spacing.md, fontFamily: 'Manrope_400Regular', fontSize: 15, color: Colors.light.text, marginBottom: Spacing.sm },
-  submitButton: { backgroundColor: Colors.primary, paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', marginTop: Spacing.sm },
-  submitText: { fontFamily: 'Manrope_600SemiBold', fontSize: 15, color: Colors.white },
+  /* Metric Cards */
+  metricsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  metricCard: {
+    flex: 1,
+    padding: Spacing.md,
+  },
+  metricLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    color: Colors.light.textSecondary,
+  },
+  metricValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
+    marginTop: 4,
+  },
 
-  sectionTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: Colors.light.text, marginBottom: Spacing.md },
-  expenseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  expenseLeft: { flex: 1 },
-  expenseDesc: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: Colors.light.text },
-  expenseDate: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: Colors.light.textSecondary, marginTop: 2 },
-  expenseAmount: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: Colors.error },
+  /* Scan Receipt Button */
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    ...Shadows.soft,
+  },
+  scanButtonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+    color: Colors.white,
+  },
 
-  emptyState: { alignItems: 'center', paddingVertical: Spacing.xl },
-  emptyTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: Colors.light.text, marginTop: Spacing.md },
-  emptyText: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: Colors.light.textSecondary, textAlign: 'center', marginTop: Spacing.sm },
+  /* Outline Button */
+  outlineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    borderWidth: 1.5,
+    borderColor: Colors.secondary,
+    backgroundColor: Colors.white,
+  },
+  outlineButtonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.secondary,
+  },
+
+  /* Section Header */
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  sectionTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  itemsBadge: {
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.pill,
+  },
+  itemsBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.success,
+  },
+
+  /* Expense List */
+  listCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  expenseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+  },
+  expenseRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  iconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  expenseMiddle: {
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  expenseDesc: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  expenseSub: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  expenseRight: {
+    alignItems: 'flex-end',
+  },
+  expenseAmount: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  claimedBadge: {
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.pill,
+    marginTop: 3,
+  },
+  claimedBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: Colors.success,
+  },
+
+  /* Empty State */
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  emptyTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 16,
+    color: Colors.light.text,
+    marginTop: Spacing.md,
+  },
+  emptyText: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+
+  /* Gold Insight Banner */
+  insightBanner: {
+    flexDirection: 'row',
+    backgroundColor: Colors.gold[50],
+    borderRadius: BorderRadius.card,
+    padding: Spacing.md,
+    alignItems: 'flex-start',
+  },
+  insightIcon: {
+    marginRight: 10,
+    marginTop: 2,
+  },
+  insightText: {
+    flex: 1,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    color: Colors.gold[700],
+    lineHeight: 19,
+  },
+  insightBold: {
+    fontFamily: 'Manrope_700Bold',
+  },
+
+  /* Coming Soon Card */
+  comingSoonCard: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: Colors.grey[300],
+    borderRadius: BorderRadius.card,
+    padding: Spacing.md,
+    backgroundColor: Colors.white,
+  },
+  comingSoonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  comingSoonText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  comingSoonTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  comingSoonSub: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  soonBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.pill,
+  },
+  soonBadgeText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: Colors.secondary,
+  },
+
+  /* Modal / Form */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  formTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 18,
+    color: Colors.light.text,
+  },
+  input: {
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.input,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 15,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
+  },
+  submitButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  submitText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+    color: Colors.white,
+  },
 });

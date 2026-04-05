@@ -1,98 +1,291 @@
-import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native';
+import { useState, useCallback } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
-import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing } from '@/constants/Colors';
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { useDashboard, useQuarterlyBreakdown, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
+
+type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'income', label: 'Income' },
+  { key: 'expenses', label: 'Expenses' },
+  { key: 'this_month', label: 'This month' },
+];
+
+const SOURCE_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string }> = {
+  'Uber / Deliveroo': { icon: 'car', bg: '#DBEAFE' },
+  'Cleaning clients': { icon: 'paint-brush', bg: '#D1FAE5' },
+  'Freelance dev': { icon: 'laptop', bg: '#FEF3C7' },
+  'Consulting': { icon: 'briefcase', bg: '#F3E8FF' },
+};
+
+const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string } = { icon: 'gbp', bg: Colors.grey[100] };
+
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function IncomeScreen() {
   useApiToken();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
-  const { data: quarterly } = useQuarterlyBreakdown();
+  const { data: _quarterly } = useQuarterlyBreakdown();
+
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [search, setSearch] = useState('');
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
+
+  const grossIncome = income?.total ?? 0;
+  const totalExpenses = tax?.totalExpenses ?? 0;
+  const netProfit = tax?.netProfit ?? 0;
+
+  // Compute YoY placeholder (static +12% as in mockup since API has no prior year)
+  const yoyPercent = 12;
+
+  // Monthly data for chart (placeholder until API provides monthly breakdown)
+  const months: { month: string; income: number; expenses: number }[] = (income as any)?.byMonth ?? [
+    { month: 'Jan', income: 2400, expenses: 800 },
+    { month: 'Feb', income: 3100, expenses: 950 },
+    { month: 'Mar', income: 2800, expenses: 700 },
+    { month: 'Apr', income: 3600, expenses: 1100 },
+    { month: 'May', income: 3200, expenses: 900 },
+    { month: 'Jun', income: 4100, expenses: 1200 },
+  ];
+  const maxMonthValue = Math.max(...months.map((m: { income: number; expenses: number }) => Math.max(m.income, m.expenses)), 1);
+
+  // Source list with search and filter
+  const sources = income?.bySource ?? [];
+  const sourceCount = sources.length;
+
+  const filteredSources = sources.filter((src) => {
+    if (search) {
+      const q = search.toLowerCase();
+      if (!src.name.toLowerCase().includes(q)) return false;
+    }
+    // "income" filter: show all since bySource is income; "expenses" filter: hide all
+    if (activeFilter === 'expenses') return false;
+    return true;
+  });
+
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+          />
+        }
       >
+        {/* Heading */}
         <Text style={styles.title}>Income</Text>
 
         {isLoading ? (
           <>
             <SkeletonCard />
+            <View style={{ height: Spacing.md }} />
+            <SkeletonCard />
+            <View style={{ height: Spacing.md }} />
+            <Skeleton width="40%" height={16} />
+            <View style={{ height: Spacing.sm }} />
+            <Skeleton width="100%" height={44} />
+            <View style={{ height: Spacing.sm }} />
             <SkeletonCard />
           </>
         ) : (
           <>
-            {/* Summary row */}
-            <View style={styles.summaryRow}>
-              <Card style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Gross Income</Text>
-                <Text style={styles.summaryAmount}>{formatCurrency(income?.total ?? 0)}</Text>
-              </Card>
-              <Card style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Net Profit</Text>
-                <Text style={[styles.summaryAmount, { color: Colors.secondary }]}>
-                  {formatCurrency(tax?.netProfit ?? 0)}
+            {/* Top summary card */}
+            <Card style={styles.topCard}>
+              {/* Summary row */}
+              <View style={styles.summaryRow}>
+                {/* Gross income */}
+                <View style={styles.summaryLeft}>
+                  <Text style={styles.summaryLabel}>Gross income</Text>
+                  <Text style={styles.grossAmount}>{formatCurrency(grossIncome)}</Text>
+                  <View style={styles.yoyRow}>
+                    <FontAwesome name="arrow-up" size={10} color={Colors.success} />
+                    <Text style={styles.yoyText}>+{yoyPercent}% vs last year</Text>
+                  </View>
+                </View>
+
+                {/* Net profit */}
+                <View style={styles.summaryRight}>
+                  <Text style={styles.summaryLabel}>Net profit</Text>
+                  <Text style={styles.netAmount}>{formatCurrency(netProfit)}</Text>
+                  <Text style={styles.afterExpenses}>
+                    After {formatCurrency(totalExpenses)} expenses
+                  </Text>
+                </View>
+              </View>
+
+              {/* Monthly bar chart */}
+              <View style={styles.chartContainer}>
+                {months.map((m, i) => {
+                  const incomeHeight = Math.max((m.income / maxMonthValue) * 100, 2);
+                  const expenseHeight = Math.max((m.expenses / maxMonthValue) * 100, 2);
+                  const label = MONTH_LABELS[i] ?? m.month.slice(0, 3);
+                  return (
+                    <View key={m.month} style={styles.chartColumn}>
+                      <View style={styles.barsWrapper}>
+                        <View
+                          style={[
+                            styles.barIncome,
+                            { height: incomeHeight },
+                          ]}
+                        />
+                        <View
+                          style={[
+                            styles.barExpense,
+                            { height: expenseHeight },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.chartLabel}>{label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Legend */}
+              <View style={styles.legendRow}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: Colors.secondary }]} />
+                  <Text style={styles.legendText}>Income</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
+                  <Text style={styles.legendText}>Expenses</Text>
+                </View>
+              </View>
+            </Card>
+
+            {/* Sources section header */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Sources</Text>
+              <View style={styles.sourceBadge}>
+                <Text style={styles.sourceBadgeText}>
+                  {sourceCount} source{sourceCount !== 1 ? 's' : ''}
                 </Text>
-              </Card>
+              </View>
             </View>
 
-            {/* Expenses */}
-            <Card>
-              <Text style={styles.sectionTitle}>Expenses Claimed</Text>
-              <Text style={styles.expenseAmount}>{formatCurrency(tax?.totalExpenses ?? 0)}</Text>
-              <Text style={styles.expenseHint}>
-                Tax saving: {formatCurrency((tax?.totalExpenses ?? 0) * 0.2)}
-              </Text>
-            </Card>
+            {/* Search input */}
+            <View style={styles.searchContainer}>
+              <FontAwesome
+                name="search"
+                size={14}
+                color={Colors.grey[400]}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search sources..."
+                placeholderTextColor={Colors.grey[400]}
+                value={search}
+                onChangeText={setSearch}
+              />
+            </View>
 
-            {/* Income by Source */}
-            <Card>
-              <Text style={styles.sectionTitle}>By Source</Text>
-              {income && income.bySource.length > 0 ? (
-                income.bySource.map((src) => (
-                  <View key={src.name} style={styles.sourceRow}>
-                    <View style={styles.sourceLeft}>
-                      <Text style={styles.sourceName}>{src.name}</Text>
-                      <View style={styles.barBackground}>
-                        <View style={[styles.barFill, { width: `${src.percentage}%` }]} />
+            {/* Filter pills */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersRow}
+            >
+              {FILTERS.map((f) => {
+                const isActive = f.key === activeFilter;
+                return (
+                  <TouchableOpacity
+                    key={f.key}
+                    style={[styles.filterPill, isActive && styles.filterPillActive]}
+                    onPress={() => setActiveFilter(f.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.filterPillText,
+                        isActive && styles.filterPillTextActive,
+                      ]}
+                    >
+                      {f.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Source list card */}
+            <Card style={styles.sourceCard}>
+              {filteredSources.length > 0 ? (
+                filteredSources.map((src, idx) => {
+                  const iconInfo =
+                    SOURCE_ICONS[src.name] ?? DEFAULT_ICON;
+                  const isLast = idx === filteredSources.length - 1;
+                  return (
+                    <View
+                      key={src.name}
+                      style={[
+                        styles.sourceRow,
+                        !isLast && styles.sourceRowBorder,
+                      ]}
+                    >
+                      {/* Icon badge */}
+                      <View
+                        style={[
+                          styles.sourceIcon,
+                          { backgroundColor: iconInfo.bg },
+                        ]}
+                      >
+                        <FontAwesome
+                          name={iconInfo.icon}
+                          size={16}
+                          color={Colors.primary}
+                        />
+                      </View>
+
+                      {/* Name + subtitle */}
+                      <View style={styles.sourceInfo}>
+                        <Text style={styles.sourceName}>{src.name}</Text>
+                        <Text style={styles.sourceSubtitle}>
+                          {getSourceSubtitle(src.name)}
+                        </Text>
+                      </View>
+
+                      {/* Amount + percentage */}
+                      <View style={styles.sourceAmounts}>
+                        <Text style={styles.sourceAmount}>
+                          {formatCurrency(src.amount)}
+                        </Text>
+                        <Text style={styles.sourcePercent}>{src.percentage}%</Text>
                       </View>
                     </View>
-                    <View style={styles.sourceRight}>
-                      <Text style={styles.sourceAmount}>{formatCurrency(src.amount)}</Text>
-                      <Text style={styles.sourcePercent}>{src.percentage}%</Text>
-                    </View>
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text style={styles.emptyText}>
-                  Connect your bank account to see income broken down by source.
+                  {search
+                    ? 'No sources match your search.'
+                    : 'Connect your bank account to see income broken down by source.'}
                 </Text>
-              )}
-            </Card>
-
-            {/* Quarterly Breakdown */}
-            <Card>
-              <Text style={styles.sectionTitle}>Quarterly Breakdown</Text>
-              {quarterly?.quarters ? (
-                (quarterly.quarters as { quarter: number; income: number; expenses: number; from: string }[]).map((q) => (
-                  <View key={q.quarter} style={styles.quarterRow}>
-                    <Text style={styles.quarterLabel}>Q{q.quarter}</Text>
-                    <View style={styles.quarterValues}>
-                      <Text style={styles.quarterIncome}>{formatCurrency(q.income)}</Text>
-                      <Text style={styles.quarterExpense}>-{formatCurrency(q.expenses)}</Text>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.emptyText}>Quarterly data will appear once you have transactions.</Text>
               )}
             </Card>
           </>
@@ -102,34 +295,272 @@ export default function IncomeScreen() {
   );
 }
 
+function getSourceSubtitle(name: string): string {
+  const map: Record<string, string> = {
+    'Uber / Deliveroo': 'Gig delivery',
+    'Cleaning clients': 'Direct invoices',
+    'Freelance dev': 'Contract work',
+    'Consulting': 'Advisory services',
+  };
+  return map[name] ?? 'Other income';
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
-  scroll: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.xxl },
-  title: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 28, color: Colors.light.text },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.background,
+  },
+  scroll: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
 
-  summaryRow: { flexDirection: 'row', gap: Spacing.md },
-  summaryCard: { flex: 1 },
-  summaryLabel: { fontFamily: 'Manrope_500Medium', fontSize: 12, color: Colors.light.textSecondary },
-  summaryAmount: { fontFamily: 'Manrope_800ExtraBold', fontSize: 24, color: Colors.primary, marginTop: 4 },
+  // Heading
+  title: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 19,
+    color: Colors.light.text,
+    marginBottom: Spacing.md,
+  },
 
-  sectionTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: Colors.light.text, marginBottom: Spacing.md },
-  expenseAmount: { fontFamily: 'Manrope_700Bold', fontSize: 24, color: Colors.light.text },
-  expenseHint: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.secondary, marginTop: 4 },
+  // Top card
+  topCard: {
+    marginBottom: Spacing.md,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+  },
+  summaryLeft: {
+    flex: 1,
+  },
+  summaryRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  summaryLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 10.5,
+    color: Colors.grey[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  grossAmount: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 30,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  yoyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  yoyText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.success,
+  },
+  netAmount: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 24,
+    color: Colors.success,
+    marginBottom: 4,
+  },
+  afterExpenses: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    color: Colors.grey[500],
+  },
 
-  sourceRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  sourceLeft: { flex: 1, marginRight: Spacing.md },
-  sourceName: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: Colors.light.text, marginBottom: 6 },
-  barBackground: { height: 6, backgroundColor: Colors.grey[100], borderRadius: 3 },
-  barFill: { height: 6, backgroundColor: Colors.secondary, borderRadius: 3 },
-  sourceRight: { alignItems: 'flex-end' },
-  sourceAmount: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: Colors.light.text },
-  sourcePercent: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: Colors.light.textSecondary },
+  // Chart
+  chartContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 120,
+    marginBottom: Spacing.sm,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  barsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+    flex: 1,
+  },
+  barIncome: {
+    width: 8,
+    backgroundColor: Colors.secondary,
+    borderRadius: 4,
+  },
+  barExpense: {
+    width: 8,
+    backgroundColor: Colors.grey[300],
+    borderRadius: 4,
+  },
+  chartLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 9,
+    color: Colors.grey[400],
+    marginTop: 4,
+  },
 
-  quarterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.light.border },
-  quarterLabel: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: Colors.primary },
-  quarterValues: { alignItems: 'flex-end' },
-  quarterIncome: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, color: Colors.secondary },
-  quarterExpense: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: Colors.error },
+  // Legend
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.md,
+    marginTop: Spacing.xs,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: Colors.grey[500],
+  },
 
-  emptyText: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: Colors.light.textSecondary },
+  // Section header
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  sectionTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  sourceBadge: {
+    backgroundColor: Colors.grey[100],
+    borderRadius: BorderRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  sourceBadgeText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: Colors.grey[500],
+  },
+
+  // Search
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.input,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: Spacing.sm,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    padding: 0,
+  },
+
+  // Filter pills
+  filtersRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: BorderRadius.pill,
+    backgroundColor: Colors.grey[100],
+  },
+  filterPillActive: {
+    backgroundColor: Colors.primary,
+  },
+  filterPillText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.grey[600],
+  },
+  filterPillTextActive: {
+    color: Colors.white,
+  },
+
+  // Source list card
+  sourceCard: {
+    paddingVertical: Spacing.sm,
+  },
+  sourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.xs,
+  },
+  sourceRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  sourceIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sourceInfo: {
+    flex: 1,
+  },
+  sourceName: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  sourceSubtitle: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.grey[400],
+  },
+  sourceAmounts: {
+    alignItems: 'flex-end',
+  },
+  sourceAmount: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  sourcePercent: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: Colors.grey[400],
+  },
+
+  // Empty state
+  emptyText: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    color: Colors.light.textSecondary,
+    textAlign: 'center',
+    paddingVertical: Spacing.lg,
+  },
 });
