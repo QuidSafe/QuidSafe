@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
 function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>['name']; color: string }) {
-  return <FontAwesome size={24} style={{ marginBottom: -2 }} {...props} />;
+  return <FontAwesome size={22} style={{ marginBottom: -2 }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -29,6 +29,7 @@ export default function TabLayout() {
           fontFamily: 'Manrope_700Bold',
           color: Colors.light.text,
         },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -43,6 +44,13 @@ export default function TabLayout() {
         options={{
           title: 'Income',
           tabBarIcon: ({ color }) => <TabBarIcon name="gbp" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="expenses"
+        options={{
+          title: 'Expenses',
+          tabBarIcon: ({ color }) => <TabBarIcon name="credit-card" color={color} />,
         }}
       />
       <Tabs.Screen

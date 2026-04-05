@@ -1,39 +1,122 @@
-import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Link } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { useSignUp } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 
 export default function SignupScreen() {
+  const { signUp, isLoaded } = useSignUp();
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSignUp = async () => {
+    if (!isLoaded || !email) return;
+    setLoading(true);
+    setError('');
+    try {
+      await signUp.create({ emailAddress: email });
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setPendingVerification(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!isLoaded || !code) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code });
+      if (result.status === 'complete') {
+        router.replace('/onboarding');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid code';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Create your account</Text>
-        <Text style={styles.subtitle}>Start tracking your tax in minutes</Text>
+        <Text style={styles.title}>
+          {pendingVerification ? 'Check your email' : 'Create your account'}
+        </Text>
+        <Text style={styles.subtitle}>
+          {pendingVerification
+            ? `We sent a code to ${email}`
+            : 'Start tracking your tax in minutes'}
+        </Text>
       </View>
 
       <View style={styles.form}>
-        <Pressable style={styles.magicLinkButton}>
-          <Text style={styles.magicLinkText}>Sign up with Magic Link</Text>
-        </Pressable>
+        {!pendingVerification ? (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor={Colors.grey[500]}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.buttonText}>Send Verification Code</Text>
+              )}
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter 6-digit code"
+              placeholderTextColor={Colors.grey[500]}
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+              maxLength={6}
+            />
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              onPress={handleVerify}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={Colors.white} />
+              ) : (
+                <Text style={styles.buttonText}>Verify & Continue</Text>
+              )}
+            </Pressable>
+          </>
+        )}
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <Pressable style={styles.googleButton}>
-          <Text style={styles.googleText}>Sign up with Google</Text>
-        </Pressable>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Already have an account?{' '}
-          <Link href="/(auth)/login" style={styles.link}>
-            Log in
-          </Link>
-        </Text>
+        <Pressable onPress={() => router.back()}>
+          <Text style={styles.backLink}>Back to login</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -46,7 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   header: {
-    flex: 1,
+    flex: 0.6,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -54,70 +137,59 @@ const styles = StyleSheet.create({
     fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 28,
     color: Colors.primary,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.light.textSecondary,
     marginTop: Spacing.sm,
+    textAlign: 'center',
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
     gap: Spacing.md,
   },
-  magicLinkButton: {
+  input: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.input,
+    paddingVertical: 16,
+    paddingHorizontal: Spacing.md,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 16,
+    color: Colors.light.text,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  button: {
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
     ...Shadows.soft,
   },
-  magicLinkText: {
+  buttonText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
     color: Colors.white,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.light.border,
-  },
-  dividerText: {
-    fontFamily: 'Manrope_400Regular',
+  error: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.light.textSecondary,
-  },
-  googleButton: {
-    backgroundColor: Colors.white,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.button,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    ...Shadows.soft,
-  },
-  googleText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 16,
-    color: Colors.light.text,
+    color: Colors.error,
+    textAlign: 'center',
   },
   footer: {
     paddingBottom: Spacing.xl,
     alignItems: 'center',
   },
-  footerText: {
-    fontFamily: 'Manrope_400Regular',
+  backLink: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.light.textSecondary,
-  },
-  link: {
     color: Colors.primary,
-    fontFamily: 'Manrope_600SemiBold',
   },
 });
