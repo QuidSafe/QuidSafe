@@ -16,7 +16,7 @@ name = "quidsafe-api-dev"
 [[env.dev.d1_databases]]
 binding = "DB"
 database_name = "quidsafe-dev"
-database_id = "REPLACE_WITH_DEV_DATABASE_ID"
+database_id = "8bd05366-7550-4fb2-8eb0-8ec5c90ae027"
 migrations_dir = "worker/migrations"
 
 [env.dev.vars]
