@@ -30,7 +30,7 @@ name = "quidsafe-api-staging"
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "quidsafe-staging"
-database_id = "REPLACE_WITH_STAGING_DATABASE_ID"
+database_id = "40d33c5f-f549-4abf-8f50-08076a9b8cfc"
 migrations_dir = "worker/migrations"
 
 [env.staging.vars]
@@ -47,7 +47,7 @@ routes = [
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "quidsafe-production"
-database_id = "REPLACE_WITH_PRODUCTION_DATABASE_ID"
+database_id = "6fcb9905-03b4-4c3b-ab0c-9443df6f6ad6"
 migrations_dir = "worker/migrations"
 
 [env.production.vars]
