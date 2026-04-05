@@ -6,6 +6,13 @@ import { getConnectUrl, exchangeCode, encryptTokens, fetchTransactions } from '.
 import { categoriseTransactions } from './services/categoriser';
 import { calculateTax, getCurrentQuarter } from '../lib/tax-engine';
 import { query, queryOne, execute } from '../lib/db';
+import {
+  createCheckoutSession,
+  createPortalSession,
+  getSubscriptionStatus,
+  verifyWebhookSignature,
+  handleWebhookEvent,
+} from './services/stripe';
 
 export interface Env {
   DB: D1Database;
@@ -51,7 +58,20 @@ app.get('/health', (c) => {
 });
 
 app.post('/webhooks/stripe', async (c) => {
-  // TODO: Verify Stripe webhook signature and handle events
+  const body = await c.req.text();
+  const signature = c.req.header('stripe-signature');
+
+  if (!signature) {
+    return c.json({ error: 'Missing signature' }, 400);
+  }
+
+  const valid = await verifyWebhookSignature(body, signature, c.env.STRIPE_WEBHOOK_SECRET);
+  if (!valid) {
+    return c.json({ error: 'Invalid signature' }, 400);
+  }
+
+  const event = JSON.parse(body);
+  await handleWebhookEvent(event, c.env.DB);
   return c.json({ received: true });
 });
 
@@ -399,6 +419,28 @@ authed.post('/invoices', async (c) => {
   );
 
   return c.json({ id, success: true }, 201);
+});
+
+// ── Billing ──────────────────────────────────────────────
+authed.post('/billing/checkout', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{ plan: 'monthly' | 'annual' }>();
+  const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
+  const session = await createCheckoutSession(userId, body.plan, config, c.env.DB);
+  return c.json(session);
+});
+
+authed.post('/billing/portal', async (c) => {
+  const userId = c.get('userId');
+  const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
+  const session = await createPortalSession(userId, config, c.env.DB);
+  return c.json(session);
+});
+
+authed.get('/billing/status', async (c) => {
+  const userId = c.get('userId');
+  const status = await getSubscriptionStatus(userId, c.env.DB);
+  return c.json(status);
 });
 
 // ── Settings ──────────────────────────────────────────────

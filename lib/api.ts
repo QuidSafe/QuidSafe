@@ -139,6 +139,19 @@ class ApiClient {
     return this.request<{ id: string }>('/invoices', { method: 'POST', body: JSON.stringify(data) });
   }
 
+  // Billing
+  createCheckout(plan: 'monthly' | 'annual') {
+    return this.request<{ url: string }>('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan }) });
+  }
+
+  createPortalSession() {
+    return this.request<{ url: string }>('/billing/portal', { method: 'POST' });
+  }
+
+  getBillingStatus() {
+    return this.request<{ plan: string; status: string; trialEndsAt: string | null; currentPeriodEnd: string | null }>('/billing/status');
+  }
+
   // Settings
   getSettings() {
     return this.request<{ user: Record<string, unknown> }>('/settings');
