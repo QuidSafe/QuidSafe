@@ -84,7 +84,7 @@ export default function BillingScreen() {
           <Card>
             <View style={styles.activeRow}>
               <View style={styles.activeBadge}>
-                <FontAwesome name="check-circle" size={16} color={Colors.secondary} />
+                <FontAwesome name="check-circle" size={16} color={Colors.success} />
                 <Text style={styles.activeBadgeText}>
                   {status?.status === 'trialing' ? 'Free Trial' : 'Pro'}
                 </Text>
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
 
   featuresTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, color: Colors.light.text, marginBottom: Spacing.md },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
-  featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.secondary + '12', alignItems: 'center', justifyContent: 'center' },
+  featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.success + '12', alignItems: 'center', justifyContent: 'center' },
   featureText: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: Colors.light.text, flex: 1 },
 
   ctaButton: { backgroundColor: Colors.primary, paddingVertical: 16, borderRadius: BorderRadius.button, alignItems: 'center', ...Shadows.medium },
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
   trialNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, color: Colors.light.textSecondary, textAlign: 'center' },
 
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.secondary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: BorderRadius.pill },
-  activeBadgeText: { fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: Colors.secondary },
+  activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.success + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: BorderRadius.pill },
+  activeBadgeText: { fontFamily: 'Manrope_600SemiBold', fontSize: 13, color: Colors.success },
   planName: { fontFamily: 'Manrope_500Medium', fontSize: 14, color: Colors.light.textSecondary },
   trialText: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.accent, marginTop: Spacing.sm },
   periodText: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.light.textSecondary, marginTop: Spacing.xs },

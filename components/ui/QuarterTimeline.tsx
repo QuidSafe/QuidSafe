@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   dotDone: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.success,
   },
   dotCurrent: {
     backgroundColor: Colors.primary,

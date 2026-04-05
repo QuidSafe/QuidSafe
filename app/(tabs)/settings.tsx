@@ -90,7 +90,7 @@ export default function SettingsScreen() {
             bankData.connections.map((conn) => (
               <View key={conn.id} style={styles.row}>
                 <Text style={styles.rowLabel}>{conn.bankName}</Text>
-                <View style={[styles.badge, { backgroundColor: Colors.secondary }]}>
+                <View style={[styles.badge, { backgroundColor: Colors.success }]}>
                   <Text style={styles.badgeText}>Connected</Text>
                 </View>
               </View>
