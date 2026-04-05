@@ -188,15 +188,15 @@ VAT registration triggers at ~750 users (~£90k turnover). Price becomes £9.99 
 | Layer | Technology | Why | Monthly Cost |
 |-------|-----------|-----|-------------|
 | **Frontend (ALL platforms)** | Expo (SDK 52) + React Native Web | Single codebase builds iOS, Android AND web. One developer maintains everything. | £0 |
-| **Backend API** | Supabase Edge Functions (Deno) | Serverless — zero servers to maintain. Auto-scales. Built into Supabase. | £0 (free tier) |
-| **Database** | Supabase PostgreSQL | Free tier: 500MB, 2 projects. Managed backups, RLS, auth all included. | £0 → £20/mo |
-| **Auth** | Supabase Auth | Magic link + Google login. 50k MAU free. No separate auth service. | £0 |
+| **Backend API** | Cloudflare Workers + Hono | Serverless — zero servers to maintain. Auto-scales. 100k requests/day free. | £0 (free tier) |
+| **Database** | Cloudflare D1 (SQLite) | 5GB free tier. Globally replicated reads. Zero config backups. | £0 → £5/mo |
+| **Auth** | Clerk | Magic link + Google login. 10k MAU free. Hosted UI + JWT verification. | £0 |
 | **Open Banking** | TrueLayer API | UK-focused, FCA regulated, handles all compliance. | ~£0.10/user/mo |
 | **AI Categorisation** | Claude API (Haiku 4.5) | Cheapest model, fast, accurate for categorisation. | ~£0.001/request |
 | **Payments** | Stripe | Subscriptions, UK cards, SCA-compliant. | 1.4% + 20p |
 | **Push Notifications** | Expo Notifications | Free, cross-platform, built into Expo. | £0 |
 | **Email** | Resend | 3k emails/mo free. Deadline reminders, receipts. | £0 → £20/mo |
-| **Hosting (Web)** | Vercel (free tier) | Expo web export as static site. Zero config. | £0 |
+| **Hosting (Web)** | Cloudflare Pages (free tier) | Expo web export as static site. Zero config. Global CDN. | £0 |
 | **CDN + DNS** | Cloudflare | Free tier. DDoS protection, SSL, caching. | £0 |
 | **CI/CD** | EAS Build + GitHub Actions | Expo Application Services for iOS/Android builds. | £0 (free tier) |
 | **Monitoring** | Sentry (free) | Error tracking across all platforms. 5k events/mo free. | £0 |
@@ -353,9 +353,10 @@ quidsafe/
 ### Prerequisites
 
 - Node.js 20+
-- Supabase CLI (`npm install -g supabase`)
+- Wrangler CLI (included as dev dependency — `npx wrangler`)
+- Cloudflare account (free tier — Workers + D1)
+- Clerk account (free tier — auth)
 - GitHub account
-- Supabase account (free tier)
 - TrueLayer sandbox account (free)
 - Xcode (for iOS simulator, Mac only)
 - Android Studio (for Android emulator, optional)
@@ -370,21 +371,26 @@ cd quidsafe
 # Install dependencies
 npm install
 
-# Start Supabase local (Postgres + Auth + Edge Functions)
-supabase start
+# Copy env template
+cp .env.example .env.local
 
-# Run database migrations
-supabase db push
+# Create D1 database (first time only)
+npx wrangler d1 create quidsafe-dev
 
-# Start the app (web + mobile from ONE command)
+# Run D1 migrations
+npx wrangler d1 migrations apply quidsafe-dev --local
+
+# Start the Worker API (http://localhost:8787)
+npx wrangler dev
+
+# In a new terminal — start the app (web + mobile)
 npx expo start
 # → Press 'w' for web browser
 # → Press 'i' for iOS simulator
 # → Press 'a' for Android emulator
 ```
 
-**3 commands. All 3 platforms running. £0 cost.**
-```
+**Two processes. All 3 platforms + API running. £0 cost.**
 
 ---
 

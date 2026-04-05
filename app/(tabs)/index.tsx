@@ -1,36 +1,175 @@
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useUser } from '@clerk/clerk-expo';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing } from '@/constants/Colors';
+import { ActionCard } from '@/components/ui/ActionCard';
+import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
+import { SkeletonCard } from '@/components/ui/Skeleton';
+import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { useDashboard, useApiToken } from '@/lib/hooks/useApi';
+import { formatCurrency } from '@/lib/tax-engine';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function DashboardScreen() {
+  useApiToken();
+  const { user } = useUser();
+  const { data, isLoading, refetch, isRefetching } = useDashboard();
+
+  const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
+  const tax = data?.tax;
+  const income = data?.income;
+  const quarter = data?.quarters?.current?.quarter ?? 1;
+  const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+      >
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Good morning</Text>
-          <Text style={styles.name}>Welcome to QuidSafe</Text>
+          <Text style={styles.greeting}>{getGreeting()}</Text>
+          <Text style={styles.name}>{firstName ? `Hey, ${firstName}` : 'Welcome to QuidSafe'}</Text>
         </View>
 
-        <Card style={styles.taxCard}>
-          <Text style={styles.taxLabel}>Estimated Tax Owed</Text>
-          <Text style={styles.taxAmount}>£0.00</Text>
-          <Text style={styles.taxSubtext}>
-            Connect your bank to start tracking
-          </Text>
-        </Card>
+        {isLoading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            {/* Hero Tax Card */}
+            <LinearGradient
+              colors={['#0F172A', '#1E3A8A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroCard}
+            >
+              {/* Gold glow accent */}
+              <View style={styles.heroGlow} />
 
-        <Card>
-          <Text style={styles.sectionTitle}>Set Aside Monthly</Text>
-          <Text style={styles.sectionValue}>£0.00</Text>
-        </Card>
+              <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
+              <Text style={styles.heroAmount}>
+                {formatCurrency(tax?.totalTaxOwed ?? 0)}
+              </Text>
+              <Text style={styles.heroSubtext}>
+                Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
+              </Text>
 
-        <Card>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <Text style={styles.sectionSubtext}>
-            Connect bank · Add expense · View tax breakdown
-          </Text>
-        </Card>
+              {/* 3 glassmorphic boxes */}
+              <View style={styles.heroSplit}>
+                <View style={styles.heroSplitBox}>
+                  <Text style={styles.splitLabel}>Income Tax</Text>
+                  <Text style={styles.splitValue}>
+                    {formatCurrency(tax?.incomeTax?.total ?? 0)}
+                  </Text>
+                </View>
+                <View style={styles.heroSplitDivider} />
+                <View style={styles.heroSplitBox}>
+                  <Text style={styles.splitLabel}>NI (Class 4)</Text>
+                  <Text style={styles.splitValue}>
+                    {formatCurrency(tax?.nationalInsurance?.total ?? 0)}
+                  </Text>
+                </View>
+                <View style={styles.heroSplitDivider} />
+                <View style={styles.heroSplitBox}>
+                  <Text style={styles.splitLabel}>Expenses</Text>
+                  <Text style={[styles.splitValue, styles.splitExpenses]}>
+                    -{formatCurrency(tax?.totalExpenses ?? 0)}
+                  </Text>
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Plain English Insight */}
+            {tax?.plainEnglish ? (
+              <View style={styles.insightBanner}>
+                <View style={styles.insightIcon}>
+                  <FontAwesome name="lightbulb-o" size={14} color={Colors.secondary} />
+                </View>
+                <Text style={styles.insightText}>{tax.plainEnglish}</Text>
+              </View>
+            ) : null}
+
+            {/* Monthly set-aside */}
+            <View style={styles.setAsideCard}>
+              <View>
+                <Text style={styles.setAsideLabel}>SET ASIDE THIS MONTH</Text>
+                <Text style={styles.setAsideAmount}>
+                  {formatCurrency(tax?.setAsideMonthly ?? 0)}
+                </Text>
+              </View>
+              <View style={styles.setAsideRight}>
+                <Text style={styles.setAsideRate}>
+                  {tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}
+                </Text>
+                <Text style={styles.setAsideRateLabel}>effective rate</Text>
+              </View>
+            </View>
+
+            {/* Action Items */}
+            <View style={styles.actions}>
+              {(income?.total ?? 0) === 0 && (
+                <ActionCard
+                  type="action"
+                  title="Connect your bank"
+                  description="Link your bank account to automatically track income and expenses."
+                  icon="university"
+                />
+              )}
+              <ActionCard
+                type="warning"
+                title={`Q${quarter} payment due`}
+                description="Submit your quarterly update to HMRC before the deadline."
+                icon="clock-o"
+              />
+              <ActionCard
+                type="success"
+                title="Tax pot on track"
+                description="You're setting aside enough to cover your tax bill."
+                icon="check"
+              />
+            </View>
+
+            {/* Quarter Timeline */}
+            <Card>
+              <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
+            </Card>
+
+            {/* Income by Source */}
+            {income && income.bySource.length > 0 && (
+              <Card>
+                <Text style={styles.sectionTitle}>Income by Source</Text>
+                {income.bySource.map((src) => (
+                  <View key={src.name} style={styles.sourceRow}>
+                    <View style={styles.sourceLeft}>
+                      <View style={[styles.sourceDot, { backgroundColor: Colors.secondary }]} />
+                      <Text style={styles.sourceName}>{src.name}</Text>
+                    </View>
+                    <View style={styles.sourceRight}>
+                      <Text style={styles.sourceAmount}>{formatCurrency(src.amount)}</Text>
+                      <View style={styles.sourceBar}>
+                        <View style={[styles.sourceBarFill, { width: `${src.percentage}%` }]} />
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </Card>
+            )}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -44,9 +183,10 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     gap: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   header: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   greeting: {
     fontFamily: 'Manrope_400Regular',
@@ -59,41 +199,201 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginTop: 2,
   },
-  taxCard: {
-    backgroundColor: Colors.primary,
+
+  // Hero Tax Card
+  heroCard: {
+    borderRadius: BorderRadius.hero,
+    padding: 22,
+    overflow: 'hidden',
+    ...Shadows.large,
   },
-  taxLabel: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+  heroGlow: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(202, 138, 4, 0.12)',
   },
-  taxAmount: {
+  heroLabel: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  heroAmount: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 36,
     color: Colors.white,
     marginTop: 4,
   },
-  taxSubtext: {
+  heroSubtext: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11.5,
+    color: 'rgba(255,255,255,0.45)',
     marginTop: Spacing.xs,
   },
+  heroSplit: {
+    flexDirection: 'row',
+    marginTop: 18,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    overflow: 'hidden',
+  },
+  heroSplitBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
+  heroSplitDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  splitLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.55)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  splitValue: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 17,
+    color: Colors.white,
+    marginTop: 4,
+  },
+  splitExpenses: {
+    color: '#4ADE80',
+  },
+
+  // Insight banner
+  insightBanner: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.card,
+    padding: Spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.secondary,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    ...Shadows.soft,
+  },
+  insightIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.secondary + '12',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  insightText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
+    color: Colors.light.text,
+    lineHeight: 22,
+    flex: 1,
+  },
+
+  // Set Aside card
+  setAsideCard: {
+    backgroundColor: Colors.gold[50],
+    borderRadius: BorderRadius.card,
+    padding: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.accent,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  setAsideLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10.5,
+    color: Colors.gold[700],
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  setAsideAmount: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 26,
+    color: Colors.light.text,
+    marginTop: 2,
+  },
+  setAsideRight: {
+    alignItems: 'flex-end',
+  },
+  setAsideRate: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 20,
+    color: Colors.accent,
+  },
+  setAsideRateLabel: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    color: Colors.gold[700],
+  },
+
+  // Actions
+  actions: {
+    gap: 7,
+  },
+
+  // Section
   sectionTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
     color: Colors.light.text,
+    marginBottom: Spacing.md,
   },
-  sectionValue: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 24,
-    color: Colors.secondary,
-    marginTop: 4,
+
+  // Income sources
+  sourceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
   },
-  sectionSubtext: {
-    fontFamily: 'Manrope_400Regular',
+  sourceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  sourceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  sourceName: {
+    fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.light.textSecondary,
-    marginTop: Spacing.sm,
+    color: Colors.light.text,
+  },
+  sourceRight: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  sourceAmount: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  sourceBar: {
+    width: 60,
+    height: 4,
+    backgroundColor: Colors.grey[200],
+    borderRadius: 2,
+  },
+  sourceBarFill: {
+    height: 4,
+    backgroundColor: Colors.secondary,
+    borderRadius: 2,
   },
 });

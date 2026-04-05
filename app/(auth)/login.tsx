@@ -1,19 +1,44 @@
+import { useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Link } from 'expo-router';
+import { useSSO } from '@clerk/clerk-expo';
+import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 
+WebBrowser.maybeCompleteAuthSession();
+
 export default function LoginScreen() {
+  const { startSSOFlow } = useSSO();
+
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy: 'oauth_google' });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
+    } catch (err) {
+      console.error('Google sign-in error:', err);
+    }
+  }, [startSSOFlow]);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.logo}>QuidSafe</Text>
-        <Text style={styles.tagline}>UK sole trader tax, simplified</Text>
+        <Text style={styles.tagline}>Your tax. Sorted. Safe.</Text>
       </View>
 
       <View style={styles.form}>
-        <Pressable style={styles.magicLinkButton}>
-          <Text style={styles.magicLinkText}>Continue with Magic Link</Text>
+        <View style={styles.trustBadge}>
+          <Text style={styles.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}
+          onPress={handleGoogleSignIn}
+        >
+          <Text style={styles.googleText}>Continue with Google</Text>
         </Pressable>
 
         <View style={styles.divider}>
@@ -22,17 +47,16 @@ export default function LoginScreen() {
           <View style={styles.dividerLine} />
         </View>
 
-        <Pressable style={styles.googleButton}>
-          <Text style={styles.googleText}>Continue with Google</Text>
-        </Pressable>
+        <Link href="/(auth)/signup" asChild>
+          <Pressable style={({ pressed }) => [styles.emailButton, pressed && styles.pressed]}>
+            <Text style={styles.emailText}>Continue with Email</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          Don't have an account?{' '}
-          <Link href="/(auth)/signup" style={styles.link}>
-            Sign up
-          </Link>
+          By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
       </View>
     </SafeAreaView>
@@ -52,11 +76,11 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 40,
+    fontSize: 44,
     color: Colors.primary,
   },
   tagline: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: 'Manrope_500Medium',
     fontSize: 16,
     color: Colors.light.textSecondary,
     marginTop: Spacing.sm,
@@ -66,14 +90,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.md,
   },
-  magicLinkButton: {
+  trustBadge: {
+    backgroundColor: Colors.secondary + '10',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.pill,
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  trustText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: Colors.secondary,
+  },
+  googleButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
     ...Shadows.soft,
   },
-  magicLinkText: {
+  googleText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
     color: Colors.white,
@@ -93,19 +130,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.textSecondary,
   },
-  googleButton: {
+  emailButton: {
     backgroundColor: Colors.white,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    ...Shadows.soft,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
   },
-  googleText: {
+  emailText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
-    color: Colors.light.text,
+    color: Colors.primary,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
   footer: {
     paddingBottom: Spacing.xl,
@@ -113,11 +153,8 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
-    color: Colors.light.textSecondary,
-  },
-  link: {
-    color: Colors.primary,
-    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.grey[500],
+    textAlign: 'center',
   },
 });

@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text } from 'react-native';
-import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { BorderRadius } from '@/constants/Colors';
 
 interface BadgeProps {
   label: string;
@@ -7,11 +7,11 @@ interface BadgeProps {
 }
 
 const variantColors = {
-  primary: { bg: Colors.primary + '15', text: Colors.primary },
-  success: { bg: Colors.success + '15', text: Colors.success },
-  warning: { bg: Colors.warning + '15', text: Colors.warning },
-  error: { bg: Colors.error + '15', text: Colors.error },
-  info: { bg: Colors.info + '15', text: Colors.info },
+  primary: { bg: '#DBEAFE', text: '#1E3A8A' },
+  success: { bg: '#DCFCE7', text: '#16A34A' },
+  warning: { bg: '#FEF9C3', text: '#A16207' },
+  error: { bg: '#FEE2E2', text: '#DC2626' },
+  info: { bg: '#DBEAFE', text: '#1E3A8A' },
 };
 
 export function Badge({ label, variant = 'primary' }: BadgeProps) {
@@ -25,13 +25,14 @@ export function Badge({ label, variant = 'primary' }: BadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: BorderRadius.pill,
     alignSelf: 'flex-start',
   },
   text: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    letterSpacing: 0.3,
   },
 });

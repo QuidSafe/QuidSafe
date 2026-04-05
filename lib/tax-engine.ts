@@ -1,32 +1,89 @@
-// QuidSafe UK Tax Engine — Pure functions for 2026/27 tax year
+// QuidSafe UK Tax Engine — Pure functions, config-driven rates
 // Source: HMRC rates — see docs/TAX_RULES.md
 
-// 2026/27 Tax Year Thresholds & Rates
-const TAX_YEAR = '2026/27';
+// ─── Tax Year Config ──────────────────────────────────────
 
-const PERSONAL_ALLOWANCE = 12_570;
-const BASIC_RATE_THRESHOLD = 50_270;
-const HIGHER_RATE_THRESHOLD = 125_140;
+export interface TaxYearConfig {
+  year: string;
+  personalAllowance: number;
+  basicRateThreshold: number;
+  higherRateThreshold: number;
+  basicRate: number;
+  higherRate: number;
+  additionalRate: number;
+  taperThreshold: number;
+  niClass2WeeklyRate: number;
+  niClass2SmallProfitsThreshold: number;
+  niClass4LowerLimit: number;
+  niClass4UpperLimit: number;
+  niClass4MainRate: number;
+  niClass4AdditionalRate: number;
+}
 
-const BASIC_RATE = 0.20;
-const HIGHER_RATE = 0.40;
-const ADDITIONAL_RATE = 0.45;
+export const TAX_YEARS: Record<string, TaxYearConfig> = {
+  '2025/26': {
+    year: '2025/26',
+    personalAllowance: 12_570,
+    basicRateThreshold: 50_270,
+    higherRateThreshold: 125_140,
+    basicRate: 0.20,
+    higherRate: 0.40,
+    additionalRate: 0.45,
+    taperThreshold: 100_000,
+    niClass2WeeklyRate: 3.45,
+    niClass2SmallProfitsThreshold: 6_725,
+    niClass4LowerLimit: 12_570,
+    niClass4UpperLimit: 50_270,
+    niClass4MainRate: 0.06,
+    niClass4AdditionalRate: 0.02,
+  },
+  '2026/27': {
+    year: '2026/27',
+    personalAllowance: 12_570,
+    basicRateThreshold: 50_270,
+    higherRateThreshold: 125_140,
+    basicRate: 0.20,
+    higherRate: 0.40,
+    additionalRate: 0.45,
+    taperThreshold: 100_000,
+    niClass2WeeklyRate: 3.45,
+    niClass2SmallProfitsThreshold: 6_725,
+    niClass4LowerLimit: 12_570,
+    niClass4UpperLimit: 50_270,
+    niClass4MainRate: 0.06,
+    niClass4AdditionalRate: 0.02,
+  },
+};
 
-// Personal allowance taper: reduced by £1 for every £2 over £100,000
-const TAPER_THRESHOLD = 100_000;
+const DEFAULT_TAX_YEAR = '2026/27';
 
-// National Insurance Class 2 & 4 (2026/27)
-const NI_CLASS2_WEEKLY = 3.45;
-const NI_CLASS2_SMALL_PROFITS_THRESHOLD = 6_725;
-const NI_CLASS4_LOWER_PROFITS = 12_570;
-const NI_CLASS4_UPPER_PROFITS = 50_270;
-const NI_CLASS4_MAIN_RATE = 0.06;
-const NI_CLASS4_ADDITIONAL_RATE = 0.02;
+function getConfig(taxYear?: string): TaxYearConfig {
+  const key = taxYear ?? DEFAULT_TAX_YEAR;
+  const config = TAX_YEARS[key];
+  if (!config) throw new Error(`Unknown tax year: ${key}`);
+  return config;
+}
+
+// ─── Types ────────────────────────────────────────────────
 
 export interface TaxInput {
   totalIncome: number;
   totalExpenses: number;
   quarter?: number;
+  taxYear?: string;
+}
+
+export interface IncomeTaxBreakdown {
+  basicRate: number;
+  higherRate: number;
+  additionalRate: number;
+  total: number;
+}
+
+export interface NIBreakdown {
+  class2: number;
+  class4: number;
+  total: number;
 }
 
 export interface TaxResult {
@@ -34,112 +91,136 @@ export interface TaxResult {
   quarter: number;
   totalIncome: number;
   totalExpenses: number;
-  taxableIncome: number;
+  netProfit: number;
   personalAllowance: number;
-  incomeTax: number;
-  niClass2: number;
-  niClass4: number;
+  taxableIncome: number;
+  incomeTax: IncomeTaxBreakdown;
+  nationalInsurance: NIBreakdown;
   totalTaxOwed: number;
   setAsideMonthly: number;
   effectiveRate: number;
   plainEnglish: string;
 }
 
-function calculatePersonalAllowance(income: number): number {
-  if (income <= TAPER_THRESHOLD) return PERSONAL_ALLOWANCE;
-  const reduction = Math.floor((income - TAPER_THRESHOLD) / 2);
-  return Math.max(0, PERSONAL_ALLOWANCE - reduction);
+export interface QuarterInfo {
+  quarter: number;
+  startDate: string;
+  endDate: string;
+  deadline: string;
+  income: number;
+  expenses: number;
+  tax: number;
 }
 
-function calculateIncomeTax(taxableIncome: number): number {
-  if (taxableIncome <= 0) return 0;
+// ─── Calculation Functions ────────────────────────────────
 
-  let tax = 0;
+export function calculatePersonalAllowance(income: number, config: TaxYearConfig): number {
+  if (income <= config.taperThreshold) return config.personalAllowance;
+  const reduction = Math.floor((income - config.taperThreshold) / 2);
+  return Math.max(0, config.personalAllowance - reduction);
+}
+
+export function calculateIncomeTax(taxableIncome: number, config: TaxYearConfig): IncomeTaxBreakdown {
+  if (taxableIncome <= 0) return { basicRate: 0, higherRate: 0, additionalRate: 0, total: 0 };
+
   let remaining = taxableIncome;
 
-  // Basic rate band (up to £37,700 of taxable income)
-  const basicBand = BASIC_RATE_THRESHOLD - PERSONAL_ALLOWANCE;
+  // Basic rate band
+  const basicBand = config.basicRateThreshold - config.personalAllowance;
   const basicAmount = Math.min(remaining, basicBand);
-  tax += basicAmount * BASIC_RATE;
+  const basicTax = round(basicAmount * config.basicRate);
   remaining -= basicAmount;
 
-  if (remaining <= 0) return Math.round(tax * 100) / 100;
-
   // Higher rate band
-  const higherBand = HIGHER_RATE_THRESHOLD - BASIC_RATE_THRESHOLD;
-  const higherAmount = Math.min(remaining, higherBand);
-  tax += higherAmount * HIGHER_RATE;
+  const higherBand = config.higherRateThreshold - config.basicRateThreshold;
+  const higherAmount = Math.min(Math.max(remaining, 0), higherBand);
+  const higherTax = round(higherAmount * config.higherRate);
   remaining -= higherAmount;
 
-  if (remaining <= 0) return Math.round(tax * 100) / 100;
-
   // Additional rate
-  tax += remaining * ADDITIONAL_RATE;
+  const additionalTax = round(Math.max(remaining, 0) * config.additionalRate);
 
-  return Math.round(tax * 100) / 100;
+  return {
+    basicRate: basicTax,
+    higherRate: higherTax,
+    additionalRate: additionalTax,
+    total: round(basicTax + higherTax + additionalTax),
+  };
 }
 
-function calculateNIClass2(profit: number): number {
-  if (profit < NI_CLASS2_SMALL_PROFITS_THRESHOLD) return 0;
-  return Math.round(NI_CLASS2_WEEKLY * 52 * 100) / 100;
+export function calculateNIClass2(profit: number, config: TaxYearConfig): number {
+  if (profit < config.niClass2SmallProfitsThreshold) return 0;
+  return round(config.niClass2WeeklyRate * 52);
 }
 
-function calculateNIClass4(profit: number): number {
-  if (profit <= NI_CLASS4_LOWER_PROFITS) return 0;
+export function calculateNIClass4(profit: number, config: TaxYearConfig): number {
+  if (profit <= config.niClass4LowerLimit) return 0;
 
-  let ni = 0;
+  const mainBand = Math.min(profit, config.niClass4UpperLimit) - config.niClass4LowerLimit;
+  let ni = Math.max(0, mainBand) * config.niClass4MainRate;
 
-  const mainBand = Math.min(profit, NI_CLASS4_UPPER_PROFITS) - NI_CLASS4_LOWER_PROFITS;
-  ni += Math.max(0, mainBand) * NI_CLASS4_MAIN_RATE;
-
-  if (profit > NI_CLASS4_UPPER_PROFITS) {
-    ni += (profit - NI_CLASS4_UPPER_PROFITS) * NI_CLASS4_ADDITIONAL_RATE;
+  if (profit > config.niClass4UpperLimit) {
+    ni += (profit - config.niClass4UpperLimit) * config.niClass4AdditionalRate;
   }
 
-  return Math.round(ni * 100) / 100;
+  return round(ni);
 }
 
+export function calculateNI(profit: number, config: TaxYearConfig): NIBreakdown {
+  const class2 = calculateNIClass2(profit, config);
+  const class4 = calculateNIClass4(profit, config);
+  return { class2, class4, total: round(class2 + class4) };
+}
+
+// ─── Plain English Generator ──────────────────────────────
+
 function generatePlainEnglish(result: Omit<TaxResult, 'plainEnglish'>): string {
-  const { totalIncome, totalExpenses, totalTaxOwed, setAsideMonthly, effectiveRate } = result;
+  const { totalIncome, totalExpenses, totalTaxOwed, setAsideMonthly, effectiveRate, netProfit, personalAllowance } = result;
 
   if (totalIncome === 0) {
     return "You haven't recorded any income yet. Once you start adding income, we'll calculate your tax.";
   }
 
   if (totalTaxOwed === 0) {
-    return `Your profit of £${(totalIncome - totalExpenses).toLocaleString()} is within your personal allowance. No tax due yet!`;
+    return `Good news — your profit of ${formatCurrency(netProfit)} is within your £${personalAllowance.toLocaleString()} personal allowance. No tax owed yet!`;
   }
 
-  return `On £${totalIncome.toLocaleString()} income with £${totalExpenses.toLocaleString()} expenses, you'll owe approximately £${totalTaxOwed.toLocaleString()} in tax and National Insurance (${effectiveRate}% effective rate). Set aside £${setAsideMonthly.toLocaleString()} per month to stay on track.`;
+  if (netProfit > 100_000) {
+    return `Heads up — at ${formatCurrency(totalIncome)} income, your personal allowance is being tapered. You'll owe approximately ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate). Set aside ${formatCurrency(setAsideMonthly)} per month.`;
+  }
+
+  return `You've earned ${formatCurrency(totalIncome)} with ${formatCurrency(totalExpenses)} in expenses. Set aside ${formatCurrency(setAsideMonthly)} per month and you're covered. Total tax: ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate).`;
 }
 
+// ─── Main Entry Point ─────────────────────────────────────
+
 export function calculateTax(input: TaxInput): TaxResult {
+  const config = getConfig(input.taxYear);
   const { totalIncome, totalExpenses, quarter = 0 } = input;
 
-  const profit = Math.max(0, totalIncome - totalExpenses);
-  const personalAllowance = calculatePersonalAllowance(profit);
-  const taxableIncome = Math.max(0, profit - personalAllowance);
+  const netProfit = Math.max(0, totalIncome - totalExpenses);
+  const personalAllowance = calculatePersonalAllowance(netProfit, config);
+  const taxableIncome = Math.max(0, netProfit - personalAllowance);
 
-  const incomeTax = calculateIncomeTax(taxableIncome);
-  const niClass2 = calculateNIClass2(profit);
-  const niClass4 = calculateNIClass4(profit);
-  const totalTaxOwed = Math.round((incomeTax + niClass2 + niClass4) * 100) / 100;
+  const incomeTax = calculateIncomeTax(taxableIncome, config);
+  const nationalInsurance = calculateNI(netProfit, config);
+  const totalTaxOwed = round(incomeTax.total + nationalInsurance.total);
 
   const monthsRemaining = quarter > 0 ? Math.max(1, 12 - (quarter - 1) * 3) : 12;
-  const setAsideMonthly = totalTaxOwed > 0 ? Math.round((totalTaxOwed / monthsRemaining) * 100) / 100 : 0;
+  const setAsideMonthly = totalTaxOwed > 0 ? round(totalTaxOwed / monthsRemaining) : 0;
 
-  const effectiveRate = profit > 0 ? Math.round((totalTaxOwed / profit) * 10000) / 100 : 0;
+  const effectiveRate = netProfit > 0 ? round((totalTaxOwed / netProfit) * 100) / 1 : 0;
 
-  const partialResult = {
-    taxYear: TAX_YEAR,
+  const partialResult: Omit<TaxResult, 'plainEnglish'> = {
+    taxYear: config.year,
     quarter,
     totalIncome,
     totalExpenses,
-    taxableIncome,
+    netProfit,
     personalAllowance,
+    taxableIncome,
     incomeTax,
-    niClass2,
-    niClass4,
+    nationalInsurance,
     totalTaxOwed,
     setAsideMonthly,
     effectiveRate,
@@ -149,6 +230,55 @@ export function calculateTax(input: TaxInput): TaxResult {
     ...partialResult,
     plainEnglish: generatePlainEnglish(partialResult),
   };
+}
+
+// ─── Quarterly Breakdown ──────────────────────────────────
+
+/**
+ * Get UK tax quarter info for a given tax year.
+ * UK tax year: 6 Apr – 5 Apr
+ * Q1: Apr–Jun, Q2: Jul–Sep, Q3: Oct–Dec, Q4: Jan–Mar
+ */
+export function getQuarterDates(taxYear: string): QuarterInfo[] {
+  const startYear = parseInt(taxYear.split('/')[0], 10);
+
+  return [
+    { quarter: 1, startDate: `${startYear}-04-06`, endDate: `${startYear}-07-05`, deadline: `${startYear}-08-05`, income: 0, expenses: 0, tax: 0 },
+    { quarter: 2, startDate: `${startYear}-07-06`, endDate: `${startYear}-10-05`, deadline: `${startYear}-11-05`, income: 0, expenses: 0, tax: 0 },
+    { quarter: 3, startDate: `${startYear}-10-06`, endDate: `${startYear + 1}-01-05`, deadline: `${startYear + 1}-02-05`, income: 0, expenses: 0, tax: 0 },
+    { quarter: 4, startDate: `${startYear + 1}-01-06`, endDate: `${startYear + 1}-04-05`, deadline: `${startYear + 1}-05-05`, income: 0, expenses: 0, tax: 0 },
+  ];
+}
+
+/**
+ * Determine the current UK tax quarter based on a date.
+ */
+export function getCurrentQuarter(date: Date = new Date()): { taxYear: string; quarter: number } {
+  const month = date.getMonth() + 1; // 1-12
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  // Tax year starts 6 April
+  if (month < 4 || (month === 4 && day < 6)) {
+    // Jan 6 – Apr 5 = Q4 of previous tax year
+    if (month > 1 || (month === 1 && day >= 6)) {
+      return { taxYear: `${year - 1}/${(year % 100).toString().padStart(2, '0')}`, quarter: 4 };
+    }
+    // Jan 1-5 = Q3 of previous tax year
+    return { taxYear: `${year - 1}/${(year % 100).toString().padStart(2, '0')}`, quarter: 3 };
+  }
+
+  const taxYear = `${year}/${((year + 1) % 100).toString().padStart(2, '0')}`;
+
+  if (month < 7 || (month === 7 && day < 6)) return { taxYear, quarter: 1 };
+  if (month < 10 || (month === 10 && day < 6)) return { taxYear, quarter: 2 };
+  return { taxYear, quarter: 3 };
+}
+
+// ─── Utilities ────────────────────────────────────────────
+
+function round(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 export function formatCurrency(amount: number): string {

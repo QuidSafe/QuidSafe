@@ -1,8 +1,12 @@
 // QuidSafe — Shared TypeScript Types
 
 export type SubscriptionTier = 'free' | 'pro';
+export type SubscriptionPlan = 'free' | 'pro_monthly' | 'pro_annual';
+export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trialing';
 
 export type TransactionCategory = 'income' | 'personal' | 'business_expense';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
+export type MTDStatus = 'draft' | 'submitted' | 'accepted' | 'rejected';
 
 export interface User {
   id: string;
@@ -10,35 +14,49 @@ export interface User {
   name: string;
   subscriptionTier: SubscriptionTier;
   onboardingCompleted: boolean;
-  createdAt: Date;
+  stripeCustomerId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BankConnection {
   id: string;
+  userId: string;
+  provider: string;
   bankName: string;
-  lastSyncedAt: Date;
+  lastSyncedAt?: string;
   active: boolean;
-  transactionCount: number;
+  createdAt: string;
 }
 
 export interface Transaction {
   id: string;
+  userId: string;
   amount: number;
+  currency: string;
   description: string;
   merchantName?: string;
-  aiCategory: TransactionCategory;
-  aiConfidence: number;
+  rawCategory?: string;
+  aiCategory?: TransactionCategory;
+  aiConfidence?: number;
+  aiReasoning?: string;
+  userOverride: boolean;
   isIncome: boolean;
+  isExpenseClaimable: boolean;
   incomeSource?: string;
+  bankConnectionId?: string;
+  bankTransactionId?: string;
   transactionDate: string;
+  createdAt: string;
 }
 
 export interface Expense {
   id: string;
+  userId: string;
   amount: number;
   description: string;
-  category: string;
-  hmrcCategory: string;
+  categoryId?: number;
+  hmrcCategory?: string;
   receiptUrl?: string;
   date: string;
   createdAt: string;
@@ -46,12 +64,50 @@ export interface Expense {
 
 export interface Invoice {
   id: string;
+  userId: string;
   clientName: string;
-  clientEmail: string;
+  clientEmail?: string;
   amount: number;
   description: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  status: InvoiceStatus;
   dueDate: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId?: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  trialEndsAt?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  createdAt: string;
+}
+
+export interface MTDSubmission {
+  id: string;
+  userId: string;
+  taxYear: string;
+  quarter: number;
+  hmrcReceiptId?: string;
+  status: MTDStatus;
+  payloadJson: string;
+  responseJson?: string;
+  submittedAt?: string;
+  createdAt: string;
+}
+
+export interface CategoryCorrection {
+  id: number;
+  userId: string;
+  transactionId: string;
+  originalCategory: TransactionCategory;
+  correctedCategory: TransactionCategory;
+  merchantName?: string;
   createdAt: string;
 }
 
@@ -60,12 +116,14 @@ export interface TaxCalculation {
   quarter: number;
   totalIncome: number;
   totalExpenses: number;
+  netProfit: number;
+  personalAllowance: number;
   taxableIncome: number;
-  incomeTax: number;
-  niClass2: number;
-  niClass4: number;
+  incomeTax: { basicRate: number; higherRate: number; additionalRate: number; total: number };
+  nationalInsurance: { class2: number; class4: number; total: number };
   totalTaxOwed: number;
   setAsideMonthly: number;
+  effectiveRate: number;
   plainEnglish: string;
 }
 
