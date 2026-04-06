@@ -41,6 +41,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home tab - Dashboard overview',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
@@ -48,6 +49,7 @@ export default function TabLayout() {
         name="income"
         options={{
           title: 'Income',
+          tabBarAccessibilityLabel: 'Income tab - Track your earnings',
           tabBarIcon: ({ color }) => <TabBarIcon name="gbp" color={color} />,
         }}
       />
@@ -55,6 +57,7 @@ export default function TabLayout() {
         name="expenses"
         options={{
           title: 'Expenses',
+          tabBarAccessibilityLabel: 'Expenses tab - Track your business expenses',
           tabBarIcon: ({ color }) => <TabBarIcon name="credit-card" color={color} />,
         }}
       />
@@ -62,6 +65,7 @@ export default function TabLayout() {
         name="learn"
         options={{
           title: 'Learn',
+          tabBarAccessibilityLabel: 'Learn tab - Tax guides and tips',
           tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
         }}
       />
@@ -69,6 +73,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          tabBarAccessibilityLabel: 'Settings tab - App preferences and account',
           tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
         }}
       />

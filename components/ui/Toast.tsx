@@ -69,6 +69,10 @@ function ToastItem({
 }) {
   return (
     <Animated.View
+      accessible
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={item.message}
       style={[
         styles.toast,
         {
@@ -84,6 +88,9 @@ function ToastItem({
         style={styles.toastContent}
         activeOpacity={0.8}
         onPress={() => onDismiss(item.id)}
+        accessibilityRole="button"
+        accessibilityLabel={`Dismiss: ${item.message}`}
+        accessibilityHint="Tap to dismiss this notification"
       >
         <ToastIcon type={item.type} />
         <Text style={styles.toastText} numberOfLines={2}>

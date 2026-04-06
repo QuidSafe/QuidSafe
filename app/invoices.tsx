@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DateInput } from '@/components/ui/DateInput';
+import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Skeleton, TransactionListSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
@@ -30,6 +31,7 @@ import {
 } from '@/lib/hooks/useApiWithToast';
 import { formatCurrency } from '@/lib/tax-engine';
 import { hapticSuccess, hapticMedium } from '@/lib/haptics';
+import { downloadInvoicePDF } from '@/lib/invoiceActions';
 import type { Invoice, InvoiceStatus } from '@/lib/types';
 
 type FilterKey = 'all' | 'draft' | 'sent' | 'paid' | 'overdue';
@@ -110,6 +112,18 @@ export default function InvoicesScreen() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
+  // Search & date range filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' });
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleDateRangeChange = useCallback((from: string, to: string) => {
+    setDateRange({ from, to });
+  }, []);
+
   // API
   const queryStatus = activeFilter === 'all' ? undefined : activeFilter;
   const { data, isLoading, refetch, isRefetching } = useInvoices(queryStatus);
@@ -122,6 +136,24 @@ export default function InvoicesScreen() {
   const allInvoices = allData?.invoices ?? [];
 
   const invoices = data?.invoices ?? [];
+
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((inv) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchesClient = inv.clientName.toLowerCase().includes(q);
+        const matchesDesc = inv.description.toLowerCase().includes(q);
+        if (!matchesClient && !matchesDesc) return false;
+      }
+      if (dateRange.from) {
+        if (inv.dueDate < dateRange.from) return false;
+      }
+      if (dateRange.to) {
+        if (inv.dueDate > dateRange.to) return false;
+      }
+      return true;
+    });
+  }, [invoices, searchQuery, dateRange]);
 
   // Summary stats
   const totalOutstanding = useMemo(
@@ -318,6 +350,16 @@ export default function InvoicesScreen() {
           })}
         </ScrollView>
 
+        {/* Search & Date Filter */}
+        {!isLoading && invoices.length > 0 && (
+          <SearchFilter
+            searchPlaceholder="Search by client or description..."
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            showDateFilter
+          />
+        )}
+
         {isLoading ? (
           <InvoicesSkeleton />
         ) : invoices.length === 0 && activeFilter === 'all' ? (
@@ -349,14 +391,16 @@ export default function InvoicesScreen() {
             </View>
 
             {/* Invoice list */}
-            {invoices.length === 0 ? (
+            {filteredInvoices.length === 0 ? (
               <Card style={styles.emptyFilterCard}>
                 <Text style={[styles.emptyFilterText, { color: colors.textSecondary }]}>
-                  No {activeFilter} invoices found.
+                  {searchQuery || dateRange.from || dateRange.to
+                    ? 'No invoices match your filters.'
+                    : `No ${activeFilter} invoices found.`}
                 </Text>
               </Card>
             ) : (
-              invoices.map((invoice) => {
+              filteredInvoices.map((invoice) => {
                 const statusColor = STATUS_COLORS[invoice.status];
                 const isOverdue = invoice.status === 'overdue';
                 return (
@@ -391,9 +435,22 @@ export default function InvoicesScreen() {
                           </View>
                         </View>
                       </View>
-                      <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
-                        {formatDueDate(invoice.dueDate)}
-                      </Text>
+                      <View style={styles.invoiceBottomRow}>
+                        <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
+                          {formatDueDate(invoice.dueDate)}
+                        </Text>
+                        <TouchableOpacity
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            downloadInvoicePDF(invoice);
+                          }}
+                          activeOpacity={0.6}
+                          style={styles.pdfButton}
+                        >
+                          <FontAwesome name="file-pdf-o" size={16} color={Colors.error} />
+                        </TouchableOpacity>
+                      </View>
                     </Card>
                   </TouchableOpacity>
                 );
@@ -722,9 +779,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 11,
   },
+  invoiceBottomRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
   dueDate: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
+  },
+  pdfButton: {
+    padding: 4,
   },
 
   // Empty filter state

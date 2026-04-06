@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,7 +8,6 @@ import {
   Dimensions,
   ScrollView,
   TextInput,
-  Easing,
   Alert,
   Platform,
 } from 'react-native';
@@ -17,309 +16,219 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-import { Card } from '@/components/ui/Card';
-// useApiToken is now called in the root layout
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
+import {
+  WelcomeIllustration,
+  BusinessIllustration,
+  BankIllustration,
+} from '@/components/ui/OnboardingIllustrations';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const BANKS = [
-  { name: 'Monzo', initials: 'M', color: '#FF4B4B' },
-  { name: 'Starling', initials: 'S', color: '#7433FF' },
-  { name: 'Halifax', initials: 'H', color: '#006BBF' },
-  { name: 'HSBC', initials: 'H', color: '#DB0011' },
-  { name: 'NatWest', initials: 'N', color: '#42145F' },
-  { name: 'Barclays', initials: 'B', color: '#00AEEF' },
-];
-
-const TRUST_PILLS = [
-  'AES-256 encryption',
-  'UK servers',
-  'AI anonymised',
-  'GDPR',
-];
+const TOTAL_STEPS = 3;
 
 /* ------------------------------------------------------------------ */
-/*  Animated Step Dots                                                 */
+/*  Progress Dots                                                      */
 /* ------------------------------------------------------------------ */
-function StepDots({ current, total }: { current: number; total: number }) {
-  const widths = useRef(
-    Array.from({ length: total }).map(
-      (_, i) => new Animated.Value(i === 0 ? 24 : 8)
-    )
-  ).current;
-
-  useEffect(() => {
-    const anims = widths.map((w, i) =>
-      Animated.spring(w, {
-        toValue: i === current ? 24 : 8,
-        useNativeDriver: false,
-        tension: 120,
-        friction: 14,
-      })
-    );
-    Animated.parallel(anims).start();
-  }, [current, widths]);
-
+function ProgressDots({ current }: { current: number }) {
   return (
     <View style={styles.dotsRow}>
-      {widths.map((w, i) => {
-        const isDone = i < current;
-        const isActive = i === current;
-        return (
-          <Animated.View
-            key={i}
-            style={[
-              styles.dot,
-              {
-                width: w,
-                backgroundColor: isActive
-                  ? Colors.secondary
-                  : isDone
-                  ? Colors.success
+      {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+        <View
+          key={i}
+          style={[
+            styles.dot,
+            {
+              width: i === current ? 24 : 8,
+              backgroundColor:
+                i === current
+                  ? Colors.accent
+                  : i < current
+                  ? Colors.accent + '60'
                   : Colors.grey[300],
-              },
-            ]}
-          />
-        );
-      })}
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Counting number animation                                          */
-/* ------------------------------------------------------------------ */
-function CountingNumber({ target }: { target: number }) {
-  const { colors } = useTheme();
-  const animValue = useRef(new Animated.Value(0)).current;
-  const [display, setDisplay] = useState('£0');
-
-  useEffect(() => {
-    animValue.setValue(0);
-    const listener = animValue.addListener(({ value }) => {
-      const num = Math.round(value);
-      setDisplay(`£${num.toLocaleString('en-GB')}`);
-    });
-
-    Animated.timing(animValue, {
-      toValue: target,
-      duration: 2000,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-
-    return () => animValue.removeListener(listener);
-  }, [target, animValue]);
-
-  return (
-    <View style={styles.countingContainer}>
-      <Text style={[styles.countingNumber, { color: Colors.accent }]}>
-        {display}
-      </Text>
-      <Text style={[styles.countingSub, { color: colors.textSecondary }]}>
-        That&apos;s how much the average sole trader saves
-      </Text>
-    </View>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Staggered Feature Card                                             */
-/* ------------------------------------------------------------------ */
-function AnimatedFeatureCard({
-  badgeColor,
-  iconName,
-  title,
-  description,
-  delay,
-}: {
-  badgeColor: string;
-  iconName: React.ComponentProps<typeof FontAwesome>['name'];
-  title: string;
-  description: string;
-  delay: number;
-}) {
-  const { colors } = useTheme();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        }),
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 80,
-          friction: 12,
-        }),
-      ]).start();
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [fadeAnim, translateY, delay]);
-
-  return (
-    <Animated.View
-      style={{ opacity: fadeAnim, transform: [{ translateY }] }}
-    >
-      <Card style={styles.featureCard}>
-        <View style={[styles.featureBadge, { backgroundColor: badgeColor + '18' }]}>
-          <FontAwesome name={iconName} size={18} color={badgeColor} />
-        </View>
-        <View style={styles.featureCardText}>
-          <Text style={[styles.featureCardTitle, { color: colors.text }]}>{title}</Text>
-          <Text style={[styles.featureCardDesc, { color: colors.textSecondary }]}>{description}</Text>
-        </View>
-      </Card>
-    </Animated.View>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Step 1 — Welcome                                                  */
+/*  Step 1 — Welcome                                                   */
 /* ------------------------------------------------------------------ */
 function StepWelcome() {
   const { colors } = useTheme();
+
   return (
     <ScrollView
       style={styles.slideScroll}
       contentContainerStyle={styles.slideContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Hero icon */}
-      <View style={styles.heroIconNavy}>
-        <FontAwesome name="shield" size={28} color={Colors.white} />
+      {/* Animated illustration — shield with pound sign */}
+      <View style={styles.illustrationArea}>
+        <WelcomeIllustration />
       </View>
 
-      <Text style={styles.appTitle}>QuidSafe</Text>
+      <Text style={[styles.heading, { color: colors.text }]}>
+        Welcome to QuidSafe
+      </Text>
 
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        Everything a sole trader needs to run their business. Tax, invoices,
-        expenses — sorted.
+        Your personal tax assistant for UK sole traders
       </Text>
 
-      {/* Animated counting number */}
-      <CountingNumber target={2847} />
-
-      <Text style={styles.subSubtitle}>
-        Whether you earn £15k or £150k — know exactly what you owe.
-      </Text>
-
-      {/* Testimonial card */}
-      <Card style={styles.testimonialCard}>
-        <View style={styles.testimonialBorder} />
-        <View style={styles.testimonialInner}>
-          <View style={styles.starsRow}>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <FontAwesome key={i} name="star" size={14} color={Colors.accent} />
-            ))}
+      {/* Feature highlights */}
+      <View style={styles.featureList}>
+        <View style={styles.featureRow}>
+          <View style={[styles.featureIcon, { backgroundColor: Colors.secondary + '18' }]}>
+            <FontAwesome name="magic" size={16} color={Colors.secondary} />
           </View>
-          <Text style={[styles.testimonialQuote, { color: colors.text }]}>
-            {'"'}Finally an app that tells me what to set aside each month. I slept
-            better the first night I used it.{'"'}
-          </Text>
-          <Text style={styles.testimonialAttribution}>
-            — Sarah T., freelance designer
-          </Text>
+          <View style={styles.featureTextWrap}>
+            <Text style={[styles.featureTitle, { color: colors.text }]}>AI-powered categorisation</Text>
+            <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+              Transactions sorted automatically
+            </Text>
+          </View>
         </View>
-      </Card>
-
-      {/* Feature cards — stagger in */}
-      <View style={styles.featureCards}>
-        <AnimatedFeatureCard
-          badgeColor={Colors.secondary}
-          iconName="magic"
-          title="AI-powered categorisation"
-          description="Anonymised AI sorts your income vs spending automatically — no manual tagging."
-          delay={200}
-        />
-        <AnimatedFeatureCard
-          badgeColor={Colors.accent}
-          iconName="commenting"
-          title="Plain English tax"
-          description={'"Set aside £648 this month." No jargon, no spreadsheets.'}
-          delay={300}
-        />
-        <AnimatedFeatureCard
-          badgeColor={Colors.success}
-          iconName="file-text-o"
-          title="MTD + Invoices + Expenses"
-          description="Submit to HMRC, send invoices, and track expenses — all in one place."
-          delay={400}
-        />
+        <View style={styles.featureRow}>
+          <View style={[styles.featureIcon, { backgroundColor: Colors.accent + '18' }]}>
+            <FontAwesome name="gbp" size={16} color={Colors.accent} />
+          </View>
+          <View style={styles.featureTextWrap}>
+            <Text style={[styles.featureTitle, { color: colors.text }]}>Know what to set aside</Text>
+            <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+              Plain English tax estimates each month
+            </Text>
+          </View>
+        </View>
+        <View style={styles.featureRow}>
+          <View style={[styles.featureIcon, { backgroundColor: Colors.success + '18' }]}>
+            <FontAwesome name="lock" size={16} color={Colors.success} />
+          </View>
+          <View style={styles.featureTextWrap}>
+            <Text style={[styles.featureTitle, { color: colors.text }]}>Bank-grade security</Text>
+            <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>
+              AES-256 encryption, GDPR compliant
+            </Text>
+          </View>
+        </View>
       </View>
-
-      {/* Price box */}
-      <Card style={styles.priceBox}>
-        <Text style={styles.priceMain}>£9.99/mo</Text>
-        <Text style={styles.priceSub}>or £89.99/yr — save 25%</Text>
-      </Card>
     </ScrollView>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Pulsing Connect Button                                             */
+/*  Step 2 — Business Info                                             */
 /* ------------------------------------------------------------------ */
-function PulsingButton({
-  onPress,
-  disabled,
+function StepBusinessInfo({
+  businessName,
+  onBusinessNameChange,
+  disclaimerChecked,
+  onDisclaimerChange,
 }: {
-  onPress: () => void;
-  disabled: boolean;
+  businessName: string;
+  onBusinessNameChange: (val: string) => void;
+  disclaimerChecked: boolean;
+  onDisclaimerChange: (val: boolean) => void;
 }) {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.04,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulseAnim]);
+  const { colors } = useTheme();
 
   return (
-    <Animated.View style={{ transform: [{ scale: pulseAnim }], alignSelf: 'stretch' }}>
+    <ScrollView
+      style={styles.slideScroll}
+      contentContainerStyle={styles.slideContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.illustrationArea}>
+        <BusinessIllustration />
+      </View>
+
+      <Text style={[styles.heading, { color: colors.text }]}>
+        About your business
+      </Text>
+
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        Tell us a bit about your sole trader business so we can personalise your experience.
+      </Text>
+
+      {/* Business name input */}
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text }]}>Business name</Text>
+        <View
+          style={[
+            styles.textInputContainer,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <TextInput
+            style={[styles.textInput, { color: colors.text }]}
+            placeholder="e.g. Smith Consulting"
+            placeholderTextColor={colors.textSecondary}
+            value={businessName}
+            onChangeText={onBusinessNameChange}
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </View>
+      </View>
+
+      {/* Tax year info */}
+      <View style={styles.formGroup}>
+        <Text style={[styles.label, { color: colors.text }]}>Tax year</Text>
+        <View
+          style={[
+            styles.infoBox,
+            { backgroundColor: Colors.secondary + '0A', borderColor: Colors.secondary + '20' },
+          ]}
+        >
+          <FontAwesome
+            name="calendar"
+            size={16}
+            color={Colors.secondary}
+            style={{ marginRight: Spacing.sm }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.infoBoxTitle, { color: colors.text }]}>
+              6 April 2025 {'\u2013'} 5 April 2026
+            </Text>
+            <Text style={[styles.infoBoxSub, { color: colors.textSecondary }]}>
+              Automatically set to the current UK tax year
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Disclaimer checkbox */}
       <Pressable
-        style={({ pressed }) => [styles.connectButton, pressed && styles.pressed]}
-        onPress={onPress}
-        disabled={disabled}
+        style={styles.checkboxRow}
+        onPress={() => onDisclaimerChange(!disclaimerChecked)}
       >
-        <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
-        <Text style={styles.connectButtonText}>
-          {disabled ? 'Connecting...' : 'Connect your bank'}
+        <View
+          style={[
+            styles.checkbox,
+            disclaimerChecked && styles.checkboxChecked,
+            { borderColor: disclaimerChecked ? Colors.accent : colors.border },
+          ]}
+        >
+          {disclaimerChecked && (
+            <FontAwesome name="check" size={12} color={Colors.white} />
+          )}
+        </View>
+        <Text style={[styles.checkboxLabel, { color: colors.textSecondary }]}>
+          I understand QuidSafe provides estimates, not financial advice
         </Text>
       </Pressable>
-    </Animated.View>
+    </ScrollView>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Step 2 — Bank Connect                                             */
+/*  Step 3 — Connect Bank                                              */
 /* ------------------------------------------------------------------ */
-function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) {
+function StepConnectBank() {
   const { colors } = useTheme();
-  const [search, setSearch] = useState('');
   const [connecting, setConnecting] = useState(false);
 
   const handleConnectBank = async () => {
@@ -331,317 +240,65 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
       } else {
         await Linking.openURL(url);
       }
-      // After returning from TrueLayer, advance to step 3
-      onBankConnected?.();
-    } catch (err) {
+    } catch (_err) {
       Alert.alert('Connection failed', 'Could not connect to your bank. Please try again.');
     } finally {
       setConnecting(false);
     }
   };
 
-  const filtered = BANKS.filter((b) =>
-    b.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <ScrollView
       style={styles.slideScroll}
       contentContainerStyle={styles.slideContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Hero icon */}
-      <View style={styles.heroIconBlue}>
-        <FontAwesome name="bank" size={26} color={Colors.secondary} />
+      {/* Animated bank illustration */}
+      <View style={styles.illustrationArea}>
+        <BankIllustration />
       </View>
 
-      <Text style={styles.stepTitle}>Connect your bank</Text>
-
-      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-        We use Open Banking to securely sync your transactions. It&apos;s read-only —
-        we can never move money or see your PIN.
+      <Text style={[styles.heading, { color: colors.text }]}>
+        Connect your bank
       </Text>
 
-      {/* Info card */}
-      <Card style={styles.infoCardBlue}>
-        <View style={styles.infoCardBlueBorder} />
-        <View style={styles.infoCardInner}>
-          <FontAwesome
-            name="info-circle"
-            size={16}
-            color={Colors.secondary}
-            style={styles.infoIcon}
-          />
-          <Text style={[styles.infoCardText, { color: colors.textSecondary }]}>
-            Open Banking is read-only. We can see transactions but never move
-            money, see your PIN, or access your login details.
-          </Text>
-        </View>
-      </Card>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        Securely link via Open Banking to auto-import transactions
+      </Text>
 
-      {/* Search */}
-      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <FontAwesome
-          name="search"
-          size={14}
-          color={colors.textSecondary}
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
-          placeholder="Search your bank..."
-          placeholderTextColor={colors.textSecondary}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
-
-      {/* Bank list */}
-      <View style={styles.bankList}>
-        {filtered.map((bank) => (
-          <Pressable key={bank.name} style={[styles.bankRow, { backgroundColor: colors.surface }]} onPress={handleConnectBank} disabled={connecting}>
-            <View style={[styles.bankLogo, { backgroundColor: bank.color }]}>
-              <Text style={styles.bankInitials}>{bank.initials}</Text>
-            </View>
-            <Text style={[styles.bankName, { color: colors.text }]}>{bank.name}</Text>
-            <FontAwesome
-              name="chevron-right"
-              size={12}
-              color={colors.textSecondary}
-            />
-          </Pressable>
+      {/* Trust badges */}
+      <View style={styles.trustBadges}>
+        {[
+          { icon: 'eye-slash' as const, text: 'Read-only access' },
+          { icon: 'shield' as const, text: 'AES-256 encrypted' },
+          { icon: 'server' as const, text: 'UK servers' },
+        ].map((badge) => (
+          <View key={badge.text} style={[styles.trustBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <FontAwesome name={badge.icon} size={14} color={Colors.success} style={{ marginRight: Spacing.xs }} />
+            <Text style={[styles.trustBadgeText, { color: colors.textSecondary }]}>{badge.text}</Text>
+          </View>
         ))}
       </View>
 
-      {/* Pulsing connect button */}
-      <View style={{ height: Spacing.lg }} />
-      <PulsingButton onPress={handleConnectBank} disabled={connecting} />
-    </ScrollView>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Confetti particle                                                  */
-/* ------------------------------------------------------------------ */
-function ConfettiParticle({ delay, startX }: { delay: number; startX: number }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.5)).current;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.timing(translateY, {
-          toValue: -80,
-          duration: 1100,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: startX,
-          duration: 1100,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(scale, {
-          toValue: 1.2,
-          duration: 1100,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [delay, startX, opacity, translateY, translateX, scale]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.confettiDot,
-        {
-          opacity,
-          transform: [{ translateY }, { translateX }, { scale }],
-        },
-      ]}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Animated Checkmark                                                 */
-/* ------------------------------------------------------------------ */
-function AnimatedCheckmark() {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.delay(200),
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 60,
-          friction: 8,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, [scaleAnim, opacityAnim]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.checkmarkCircle,
-        {
-          opacity: opacityAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
-    >
-      <FontAwesome name="check" size={40} color={Colors.white} />
-    </Animated.View>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Step 3 — All Set                                                  */
-/* ------------------------------------------------------------------ */
-function StepAllSet() {
-  const { colors } = useTheme();
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const titleScale = useRef(new Animated.Value(0.8)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Title scale-up animation
-    Animated.sequence([
-      Animated.delay(500),
-      Animated.parallel([
-        Animated.spring(titleScale, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 80,
-          friction: 10,
-        }),
-        Animated.timing(titleOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
-    // Progress bar loop
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(progressAnim, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
-        }),
-        Animated.timing(progressAnim, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: false,
-        }),
-      ])
-    ).start();
-  }, [progressAnim, titleScale, titleOpacity]);
-
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
-  // Confetti particles — scattered positions
-  const confettiData = [
-    { delay: 400, startX: -30 },
-    { delay: 500, startX: 20 },
-    { delay: 600, startX: -50 },
-    { delay: 700, startX: 40 },
-    { delay: 550, startX: -10 },
-    { delay: 650, startX: 55 },
-    { delay: 450, startX: -40 },
-    { delay: 750, startX: 15 },
-  ];
-
-  return (
-    <ScrollView
-      style={styles.slideScroll}
-      contentContainerStyle={styles.slideContent}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Confetti particles */}
-      <View style={styles.confettiContainer}>
-        {confettiData.map((c, i) => (
-          <ConfettiParticle key={i} delay={c.delay} startX={c.startX} />
-        ))}
-      </View>
-
-      {/* Animated checkmark */}
-      <AnimatedCheckmark />
-
-      <Animated.Text
-        style={[
-          styles.stepTitle,
-          {
-            color: Colors.success,
-            opacity: titleOpacity,
-            transform: [{ scale: titleScale }],
-          },
-        ]}
+      {/* Connect button */}
+      <Pressable
+        style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
+        onPress={handleConnectBank}
+        disabled={connecting}
       >
-        You&apos;re all set!
-      </Animated.Text>
-
-      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
-        We&apos;re syncing your transactions now. This usually takes about 30 seconds.
-      </Text>
-
-      {/* Syncing card */}
-      <Card style={styles.syncCard}>
-        <View style={styles.syncHeader}>
-          <FontAwesome name="refresh" size={16} color={Colors.secondary} />
-          <Text style={[styles.syncTitle, { color: colors.text }]}>Syncing transactions...</Text>
-        </View>
-        <View style={styles.progressTrack}>
-          <Animated.View
-            style={[styles.progressBar, { width: progressWidth }]}
-          />
-        </View>
-        <Text style={styles.syncSubtext}>
-          This usually takes about 30 seconds
+        <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
+        <Text style={styles.ctaButtonText}>
+          {connecting ? 'Connecting...' : 'Connect Bank'}
         </Text>
-      </Card>
+      </Pressable>
 
-      {/* Security banner */}
-      <Card style={styles.securityBanner}>
-        <FontAwesome name="shield" size={18} color={Colors.success} />
-        <View style={styles.securityTextWrap}>
-          <Text style={[styles.securityTitle, { color: colors.text }]}>Your data is safe</Text>
-          <Text style={styles.securityDesc}>
-            AES-256 encryption · UK servers · GDPR compliant
-          </Text>
-        </View>
-      </Card>
+      {/* Info note */}
+      <View style={[styles.infoNote, { borderColor: Colors.secondary + '20', backgroundColor: Colors.secondary + '08' }]}>
+        <FontAwesome name="info-circle" size={14} color={Colors.secondary} style={{ marginRight: Spacing.sm, marginTop: 2 }} />
+        <Text style={[styles.infoNoteText, { color: colors.textSecondary }]}>
+          We use Open Banking — we can see transactions but never move money, see your PIN, or access your login details.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -653,6 +310,10 @@ export default function OnboardingScreen() {
   const { colors } = useTheme();
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  // Step 2 form state
+  const [businessName, setBusinessName] = useState('');
+  const [disclaimerChecked, setDisclaimerChecked] = useState(false);
 
   const animateTo = useCallback(
     (nextStep: number) => {
@@ -667,115 +328,92 @@ export default function OnboardingScreen() {
     [slideAnim]
   );
 
-  const handleNext = async () => {
-    if (step < 2) {
+  const handleNext = () => {
+    if (step < TOTAL_STEPS - 1) {
       animateTo(step + 1);
-    } else {
-      await api.completeOnboarding().catch(() => {});
-      router.replace('/(tabs)');
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0) {
+      animateTo(step - 1);
     }
   };
 
   const handleSkip = async () => {
-    if (step === 1) {
-      // Skip bank connect, go to step 3
-      animateTo(2);
-    } else {
-      await api.completeOnboarding().catch(() => {});
-      router.replace('/(tabs)');
-    }
-  };
-
-  const handleFinish = async () => {
     await api.completeOnboarding().catch(() => {});
     router.replace('/(tabs)');
   };
 
+  const canContinueStep2 = disclaimerChecked;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Subtle gradient overlay */}
-      <View style={[styles.gradientOverlay, { backgroundColor: colors.background }]}>
-        <View style={styles.gradientTop} />
+      {/* Top bar: back button + dots */}
+      <View style={styles.topBar}>
+        {step > 0 ? (
+          <Pressable onPress={handleBack} style={styles.backButton}>
+            <FontAwesome name="arrow-left" size={18} color={colors.text} />
+          </Pressable>
+        ) : (
+          <View style={styles.backButtonPlaceholder} />
+        )}
+        <ProgressDots current={step} />
+        <View style={styles.backButtonPlaceholder} />
       </View>
 
       {/* Slides */}
       <Animated.View
         style={[styles.slides, { transform: [{ translateX: slideAnim }] }]}
       >
-        {/* Step 1 */}
         <View style={{ width: SCREEN_WIDTH }}>
           <StepWelcome />
         </View>
-        {/* Step 2 */}
         <View style={{ width: SCREEN_WIDTH }}>
-          <StepBankConnect onBankConnected={() => animateTo(2)} />
+          <StepBusinessInfo
+            businessName={businessName}
+            onBusinessNameChange={setBusinessName}
+            disclaimerChecked={disclaimerChecked}
+            onDisclaimerChange={setDisclaimerChecked}
+          />
         </View>
-        {/* Step 3 */}
         <View style={{ width: SCREEN_WIDTH }}>
-          <StepAllSet />
+          <StepConnectBank />
         </View>
       </Animated.View>
 
       {/* Footer */}
       <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
-        <StepDots current={step} total={3} />
-
         {step === 0 && (
-          <>
-            <Pressable
-              style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
-              onPress={handleNext}
-            >
-              <FontAwesome
-                name="shield"
-                size={16}
-                color={Colors.white}
-                style={styles.ctaIcon}
-              />
-              <Text style={styles.ctaButtonText}>Start 14-day free trial</Text>
-            </Pressable>
-            <Text style={styles.smallText}>
-              No card required · Cancel anytime
-            </Text>
-            <View style={styles.trustPills}>
-              {TRUST_PILLS.map((pill) => (
-                <View key={pill} style={styles.trustPill}>
-                  <FontAwesome
-                    name="check-circle"
-                    size={10}
-                    color={Colors.success}
-                    style={styles.trustPillIcon}
-                  />
-                  <Text style={styles.trustPillText}>{pill}</Text>
-                </View>
-              ))}
-            </View>
-          </>
+          <Pressable
+            style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
+            onPress={handleNext}
+          >
+            <Text style={styles.ctaButtonText}>Get Started</Text>
+            <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+          </Pressable>
         )}
 
         {step === 1 && (
-          <>
-            <Pressable
-              style={({ pressed }) => [
-                styles.ghostButton,
-                pressed && styles.pressed,
-              ]}
-              onPress={handleSkip}
-            >
-              <Text style={styles.ghostButtonText}>Skip for now</Text>
-            </Pressable>
-          </>
+          <Pressable
+            style={({ pressed }) => [
+              styles.ctaButton,
+              !canContinueStep2 && styles.ctaButtonDisabled,
+              pressed && canContinueStep2 && styles.pressed,
+            ]}
+            onPress={handleNext}
+            disabled={!canContinueStep2}
+          >
+            <Text style={styles.ctaButtonText}>Continue</Text>
+            <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+          </Pressable>
         )}
 
         {step === 2 && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.primaryButton,
-              pressed && styles.pressed,
-            ]}
-            onPress={handleFinish}
-          >
-            <Text style={styles.primaryButtonText}>Go to Dashboard</Text>
+          <Pressable onPress={handleSkip}>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>
+              Skip for now
+            </Text>
           </Pressable>
         )}
       </View>
@@ -787,413 +425,327 @@ export default function OnboardingScreen() {
 /*  Styles                                                            */
 /* ================================================================== */
 const styles = StyleSheet.create({
-  /* Layout */
   container: {
     flex: 1,
   },
-  gradientOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-  },
-  gradientTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    backgroundColor: Colors.secondary,
-    opacity: 0.03,
-  },
-  slides: {
-    flex: 1,
+
+  /* Top bar */
+  topBar: {
     flexDirection: 'row',
-    zIndex: 1,
-  },
-  slideScroll: {
-    flex: 1,
-  },
-  slideContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  backButtonPlaceholder: {
+    width: 40,
+    height: 40,
   },
 
-  /* Step Dots */
+  /* Dots */
   dotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    marginBottom: Spacing.md,
   },
   dot: {
     height: 8,
     borderRadius: 4,
   },
 
-  /* Hero icons */
-  heroIconNavy: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
+  /* Slides */
+  slides: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  slideScroll: {
+    flex: 1,
+  },
+  slideContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    alignItems: 'center',
+  },
+
+  /* Illustration */
+  illustrationArea: {
+    width: 180,
+    height: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
+  },
+  illustrationRingOuter: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 1.5,
+  },
+  illustrationRingMiddle: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 1.5,
+  },
+  illustrationCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    ...Shadows.large,
   },
-  heroIconBlue: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
-    backgroundColor: Colors.secondary + '18',
+  illustrationCircleBlue: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.secondary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    ...Shadows.large,
   },
-  heroIconGreen: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
-    backgroundColor: Colors.success + '18',
+  poundOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    ...Shadows.soft,
+  },
+  poundText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16,
+    color: Colors.white,
+  },
+  decoDot: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors.accent,
+  },
+  decoDotTopRight: {
+    top: 18,
+    right: 12,
+  },
+  decoDotBottomLeft: {
+    bottom: 22,
+    left: 8,
+  },
+  decoSmallDot: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.secondary,
+  },
+  decoSmallDotTop: {
+    top: 8,
+    left: 50,
+  },
+  decoSmallDotRight: {
+    right: 4,
+    bottom: 60,
   },
 
-  /* Counting number animation */
-  countingContainer: {
+  /* Bank illustration extras */
+  bankDecoDot: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    paddingVertical: Spacing.sm,
+    justifyContent: 'center',
+    ...Shadows.soft,
   },
-  countingNumber: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 48,
-    letterSpacing: -1,
-    marginBottom: Spacing.xs,
+  bankDecoDot1: {
+    top: 20,
+    right: 16,
   },
-  countingSub: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+  bankDecoDot2: {
+    bottom: 24,
+    left: 14,
   },
 
-  /* Step 1 — Welcome */
-  appTitle: {
+  /* Typography */
+  heading: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 24,
-    color: Colors.primary,
+    fontSize: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-  },
-  subSubtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: Colors.grey[500],
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: Spacing.lg,
+    lineHeight: 24,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.md,
   },
 
-  /* Testimonial */
-  testimonialCard: {
+  /* Step 1 feature list */
+  featureList: {
     alignSelf: 'stretch',
-    flexDirection: 'row',
-    padding: 0,
-    overflow: 'hidden',
-    marginBottom: Spacing.lg,
-  },
-  testimonialBorder: {
-    width: 3,
-    backgroundColor: Colors.accent,
-  },
-  testimonialInner: {
-    flex: 1,
-    padding: Spacing.md,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 3,
-    marginBottom: Spacing.xs,
-  },
-  testimonialQuote: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    fontStyle: 'italic',
-    lineHeight: 20,
-    marginBottom: Spacing.xs,
-  },
-  testimonialAttribution: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.grey[500],
-  },
-
-  /* Feature cards */
-  featureCards: {
-    alignSelf: 'stretch',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
     gap: Spacing.md,
   },
-  featureBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 9,
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  featureIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  featureCardText: {
+  featureTextWrap: {
     flex: 1,
   },
-  featureCardTitle: {
+  featureTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  featureDesc: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    lineHeight: 19,
+  },
+
+  /* Step 2 icon */
+  stepIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+
+  /* Step 2 form */
+  formGroup: {
+    alignSelf: 'stretch',
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    marginBottom: Spacing.sm,
+  },
+  textInputContainer: {
+    borderRadius: BorderRadius.input,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    height: 48,
+    justifyContent: 'center',
+  },
+  textInput: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 15,
+    padding: 0,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.input,
+    borderWidth: 1,
+    padding: Spacing.md,
+  },
+  infoBoxTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
     marginBottom: 2,
   },
-  featureCardDesc: {
+  infoBoxSub: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
     lineHeight: 18,
   },
 
-  /* Price box */
-  priceBox: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  priceMain: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 22,
-    color: Colors.primary,
-  },
-  priceSub: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    color: Colors.grey[500],
-    marginTop: 2,
-  },
-
-  /* Step titles (shared by step 2 & 3) */
-  stepTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 24,
-    color: Colors.primary,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-  },
-  stepDescription: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.lg,
-    paddingHorizontal: Spacing.sm,
-  },
-
-  /* Step 2 — Bank Connect */
-  infoCardBlue: {
+  /* Checkbox */
+  checkboxRow: {
     alignSelf: 'stretch',
     flexDirection: 'row',
-    padding: 0,
-    overflow: 'hidden',
-    marginBottom: Spacing.lg,
-  },
-  infoCardBlueBorder: {
-    width: 3,
-    backgroundColor: Colors.secondary,
-  },
-  infoCardInner: {
-    flex: 1,
-    flexDirection: 'row',
-    padding: Spacing.md,
     alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
   },
-  infoIcon: {
-    marginRight: Spacing.sm,
-    marginTop: 2,
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
   },
-  infoCardText: {
+  checkboxChecked: {
+    backgroundColor: Colors.accent,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    lineHeight: 21,
+  },
+
+  /* Step 3 trust badges */
+  trustBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  trustBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+  },
+  trustBadgeText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+  },
+
+  /* Step 3 info note */
+  infoNote: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: BorderRadius.input,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  infoNoteText: {
     flex: 1,
     fontFamily: 'Manrope_400Regular',
     fontSize: 13,
     lineHeight: 20,
   },
 
-  searchContainer: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: BorderRadius.input,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    height: 44,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
-    padding: 0,
-  },
-
-  bankList: {
-    alignSelf: 'stretch',
-    gap: Spacing.xs,
-  },
-  bankRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: BorderRadius.card,
-    padding: Spacing.md,
-    ...Shadows.soft,
-  },
-  bankLogo: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-  bankInitials: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 16,
-    color: Colors.white,
-  },
-  bankName: {
-    flex: 1,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 15,
-  },
-
-  /* Connect button (pulsing) */
-  connectButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.secondary,
-    paddingVertical: 14,
-    borderRadius: BorderRadius.button,
-    ...Shadows.medium,
-  },
-  connectButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 16,
-    color: Colors.white,
-  },
-
-  /* Step 3 — All Set */
-  confettiContainer: {
-    position: 'relative',
-    height: 0,
-    width: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'visible',
-  },
-  confettiDot: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.accent,
-  },
-  checkmarkCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-    ...Shadows.medium,
-  },
-  syncCard: {
-    alignSelf: 'stretch',
-    marginBottom: Spacing.md,
-  },
-  syncHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  syncTitle: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 14,
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.grey[200],
-    overflow: 'hidden',
-    marginBottom: Spacing.sm,
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.secondary,
-  },
-  syncSubtext: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 12,
-    color: Colors.grey[500],
-  },
-
-  securityBanner: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.success + '0D',
-    borderWidth: 1,
-    borderColor: Colors.success + '30',
-  },
-  securityTextWrap: {
-    flex: 1,
-  },
-  securityTitle: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  securityDesc: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 12,
-    color: Colors.grey[500],
-  },
-
-  /* Footer */
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-    paddingTop: Spacing.sm,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    zIndex: 1,
-  },
-
-  /* CTA button (gold) — Step 1 */
+  /* CTA Button (gold) */
   ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1204,74 +756,30 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Shadows.medium,
   },
-  ctaIcon: {
-    marginRight: Spacing.sm,
+  ctaButtonDisabled: {
+    opacity: 0.45,
   },
   ctaButtonText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 16,
     color: Colors.white,
   },
-  smallText: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 12,
-    color: Colors.grey[500],
-    marginTop: Spacing.sm,
-  },
 
-  /* Trust pills */
-  trustPills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  trustPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.grey[100],
-    borderRadius: BorderRadius.pill,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-  },
-  trustPillIcon: {
-    marginRight: 4,
-  },
-  trustPillText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: Colors.grey[600],
-  },
-
-  /* Ghost button — Step 2 */
-  ghostButton: {
-    paddingVertical: 14,
-    borderRadius: BorderRadius.button,
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.grey[300],
-  },
-  ghostButtonText: {
+  /* Skip text */
+  skipText: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 16,
-    color: Colors.grey[600],
+    fontSize: 15,
+    paddingVertical: Spacing.sm,
+    textDecorationLine: 'underline',
   },
 
-  /* Primary button — Step 3 */
-  primaryButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    borderRadius: BorderRadius.button,
-    width: '100%',
+  /* Footer */
+  footer: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.md,
     alignItems: 'center',
-    ...Shadows.medium,
-  },
-  primaryButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 16,
-    color: Colors.white,
+    borderTopWidth: 1,
   },
 
   pressed: {

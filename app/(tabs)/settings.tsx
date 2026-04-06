@@ -33,6 +33,8 @@ import {
   downloadCSV,
 } from '@/lib/export';
 import type { BankConnection } from '@/lib/types';
+import { clearCache } from '@/lib/offlineCache';
+import { isBiometricAvailable, getBiometricType, authenticate, isBiometricEnabled, setBiometricEnabled } from '@/lib/biometrics';
 
 // --------------- Custom Toggle ---------------
 function Toggle({
@@ -318,6 +320,31 @@ export default function SettingsScreen() {
     getNotificationPermissionStatus().then(setPushStatus);
   }, []);
 
+  // Biometric lock state
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState('Biometric');
+  const [biometricEnabled, setBiometricEnabledState] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then((available) => {
+      setBiometricAvailable(available);
+      if (available) {
+        getBiometricType().then(setBiometricType);
+        isBiometricEnabled().then(setBiometricEnabledState);
+      }
+    });
+  }, []);
+
+  const handleBiometricToggle = async (value: boolean) => {
+    if (value) {
+      // Authenticate first to confirm identity before enabling
+      const success = await authenticate();
+      if (!success) return;
+    }
+    setBiometricEnabledState(value);
+    await setBiometricEnabled(value);
+  };
+
   // Export modal state
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -420,6 +447,7 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = async () => {
+    await clearCache();
     await signOut();
     router.replace('/(auth)/login');
   };
@@ -461,17 +489,24 @@ export default function SettingsScreen() {
             subtitle="AES-256 · Bank-grade"
             right={<ActiveBadge />}
           />
-          <SettingsRow
-            icon="lock"
-            iconBg={Colors.secondary}
-            title="Biometric lock"
-            subtitle="Coming soon"
-            right={
-              <View style={styles.comingSoonBadge}>
-                <Text style={styles.comingSoonText}>Coming soon</Text>
-              </View>
-            }
-          />
+          {biometricAvailable ? (
+            <SettingsRow
+              icon="lock"
+              iconBg={Colors.secondary}
+              title="Biometric lock"
+              subtitle={biometricType}
+              right={<Toggle value={biometricEnabled} onValueChange={handleBiometricToggle} />}
+              accessibilityLabel="Biometric lock"
+              accessibilityHint={`Toggle ${biometricType} lock on or off`}
+            />
+          ) : (
+            <SettingsRow
+              icon="lock"
+              iconBg={Colors.secondary}
+              title="Biometric lock"
+              subtitle="Not available on this device"
+            />
+          )}
           <SettingsRow
             icon="eye"
             iconBg={Colors.secondary}

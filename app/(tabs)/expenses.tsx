@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -16,7 +16,10 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
+import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ReceiptCapture } from '@/components/ui/ReceiptCapture';
+import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useExpenses, useAddExpense, useDeleteExpense, useDashboard, useRecurringExpenses, useCreateRecurringExpense, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -109,6 +112,7 @@ export default function ExpensesScreen() {
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('other');
   const [expTouched, setExpTouched] = useState<Record<string, boolean>>({});
+  const [receiptUri, setReceiptUri] = useState<string | null>(null);
 
   // Recurring expenses state
   const { data: recurringData, refetch: refetchRecurring } = useRecurringExpenses();
@@ -153,6 +157,18 @@ export default function ExpensesScreen() {
 
   const isRecFormValid = Object.keys(recErrors).length === 0;
 
+  // Search & date range filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' });
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleDateRangeChange = useCallback((from: string, to: string) => {
+    setDateRange({ from, to });
+  }, []);
+
   const expenses = (data?.expenses ?? []) as {
     id: string;
     amount: number;
@@ -160,9 +176,39 @@ export default function ExpensesScreen() {
     date: string;
     hmrc_category?: string;
   }[];
+
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((exp) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!exp.description.toLowerCase().includes(q)) return false;
+      }
+      if (dateRange.from) {
+        if (exp.date < dateRange.from) return false;
+      }
+      if (dateRange.to) {
+        if (exp.date > dateRange.to) return false;
+      }
+      return true;
+    });
+  }, [expenses, searchQuery, dateRange]);
+
   const totalClaimed = expenses.reduce((sum, e) => sum + e.amount, 0);
   const effectiveRate = dashboardData?.tax?.effectiveRate ?? 0.2;
   const taxSaved = totalClaimed * effectiveRate;
+
+  const categorySegments = useMemo(() => {
+    const grouped: Record<string, number> = {};
+    for (const exp of expenses) {
+      const cat = exp.hmrc_category || 'other';
+      grouped[cat] = (grouped[cat] ?? 0) + exp.amount;
+    }
+    return Object.entries(grouped).map(([label, value]) => ({
+      label: HMRC_CATEGORY_LABELS[label] || label,
+      value,
+      color: CATEGORY_COLORS[label] || CATEGORY_COLORS['other'] || '#6B7280',
+    }));
+  }, [expenses]);
 
   const recurringExpenses = (recurringData?.recurringExpenses ?? []).map((r) => {
     const raw = r as unknown as Record<string, unknown>;
@@ -189,6 +235,7 @@ export default function ExpensesScreen() {
     setDescription('');
     setSelectedCategory('other');
     setExpTouched({});
+    setReceiptUri(null);
     setOpenedFromReceipt(false);
     setShowForm(false);
   };
@@ -307,6 +354,23 @@ export default function ExpensesScreen() {
           </Text>
         </Card>
 
+
+        {/* Spending by Category */}
+        {categorySegments.length > 0 && (
+          <>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">Spending by Category</Text>
+            </View>
+            <Card variant="elevated" style={styles.categoryChartCard}>
+              <DonutChart
+                segments={categorySegments}
+                centerLabel="Total expenses"
+                centerValue={formatCurrency(totalClaimed)}
+              />
+            </Card>
+          </>
+        )}
+
         {/* Scan Receipt Button */}
         <Pressable
           style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}
@@ -331,6 +395,16 @@ export default function ExpensesScreen() {
           <Text style={styles.outlineButtonText}>What can I claim? See the full list</Text>
         </Pressable>
 
+        {/* Search & Date Filter */}
+        {!isLoading && expenses.length > 0 && (
+          <SearchFilter
+            searchPlaceholder="Search expenses..."
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            showDateFilter
+          />
+        )}
+
         {/* Claimed Expenses Section */}
         {isLoading ? (
           <ExpensesSkeleton />
@@ -339,19 +413,19 @@ export default function ExpensesScreen() {
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">Claimed expenses</Text>
               <View style={styles.itemsBadge}>
-                <Text style={styles.itemsBadgeText}>{expenses.length} items</Text>
+                <Text style={styles.itemsBadgeText}>{filteredExpenses.length} items</Text>
               </View>
             </View>
 
             <Card style={styles.listCard}>
-              {expenses.map((exp, index) => {
+              {filteredExpenses.map((exp, index) => {
                 const meta = getCategoryMeta(exp.hmrc_category);
                 return (
                   <View
                     key={exp.id}
                     style={[
                       styles.expenseRow,
-                      index < expenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
+                      index < filteredExpenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
                     ]}
                   >
                     <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
@@ -534,6 +608,8 @@ export default function ExpensesScreen() {
               onChangeText={setAmount}
               onBlur={() => setExpTouched((prev) => ({ ...prev, amount: true }))}
               keyboardType="decimal-pad"
+              accessibilityLabel="Expense amount"
+              accessibilityHint="Enter the expense amount in pounds"
             />
             {expTouched.amount && expErrors.amount ? (
               <Text style={styles.fieldError}>{expErrors.amount}</Text>
@@ -545,6 +621,8 @@ export default function ExpensesScreen() {
               value={description}
               onChangeText={setDescription}
               onBlur={() => setExpTouched((prev) => ({ ...prev, description: true }))}
+              accessibilityLabel="Expense description"
+              accessibilityHint="Describe this expense, minimum 3 characters"
             />
             {expTouched.description && expErrors.description ? (
               <Text style={styles.fieldError}>{expErrors.description}</Text>
@@ -586,6 +664,11 @@ export default function ExpensesScreen() {
                 );
               })}
             </ScrollView>
+            <ReceiptCapture
+              imageUri={receiptUri}
+              onImageSelected={(uri) => setReceiptUri(uri)}
+              onImageRemoved={() => setReceiptUri(null)}
+            />
             <Pressable
               style={({ pressed }) => [
                 styles.submitButton,
@@ -1173,5 +1256,8 @@ const styles = StyleSheet.create({
   frequencyPillText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12,
+  },
+  categoryChartCard: {
+    padding: Spacing.md,
   },
 });

@@ -17,7 +17,7 @@ const variantColors = {
 export function Badge({ label, variant = 'primary' }: BadgeProps) {
   const colors = variantColors[variant];
   return (
-    <View style={[styles.badge, { backgroundColor: colors.bg }]}>
+    <View style={[styles.badge, { backgroundColor: colors.bg }]} accessible accessibilityRole="text" accessibilityLabel={label}>
       <Text style={[styles.text, { color: colors.text }]}>{label}</Text>
     </View>
   );

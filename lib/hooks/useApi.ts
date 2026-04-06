@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
 import { useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
+import { getCached, setCache } from '../offlineCache';
+import type { TaxCalculation, Expense } from '../types';
 
 /** Sync Clerk token to API client — call once at root level */
 export function useApiToken() {
@@ -22,10 +24,21 @@ export function useApiToken() {
 }
 
 export function useDashboard() {
+  type DashboardResponse = Awaited<ReturnType<typeof api.getDashboard>>;
   return useQuery({
     queryKey: ['dashboard'],
-    queryFn: () => api.getDashboard(),
-    staleTime: 30_000,
+    queryFn: async () => {
+      try {
+        const data = await api.getDashboard();
+        setCache('dashboard', data).catch(() => {});
+        return data;
+      } catch (error) {
+        const cached = await getCached<DashboardResponse>('dashboard');
+        if (cached) return cached;
+        throw error;
+      }
+    },
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -76,8 +89,18 @@ export function useQuarterlyBreakdown(taxYear?: string) {
 export function useExpenses() {
   return useQuery({
     queryKey: ['expenses'],
-    queryFn: () => api.getExpenses(),
-    staleTime: 30_000,
+    queryFn: async () => {
+      try {
+        const data = await api.getExpenses();
+        setCache('expenses', data).catch(() => {});
+        return data;
+      } catch (error) {
+        const cached = await getCached<{ expenses: Expense[] }>('expenses');
+        if (cached) return cached;
+        throw error;
+      }
+    },
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -233,8 +256,18 @@ export function useBillingStatus() {
 export function useTaxCalculation() {
   return useQuery({
     queryKey: ['tax', 'calculation'],
-    queryFn: () => api.getTaxCalculation(),
-    staleTime: 60_000,
+    queryFn: async () => {
+      try {
+        const data = await api.getTaxCalculation();
+        setCache('tax', data).catch(() => {});
+        return data;
+      } catch (error) {
+        const cached = await getCached<TaxCalculation>('tax');
+        if (cached) return cached;
+        throw error;
+      }
+    },
+    staleTime: 5 * 60_000,
   });
 }
 

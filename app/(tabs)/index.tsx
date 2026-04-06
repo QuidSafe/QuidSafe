@@ -223,12 +223,12 @@ export default function DashboardScreen() {
                   style={styles.heroCard}
                 >
                   {/* Radial gold glow overlays */}
-                  <View style={styles.heroGlow} />
-                  <View style={styles.heroGlowSecondary} />
+                  <View style={styles.heroGlow} importantForAccessibility="no" accessibilityElementsHidden={true} />
+                  <View style={styles.heroGlowSecondary} importantForAccessibility="no" accessibilityElementsHidden={true} />
 
                   {/* Label row with gold dot */}
                   <View style={styles.heroLabelRow}>
-                    <View style={styles.heroLabelDot} />
+                    <View style={styles.heroLabelDot} importantForAccessibility="no" accessibilityElementsHidden={true} />
                     <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
                   </View>
 
@@ -290,7 +290,7 @@ export default function DashboardScreen() {
                 <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
                   <Card>
                     <View style={styles.chartHeader}>
-                      <Text style={[styles.chartTitle, { color: colors.text }]}>Income Trend</Text>
+                      <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
                       <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
                         {formatCurrency(periodTotal)} over {last6.length} months
                       </Text>
@@ -403,7 +403,7 @@ export default function DashboardScreen() {
 
               {/* Quarter Timeline */}
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionHeading, { color: colors.text }]}>Tax year quarters</Text>
+                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Tax year quarters</Text>
               </View>
               <Card>
                 <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
@@ -423,7 +423,7 @@ export default function DashboardScreen() {
               {income && income.bySource.length > 0 && (
                 <>
                   <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionHeading, { color: colors.text }]}>Income by Source</Text>
+                    <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Income by Source</Text>
                   </View>
                   <Card>
                     {income.bySource.map((src, index) => {
@@ -435,14 +435,16 @@ export default function DashboardScreen() {
                             styles.sourceRow,
                             !isLast && { borderBottomColor: colors.border, borderBottomWidth: 1 },
                           ]}
+                          accessible
+                          accessibilityLabel={`${src.name}: ${formatCurrency(src.amount)}, ${src.percentage}% of income`}
                         >
                           <View style={styles.sourceLeft}>
-                            <View style={[styles.sourceDot, { backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} />
+                            <View style={[styles.sourceDot, { backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} importantForAccessibility="no" accessibilityElementsHidden={true} />
                             <Text style={[styles.sourceName, { color: colors.text }]}>{src.name}</Text>
                           </View>
                           <View style={styles.sourceRight}>
                             <Text style={[styles.sourceAmount, { color: colors.text }]}>{formatCurrency(src.amount)}</Text>
-                            <View style={[styles.sourceBar, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]}>
+                            <View style={[styles.sourceBar, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>
                               <View style={[styles.sourceBarFill, { width: `${src.percentage}%`, backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} />
                             </View>
                           </View>

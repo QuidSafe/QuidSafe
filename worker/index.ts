@@ -39,6 +39,20 @@ import {
   verifyWebhookSignature,
   handleWebhookEvent,
 } from './services/stripe';
+import {
+  signupSchema,
+  createExpenseSchema,
+  createInvoiceSchema,
+  updateInvoiceSchema,
+  createRecurringExpenseSchema,
+  updateRecurringExpenseSchema,
+  updateSettingsSchema,
+  updateTransactionCategorySchema,
+  checkoutSchema,
+  mtdCallbackSchema,
+  mtdSubmitQuarterlySchema,
+  registerDeviceSchema,
+} from './validation';
 
 export interface Env {
   DB: D1Database;
@@ -207,7 +221,12 @@ authed.post('/mtd/*', requireActiveSubscription);
 // ── Auth ──────────────────────────────────────────────────
 authed.post('/auth/signup', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ email: string; name?: string }>();
+  const raw = await c.req.json();
+  const result = signupSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
 
   await execute(c.env.DB, 'INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)', [
     userId,
@@ -529,7 +548,12 @@ authed.get('/transactions/uncategorised', async (c) => {
 authed.put('/transactions/:id/category', async (c) => {
   const userId = c.get('userId');
   const txId = c.req.param('id');
-  const body = await c.req.json<{ category: string; incomeSource?: string }>();
+  const raw = await c.req.json();
+  const result = updateTransactionCategorySchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
 
   // Get original for correction tracking
   const original = await queryOne<{ ai_category: string; merchant_name: string }>(
@@ -766,7 +790,12 @@ authed.get('/expenses', async (c) => {
 
 authed.post('/expenses', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ amount: number; description: string; categoryId?: number; hmrcCategory?: string; date: string }>();
+  const raw = await c.req.json();
+  const result = createExpenseSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
   const id = crypto.randomUUID();
 
   await execute(
@@ -797,33 +826,18 @@ authed.get('/expenses/recurring', async (c) => {
 
 authed.post('/expenses/recurring', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{
-    amount: number;
-    description: string;
-    hmrcCategory?: string;
-    frequency: string;
-    startDate: string;
-  }>();
-
-  if (!body.amount || body.amount <= 0) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Amount must be greater than 0' } }, 400);
+  const raw = await c.req.json();
+  const result = createRecurringExpenseSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
-  if (!body.description || body.description.trim().length < 3) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Description must be at least 3 characters' } }, 400);
-  }
-  const validFrequencies = ['weekly', 'monthly', 'quarterly', 'yearly'];
-  if (!validFrequencies.includes(body.frequency)) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Frequency must be weekly, monthly, quarterly, or yearly' } }, 400);
-  }
-  if (!body.startDate) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Start date is required' } }, 400);
-  }
+  const body = result.data;
 
   const id = crypto.randomUUID();
   await execute(
     c.env.DB,
     'INSERT INTO recurring_expenses (id, user_id, amount, description, hmrc_category, frequency, start_date, next_due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, body.amount, body.description.trim(), body.hmrcCategory ?? 'other', body.frequency, body.startDate, body.startDate],
+    [id, userId, body.amount, body.description, body.hmrcCategory ?? 'other', body.frequency, body.startDate, body.startDate],
   );
 
   return c.json({ id, success: true }, 201);
@@ -832,13 +846,12 @@ authed.post('/expenses/recurring', async (c) => {
 authed.put('/expenses/recurring/:id', async (c) => {
   const userId = c.get('userId');
   const recId = c.req.param('id');
-  const body = await c.req.json<{
-    amount?: number;
-    description?: string;
-    hmrcCategory?: string;
-    frequency?: string;
-    active?: boolean;
-  }>();
+  const raw = await c.req.json();
+  const result = updateRecurringExpenseSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
 
   const updates: string[] = [];
   const params: unknown[] = [];
@@ -888,7 +901,12 @@ authed.get('/invoices', async (c) => {
 
 authed.post('/invoices', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ clientName: string; clientEmail?: string; amount: number; description: string; dueDate: string }>();
+  const raw = await c.req.json();
+  const result = createInvoiceSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
   const id = crypto.randomUUID();
 
   await execute(
@@ -903,7 +921,12 @@ authed.post('/invoices', async (c) => {
 authed.put('/invoices/:id', async (c) => {
   const userId = c.get('userId');
   const invoiceId = c.req.param('id');
-  const body = await c.req.json<{ status?: string; clientName?: string; clientEmail?: string; amount?: number; description?: string; dueDate?: string }>();
+  const raw = await c.req.json();
+  const result = updateInvoiceSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
 
   // Build dynamic update
   const updates: string[] = [];
@@ -945,7 +968,12 @@ authed.delete('/invoices/:id', async (c) => {
 // ── Billing ──────────────────────────────────────────────
 authed.post('/billing/checkout', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ plan: 'monthly' | 'annual' }>();
+  const raw = await c.req.json();
+  const result = checkoutSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
   const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
   const session = await createCheckoutSession(userId, body.plan, config, c.env.DB);
   return c.json(session);
@@ -984,7 +1012,12 @@ authed.get('/mtd/auth', async (c) => {
 
 authed.post('/mtd/callback', async (c) => {
   const userId = c.get('userId');
-  const { code } = await c.req.json<{ code: string }>();
+  const raw = await c.req.json();
+  const result = mtdCallbackSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const { code } = result.data;
   const config = getHmrcConfig(c.env);
 
   const tokens = await exchangeHmrcCode(code, config);
@@ -1029,11 +1062,12 @@ authed.get('/mtd/obligations', async (c) => {
 
 authed.post('/mtd/submit-quarterly', async (c) => {
   const userId = c.get('userId');
-  const { taxYear, quarter } = await c.req.json<{ taxYear: string; quarter: number }>();
-
-  if (!taxYear || !quarter || quarter < 1 || quarter > 4) {
-    return c.json({ error: { code: 'INVALID_INPUT', message: 'Valid taxYear and quarter (1-4) required' } }, 400);
+  const raw = await c.req.json();
+  const result = mtdSubmitQuarterlySchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
+  const { taxYear, quarter } = result.data;
 
   const existing = await queryOne<{ id: string; status: string }>(
     c.env.DB,
@@ -1131,13 +1165,12 @@ authed.get('/settings', async (c) => {
 
 authed.put('/settings', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{
-    name?: string;
-    notifyTaxDeadlines?: boolean;
-    notifyWeeklySummary?: boolean;
-    notifyTransactionAlerts?: boolean;
-    notifyMtdReady?: boolean;
-  }>();
+  const raw = await c.req.json();
+  const result = updateSettingsSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
 
   const updates: string[] = [];
   const values: (string | number)[] = [];
@@ -1178,11 +1211,12 @@ authed.put('/settings', async (c) => {
 // ── Device Push Token Registration ───────────────────────
 authed.post('/devices', async (c) => {
   const userId = c.get('userId');
-  const { pushToken, platform } = await c.req.json<{ pushToken: string; platform: string }>();
-
-  if (!pushToken || !platform) {
-    return c.json({ error: { code: 'INVALID_INPUT', message: 'pushToken and platform are required' } }, 400);
+  const raw = await c.req.json();
+  const result = registerDeviceSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
+  const { pushToken, platform } = result.data;
 
   // Remove any existing entry for this token, then insert
   await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ?', [pushToken]);
