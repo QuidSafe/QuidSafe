@@ -18,6 +18,8 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
+import { ToastProvider } from '@/components/ui/Toast';
+import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useApiToken } from '@/lib/hooks/useApi';
 import 'react-native-reanimated';
 
@@ -91,15 +93,20 @@ export default function RootLayout() {
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <ThemedStatusBar />
-            <AuthRedirect>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="onboarding" />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-            </AuthRedirect>
+            <ToastProvider>
+              <AppErrorBoundary>
+                <ThemedStatusBar />
+                <AuthRedirect>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="onboarding" />
+                    <Stack.Screen name="transactions" options={{ presentation: 'modal' }} />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                </AuthRedirect>
+              </AppErrorBoundary>
+            </ToastProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </ClerkLoaded>

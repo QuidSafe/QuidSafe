@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
-import { SkeletonCard } from '@/components/ui/Skeleton';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useDashboard } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
@@ -35,6 +37,7 @@ function getGreeting(): string {
 
 export default function DashboardScreen() {
   const { user } = useUser();
+  const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
   const { colors, isDark } = useTheme();
 
@@ -157,11 +160,18 @@ export default function DashboardScreen() {
         </Animated.View>
 
         {isLoading ? (
-          <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </>
+          <DashboardSkeleton />
+        ) : (income?.total ?? 0) === 0 && (!actions || actions.length === 0) ? (
+          <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }] }}>
+            <EmptyState
+              icon="sparkles-outline"
+              title="Welcome to QuidSafe!"
+              subtitle="Connect your bank to start tracking your income and tax. We'll tell you exactly how much to set aside."
+              actionLabel="Connect Bank"
+              onAction={handleConnectBank}
+              tintColor={Colors.secondary}
+            />
+          </Animated.View>
         ) : (
           <>
             {/* Hero Tax Card */}
@@ -292,6 +302,11 @@ export default function DashboardScreen() {
                       type={(action.type as 'warning' | 'info' | 'action') ?? 'info'}
                       title={action.title}
                       description={action.subtitle}
+                      onPress={
+                        action.id === 'uncategorised' || action.title.toLowerCase().includes('uncategorised')
+                          ? () => router.push('/transactions?filter=uncategorised')
+                          : undefined
+                      }
                     />
                   ))
                 ) : (

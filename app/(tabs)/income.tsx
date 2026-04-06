@@ -15,7 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
-import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
+import { IncomeSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
@@ -189,17 +190,15 @@ export default function IncomeScreen() {
         <Text style={[styles.title, { color: colors.text }]}>Income</Text>
 
         {isLoading ? (
-          <>
-            <SkeletonCard />
-            <View style={{ height: Spacing.md }} />
-            <SkeletonCard />
-            <View style={{ height: Spacing.md }} />
-            <Skeleton width="40%" height={16} />
-            <View style={{ height: Spacing.sm }} />
-            <Skeleton width="100%" height={44} />
-            <View style={{ height: Spacing.sm }} />
-            <SkeletonCard />
-          </>
+          <IncomeSkeleton />
+        ) : grossIncome === 0 && sources.length === 0 ? (
+          <EmptyState
+            icon="wallet-outline"
+            title="No income recorded yet"
+            subtitle="Connect your bank account or create your first invoice to start tracking income."
+            actionLabel="Create Invoice"
+            onAction={() => setInvoiceModalVisible(true)}
+          />
         ) : (
           <>
             {/* Top summary card */}

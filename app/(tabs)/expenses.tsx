@@ -15,7 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
-import { SkeletonCard } from '@/components/ui/Skeleton';
+import { ExpensesSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useExpenses, useAddExpense, useDeleteExpense, useDashboard } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -204,7 +205,7 @@ export default function ExpensesScreen() {
 
         {/* Claimed Expenses Section */}
         {isLoading ? (
-          <SkeletonCard />
+          <ExpensesSkeleton />
         ) : expenses.length > 0 ? (
           <>
             <View style={styles.sectionHeaderRow}>
@@ -264,15 +265,14 @@ export default function ExpensesScreen() {
             </Card>
           </>
         ) : (
-          <Card>
-            <View style={styles.emptyState}>
-              <FontAwesome name="file-text-o" size={32} color={Colors.grey[400]} />
-              <Text style={[styles.emptyTitle, { color: colors.text }]}>No expenses yet</Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                Add business expenses to reduce your tax bill. Every little helps!
-              </Text>
-            </View>
-          </Card>
+          <EmptyState
+            icon="receipt-outline"
+            title="No expenses yet"
+            subtitle="Start logging your business expenses to reduce your tax bill."
+            actionLabel="Add Expense"
+            onAction={() => setShowForm(true)}
+            tintColor={Colors.success}
+          />
         )}
 
         {/* Gold Insight Banner */}
