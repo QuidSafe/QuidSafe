@@ -24,7 +24,7 @@ This file provides guidance to Claude Code when working with the QuidSafe codeba
 ```bash
 # Development
 npx expo start                    # Start app (press w/i/a for web/iOS/Android)
-npx wrangler dev                  # Start Worker API on localhost:8787
+npx wrangler dev --config wrangler.worker.toml  # Start Worker API on localhost:8787
 
 # Checks
 npx tsc --noEmit                  # TypeScript check (app)
@@ -35,12 +35,12 @@ npx eslint "app/**/*.tsx" "lib/**/*.ts" "components/**/*.tsx"  # Lint
 npx expo export --platform web    # Web build to dist/
 
 # Database
-npx wrangler d1 migrations apply quidsafe-staging --local   # Local migrations
-npx wrangler d1 migrations apply quidsafe-staging --remote  # Remote migrations
+npx wrangler d1 migrations apply quidsafe-staging --local --config wrangler.worker.toml
+npx wrangler d1 migrations apply quidsafe-staging --remote --config wrangler.worker.toml
 
 # Deploy
-npx wrangler deploy               # Deploy Worker
-npx wrangler pages deploy dist/   # Deploy Pages
+npx wrangler deploy --config wrangler.worker.toml  # Deploy Worker
+# Pages deploys automatically via Git push (configured in wrangler.toml)
 ```
 
 ## Architecture
