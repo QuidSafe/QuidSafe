@@ -1,7 +1,7 @@
 // AI Transaction Categoriser — Uses Claude Haiku via Anthropic API
 // All data is anonymised BEFORE reaching this module (see anonymiser.ts)
 
-import { anonymiseTransaction } from './anonymiser';
+import { anonymiseTransaction, anonymiseMerchant } from './anonymiser';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -103,13 +103,27 @@ function applyRules(tx: AnonymisedTx): CategorisationResult | null {
 
 // ─── AI Categorisation ────────────────────────────────────
 
-function buildPrompt(transactions: AnonymisedTx[]): string {
+interface CorrectionExample {
+  merchantName: string;
+  category: string;
+}
+
+function buildPrompt(transactions: AnonymisedTx[], corrections?: CorrectionExample[]): string {
   const txList = transactions
     .map(
       (tx, i) =>
         `${i + 1}. ID: ${tx.id} | Amount: £${tx.amount.toFixed(2)} | Merchant: "${tx.merchantType}" | Pattern: "${tx.pattern}" | Direction: ${tx.direction}`,
     )
     .join('\n');
+
+  let fewShot = '';
+  if (corrections && corrections.length > 0) {
+    const examples = corrections
+      .slice(0, 10)
+      .map((c) => `- "${anonymiseMerchant(c.merchantName)}" → ${c.category}`)
+      .join('\n');
+    fewShot = `\nThis user has previously corrected these merchants:\n${examples}\nUse these as guidance for similar transactions.\n`;
+  }
 
   return `You are a UK tax categorisation assistant for sole traders.
 
@@ -119,7 +133,7 @@ For each anonymised bank transaction below, classify it as:
 - "business_expense" — money spent to earn income (fuel, phone bill, equipment, tools, etc.)
 
 Also identify the income source type if applicable (e.g., "gig_delivery", "ecommerce", "freelance_service").
-
+${fewShot}
 Transactions:
 ${txList}
 
@@ -189,6 +203,7 @@ async function callClaude(
 export async function categoriseTransactions(
   transactions: { id: string; amount: number; description: string; merchantName?: string | null }[],
   anthropicApiKey: string,
+  corrections?: CorrectionExample[],
 ): Promise<CategorisationResult[]> {
   const results: CategorisationResult[] = [];
   const needsAI: AnonymisedTx[] = [];
@@ -211,7 +226,7 @@ export async function categoriseTransactions(
     const BATCH_SIZE = 30;
     for (let i = 0; i < needsAI.length; i += BATCH_SIZE) {
       const batch = needsAI.slice(i, i + BATCH_SIZE);
-      const prompt = buildPrompt(batch);
+      const prompt = buildPrompt(batch, corrections);
       try {
         const aiResults = await callClaude(prompt, anthropicApiKey);
         results.push(...aiResults);

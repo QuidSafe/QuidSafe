@@ -73,6 +73,10 @@ class ApiClient {
     return this.request<{ transactions: Transaction[]; total: number }>(`/transactions?${query}`);
   }
 
+  categoriseTransactions() {
+    return this.request<{ categorised: number; autoAccepted: number; flaggedForReview: number; uncategorised: number }>('/transactions/categorise', { method: 'POST' });
+  }
+
   getUncategorised() {
     return this.request<{ transactions: Transaction[] }>('/transactions/uncategorised');
   }

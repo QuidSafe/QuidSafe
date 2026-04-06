@@ -11,6 +11,7 @@ import {
   detectBankName,
 } from './services/banking';
 import type { TrueLayerConfig, BankConnectionRow } from './services/banking';
+import { categoriseTransactions } from './services/categoriser';
 import { calculateTax, getCurrentQuarter, getQuarterDates } from '../lib/tax-engine';
 import { query, queryOne, execute } from '../lib/db';
 import {
@@ -210,6 +211,83 @@ authed.get('/transactions', async (c) => {
   );
 
   return c.json({ transactions, total: countResult?.count ?? 0, limit, offset });
+});
+
+authed.post('/transactions/categorise', async (c) => {
+  const userId = c.get('userId');
+
+  // Get uncategorised transactions
+  const uncategorised = await query<{
+    id: string;
+    amount: number;
+    description: string;
+    merchant_name: string | null;
+  }>(
+    c.env.DB,
+    'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL LIMIT 200',
+    [userId],
+  );
+
+  if (uncategorised.length === 0) {
+    return c.json({ categorised: 0, message: 'No uncategorised transactions' });
+  }
+
+  // Load user corrections for few-shot examples
+  const corrections = await query<{
+    merchant_name: string;
+    corrected_category: string;
+  }>(
+    c.env.DB,
+    'SELECT DISTINCT merchant_name, corrected_category FROM category_corrections WHERE user_id = ? AND merchant_name IS NOT NULL LIMIT 20',
+    [userId],
+  );
+
+  const results = await categoriseTransactions(
+    uncategorised.map((tx) => ({
+      id: tx.id,
+      amount: tx.amount,
+      description: tx.description,
+      merchantName: tx.merchant_name,
+    })),
+    c.env.ANTHROPIC_API_KEY,
+    corrections.map((c) => ({ merchantName: c.merchant_name, category: c.corrected_category })),
+  );
+
+  // Write results to D1 with confidence thresholds
+  let autoAccepted = 0;
+  let flagged = 0;
+  let uncategorisedCount = 0;
+
+  for (const result of results) {
+    let isExpenseClaimable = 0;
+    if (result.category === 'business_expense') isExpenseClaimable = 1;
+
+    await execute(
+      c.env.DB,
+      'UPDATE transactions SET ai_category = ?, ai_confidence = ?, ai_reasoning = ?, is_income = ?, is_expense_claimable = ?, income_source = ? WHERE id = ? AND user_id = ?',
+      [
+        result.category,
+        result.confidence,
+        result.reasoning,
+        result.category === 'income' ? 1 : 0,
+        isExpenseClaimable,
+        result.incomeSourceType,
+        result.id,
+        userId,
+      ],
+    );
+
+    if (result.confidence >= 0.85) autoAccepted++;
+    else if (result.confidence >= 0.60) flagged++;
+    else uncategorisedCount++;
+  }
+
+  return c.json({
+    categorised: results.length,
+    autoAccepted,
+    flaggedForReview: flagged,
+    uncategorised: uncategorisedCount,
+  });
 });
 
 authed.get('/transactions/uncategorised', async (c) => {
