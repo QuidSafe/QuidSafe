@@ -2,7 +2,7 @@
 
 import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency } from './types';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://quidsafe-api.nathanlufc.workers.dev';
 
 class ApiClient {
   private token: string | null = null;

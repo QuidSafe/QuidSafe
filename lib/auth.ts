@@ -4,7 +4,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_bmV1dHJhbC13YWxydXMtNDQuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
 const tokenCache =
   Platform.OS !== 'web'
