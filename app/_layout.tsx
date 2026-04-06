@@ -53,11 +53,12 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const onLanding = segments[0] === 'landing';
 
-    if (isSignedIn && inAuthGroup) {
+    if (isSignedIn && (inAuthGroup || onLanding)) {
       router.replace('/(tabs)');
-    } else if (!isSignedIn && !inAuthGroup) {
-      router.replace('/(auth)/login');
+    } else if (!isSignedIn && !inAuthGroup && !onLanding) {
+      router.replace('/landing');
     }
   }, [isSignedIn, isLoaded, segments, router]);
 
@@ -118,6 +119,7 @@ export default function RootLayout() {
                 <ThemedStatusBar />
                 <AuthRedirect>
                   <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="landing" />
                     <Stack.Screen name="(auth)" />
                     <Stack.Screen name="(tabs)" />
                     <Stack.Screen name="onboarding" />
