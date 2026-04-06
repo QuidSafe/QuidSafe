@@ -17,7 +17,8 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
-import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank } from '@/lib/hooks/useApi';
+import * as WebBrowser from 'expo-web-browser';
+import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
 import type { BankConnection } from '@/lib/types';
@@ -181,27 +182,46 @@ const ThemeOption = memo(function ThemeOption({
   );
 });
 
+// --------------- Relative Time ---------------
+function formatRelativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Never';
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  if (diffMs < 0) return 'Just now';
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
 // --------------- Bank Connection Row ---------------
 const BankConnectionRow = memo(function BankConnectionRow({
   connection,
   isLast,
+  onSync,
+  isSyncing,
   onDisconnect,
   isDisconnecting,
 }: {
   connection: BankConnection;
   isLast: boolean;
+  onSync: (id: string) => void;
+  isSyncing: boolean;
   onDisconnect: (id: string) => void;
   isDisconnecting: boolean;
 }) {
   const { colors } = useTheme();
-  const lastSynced = connection.lastSyncedAt
-    ? new Date(connection.lastSyncedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    : 'Never';
+  const lastSynced = formatRelativeTime(connection.lastSyncedAt);
 
   const handleDisconnect = () => {
     Alert.alert(
       'Disconnect Bank',
-      `Are you sure you want to disconnect ${connection.bankName}?`,
+      `Are you sure you want to disconnect ${connection.bankName}? Your existing transactions will be kept.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Disconnect', style: 'destructive', onPress: () => onDisconnect(connection.id) },
@@ -214,19 +234,32 @@ const BankConnectionRow = memo(function BankConnectionRow({
       <IconBox name="bank" bg={Colors.secondary} />
       <View style={styles.rowText}>
         <Text style={[styles.rowTitle, { color: colors.text }]}>{connection.bankName}</Text>
-        <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>Last synced: {lastSynced}</Text>
+        <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>Synced: {lastSynced}</Text>
       </View>
-      <Pressable
-        onPress={handleDisconnect}
-        disabled={isDisconnecting}
-        style={({ pressed }) => [styles.disconnectButton, pressed && styles.pressed]}
-      >
-        {isDisconnecting ? (
-          <ActivityIndicator size="small" color={Colors.error} />
-        ) : (
-          <Text style={styles.disconnectText}>Disconnect</Text>
-        )}
-      </Pressable>
+      <View style={styles.bankActions}>
+        <Pressable
+          onPress={() => onSync(connection.id)}
+          disabled={isSyncing}
+          style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}
+        >
+          {isSyncing ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : (
+            <Text style={styles.syncText}>Sync</Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={handleDisconnect}
+          disabled={isDisconnecting}
+          style={({ pressed }) => [styles.disconnectButton, pressed && styles.pressed]}
+        >
+          {isDisconnecting ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <Text style={styles.disconnectText}>Disconnect</Text>
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 });
@@ -240,6 +273,7 @@ export default function SettingsScreen() {
   const { data: bankData } = useBankConnections();
   const { data: settingsData } = useSettings();
   const updateSettings = useUpdateSettings();
+  const syncBank = useSyncBank();
   const disconnectBank = useDisconnectBank();
 
   // Toggle states — initialise from API
@@ -282,8 +316,26 @@ export default function SettingsScreen() {
     Alert.alert('Export Data', 'Export coming soon. You will be able to download your data as CSV or PDF.');
   };
 
+  const handleSyncBank = (id: string) => {
+    syncBank.mutate(id);
+  };
+
   const handleDisconnectBank = (id: string) => {
     disconnectBank.mutate(id);
+  };
+
+  const [isAddingBank, setIsAddingBank] = useState(false);
+  const handleAddBank = async () => {
+    if (isAddingBank) return;
+    setIsAddingBank(true);
+    try {
+      const { url } = await api.getConnectUrl();
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
+    } finally {
+      setIsAddingBank(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -405,22 +457,40 @@ export default function SettingsScreen() {
         </Card>
 
         {/* CONNECTED BANKS */}
-        {bankConnections.length > 0 && (
-          <>
-            <SectionLabel label="CONNECTED BANKS" />
-            <Card style={styles.cardPadding}>
-              {bankConnections.map((conn, idx) => (
-                <BankConnectionRow
-                  key={conn.id}
-                  connection={conn}
-                  isLast={idx === bankConnections.length - 1}
-                  onDisconnect={handleDisconnectBank}
-                  isDisconnecting={disconnectBank.isPending}
-                />
-              ))}
-            </Card>
-          </>
-        )}
+        <SectionLabel label="CONNECTED BANKS" />
+        <Card style={styles.cardPadding}>
+          {bankConnections.length > 0 ? (
+            bankConnections.map((conn, idx) => (
+              <BankConnectionRow
+                key={conn.id}
+                connection={conn}
+                isLast={false}
+                onSync={handleSyncBank}
+                isSyncing={syncBank.isPending}
+                onDisconnect={handleDisconnectBank}
+                isDisconnecting={disconnectBank.isPending}
+              />
+            ))
+          ) : (
+            <View style={styles.noBanksRow}>
+              <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>No banks connected yet</Text>
+            </View>
+          )}
+          <Pressable
+            onPress={handleAddBank}
+            disabled={isAddingBank}
+            style={({ pressed }) => [styles.addBankButton, pressed && styles.pressed]}
+          >
+            {isAddingBank ? (
+              <ActivityIndicator size="small" color={Colors.secondary} />
+            ) : (
+              <>
+                <FontAwesome name="plus" size={12} color={Colors.secondary} />
+                <Text style={styles.addBankText}>Add Bank</Text>
+              </>
+            )}
+          </Pressable>
+        </Card>
 
         {/* ACCOUNT */}
         <SectionLabel label="ACCOUNT" />
@@ -674,6 +744,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.white,
   },
+  bankActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  syncButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.secondary,
+  },
+  syncText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10.5,
+    color: Colors.secondary,
+  },
   disconnectButton: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -685,5 +772,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 10.5,
     color: Colors.error,
+  },
+  noBanksRow: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  addBankButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.grey[200],
+    marginTop: 4,
+  },
+  addBankText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12.5,
+    color: Colors.secondary,
   },
 });

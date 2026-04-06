@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, Linking, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, RefreshControl, Linking, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-// useApiToken is now called in the root layout
 import { api } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { useBillingStatus, useCreateCheckout } from '@/lib/hooks/useApi';
 
 const PLANS = [
   {
@@ -40,43 +39,52 @@ const PRO_FEATURES = [
 export default function BillingScreen() {
   const { colors } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
-  const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
-  const { data: status } = useQuery({
-    queryKey: ['billing-status'],
-    queryFn: () => api.getBillingStatus(),
-  });
+  const { data: status, refetch, isRefetching } = useBillingStatus();
+  const checkoutMutation = useCreateCheckout();
 
   const isSubscribed = status?.status === 'active' || status?.status === 'trialing';
 
-  const handleCheckout = async () => {
-    setLoading(true);
-    try {
-      const { url } = await api.createCheckout(selectedPlan);
-      await Linking.openURL(url);
-    } catch (err) {
-      console.error('Stripe checkout error:', err);
-    } finally {
-      setLoading(false);
-    }
+  const trialDaysRemaining = (() => {
+    if (status?.status !== 'trialing' || !status.trialEndsAt) return null;
+    const now = new Date();
+    const end = new Date(status.trialEndsAt);
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  })();
+
+  const handleCheckout = () => {
+    checkoutMutation.mutate(selectedPlan, {
+      onSuccess: async ({ url }) => {
+        await Linking.openURL(url);
+      },
+      onError: (err) => {
+        Alert.alert('Checkout failed', err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      },
+    });
   };
 
   const handleManage = async () => {
-    setLoading(true);
+    setPortalLoading(true);
     try {
       const { url } = await api.createPortalSession();
       await Linking.openURL(url);
     } catch (err) {
-      console.error('Stripe portal error:', err);
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not open subscription management.');
     } finally {
-      setLoading(false);
+      setPortalLoading(false);
     }
   };
 
   if (isSubscribed) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
+        >
           <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
             <FontAwesome name="arrow-left" size={16} color={colors.text} />
           </Pressable>
@@ -92,12 +100,19 @@ export default function BillingScreen() {
               </View>
               <Text style={[styles.planName, { color: colors.textSecondary }]}>{status?.plan === 'pro_annual' ? 'Annual' : 'Monthly'}</Text>
             </View>
-            {status?.trialEndsAt && (
+            {status?.status === 'trialing' && trialDaysRemaining !== null && (
               <Text style={styles.trialText}>
+                {trialDaysRemaining === 0
+                  ? 'Your trial ends today'
+                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} remaining in your trial`}
+              </Text>
+            )}
+            {status?.trialEndsAt && (
+              <Text style={[styles.periodText, { color: colors.textSecondary }]}>
                 Trial ends {new Date(status.trialEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
             )}
-            {status?.currentPeriodEnd && (
+            {status?.currentPeriodEnd && status?.status !== 'trialing' && (
               <Text style={[styles.periodText, { color: colors.textSecondary }]}>
                 Next billing: {new Date(status.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
@@ -105,7 +120,7 @@ export default function BillingScreen() {
           </Card>
 
           <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={handleManage}>
-            {loading ? (
+            {portalLoading ? (
               <ActivityIndicator color={Colors.primary} />
             ) : (
               <Text style={styles.manageText}>Manage Subscription</Text>
@@ -118,7 +133,11 @@ export default function BillingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
+      >
         <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <FontAwesome name="arrow-left" size={16} color={colors.text} />
         </Pressable>
@@ -176,9 +195,9 @@ export default function BillingScreen() {
         <Pressable
           style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
           onPress={handleCheckout}
-          disabled={loading}
+          disabled={checkoutMutation.isPending}
         >
-          {loading ? (
+          {checkoutMutation.isPending ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
             <Text style={styles.ctaText}>Start 14-day free trial</Text>
@@ -187,6 +206,10 @@ export default function BillingScreen() {
 
         <Text style={[styles.trialNote, { color: colors.textSecondary }]}>
           No charge until your trial ends. Cancel anytime.
+        </Text>
+
+        <Text style={[styles.restoreNote, { color: colors.textSecondary }]}>
+          Already subscribed? Pull down to refresh.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -226,6 +249,7 @@ const styles = StyleSheet.create({
   ctaText: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: Colors.white },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   trialNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center' },
+  restoreNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center', marginTop: Spacing.sm },
 
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.success + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: BorderRadius.pill },

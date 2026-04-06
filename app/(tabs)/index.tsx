@@ -1,6 +1,8 @@
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
@@ -9,6 +11,7 @@ import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useDashboard } from '@/lib/hooks/useApi';
+import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -24,12 +27,27 @@ export default function DashboardScreen() {
   const { data, isLoading, refetch, isRefetching } = useDashboard();
   const { colors, isDark } = useTheme();
 
+  const [isConnecting, setIsConnecting] = useState(false);
+
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
   const income = data?.income;
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
+
+  const handleConnectBank = async () => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    try {
+      const { url } = await api.getConnectUrl();
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -167,6 +185,7 @@ export default function DashboardScreen() {
                       title="Connect your bank"
                       description="Link your bank account to automatically track income and expenses."
                       icon="university"
+                      onPress={handleConnectBank}
                     />
                   )}
                   <ActionCard

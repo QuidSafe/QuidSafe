@@ -76,7 +76,7 @@ function getLastNMonths(byMonth: { month: string; income: number; expenses: numb
 export default function IncomeScreen() {
   const { colors } = useTheme();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
-  const { data: _quarterly } = useQuarterlyBreakdown();
+  useQuarterlyBreakdown();
   const createInvoiceMutation = useCreateInvoice();
 
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
