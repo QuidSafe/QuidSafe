@@ -18,7 +18,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { Card } from '@/components/ui/Card';
-import { useApiToken } from '@/lib/hooks/useApi';
+// useApiToken is now called in the root layout
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
 
@@ -67,6 +67,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
 /*  Step 1 — Welcome                                                  */
 /* ------------------------------------------------------------------ */
 function StepWelcome() {
+  const { colors } = useTheme();
   return (
     <ScrollView
       style={styles.slideScroll}
@@ -80,7 +81,7 @@ function StepWelcome() {
 
       <Text style={styles.appTitle}>QuidSafe</Text>
 
-      <Text style={styles.subtitle}>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         Everything a sole trader needs to run their business. Tax, invoices,
         expenses — sorted.
       </Text>
@@ -98,7 +99,7 @@ function StepWelcome() {
               <FontAwesome key={i} name="star" size={14} color={Colors.accent} />
             ))}
           </View>
-          <Text style={styles.testimonialQuote}>
+          <Text style={[styles.testimonialQuote, { color: colors.text }]}>
             {'"'}Finally an app that tells me what to set aside each month. I slept
             better the first night I used it.{'"'}
           </Text>
@@ -150,14 +151,15 @@ function FeatureCard({
   title: string;
   description: string;
 }) {
+  const { colors } = useTheme();
   return (
     <Card style={styles.featureCard}>
       <View style={[styles.featureBadge, { backgroundColor: badgeColor + '18' }]}>
         <FontAwesome name={iconName} size={18} color={badgeColor} />
       </View>
       <View style={styles.featureCardText}>
-        <Text style={styles.featureCardTitle}>{title}</Text>
-        <Text style={styles.featureCardDesc}>{description}</Text>
+        <Text style={[styles.featureCardTitle, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.featureCardDesc, { color: colors.textSecondary }]}>{description}</Text>
       </View>
     </Card>
   );
@@ -167,6 +169,7 @@ function FeatureCard({
 /*  Step 2 — Bank Connect                                             */
 /* ------------------------------------------------------------------ */
 function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) {
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
   const [connecting, setConnecting] = useState(false);
 
@@ -205,7 +208,7 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
 
       <Text style={styles.stepTitle}>Connect your bank</Text>
 
-      <Text style={styles.stepDescription}>
+      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
         We use Open Banking to securely sync your transactions. It&apos;s read-only —
         we can never move money or see your PIN.
       </Text>
@@ -220,7 +223,7 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
             color={Colors.secondary}
             style={styles.infoIcon}
           />
-          <Text style={styles.infoCardText}>
+          <Text style={[styles.infoCardText, { color: colors.textSecondary }]}>
             Open Banking is read-only. We can see transactions but never move
             money, see your PIN, or access your login details.
           </Text>
@@ -228,17 +231,17 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
       </Card>
 
       {/* Search */}
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <FontAwesome
           name="search"
           size={14}
-          color={Colors.grey[400]}
+          color={colors.textSecondary}
           style={styles.searchIcon}
         />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]}
           placeholder="Search your bank..."
-          placeholderTextColor={Colors.grey[400]}
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
         />
@@ -247,15 +250,15 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
       {/* Bank list */}
       <View style={styles.bankList}>
         {filtered.map((bank) => (
-          <Pressable key={bank.name} style={styles.bankRow} onPress={handleConnectBank} disabled={connecting}>
+          <Pressable key={bank.name} style={[styles.bankRow, { backgroundColor: colors.surface }]} onPress={handleConnectBank} disabled={connecting}>
             <View style={[styles.bankLogo, { backgroundColor: bank.color }]}>
               <Text style={styles.bankInitials}>{bank.initials}</Text>
             </View>
-            <Text style={styles.bankName}>{bank.name}</Text>
+            <Text style={[styles.bankName, { color: colors.text }]}>{bank.name}</Text>
             <FontAwesome
               name="chevron-right"
               size={12}
-              color={Colors.grey[400]}
+              color={colors.textSecondary}
             />
           </Pressable>
         ))}
@@ -268,6 +271,7 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
 /*  Step 3 — All Set                                                  */
 /* ------------------------------------------------------------------ */
 function StepAllSet() {
+  const { colors } = useTheme();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -308,7 +312,7 @@ function StepAllSet() {
         You&apos;re all set
       </Text>
 
-      <Text style={styles.stepDescription}>
+      <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
         We&apos;re syncing your transactions now. This usually takes about 30 seconds.
       </Text>
 
@@ -316,7 +320,7 @@ function StepAllSet() {
       <Card style={styles.syncCard}>
         <View style={styles.syncHeader}>
           <FontAwesome name="refresh" size={16} color={Colors.secondary} />
-          <Text style={styles.syncTitle}>Syncing transactions...</Text>
+          <Text style={[styles.syncTitle, { color: colors.text }]}>Syncing transactions...</Text>
         </View>
         <View style={styles.progressTrack}>
           <Animated.View
@@ -332,7 +336,7 @@ function StepAllSet() {
       <Card style={styles.securityBanner}>
         <FontAwesome name="shield" size={18} color={Colors.success} />
         <View style={styles.securityTextWrap}>
-          <Text style={styles.securityTitle}>Your data is safe</Text>
+          <Text style={[styles.securityTitle, { color: colors.text }]}>Your data is safe</Text>
           <Text style={styles.securityDesc}>
             AES-256 encryption · UK servers · GDPR compliant
           </Text>
@@ -346,7 +350,7 @@ function StepAllSet() {
 /*  Main Screen                                                       */
 /* ================================================================== */
 export default function OnboardingScreen() {
-  useApiToken();
+  const { colors } = useTheme();
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -384,7 +388,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Slides */}
       <Animated.View
         style={[styles.slides, { transform: [{ translateX: slideAnim }] }]}
@@ -404,7 +408,7 @@ export default function OnboardingScreen() {
       </Animated.View>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
         <StepDots current={step} total={3} />
 
         {step === 0 && (
@@ -477,7 +481,6 @@ const styles = StyleSheet.create({
   /* Layout */
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   slides: {
     flex: 1,
@@ -555,7 +558,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Spacing.xs,
@@ -595,7 +597,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     fontSize: 13,
     fontStyle: 'italic',
-    color: Colors.light.text,
     lineHeight: 20,
     marginBottom: Spacing.xs,
   },
@@ -630,13 +631,11 @@ const styles = StyleSheet.create({
   featureCardTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
     marginBottom: 2,
   },
   featureCardDesc: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.light.textSecondary,
     lineHeight: 18,
   },
 
@@ -670,7 +669,6 @@ const styles = StyleSheet.create({
   stepDescription: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: Spacing.lg,
@@ -703,7 +701,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Manrope_400Regular',
     fontSize: 13,
-    color: Colors.light.textSecondary,
     lineHeight: 20,
   },
 
@@ -711,10 +708,8 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.input,
     borderWidth: 1,
-    borderColor: Colors.light.border,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.md,
     height: 44,
@@ -726,7 +721,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.text,
     padding: 0,
   },
 
@@ -737,7 +731,6 @@ const styles = StyleSheet.create({
   bankRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
     ...Shadows.soft,
@@ -759,7 +752,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Manrope_500Medium',
     fontSize: 15,
-    color: Colors.light.text,
   },
 
   /* Step 3 — All Set */
@@ -776,7 +768,6 @@ const styles = StyleSheet.create({
   syncTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   progressTrack: {
     height: 6,
@@ -811,7 +802,6 @@ const styles = StyleSheet.create({
   securityTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
     marginBottom: 2,
   },
   securityDesc: {
@@ -827,8 +817,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: Colors.grey[200],
-    backgroundColor: Colors.light.background,
   },
 
   /* CTA button (gold) — Step 1 */

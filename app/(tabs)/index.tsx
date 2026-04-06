@@ -8,7 +8,7 @@ import { ActionCard } from '@/components/ui/ActionCard';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
-import { useDashboard, useApiToken } from '@/lib/hooks/useApi';
+import { useDashboard } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -20,7 +20,6 @@ function getGreeting(): string {
 }
 
 export default function DashboardScreen() {
-  useApiToken();
   const { user } = useUser();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
   const { colors, isDark } = useTheme();

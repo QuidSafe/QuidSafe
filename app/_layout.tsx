@@ -18,6 +18,7 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
+import { useApiToken } from '@/lib/hooks/useApi';
 import 'react-native-reanimated';
 
 export { ErrorBoundary } from 'expo-router';
@@ -40,6 +41,7 @@ function ThemedStatusBar() {
 }
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
+  useApiToken(); // Sync Clerk token once at root level
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();

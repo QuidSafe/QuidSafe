@@ -6,7 +6,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-import { useApiToken } from '@/lib/hooks/useApi';
+// useApiToken is now called in the root layout
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -38,8 +38,7 @@ const PRO_FEATURES = [
 ];
 
 export default function BillingScreen() {
-  useApiToken();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
   const [loading, setLoading] = useState(false);
 

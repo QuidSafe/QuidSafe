@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   StyleSheet,
   View,
@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
-import { useBankConnections, useApiToken, useSettings, useUpdateSettings } from '@/lib/hooks/useApi';
+import { useBankConnections, useSettings, useUpdateSettings } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -99,7 +99,7 @@ function ActiveBadge() {
 }
 
 // --------------- Row ---------------
-function SettingsRow({
+const SettingsRow = memo(function SettingsRow({
   icon,
   iconBg,
   title,
@@ -136,7 +136,7 @@ function SettingsRow({
     );
   }
   return content;
-}
+});
 
 // --------------- Chevron ---------------
 function Chevron() {
@@ -144,13 +144,13 @@ function Chevron() {
 }
 
 // --------------- Section Label ---------------
-function SectionLabel({ label }: { label: string }) {
+const SectionLabel = memo(function SectionLabel({ label }: { label: string }) {
   const { colors } = useTheme();
   return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{label}</Text>;
-}
+});
 
 // --------------- Theme Option ---------------
-function ThemeOption({
+const ThemeOption = memo(function ThemeOption({
   icon,
   label,
   active,
@@ -175,11 +175,10 @@ function ThemeOption({
       {active && <FontAwesome name="check" size={14} color={Colors.success} />}
     </Pressable>
   );
-}
+});
 
 // --------------- Main Screen ---------------
 export default function SettingsScreen() {
-  useApiToken();
   const { colors, mode, setMode } = useTheme();
   const { user } = useUser();
   const { signOut } = useAuth();

@@ -2,19 +2,23 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
 
-/** Sync Clerk token to API client on every render */
+/** Sync Clerk token to API client — call once at root level */
 export function useApiToken() {
   const { getToken } = useAuth();
+  const hasSetToken = useRef(false);
+
+  const syncToken = useCallback(async () => {
+    const token = await getToken();
+    api.setToken(token);
+    hasSetToken.current = true;
+  }, [getToken]);
 
   useEffect(() => {
-    (async () => {
-      const token = await getToken();
-      api.setToken(token);
-    })();
-  }, [getToken]);
+    syncToken();
+  }, [syncToken]);
 }
 
 export function useDashboard() {
@@ -37,6 +41,7 @@ export function useUncategorised() {
   return useQuery({
     queryKey: ['transactions', 'uncategorised'],
     queryFn: () => api.getUncategorised(),
+    staleTime: 30_000,
   });
 }
 
@@ -56,6 +61,7 @@ export function useBankConnections() {
   return useQuery({
     queryKey: ['banking', 'connections'],
     queryFn: () => api.getConnections(),
+    staleTime: 60_000,
   });
 }
 
@@ -71,6 +77,7 @@ export function useExpenses() {
   return useQuery({
     queryKey: ['expenses'],
     queryFn: () => api.getExpenses(),
+    staleTime: 30_000,
   });
 }
 
@@ -90,6 +97,7 @@ export function useSettings() {
   return useQuery({
     queryKey: ['settings'],
     queryFn: () => api.getSettings(),
+    staleTime: 60_000,
   });
 }
 
@@ -108,6 +116,7 @@ export function useInvoices(status?: string) {
   return useQuery({
     queryKey: ['invoices', status],
     queryFn: () => api.getInvoices(status),
+    staleTime: 30_000,
   });
 }
 

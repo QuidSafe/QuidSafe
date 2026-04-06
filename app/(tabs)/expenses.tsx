@@ -15,7 +15,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
-import { useExpenses, useAddExpense, useApiToken } from '@/lib/hooks/useApi';
+import { useExpenses, useAddExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -47,7 +47,6 @@ function formatDate(dateStr: string): string {
 }
 
 export default function ExpensesScreen() {
-  useApiToken();
   const { colors } = useTheme();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useExpenses();

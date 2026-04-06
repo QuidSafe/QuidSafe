@@ -14,7 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-import { useDashboard, useQuarterlyBreakdown, useApiToken } from '@/lib/hooks/useApi';
+import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
@@ -39,7 +39,6 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 
 export default function IncomeScreen() {
   const { colors } = useTheme();
-  useApiToken();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   const { data: _quarterly } = useQuarterlyBreakdown();
 
