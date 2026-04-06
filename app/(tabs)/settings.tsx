@@ -62,7 +62,11 @@ function Toggle({
   });
 
   return (
-    <Pressable onPress={() => onValueChange(!value)}>
+    <Pressable
+      onPress={() => onValueChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+    >
       <Animated.View style={[toggleStyles.track, { backgroundColor: trackBg }]}>
         <Animated.View
           style={[toggleStyles.knob, { transform: [{ translateX: knobTranslate }] }]}
@@ -122,6 +126,8 @@ const SettingsRow = memo(function SettingsRow({
   right,
   isLast = false,
   onPress,
+  accessibilityLabel,
+  accessibilityHint,
 }: {
   icon: React.ComponentProps<typeof FontAwesome>['name'];
   iconBg: string;
@@ -130,6 +136,8 @@ const SettingsRow = memo(function SettingsRow({
   right?: React.ReactNode;
   isLast?: boolean;
   onPress?: () => void;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }) {
   const { colors } = useTheme();
   const content = (
@@ -145,7 +153,13 @@ const SettingsRow = memo(function SettingsRow({
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => pressed && styles.pressed}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? title}
+        accessibilityHint={accessibilityHint}
+      >
         {content}
       </Pressable>
     );
@@ -178,7 +192,7 @@ const ThemeOption = memo(function ThemeOption({
 }) {
   const { colors } = useTheme();
   return (
-    <Pressable onPress={onPress} style={styles.themeOption}>
+    <Pressable onPress={onPress} style={styles.themeOption} accessibilityRole="button" accessibilityLabel={`Theme: ${label}`} accessibilityState={{ selected: active }}>
       <View style={styles.themeLeft}>
         <IconBox
           name={icon}
@@ -251,6 +265,8 @@ const BankConnectionRow = memo(function BankConnectionRow({
           onPress={() => onSync(connection.id)}
           disabled={isSyncing}
           style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={`Sync ${connection.bankName}`}
         >
           {isSyncing ? (
             <ActivityIndicator size="small" color={Colors.secondary} />
@@ -423,7 +439,7 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Settings</Text>
 
         {/* SECURITY */}
         <SectionLabel label="SECURITY" />
@@ -489,18 +505,24 @@ export default function SettingsScreen() {
             iconBg={Colors.accent}
             title="Tax deadline reminders"
             right={<Toggle value={taxReminders} onValueChange={(v) => { setTaxReminders(v); handleToggle('notifyTaxDeadlines', v); }} />}
+            accessibilityLabel="Tax deadline reminders"
+            accessibilityHint="Toggle tax deadline reminders on or off"
           />
           <SettingsRow
             icon="bar-chart"
             iconBg={Colors.secondary}
             title="Weekly income summary"
             right={<Toggle value={weeklySum} onValueChange={(v) => { setWeeklySum(v); handleToggle('notifyWeeklySummary', v); }} />}
+            accessibilityLabel="Weekly income summary"
+            accessibilityHint="Toggle weekly income summary notifications on or off"
           />
           <SettingsRow
             icon="gbp"
             iconBg={Colors.success}
             title="Tax pot check (monthly)"
             right={<Toggle value={taxPotCheck} onValueChange={(v) => { setTaxPotCheck(v); handleToggle('notifyTransactionAlerts', v); }} />}
+            accessibilityLabel="Tax pot check, monthly"
+            accessibilityHint="Toggle monthly tax pot check notifications on or off"
           />
           <SettingsRow
             icon="file-text-o"
@@ -508,6 +530,8 @@ export default function SettingsScreen() {
             title="MTD submission ready"
             right={<Toggle value={mtdReady} onValueChange={(v) => { setMtdReady(v); handleToggle('notifyMtdReady', v); }} />}
             isLast
+            accessibilityLabel="MTD submission ready"
+            accessibilityHint="Toggle Making Tax Digital submission ready notifications on or off"
           />
         </Card>
 
@@ -535,6 +559,9 @@ export default function SettingsScreen() {
             onPress={handleAddBank}
             disabled={isAddingBank}
             style={({ pressed }) => [styles.addBankButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Add bank"
+            accessibilityHint="Tap to connect a new bank account"
           >
             {isAddingBank ? (
               <ActivityIndicator size="small" color={Colors.secondary} />
@@ -656,12 +683,15 @@ export default function SettingsScreen() {
         <Pressable
           style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
           onPress={handleSignOut}
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+          accessibilityHint="Tap to sign out of your account"
         >
           <Text style={[styles.signOutText, { color: colors.text }]}>Sign out</Text>
         </Pressable>
 
         {/* Delete account */}
-        <Pressable style={styles.deleteButton} onPress={handleDeleteAccount}>
+        <Pressable style={styles.deleteButton} onPress={handleDeleteAccount} accessibilityRole="button" accessibilityLabel="Delete account" accessibilityHint="Tap to permanently delete your account and all data">
           <Text style={styles.deleteText}>Delete account</Text>
         </Pressable>
       </ScrollView>
