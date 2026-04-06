@@ -119,7 +119,7 @@ function CountingNumber({ target }: { target: number }) {
         {display}
       </Text>
       <Text style={[styles.countingSub, { color: colors.textSecondary }]}>
-        That's how much the average sole trader saves
+        That&apos;s how much the average sole trader saves
       </Text>
     </View>
   );

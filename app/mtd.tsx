@@ -269,7 +269,7 @@ export default function MTDScreen() {
                   What is Making Tax Digital?
                 </Text>
                 <Text style={[styles.connectDescription, { color: colors.textSecondary }]}>
-                  Making Tax Digital (MTD) is HMRC's initiative requiring sole traders to submit
+                  Making Tax Digital (MTD) is HMRC&apos;s initiative requiring sole traders to submit
                   quarterly income and expense updates digitally. From April 2026, this applies to
                   businesses earning over the VAT threshold.
                 </Text>
