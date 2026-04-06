@@ -127,6 +127,7 @@ export default function RootLayout() {
                     <Stack.Screen name="billing" options={{ headerShown: false }} />
                     <Stack.Screen name="mtd" options={{ headerShown: false, presentation: 'modal' }} />
                     <Stack.Screen name="invoices" options={{ headerShown: false }} />
+                    <Stack.Screen name="status" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </AuthRedirect>

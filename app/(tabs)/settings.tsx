@@ -661,6 +661,14 @@ export default function SettingsScreen() {
         <SectionLabel label="ABOUT" />
         <Card style={styles.cardPadding}>
           <SettingsRow
+            icon="dashboard"
+            iconBg={Colors.secondary}
+            title="System Status"
+            subtitle="Monitoring & diagnostics"
+            right={<Chevron />}
+            onPress={() => router.push('/status')}
+          />
+          <SettingsRow
             icon="info-circle"
             iconBg={Colors.grey[400]}
             title="App version"

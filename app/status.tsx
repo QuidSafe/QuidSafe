@@ -1,0 +1,1122 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+  Animated,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useUser } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Constants from 'expo-constants';
+import { Card } from '@/components/ui/Card';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import {
+  useDashboard,
+  useBankConnections,
+  useTransactions,
+  useInvoices,
+  useBillingStatus,
+  useMtdObligations,
+  useSyncBank,
+} from '@/lib/hooks/useApi';
+import { useTheme } from '@/lib/ThemeContext';
+import { formatCurrency } from '@/lib/tax-engine';
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
+
+// -------- Helpers --------
+
+function formatRelativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Never';
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  if (diffMs < 0) return 'Just now';
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function getSyncHealthColor(lastSyncedAt: string | undefined): string {
+  if (!lastSyncedAt) return Colors.error;
+  const diffMs = Date.now() - new Date(lastSyncedAt).getTime();
+  const hours = diffMs / (1000 * 60 * 60);
+  if (hours < 24) return Colors.success;
+  if (hours < 168) return Colors.warning;
+  return Colors.error;
+}
+
+function formatTimestamp(date: Date): string {
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+// -------- Sub-components --------
+
+function SectionTitle({ title, colors }: { title: string; colors: { text: string } }) {
+  return (
+    <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">
+      {title}
+    </Text>
+  );
+}
+
+function StatusDot({ color }: { color: string }) {
+  return <View style={[styles.statusDot, { backgroundColor: color }]} />;
+}
+
+function StatRow({
+  label,
+  value,
+  colors,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  colors: { text: string; textSecondary: string };
+  valueColor?: string;
+}) {
+  return (
+    <View style={styles.statRow}>
+      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.statValue, { color: valueColor ?? colors.text }]}>{value}</Text>
+    </View>
+  );
+}
+
+function StatusBadge({ label, color, bg }: { label: string; color: string; bg: string }) {
+  return (
+    <View style={[styles.badge, { backgroundColor: bg }]}>
+      <Text style={[styles.badgeText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+function CountBadge({ count, color, bg }: { count: number; color: string; bg: string }) {
+  return (
+    <View style={[styles.countBadge, { backgroundColor: bg }]}>
+      <Text style={[styles.countBadgeText, { color }]}>{count}</Text>
+    </View>
+  );
+}
+
+function ProgressBar({
+  progress,
+  color,
+  bgColor,
+}: {
+  progress: number;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <View style={[styles.progressBar, { backgroundColor: bgColor }]}>
+      <View
+        style={[
+          styles.progressBarFill,
+          { width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: color },
+        ]}
+      />
+    </View>
+  );
+}
+
+// -------- Toggle --------
+
+function Toggle({
+  value,
+  onValueChange,
+}: {
+  value: boolean;
+  onValueChange: (v: boolean) => void;
+}) {
+  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: value ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [value, anim]);
+
+  const trackBg = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [Colors.grey[300], Colors.success],
+  });
+
+  const knobTranslate = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [2, 18],
+  });
+
+  return (
+    <Pressable
+      onPress={() => onValueChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+    >
+      <Animated.View style={[toggleStyles.track, { backgroundColor: trackBg }]}>
+        <Animated.View
+          style={[toggleStyles.knob, { transform: [{ translateX: knobTranslate }] }]}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const toggleStyles = StyleSheet.create({
+  track: {
+    width: 40,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+  knob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+  },
+});
+
+// -------- Main Screen --------
+
+export default function StatusScreen() {
+  const { colors, isDark } = useTheme();
+  const { user } = useUser();
+  const router = useRouter();
+
+  // Data hooks
+  const dashboard = useDashboard();
+  const bankConnections = useBankConnections();
+  const transactions = useTransactions({ limit: 10000 });
+  const invoices = useInvoices();
+  const billing = useBillingStatus();
+  const mtd = useMtdObligations();
+  const syncBank = useSyncBank();
+
+  // Auto-refresh
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // API health
+  const [apiPing, setApiPing] = useState<number | null>(null);
+  const [apiStatus, setApiStatus] = useState<'connected' | 'error' | 'checking'>('checking');
+
+  const refreshAll = useCallback(() => {
+    dashboard.refetch();
+    bankConnections.refetch();
+    transactions.refetch();
+    invoices.refetch();
+    billing.refetch();
+    mtd.refetch();
+    setLastRefreshed(new Date());
+    pingApi();
+  }, [dashboard, bankConnections, transactions, invoices, billing, mtd]);
+
+  const pingApi = useCallback(async () => {
+    setApiStatus('checking');
+    const start = Date.now();
+    try {
+      const res = await fetch(`${API_BASE}/health`);
+      const elapsed = Date.now() - start;
+      if (res.ok) {
+        setApiPing(elapsed);
+        setApiStatus('connected');
+      } else {
+        setApiPing(elapsed);
+        setApiStatus('error');
+      }
+    } catch {
+      setApiPing(null);
+      setApiStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    pingApi();
+  }, [pingApi]);
+
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        refreshAll();
+      }, 30_000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefresh, refreshAll]);
+
+  const isRefetching =
+    dashboard.isRefetching ||
+    bankConnections.isRefetching ||
+    transactions.isRefetching ||
+    invoices.isRefetching;
+
+  // Derived data
+  const tax = dashboard.data?.tax;
+  const connections = bankConnections.data?.connections ?? [];
+  const txns = transactions.data?.transactions ?? [];
+  const txnTotal = transactions.data?.total ?? txns.length;
+  const allInvoices = invoices.data?.invoices ?? [];
+
+  // Transaction stats
+  const categorised = txns.filter((t) => t.aiCategory != null || t.userOverride).length;
+  const uncategorised = txnTotal - categorised;
+  const categorisedPct = txnTotal > 0 ? Math.round((categorised / txnTotal) * 100) : 0;
+  const incomeCount = txns.filter((t) => t.aiCategory === 'income' || t.isIncome).length;
+  const businessCount = txns.filter((t) => t.aiCategory === 'business_expense').length;
+  const personalCount = txns.filter((t) => t.aiCategory === 'personal').length;
+  const incomePct = txnTotal > 0 ? Math.round((incomeCount / txnTotal) * 100) : 0;
+  const businessPct = txnTotal > 0 ? Math.round((businessCount / txnTotal) * 100) : 0;
+  const personalPct = txnTotal > 0 ? Math.round((personalCount / txnTotal) * 100) : 0;
+  const lastTxnDate =
+    txns.length > 0
+      ? [...txns].sort(
+          (a, b) =>
+            new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime(),
+        )[0]?.transactionDate
+      : null;
+
+  // Invoice stats
+  const draftInvoices = allInvoices.filter((i) => i.status === 'draft');
+  const sentInvoices = allInvoices.filter((i) => i.status === 'sent');
+  const paidInvoices = allInvoices.filter((i) => i.status === 'paid');
+  const overdueInvoices = allInvoices.filter((i) => i.status === 'overdue');
+  const totalOutstanding = [...sentInvoices, ...overdueInvoices].reduce(
+    (s, i) => s + i.amount,
+    0,
+  );
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const paidThisMonth = paidInvoices
+    .filter((i) => i.paidAt && new Date(i.paidAt) >= startOfMonth)
+    .reduce((s, i) => s + i.amount, 0);
+
+  // Billing
+  const billingData = billing.data;
+  const subTier = billingData?.plan === 'pro_monthly' || billingData?.plan === 'pro_annual' ? 'Pro' : 'Free';
+  const subStatus = billingData?.status ?? 'active';
+  const trialEndsAt = billingData?.trialEndsAt;
+  const trialDaysRemaining =
+    trialEndsAt && subStatus === 'trialing'
+      ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : null;
+
+  // MTD
+  const mtdSubmissions = mtd.data?.submissions ?? [];
+  const mtdConnected = mtdSubmissions.length > 0 || (mtd.data?.obligations && Array.isArray(mtd.data.obligations) && mtd.data.obligations.length > 0);
+
+  // App info
+  const appVersion = Constants.expoConfig?.version ?? '0.1.0';
+  const sdkVersion = Constants.expoConfig?.sdkVersion ?? 'Unknown';
+  const buildType = __DEV__ ? 'Development' : 'Production';
+  const platform =
+    Platform.OS === 'web' ? 'Web' : Platform.OS === 'ios' ? 'iOS' : 'Android';
+
+  const statusBadgeConfig = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { color: Colors.success, bg: 'rgba(22,163,74,0.1)', label: 'Active' };
+      case 'trialing':
+        return { color: Colors.accent, bg: 'rgba(202,138,4,0.1)', label: 'Trialing' };
+      case 'past_due':
+        return { color: Colors.error, bg: 'rgba(220,38,38,0.1)', label: 'Past Due' };
+      case 'cancelled':
+        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Cancelled' };
+      default:
+        return { color: Colors.grey[500], bg: Colors.grey[200], label: status };
+    }
+  };
+
+  const subBadge = statusBadgeConfig(subStatus);
+
+  const quarterBadgeConfig = (status: string) => {
+    switch (status) {
+      case 'submitted':
+      case 'accepted':
+        return { color: Colors.success, bg: 'rgba(22,163,74,0.1)', label: 'Submitted' };
+      case 'rejected':
+        return { color: Colors.error, bg: 'rgba(220,38,38,0.1)', label: 'Rejected' };
+      case 'draft':
+        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Pending' };
+      default:
+        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Pending' };
+    }
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refreshAll} tintColor={colors.tint} />
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <FontAwesome name="chevron-left" size={16} color={colors.text} />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text style={[styles.pageTitle, { color: colors.text }]}>System Status</Text>
+            <Text style={[styles.lastRefreshed, { color: colors.textSecondary }]}>
+              Last refreshed: {formatTimestamp(lastRefreshed)}
+            </Text>
+          </View>
+          <View style={styles.headerActions}>
+            <Toggle value={autoRefresh} onValueChange={setAutoRefresh} />
+            <Pressable
+              onPress={refreshAll}
+              style={[styles.refreshButton, { borderColor: colors.border }]}
+              accessibilityRole="button"
+              accessibilityLabel="Refresh all data"
+            >
+              {isRefetching ? (
+                <ActivityIndicator size="small" color={Colors.secondary} />
+              ) : (
+                <FontAwesome name="refresh" size={14} color={Colors.secondary} />
+              )}
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Section 1 — Account Overview */}
+        <SectionTitle title="Account Overview" colors={colors} />
+        <Card style={styles.cardPadding}>
+          <StatRow label="Name" value={user?.fullName ?? '—'} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow
+            label="Email"
+            value={user?.primaryEmailAddress?.emailAddress ?? '—'}
+            colors={colors}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <View style={styles.statRow}>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Subscription</Text>
+            <View style={styles.rowEnd}>
+              <Text style={[styles.statValue, { color: colors.text, marginRight: 8 }]}>
+                {subTier}
+              </Text>
+              <StatusBadge label={subBadge.label} color={subBadge.color} bg={subBadge.bg} />
+            </View>
+          </View>
+          {trialDaysRemaining !== null && (
+            <>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Trial days remaining"
+                value={`${trialDaysRemaining} days`}
+                colors={colors}
+                valueColor={trialDaysRemaining <= 3 ? Colors.error : Colors.accent}
+              />
+            </>
+          )}
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow
+            label="Account created"
+            value={
+              user?.createdAt
+                ? new Date(user.createdAt).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : '—'
+            }
+            colors={colors}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <Pressable
+            onPress={() => router.push('/billing')}
+            style={styles.linkRow}
+            accessibilityRole="link"
+            accessibilityLabel="Manage Plan"
+          >
+            <Text style={[styles.linkText, { color: Colors.secondary }]}>Manage Plan</Text>
+            <FontAwesome name="chevron-right" size={10} color={Colors.secondary} />
+          </Pressable>
+        </Card>
+
+        {/* Section 2 — Financial Summary */}
+        <SectionTitle title="Financial Summary" colors={colors} />
+        <Card style={styles.cardPadding}>
+          {dashboard.isLoading ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : (
+            <>
+              <StatRow
+                label="Tax year"
+                value={tax?.taxYear ?? '—'}
+                colors={colors}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Gross income"
+                value={formatCurrency(tax?.totalIncome ?? 0)}
+                colors={colors}
+                valueColor={Colors.success}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Total expenses"
+                value={formatCurrency(tax?.totalExpenses ?? 0)}
+                colors={colors}
+                valueColor={Colors.error}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Net profit"
+                value={formatCurrency(tax?.netProfit ?? 0)}
+                colors={colors}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Total tax owed"
+                value={formatCurrency(tax?.totalTaxOwed ?? 0)}
+                colors={colors}
+                valueColor={Colors.accent}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Effective tax rate"
+                value={`${tax?.effectiveRate ?? 0}%`}
+                colors={colors}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Monthly set-aside"
+                value={formatCurrency(tax?.setAsideMonthly ?? 0)}
+                colors={colors}
+                valueColor={Colors.accent}
+              />
+            </>
+          )}
+        </Card>
+
+        {/* Section 3 — Bank Connections */}
+        <SectionTitle title="Bank Connections" colors={colors} />
+        <Card style={styles.cardPadding}>
+          {bankConnections.isLoading ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : connections.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No bank connections
+            </Text>
+          ) : (
+            connections.map((conn, idx) => {
+              const healthColor = getSyncHealthColor(conn.lastSyncedAt);
+              const isLast = idx === connections.length - 1;
+              const connTxns = txns.filter((t) => t.bankConnectionId === conn.id).length;
+              return (
+                <View key={conn.id}>
+                  <View style={styles.bankRow}>
+                    <View style={styles.bankInfo}>
+                      <View style={styles.bankNameRow}>
+                        <StatusDot color={healthColor} />
+                        <Text style={[styles.bankName, { color: colors.text }]}>
+                          {conn.bankName}
+                        </Text>
+                        <StatusBadge
+                          label={conn.active ? 'Active' : 'Inactive'}
+                          color={conn.active ? Colors.success : Colors.grey[500]}
+                          bg={conn.active ? 'rgba(22,163,74,0.1)' : Colors.grey[200]}
+                        />
+                      </View>
+                      <Text style={[styles.bankDetail, { color: colors.textSecondary }]}>
+                        Last synced: {formatRelativeTime(conn.lastSyncedAt)}
+                      </Text>
+                      <Text style={[styles.bankDetail, { color: colors.textSecondary }]}>
+                        Transactions synced: {connTxns}
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={() => syncBank.mutate(conn.id)}
+                      disabled={syncBank.isPending}
+                      style={[styles.syncButton, { borderColor: Colors.secondary }]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Sync ${conn.bankName}`}
+                    >
+                      {syncBank.isPending ? (
+                        <ActivityIndicator size="small" color={Colors.secondary} />
+                      ) : (
+                        <Text style={styles.syncButtonText}>Sync Now</Text>
+                      )}
+                    </Pressable>
+                  </View>
+                  {!isLast && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
+                </View>
+              );
+            })
+          )}
+        </Card>
+
+        {/* Section 4 — Transaction Stats */}
+        <SectionTitle title="Transaction Stats" colors={colors} />
+        <Card style={styles.cardPadding}>
+          {transactions.isLoading ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : (
+            <>
+              <StatRow
+                label="Total transactions"
+                value={String(txnTotal)}
+                colors={colors}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={styles.progressSection}>
+                <View style={styles.statRow}>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                    Categorised
+                  </Text>
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {categorised} / {txnTotal} ({categorisedPct}%)
+                  </Text>
+                </View>
+                <ProgressBar
+                  progress={categorisedPct}
+                  color={Colors.success}
+                  bgColor={isDark ? Colors.grey[700] : Colors.grey[200]}
+                />
+              </View>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Uncategorised"
+                value={String(uncategorised)}
+                colors={colors}
+                valueColor={uncategorised > 0 ? Colors.warning : Colors.success}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={styles.categoryBreakdown}>
+                <Text style={[styles.statLabel, { color: colors.textSecondary, marginBottom: 8 }]}>
+                  By category
+                </Text>
+                <View style={styles.categoryRow}>
+                  <StatusDot color={Colors.success} />
+                  <Text style={[styles.categoryLabel, { color: colors.text }]}>Income</Text>
+                  <Text style={[styles.categoryValue, { color: colors.textSecondary }]}>
+                    {incomeCount} ({incomePct}%)
+                  </Text>
+                </View>
+                <View style={styles.categoryRow}>
+                  <StatusDot color={Colors.secondary} />
+                  <Text style={[styles.categoryLabel, { color: colors.text }]}>Business</Text>
+                  <Text style={[styles.categoryValue, { color: colors.textSecondary }]}>
+                    {businessCount} ({businessPct}%)
+                  </Text>
+                </View>
+                <View style={styles.categoryRow}>
+                  <StatusDot color={Colors.grey[400]} />
+                  <Text style={[styles.categoryLabel, { color: colors.text }]}>Personal</Text>
+                  <Text style={[styles.categoryValue, { color: colors.textSecondary }]}>
+                    {personalCount} ({personalPct}%)
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Last transaction"
+                value={
+                  lastTxnDate
+                    ? new Date(lastTxnDate).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : '—'
+                }
+                colors={colors}
+              />
+            </>
+          )}
+        </Card>
+
+        {/* Section 5 — Invoices Overview */}
+        <SectionTitle title="Invoices Overview" colors={colors} />
+        <Card style={styles.cardPadding}>
+          {invoices.isLoading ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : (
+            <>
+              <StatRow
+                label="Total invoices"
+                value={String(allInvoices.length)}
+                colors={colors}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={styles.invoiceStatusRow}>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>By status</Text>
+                <View style={styles.invoiceBadges}>
+                  <View style={styles.invoiceBadgeItem}>
+                    <Text style={[styles.invoiceBadgeLabel, { color: colors.textSecondary }]}>
+                      Draft
+                    </Text>
+                    <CountBadge
+                      count={draftInvoices.length}
+                      color={Colors.grey[600]}
+                      bg={Colors.grey[200]}
+                    />
+                  </View>
+                  <View style={styles.invoiceBadgeItem}>
+                    <Text style={[styles.invoiceBadgeLabel, { color: colors.textSecondary }]}>
+                      Sent
+                    </Text>
+                    <CountBadge
+                      count={sentInvoices.length}
+                      color={Colors.secondary}
+                      bg="rgba(30,58,138,0.1)"
+                    />
+                  </View>
+                  <View style={styles.invoiceBadgeItem}>
+                    <Text style={[styles.invoiceBadgeLabel, { color: colors.textSecondary }]}>
+                      Paid
+                    </Text>
+                    <CountBadge
+                      count={paidInvoices.length}
+                      color={Colors.success}
+                      bg="rgba(22,163,74,0.1)"
+                    />
+                  </View>
+                  <View style={styles.invoiceBadgeItem}>
+                    <Text style={[styles.invoiceBadgeLabel, { color: colors.textSecondary }]}>
+                      Overdue
+                    </Text>
+                    <CountBadge
+                      count={overdueInvoices.length}
+                      color={Colors.error}
+                      bg="rgba(220,38,38,0.1)"
+                    />
+                  </View>
+                </View>
+              </View>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Outstanding amount"
+                value={formatCurrency(totalOutstanding)}
+                colors={colors}
+                valueColor={totalOutstanding > 0 ? Colors.warning : Colors.success}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <StatRow
+                label="Paid this month"
+                value={formatCurrency(paidThisMonth)}
+                colors={colors}
+                valueColor={Colors.success}
+              />
+            </>
+          )}
+        </Card>
+
+        {/* Section 6 — HMRC MTD Status */}
+        <SectionTitle title="HMRC MTD Status" colors={colors} />
+        <Card style={styles.cardPadding}>
+          {mtd.isLoading ? (
+            <ActivityIndicator size="small" color={Colors.secondary} />
+          ) : (
+            <>
+              <View style={styles.statRow}>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                  Connection status
+                </Text>
+                <View style={styles.rowEnd}>
+                  <StatusDot color={mtdConnected ? Colors.success : Colors.grey[400]} />
+                  <Text
+                    style={[
+                      styles.statValue,
+                      { color: mtdConnected ? Colors.success : colors.textSecondary, marginLeft: 6 },
+                    ]}
+                  >
+                    {mtdConnected ? 'Connected' : 'Not connected'}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <Text
+                style={[styles.statLabel, { color: colors.textSecondary, marginBottom: 8 }]}
+              >
+                Quarterly submissions
+              </Text>
+              <View style={styles.quarterGrid}>
+                {[1, 2, 3, 4].map((q) => {
+                  const sub = mtdSubmissions.find((s) => s.quarter === q);
+                  const badge = quarterBadgeConfig(sub?.status ?? 'pending');
+                  return (
+                    <View key={q} style={[styles.quarterItem, { borderColor: colors.border }]}>
+                      <Text style={[styles.quarterLabel, { color: colors.text }]}>Q{q}</Text>
+                      <StatusBadge label={badge.label} color={badge.color} bg={badge.bg} />
+                    </View>
+                  );
+                })}
+              </View>
+              {mtdSubmissions.length > 0 && (
+                <>
+                  <View style={[styles.divider, { backgroundColor: colors.border, marginTop: 8 }]} />
+                  <StatRow
+                    label="Last submission"
+                    value={
+                      (() => {
+                        const submitted = mtdSubmissions
+                          .filter((s) => s.status === 'submitted' || s.status === 'accepted');
+                        if (submitted.length === 0) return '—';
+                        return `Q${submitted[submitted.length - 1]?.quarter ?? '?'}`;
+                      })()
+                    }
+                    colors={colors}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </Card>
+
+        {/* Section 7 — API Health */}
+        <SectionTitle title="API Health" colors={colors} />
+        <Card style={styles.cardPadding}>
+          <View style={styles.statRow}>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Status</Text>
+            <View style={styles.rowEnd}>
+              <StatusDot
+                color={
+                  apiStatus === 'connected'
+                    ? Colors.success
+                    : apiStatus === 'checking'
+                      ? Colors.warning
+                      : Colors.error
+                }
+              />
+              <Text
+                style={[
+                  styles.statValue,
+                  {
+                    color:
+                      apiStatus === 'connected'
+                        ? Colors.success
+                        : apiStatus === 'checking'
+                          ? Colors.warning
+                          : Colors.error,
+                    marginLeft: 6,
+                  },
+                ]}
+              >
+                {apiStatus === 'connected'
+                  ? 'Connected'
+                  : apiStatus === 'checking'
+                    ? 'Checking...'
+                    : 'Error'}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow
+            label="Response time"
+            value={apiPing !== null ? `${apiPing}ms` : '—'}
+            colors={colors}
+            valueColor={
+              apiPing !== null
+                ? apiPing < 200
+                  ? Colors.success
+                  : apiPing < 1000
+                    ? Colors.warning
+                    : Colors.error
+                : undefined
+            }
+          />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow label="API URL" value={API_BASE} colors={colors} />
+        </Card>
+
+        {/* Section 8 — App Info */}
+        <SectionTitle title="App Info" colors={colors} />
+        <Card style={styles.cardPadding}>
+          <StatRow label="App version" value={appVersion} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow label="Expo SDK" value={sdkVersion} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow label="Build type" value={buildType} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <StatRow label="Platform" value={platform} colors={colors} />
+        </Card>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scroll: {
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+    paddingBottom: Spacing.xxl + Spacing.lg,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+  },
+  pageTitle: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 24,
+    lineHeight: 32,
+  },
+  lastRefreshed: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refreshButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Section titles
+  sectionTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16,
+    letterSpacing: -0.2,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+  },
+
+  // Card padding
+  cardPadding: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+
+  // Stat rows
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  statLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+  },
+  statValue: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+  rowEnd: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  // Divider
+  divider: {
+    height: 1,
+  },
+
+  // Status dot
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // Badge
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.pill,
+  },
+  badgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10.5,
+  },
+
+  // Count badge
+  countBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  countBadgeText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+  },
+
+  // Progress bar
+  progressSection: {
+    paddingVertical: 4,
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+    marginTop: 6,
+  },
+  progressBarFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+
+  // Category breakdown
+  categoryBreakdown: {
+    paddingVertical: 4,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  categoryLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    flex: 1,
+  },
+  categoryValue: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+  },
+
+  // Bank connections
+  bankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  bankInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  bankNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bankName: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+  },
+  bankDetail: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    marginLeft: 16,
+  },
+  syncButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  syncButtonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: Colors.secondary,
+  },
+
+  // Invoices
+  invoiceStatusRow: {
+    paddingVertical: 8,
+  },
+  invoiceBadges: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  invoiceBadgeItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  invoiceBadgeLabel: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 10,
+  },
+
+  // MTD quarters
+  quarterGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quarterItem: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    gap: 6,
+  },
+  quarterLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+  },
+
+  // Link row
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  linkText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+
+  // Empty text
+  emptyText: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+});
