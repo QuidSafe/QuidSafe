@@ -28,6 +28,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Post-deploy health check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://quidsafe-api.nathanlufc.workers.dev/health)
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed (200 OK)"
+
   deploy-web:
     name: Deploy Web (Pages)
     runs-on: ubuntu-latest

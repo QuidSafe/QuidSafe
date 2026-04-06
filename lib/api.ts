@@ -177,6 +177,44 @@ class ApiClient {
   }) {
     return this.request<{ user: User }>('/settings', { method: 'PUT', body: JSON.stringify(data) });
   }
+
+  // Devices
+  registerDevice(pushToken: string, platform: string) {
+    return this.request<{ registered: boolean }>('/devices', { method: 'POST', body: JSON.stringify({ pushToken, platform }) });
+  }
+
+  removeDevice(pushToken: string) {
+    return this.request<{ removed: boolean }>('/devices', { method: 'DELETE', body: JSON.stringify({ pushToken }) });
+  }
+
+  // Tax quarters
+  getQuarters(taxYear?: string) {
+    return this.getQuarterlyBreakdown(taxYear);
+  }
+
+  // HMRC MTD
+  getHmrcAuthUrl() {
+    return this.request<{ url: string }>('/mtd/auth');
+  }
+
+  submitHmrcCallback(code: string) {
+    return this.request<{ connected: boolean }>('/mtd/callback', { method: 'POST', body: JSON.stringify({ code }) });
+  }
+
+  getMtdObligations() {
+    return this.request<{ obligations: unknown[]; submissions: { quarter: number; status: string; hmrc_receipt_id: string | null }[] }>('/mtd/obligations');
+  }
+
+  submitQuarterly(taxYear: string, quarter: number) {
+    return this.request<{ success: boolean; submissionId: string; hmrcReceiptId: string; summary: { taxYear: string; quarter: number; totalIncome: number; totalExpenses: number; netProfit: number } }>(
+      '/mtd/submit-quarterly',
+      { method: 'POST', body: JSON.stringify({ taxYear, quarter }) },
+    );
+  }
+
+  getMtdSubmission(id: string) {
+    return this.request<{ submission: unknown }>(`/mtd/submission/${id}`);
+  }
 }
 
 export const api = new ApiClient();

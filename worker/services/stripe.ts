@@ -222,9 +222,9 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
         [crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd],
       );
 
-      // Update user tier
+      // Update user tier and clear grace period if subscription is back to active
       const tier = status === 'active' || status === 'trialing' ? 'pro' : 'free';
-      await execute(db, 'UPDATE users SET subscription_tier = ?, updated_at = datetime(\'now\') WHERE id = ?', [tier, userId]);
+      await execute(db, 'UPDATE users SET subscription_tier = ?, grace_period_ends = CASE WHEN ? IN (\'active\', \'trialing\') THEN NULL ELSE grace_period_ends END, updated_at = datetime(\'now\') WHERE id = ?', [tier, status, userId]);
       break;
     }
 
@@ -235,10 +235,17 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
 
     case 'invoice.payment_failed': {
       if (!userId) break;
+      // Set 7-day grace period instead of immediately revoking access
+      const gracePeriodEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       await execute(
         db,
         'UPDATE subscriptions SET status = \'past_due\' WHERE user_id = ?',
         [userId],
+      );
+      await execute(
+        db,
+        'UPDATE users SET subscription_tier = \'past_due\', grace_period_ends = ?, updated_at = datetime(\'now\') WHERE id = ?',
+        [gracePeriodEnds, userId],
       );
       break;
     }
@@ -246,7 +253,7 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
     case 'customer.subscription.deleted': {
       if (!userId) break;
       await execute(db, 'UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = ?', [userId]);
-      await execute(db, 'UPDATE users SET subscription_tier = \'free\', updated_at = datetime(\'now\') WHERE id = ?', [userId]);
+      await execute(db, 'UPDATE users SET subscription_tier = \'cancelled\', grace_period_ends = NULL, updated_at = datetime(\'now\') WHERE id = ?', [userId]);
       break;
     }
   }

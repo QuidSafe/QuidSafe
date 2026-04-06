@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
-import { useBankConnections, useApiToken } from '@/lib/hooks/useApi';
+import { useBankConnections, useApiToken, useSettings, useUpdateSettings } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 
 // --------------- Custom Toggle ---------------
@@ -181,14 +181,30 @@ export default function SettingsScreen() {
   const { signOut } = useAuth();
   const router = useRouter();
   const { data: _bankData } = useBankConnections();
+  const { data: settingsData } = useSettings();
+  const updateSettings = useUpdateSettings();
   const _systemScheme = useColorScheme();
 
-  // Toggle states
+  // Toggle states — initialise from API
   const [biometricLock, setBiometricLock] = useState(true);
   const [taxReminders, setTaxReminders] = useState(true);
-  const [weeklySummary, setWeeklySummary] = useState(true);
+  const [weeklySum, setWeeklySum] = useState(true);
   const [taxPotCheck, setTaxPotCheck] = useState(false);
   const [mtdReady, setMtdReady] = useState(true);
+
+  // Sync API settings to local state
+  useEffect(() => {
+    if (settingsData?.user) {
+      const u = settingsData.user as unknown as Record<string, unknown>;
+      if (typeof u.notify_tax_deadlines === 'number') setTaxReminders(u.notify_tax_deadlines === 1);
+      if (typeof u.notify_weekly_summary === 'number') setWeeklySum(u.notify_weekly_summary === 1);
+      if (typeof u.notify_transaction_alerts === 'number') setTaxPotCheck(u.notify_transaction_alerts === 1);
+    }
+  }, [settingsData]);
+
+  const handleToggle = (key: 'notifyTaxDeadlines' | 'notifyWeeklySummary' | 'notifyTransactionAlerts', value: boolean) => {
+    updateSettings.mutate({ [key]: value });
+  };
 
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
@@ -283,19 +299,19 @@ export default function SettingsScreen() {
             icon="bell"
             iconBg={Colors.accent}
             title="Tax deadline reminders"
-            right={<Toggle value={taxReminders} onValueChange={setTaxReminders} />}
+            right={<Toggle value={taxReminders} onValueChange={(v) => { setTaxReminders(v); handleToggle('notifyTaxDeadlines', v); }} />}
           />
           <SettingsRow
             icon="bar-chart"
             iconBg={Colors.secondary}
             title="Weekly income summary"
-            right={<Toggle value={weeklySummary} onValueChange={setWeeklySummary} />}
+            right={<Toggle value={weeklySum} onValueChange={(v) => { setWeeklySum(v); handleToggle('notifyWeeklySummary', v); }} />}
           />
           <SettingsRow
             icon="gbp"
             iconBg={Colors.success}
             title="Tax pot check (monthly)"
-            right={<Toggle value={taxPotCheck} onValueChange={setTaxPotCheck} />}
+            right={<Toggle value={taxPotCheck} onValueChange={(v) => { setTaxPotCheck(v); handleToggle('notifyTransactionAlerts', v); }} />}
           />
           <SettingsRow
             icon="file-text-o"

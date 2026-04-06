@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, ScrollView, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '@clerk/clerk-expo';
@@ -28,6 +28,7 @@ export default function DashboardScreen() {
   const income = data?.income;
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
+  const actions = data?.actions;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -37,9 +38,9 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={styles.header} accessible={true} accessibilityRole="header">
           <Text style={styles.greeting}>{getGreeting()}</Text>
-          <Text style={styles.name}>{firstName ? `Hey, ${firstName}` : 'Welcome to QuidSafe'}</Text>
+          <Text style={styles.name} accessibilityRole="header">{firstName ? `Hey, ${firstName}` : 'Welcome to QuidSafe'}</Text>
         </View>
 
         {isLoading ? (
@@ -51,60 +52,77 @@ export default function DashboardScreen() {
         ) : (
           <>
             {/* Hero Tax Card */}
-            <LinearGradient
-              colors={['#0F172A', '#1E3A8A']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.heroCard}
+            <Pressable
+              accessible={true}
+              accessibilityRole="summary"
+              accessibilityLabel={`Tax summary. Set aside ${formatCurrency(tax?.totalTaxOwed ?? 0)} for tax based on ${formatCurrency(tax?.totalIncome ?? 0)} income this tax year`}
+              style={({ pressed }) => [pressed && styles.pressedCard]}
             >
-              {/* Gold glow accent */}
-              <View style={styles.heroGlow} />
+              <LinearGradient
+                colors={['#0F172A', '#1E3A8A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroCard}
+              >
+                {/* Gold glow accent */}
+                <View style={styles.heroGlow} />
 
-              <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
-              <Text style={styles.heroAmount}>
-                {formatCurrency(tax?.totalTaxOwed ?? 0)}
-              </Text>
-              <Text style={styles.heroSubtext}>
-                Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
-              </Text>
+                <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
+                <Text style={styles.heroAmount}>
+                  {formatCurrency(tax?.totalTaxOwed ?? 0)}
+                </Text>
+                <Text style={styles.heroSubtext}>
+                  Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
+                </Text>
 
-              {/* 3 glassmorphic boxes */}
-              <View style={styles.heroSplit}>
-                <View style={styles.heroSplitBox}>
-                  <Text style={styles.splitLabel}>Income Tax</Text>
-                  <Text style={styles.splitValue}>
-                    {formatCurrency(tax?.incomeTax?.total ?? 0)}
-                  </Text>
+                {/* 3 glassmorphic boxes */}
+                <View style={styles.heroSplit}>
+                  <View style={styles.heroSplitBox}>
+                    <Text style={styles.splitLabel}>Income Tax</Text>
+                    <Text style={styles.splitValue}>
+                      {formatCurrency(tax?.incomeTax?.total ?? 0)}
+                    </Text>
+                  </View>
+                  <View style={styles.heroSplitDivider} />
+                  <View style={styles.heroSplitBox}>
+                    <Text style={styles.splitLabel}>NI (Class 4)</Text>
+                    <Text style={styles.splitValue}>
+                      {formatCurrency(tax?.nationalInsurance?.total ?? 0)}
+                    </Text>
+                  </View>
+                  <View style={styles.heroSplitDivider} />
+                  <View style={styles.heroSplitBox}>
+                    <Text style={styles.splitLabel}>Expenses</Text>
+                    <Text style={[styles.splitValue, styles.splitExpenses]}>
+                      -{formatCurrency(tax?.totalExpenses ?? 0)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.heroSplitDivider} />
-                <View style={styles.heroSplitBox}>
-                  <Text style={styles.splitLabel}>NI (Class 4)</Text>
-                  <Text style={styles.splitValue}>
-                    {formatCurrency(tax?.nationalInsurance?.total ?? 0)}
-                  </Text>
-                </View>
-                <View style={styles.heroSplitDivider} />
-                <View style={styles.heroSplitBox}>
-                  <Text style={styles.splitLabel}>Expenses</Text>
-                  <Text style={[styles.splitValue, styles.splitExpenses]}>
-                    -{formatCurrency(tax?.totalExpenses ?? 0)}
-                  </Text>
-                </View>
-              </View>
-            </LinearGradient>
+              </LinearGradient>
+            </Pressable>
 
             {/* Plain English Insight */}
             {tax?.plainEnglish ? (
-              <View style={styles.insightBanner}>
+              <Pressable
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel={`Tax insight: ${tax.plainEnglish}`}
+                style={({ pressed }) => [styles.insightBanner, pressed && styles.pressedCard]}
+              >
                 <View style={styles.insightIcon}>
                   <FontAwesome name="lightbulb-o" size={14} color={Colors.secondary} />
                 </View>
                 <Text style={styles.insightText}>{tax.plainEnglish}</Text>
-              </View>
+              </Pressable>
             ) : null}
 
             {/* Monthly set-aside */}
-            <View style={styles.setAsideCard}>
+            <Pressable
+              accessible={true}
+              accessibilityRole="summary"
+              accessibilityLabel={`Set aside ${formatCurrency(tax?.setAsideMonthly ?? 0)} this month. Effective tax rate ${tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}`}
+              style={({ pressed }) => [styles.setAsideCard, pressed && styles.pressedCard]}
+            >
               <View>
                 <Text style={styles.setAsideLabel}>SET ASIDE THIS MONTH</Text>
                 <Text style={styles.setAsideAmount}>
@@ -117,30 +135,37 @@ export default function DashboardScreen() {
                 </Text>
                 <Text style={styles.setAsideRateLabel}>effective rate</Text>
               </View>
-            </View>
+            </Pressable>
 
             {/* Action Items */}
-            <View style={styles.actions}>
-              {(income?.total ?? 0) === 0 && (
-                <ActionCard
-                  type="action"
-                  title="Connect your bank"
-                  description="Link your bank account to automatically track income and expenses."
-                  icon="university"
-                />
+            <View style={styles.actions} accessibilityRole="list" accessibilityLabel="Action items">
+              {actions && actions.length > 0 ? (
+                actions.map((action) => (
+                  <ActionCard
+                    key={action.id}
+                    type={(action.type as 'warning' | 'info' | 'action') ?? 'info'}
+                    title={action.title}
+                    description={action.subtitle}
+                  />
+                ))
+              ) : (
+                <>
+                  {(income?.total ?? 0) === 0 && (
+                    <ActionCard
+                      type="action"
+                      title="Connect your bank"
+                      description="Link your bank account to automatically track income and expenses."
+                      icon="university"
+                    />
+                  )}
+                  <ActionCard
+                    type="warning"
+                    title={`Q${quarter} payment due`}
+                    description="Submit your quarterly update to HMRC before the deadline."
+                    icon="clock-o"
+                  />
+                </>
               )}
-              <ActionCard
-                type="warning"
-                title={`Q${quarter} payment due`}
-                description="Submit your quarterly update to HMRC before the deadline."
-                icon="clock-o"
-              />
-              <ActionCard
-                type="success"
-                title="Tax pot on track"
-                description="You're setting aside enough to cover your tax bill."
-                icon="check"
-              />
             </View>
 
             {/* Quarter Timeline */}
@@ -198,6 +223,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.light.text,
     marginTop: 2,
+  },
+
+  // Press state for interactive cards
+  pressedCard: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.95,
   },
 
   // Hero Tax Card

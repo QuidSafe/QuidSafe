@@ -12,7 +12,24 @@ import {
 } from './services/banking';
 import type { TrueLayerConfig, BankConnectionRow } from './services/banking';
 import { categoriseTransactions } from './services/categoriser';
-import { calculateTax, getCurrentQuarter, getQuarterDates } from '../lib/tax-engine';
+import { calculateTax, getCurrentQuarter, getQuarterDates, formatCurrency } from '../lib/tax-engine';
+import {
+  sendPushNotifications,
+  buildPushMessages,
+  getUKTaxDeadlines,
+  deadlineReminder14Days,
+  deadlineUrgent3Days,
+  weeklySummary,
+  bankReauthNeeded,
+  trialEnding,
+} from './services/notifications';
+import {
+  getHmrcAuthUrl,
+  exchangeHmrcCode,
+  getObligations,
+  submitQuarterlyUpdate,
+} from './services/hmrc';
+import type { HmrcConfig } from './services/hmrc';
 import { query, queryOne, execute } from '../lib/db';
 import {
   createCheckoutSession,
@@ -128,6 +145,62 @@ app.post('/webhooks/stripe', async (c) => {
 
 const authed = new Hono<AuthedEnv>();
 authed.use('*', clerkAuth());
+
+// ─── Subscription Guard Middleware ───────────────────────
+// Blocks write-sensitive routes when subscription is 'free' and trial has ended
+// or when subscription is 'cancelled'. Returns 402 for paywall enforcement.
+async function requireActiveSubscription(c: any, next: any) {
+  const userId = c.get('userId');
+  const user = await queryOne<{ subscription_tier: string; grace_period_ends: string | null }>(
+    c.env.DB,
+    'SELECT subscription_tier, grace_period_ends FROM users WHERE id = ?',
+    [userId],
+  );
+
+  if (!user) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, 404);
+  }
+
+  const tier = user.subscription_tier;
+
+  // Allow pro and past_due (still in grace period) users through
+  if (tier === 'pro' || tier === 'past_due') {
+    return next();
+  }
+
+  // For free/cancelled users, check if they have an active trial
+  if (tier === 'free' || tier === 'cancelled') {
+    const sub = await queryOne<{ status: string; trial_ends_at: string | null }>(
+      c.env.DB,
+      'SELECT status, trial_ends_at FROM subscriptions WHERE user_id = ?',
+      [userId],
+    );
+
+    // Allow if still trialing
+    if (sub?.status === 'trialing' && sub.trial_ends_at) {
+      const trialEnd = new Date(sub.trial_ends_at);
+      if (trialEnd > new Date()) {
+        return next();
+      }
+    }
+
+    return c.json(
+      { error: { code: 'SUBSCRIPTION_REQUIRED', message: 'Active subscription required' } },
+      402,
+    );
+  }
+
+  // Default: block access
+  return c.json(
+    { error: { code: 'SUBSCRIPTION_REQUIRED', message: 'Active subscription required' } },
+    402,
+  );
+}
+
+// Apply subscription guard to write-sensitive routes
+authed.post('/banking/sync/:id', requireActiveSubscription);
+authed.post('/transactions/categorise', requireActiveSubscription);
+authed.post('/mtd/*', requireActiveSubscription);
 
 // ── Auth ──────────────────────────────────────────────────
 authed.post('/auth/signup', async (c) => {
@@ -799,6 +872,164 @@ authed.get('/billing/status', async (c) => {
   return c.json(status);
 });
 
+// ── HMRC MTD ─────────────────────────────────────────────
+
+function getHmrcConfig(env: Env): HmrcConfig {
+  return {
+    clientId: env.HMRC_CLIENT_ID,
+    clientSecret: env.HMRC_CLIENT_SECRET,
+    redirectUri: `${env.TRUELAYER_REDIRECT_URI.replace('/banking/callback', '/mtd/callback')}`,
+  };
+}
+
+authed.get('/mtd/auth', async (c) => {
+  const config = getHmrcConfig(c.env);
+  const userId = c.get('userId');
+  const state = btoa(JSON.stringify({ userId }));
+  const url = getHmrcAuthUrl(config, state);
+  return c.json({ url });
+});
+
+authed.post('/mtd/callback', async (c) => {
+  const userId = c.get('userId');
+  const { code } = await c.req.json<{ code: string }>();
+  const config = getHmrcConfig(c.env);
+
+  const tokens = await exchangeHmrcCode(code, config);
+  const encrypted = await encryptTokens(
+    { access_token: tokens.accessToken, refresh_token: tokens.refreshToken, expires_in: tokens.expiresIn, token_type: 'bearer' },
+    c.env.ENCRYPTION_KEY,
+  );
+
+  await execute(c.env.DB,
+    'INSERT INTO bank_connections (id, user_id, provider, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?, ?)',
+    [crypto.randomUUID(), userId, 'hmrc', 'HMRC', encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+  );
+
+  return c.json({ connected: true });
+});
+
+authed.get('/mtd/obligations', async (c) => {
+  const userId = c.get('userId');
+
+  const hmrcConn = await queryOne<{ access_token_encrypted: string }>(
+    c.env.DB,
+    'SELECT access_token_encrypted FROM bank_connections WHERE user_id = ? AND provider = ? AND active = 1',
+    [userId, 'hmrc'],
+  );
+
+  if (!hmrcConn) {
+    return c.json({ error: { code: 'HMRC_NOT_CONNECTED', message: 'Connect your HMRC account first' } }, 400);
+  }
+
+  const { decrypt: decryptHmrc } = await import('./utils/crypto');
+  const accessToken = await decryptHmrc(hmrcConn.access_token_encrypted, c.env.ENCRYPTION_KEY);
+  const obligations = await getObligations(accessToken, userId);
+
+  const submissions = await query<{ quarter: number; status: string; hmrc_receipt_id: string | null }>(
+    c.env.DB,
+    'SELECT quarter, status, hmrc_receipt_id FROM mtd_submissions WHERE user_id = ? ORDER BY quarter',
+    [userId],
+  );
+
+  return c.json({ obligations, submissions });
+});
+
+authed.post('/mtd/submit-quarterly', async (c) => {
+  const userId = c.get('userId');
+  const { taxYear, quarter } = await c.req.json<{ taxYear: string; quarter: number }>();
+
+  if (!taxYear || !quarter || quarter < 1 || quarter > 4) {
+    return c.json({ error: { code: 'INVALID_INPUT', message: 'Valid taxYear and quarter (1-4) required' } }, 400);
+  }
+
+  const existing = await queryOne<{ id: string; status: string }>(
+    c.env.DB,
+    'SELECT id, status FROM mtd_submissions WHERE user_id = ? AND tax_year = ? AND quarter = ?',
+    [userId, taxYear, quarter],
+  );
+
+  if (existing && existing.status === 'accepted') {
+    return c.json({ error: { code: 'ALREADY_SUBMITTED', message: 'This quarter has already been submitted' } }, 409);
+  }
+
+  const quarters = getQuarterDates(taxYear);
+  const qInfo = quarters.find((q) => q.quarter === quarter);
+  if (!qInfo) return c.json({ error: { code: 'INVALID_QUARTER', message: 'Invalid quarter' } }, 400);
+
+  const income = await queryOne<{ total: number }>(
+    c.env.DB,
+    'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? AND transaction_date <= ?',
+    [userId, qInfo.startDate, qInfo.endDate],
+  );
+
+  const expenses = await queryOne<{ total: number }>(
+    c.env.DB,
+    'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ? AND transaction_date <= ?',
+    [userId, qInfo.startDate, qInfo.endDate],
+  );
+
+  const totalIncome = income?.total ?? 0;
+  const totalExpenses = expenses?.total ?? 0;
+  const payload = { periodStart: qInfo.startDate, periodEnd: qInfo.endDate, totalIncome, totalExpenses };
+
+  const hmrcConn = await queryOne<{ access_token_encrypted: string }>(
+    c.env.DB,
+    'SELECT access_token_encrypted FROM bank_connections WHERE user_id = ? AND provider = ? AND active = 1',
+    [userId, 'hmrc'],
+  );
+
+  if (!hmrcConn) {
+    return c.json({ error: { code: 'HMRC_NOT_CONNECTED', message: 'Connect your HMRC account first' } }, 400);
+  }
+
+  const { decrypt: decryptHmrc } = await import('./utils/crypto');
+  const accessToken = await decryptHmrc(hmrcConn.access_token_encrypted, c.env.ENCRYPTION_KEY);
+  const submissionId = crypto.randomUUID();
+
+  await execute(c.env.DB,
+    'INSERT INTO mtd_submissions (id, user_id, tax_year, quarter, status, payload_json) VALUES (?, ?, ?, ?, ?, ?)',
+    [submissionId, userId, taxYear, quarter, 'draft', JSON.stringify(payload)],
+  );
+
+  try {
+    const response = await submitQuarterlyUpdate(accessToken, userId, payload);
+
+    await execute(c.env.DB,
+      'UPDATE mtd_submissions SET status = ?, hmrc_receipt_id = ?, response_json = ?, submitted_at = datetime(\'now\') WHERE id = ?',
+      ['accepted', response.id, JSON.stringify(response), submissionId],
+    );
+
+    return c.json({
+      success: true,
+      submissionId,
+      hmrcReceiptId: response.id,
+      summary: { taxYear, quarter, totalIncome, totalExpenses, netProfit: totalIncome - totalExpenses },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    await execute(c.env.DB,
+      'UPDATE mtd_submissions SET status = ?, response_json = ? WHERE id = ?',
+      ['rejected', JSON.stringify({ error: message }), submissionId],
+    );
+    return c.json({ error: { code: 'SUBMISSION_FAILED', message } }, 500);
+  }
+});
+
+authed.get('/mtd/submission/:id', async (c) => {
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+
+  const submission = await queryOne(
+    c.env.DB,
+    'SELECT * FROM mtd_submissions WHERE id = ? AND user_id = ?',
+    [id, userId],
+  );
+
+  if (!submission) return c.json({ error: { code: 'NOT_FOUND', message: 'Submission not found' } }, 404);
+  return c.json({ submission });
+});
+
 // ── Settings ──────────────────────────────────────────────
 authed.get('/settings', async (c) => {
   const userId = c.get('userId');
@@ -846,6 +1077,35 @@ authed.put('/settings', async (c) => {
 });
 
 // ── Mount authed routes ───────────────────────────────────
+
+// ── Device Push Token Registration ───────────────────────
+authed.post('/devices', async (c) => {
+  const userId = c.get('userId');
+  const { pushToken, platform } = await c.req.json<{ pushToken: string; platform: string }>();
+
+  if (!pushToken || !platform) {
+    return c.json({ error: { code: 'INVALID_INPUT', message: 'pushToken and platform are required' } }, 400);
+  }
+
+  // Remove any existing entry for this token, then insert
+  await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ?', [pushToken]);
+  await execute(
+    c.env.DB,
+    'INSERT INTO user_devices (user_id, push_token, platform) VALUES (?, ?, ?)',
+    [userId, pushToken, platform],
+  );
+
+  return c.json({ registered: true });
+});
+
+authed.delete('/devices', async (c) => {
+  const userId = c.get('userId');
+  const { pushToken } = await c.req.json<{ pushToken: string }>();
+
+  await execute(c.env.DB, 'DELETE FROM user_devices WHERE user_id = ? AND push_token = ?', [userId, pushToken]);
+  return c.json({ removed: true });
+});
+
 app.route('/', authed);
 
 // ─── Catch-all 404 ────────────────────────────────────────
@@ -934,6 +1194,124 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   }
 
   console.log(`[Cron] Daily sync complete: ${successCount} success, ${failCount} failed out of ${connections.results.length} connections`);
+
+  // ── Grace period expiry check ─────────────────────────────
+  // Downgrade users whose 7-day payment grace period has expired
+  try {
+    const expiredGrace = await env.DB
+      .prepare('SELECT id FROM users WHERE subscription_tier = ? AND grace_period_ends IS NOT NULL AND grace_period_ends <= datetime(\'now\')')
+      .bind('past_due')
+      .all<{ id: string }>();
+
+    for (const user of expiredGrace.results) {
+      await env.DB
+        .prepare('UPDATE users SET subscription_tier = ?, grace_period_ends = NULL, updated_at = datetime(\'now\') WHERE id = ?')
+        .bind('free', user.id)
+        .run();
+      await env.DB
+        .prepare('UPDATE subscriptions SET status = ? WHERE user_id = ?')
+        .bind('cancelled', user.id)
+        .run();
+      console.log(`[Cron] Grace period expired for user ${user.id} — downgraded to free`);
+    }
+
+    if (expiredGrace.results.length > 0) {
+      console.log(`[Cron] Downgraded ${expiredGrace.results.length} user(s) after grace period expiry`);
+    }
+  } catch (graceErr) {
+    console.error('[Cron] Grace period check failed:', graceErr);
+  }
+
+  // ── Notification checks ──────────────────────────────────
+  try {
+    const now = new Date();
+    const { taxYear } = getCurrentQuarter(now);
+    const deadlines = getUKTaxDeadlines(taxYear);
+
+    // Get all users with push tokens and notification preferences
+    const usersWithDevices = await env.DB
+      .prepare(`SELECT DISTINCT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
+                u.subscription_tier, u.created_at
+                FROM users u INNER JOIN user_devices d ON u.id = d.user_id WHERE d.active = 1`)
+      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string }>();
+
+    for (const user of usersWithDevices.results) {
+      const tokens = await env.DB
+        .prepare('SELECT push_token FROM user_devices WHERE user_id = ? AND active = 1')
+        .bind(user.id)
+        .all<{ push_token: string }>();
+
+      const pushTokens = tokens.results.map((t) => t.push_token);
+      if (pushTokens.length === 0) continue;
+
+      // Tax deadline reminders (14 days and 3 days before)
+      if (user.notify_tax_deadlines) {
+        for (const deadline of deadlines) {
+          const deadlineDate = new Date(deadline.date);
+          const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (daysUntil === 14 && deadline.quarter) {
+            const taxResult = await env.DB
+              .prepare('SELECT COALESCE(SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END), 0) as income FROM transactions WHERE user_id = ? AND transaction_date >= date(\'now\', \'-90 days\')')
+              .bind(user.id)
+              .first<{ income: number }>();
+            const estimated = formatCurrency(taxResult?.income ? taxResult.income * 0.25 : 0);
+            const template = deadlineReminder14Days(deadline.quarter, deadline.date, estimated);
+            await sendPushNotifications(buildPushMessages(pushTokens, template));
+          }
+
+          if (daysUntil === 3 && deadline.quarter) {
+            const template = deadlineUrgent3Days(deadline.quarter, deadline.date);
+            await sendPushNotifications(buildPushMessages(pushTokens, template));
+          }
+        }
+      }
+
+      // Weekly income summary (Monday only — day 1)
+      if (user.notify_weekly_summary && now.getDay() === 1) {
+        const weeklyIncome = await env.DB
+          .prepare('SELECT COALESCE(SUM(amount), 0) as total, COUNT(DISTINCT income_source) as sources FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= date(\'now\', \'-7 days\')')
+          .bind(user.id)
+          .first<{ total: number; sources: number }>();
+
+        if (weeklyIncome && weeklyIncome.total > 0) {
+          const taxToSetAside = formatCurrency(weeklyIncome.total * 0.25);
+          const template = weeklySummary(formatCurrency(weeklyIncome.total), weeklyIncome.sources, taxToSetAside);
+          await sendPushNotifications(buildPushMessages(pushTokens, template));
+        }
+      }
+
+      // Bank re-auth warnings (7 days before consent expiry)
+      const expiringBanks = await env.DB
+        .prepare('SELECT bank_name, consent_expires_at FROM bank_connections WHERE user_id = ? AND active = 1 AND consent_expires_at IS NOT NULL')
+        .bind(user.id)
+        .all<{ bank_name: string; consent_expires_at: string }>();
+
+      for (const bank of expiringBanks.results) {
+        const expiryDate = new Date(bank.consent_expires_at);
+        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntilExpiry === 7) {
+          const template = bankReauthNeeded(bank.bank_name || 'your bank', daysUntilExpiry);
+          await sendPushNotifications(buildPushMessages(pushTokens, template));
+        }
+      }
+
+      // Trial ending reminder (2 days before trial end)
+      if (user.subscription_tier === 'free') {
+        const createdAt = new Date(user.created_at);
+        const trialEnd = new Date(createdAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+        const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLeft === 2) {
+          const template = trialEnding(daysLeft);
+          await sendPushNotifications(buildPushMessages(pushTokens, template));
+        }
+      }
+    }
+
+    console.log(`[Cron] Notification checks complete for ${usersWithDevices.results.length} users`);
+  } catch (notifErr) {
+    console.error('[Cron] Notification checks failed:', notifErr);
+  }
 }
 
 export default {
