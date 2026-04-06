@@ -111,8 +111,13 @@ class ApiClient {
     return this.request<TaxCalculation>('/tax/calculation');
   }
 
-  getQuarterlyBreakdown() {
-    return this.request<{ taxYear: string; quarters: { quarter: number; from: string; to: string; income: number; expenses: number }[] }>('/tax/quarterly');
+  getQuarterlyBreakdown(taxYear?: string) {
+    const params = taxYear ? `?taxYear=${taxYear}` : '';
+    return this.request<{
+      taxYear: string;
+      quarters: { quarter: number; startDate: string; endDate: string; deadline: string; income: number; expenses: number; tax: number; setAsideMonthly: number }[];
+      yearTotal: { income: number; expenses: number; totalTaxOwed: number; effectiveRate: number; setAsideMonthly: number; plainEnglish: string };
+    }>(`/tax/quarters${params}`);
   }
 
   // Expenses

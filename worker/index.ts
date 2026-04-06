@@ -284,6 +284,58 @@ authed.get('/dashboard', async (c) => {
   });
 });
 
+// ── Quarterly Breakdown ──────────────────────────────────
+authed.get('/tax/quarters', async (c) => {
+  const userId = c.get('userId');
+  const taxYear = c.req.query('taxYear') ?? getCurrentQuarter().taxYear;
+  const quarters = getQuarterDates(taxYear);
+
+  const populated = await Promise.all(
+    quarters.map(async (q) => {
+      const income = await queryOne<{ total: number }>(
+        c.env.DB,
+        'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? AND transaction_date <= ?',
+        [userId, q.startDate, q.endDate],
+      );
+      const expenses = await queryOne<{ total: number }>(
+        c.env.DB,
+        'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ? AND transaction_date <= ?',
+        [userId, q.startDate, q.endDate],
+      );
+
+      const qIncome = income?.total ?? 0;
+      const qExpenses = expenses?.total ?? 0;
+      const taxResult = calculateTax({ totalIncome: qIncome, totalExpenses: qExpenses, quarter: q.quarter, taxYear });
+
+      return {
+        ...q,
+        income: qIncome,
+        expenses: qExpenses,
+        tax: taxResult.totalTaxOwed,
+        setAsideMonthly: taxResult.setAsideMonthly,
+      };
+    }),
+  );
+
+  // Full year totals
+  const yearIncome = populated.reduce((sum, q) => sum + q.income, 0);
+  const yearExpenses = populated.reduce((sum, q) => sum + q.expenses, 0);
+  const yearTax = calculateTax({ totalIncome: yearIncome, totalExpenses: yearExpenses, taxYear });
+
+  return c.json({
+    taxYear,
+    quarters: populated,
+    yearTotal: {
+      income: yearIncome,
+      expenses: yearExpenses,
+      totalTaxOwed: yearTax.totalTaxOwed,
+      effectiveRate: yearTax.effectiveRate,
+      setAsideMonthly: yearTax.setAsideMonthly,
+      plainEnglish: yearTax.plainEnglish,
+    },
+  });
+});
+
 // ── Transactions ──────────────────────────────────────────
 authed.get('/transactions', async (c) => {
   const userId = c.get('userId');

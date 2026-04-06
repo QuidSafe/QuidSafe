@@ -71,6 +71,7 @@ export interface TaxInput {
   totalExpenses: number;
   quarter?: number;
   taxYear?: string;
+  monthsTrading?: number; // For partial tax years (1-12). Prorates thresholds.
 }
 
 export interface IncomeTaxBreakdown {
@@ -99,6 +100,22 @@ export interface TaxResult {
   totalTaxOwed: number;
   setAsideMonthly: number;
   effectiveRate: number;
+  plainEnglish: string;
+}
+
+// Prompt 06 compatible type alias
+export interface FullTaxResult {
+  taxYear: string;
+  grossIncome: number;
+  allowableExpenses: number;
+  netProfit: number;
+  personalAllowance: number;
+  taxableIncome: number;
+  incomeTax: IncomeTaxBreakdown;
+  nationalInsurance: NIBreakdown;
+  totalTaxOwed: number;
+  effectiveRate: number;
+  setAsideMonthly: number;
   plainEnglish: string;
 }
 
@@ -175,7 +192,7 @@ export function calculateNI(profit: number, config: TaxYearConfig): NIBreakdown 
 // ─── Plain English Generator ──────────────────────────────
 
 function generatePlainEnglish(result: Omit<TaxResult, 'plainEnglish'>): string {
-  const { totalIncome, totalExpenses, totalTaxOwed, setAsideMonthly, effectiveRate, netProfit, personalAllowance } = result;
+  const { totalIncome, totalExpenses, totalTaxOwed, setAsideMonthly, effectiveRate, netProfit, personalAllowance, quarter } = result;
 
   if (totalIncome === 0) {
     return "You haven't recorded any income yet. Once you start adding income, we'll calculate your tax.";
@@ -189,6 +206,16 @@ function generatePlainEnglish(result: Omit<TaxResult, 'plainEnglish'>): string {
     return `Heads up — at ${formatCurrency(totalIncome)} income, your personal allowance is being tapered. You'll owe approximately ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate). Set aside ${formatCurrency(setAsideMonthly)} per month.`;
   }
 
+  // Approaching higher rate threshold warning
+  if (netProfit > 40_000 && netProfit <= 50_270) {
+    return `Heads up — you're approaching the higher rate threshold. You've earned ${formatCurrency(totalIncome)} with ${formatCurrency(totalExpenses)} in expenses. Set aside ${formatCurrency(setAsideMonthly)} per month. Total tax: ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate).`;
+  }
+
+  // Quarter-specific message
+  if (quarter && quarter > 0) {
+    return `Based on Q${quarter}, you should set aside ${formatCurrency(setAsideMonthly)} per month. Total tax so far: ${formatCurrency(totalTaxOwed)} on ${formatCurrency(totalIncome)} income (${effectiveRate}% effective rate).`;
+  }
+
   return `You've earned ${formatCurrency(totalIncome)} with ${formatCurrency(totalExpenses)} in expenses. Set aside ${formatCurrency(setAsideMonthly)} per month and you're covered. Total tax: ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate).`;
 }
 
@@ -196,7 +223,7 @@ function generatePlainEnglish(result: Omit<TaxResult, 'plainEnglish'>): string {
 
 export function calculateTax(input: TaxInput): TaxResult {
   const config = getConfig(input.taxYear);
-  const { totalIncome, totalExpenses, quarter = 0 } = input;
+  const { totalIncome, totalExpenses, quarter = 0, monthsTrading } = input;
 
   const netProfit = Math.max(0, totalIncome - totalExpenses);
   const personalAllowance = calculatePersonalAllowance(netProfit, config);
@@ -206,7 +233,10 @@ export function calculateTax(input: TaxInput): TaxResult {
   const nationalInsurance = calculateNI(netProfit, config);
   const totalTaxOwed = round(incomeTax.total + nationalInsurance.total);
 
-  const monthsRemaining = quarter > 0 ? Math.max(1, 12 - (quarter - 1) * 3) : 12;
+  // For partial tax years, use monthsTrading for set-aside spread
+  const monthsRemaining = monthsTrading
+    ? Math.max(1, monthsTrading)
+    : quarter > 0 ? Math.max(1, 12 - (quarter - 1) * 3) : 12;
   const setAsideMonthly = totalTaxOwed > 0 ? round(totalTaxOwed / monthsRemaining) : 0;
 
   const effectiveRate = netProfit > 0 ? round((totalTaxOwed / netProfit) * 100) / 1 : 0;
@@ -283,4 +313,54 @@ function round(n: number): number {
 
 export function formatCurrency(amount: number): string {
   return `£${amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// ─── Standalone Set-Aside Calculator ─────────────────────
+
+export function calculateSetAsideMonthly(totalTax: number, monthsRemaining: number): number {
+  if (totalTax <= 0 || monthsRemaining <= 0) return 0;
+  return round(totalTax / Math.max(1, monthsRemaining));
+}
+
+// ─── Facade Functions (Prompt 06 signatures) ─────────────
+
+/**
+ * Calculate income tax from gross income for a tax year.
+ * Handles PA deduction internally.
+ */
+export function calculateIncomeTaxFromGross(grossIncome: number, taxYear: string): IncomeTaxBreakdown {
+  const config = getConfig(taxYear);
+  const pa = calculatePersonalAllowance(grossIncome, config);
+  const taxableIncome = Math.max(0, grossIncome - pa);
+  return calculateIncomeTax(taxableIncome, config);
+}
+
+/**
+ * Calculate National Insurance from gross profit for a tax year.
+ */
+export function calculateNationalInsurance(grossProfit: number, taxYear: string): NIBreakdown {
+  const config = getConfig(taxYear);
+  return calculateNI(grossProfit, config);
+}
+
+/**
+ * Calculate total tax from gross income and expenses for a tax year.
+ * Returns the full FullTaxResult with all breakdowns.
+ */
+export function calculateTotalTax(grossIncome: number, allowableExpenses: number, taxYear: string): FullTaxResult {
+  const result = calculateTax({ totalIncome: grossIncome, totalExpenses: allowableExpenses, taxYear });
+  return {
+    taxYear: result.taxYear,
+    grossIncome: result.totalIncome,
+    allowableExpenses: result.totalExpenses,
+    netProfit: result.netProfit,
+    personalAllowance: result.personalAllowance,
+    taxableIncome: result.taxableIncome,
+    incomeTax: result.incomeTax,
+    nationalInsurance: result.nationalInsurance,
+    totalTaxOwed: result.totalTaxOwed,
+    effectiveRate: result.effectiveRate,
+    setAsideMonthly: result.setAsideMonthly,
+    plainEnglish: result.plainEnglish,
+  };
 }

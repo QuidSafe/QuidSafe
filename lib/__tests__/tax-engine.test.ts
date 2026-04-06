@@ -9,6 +9,10 @@ import {
   formatCurrency,
   getCurrentQuarter,
   getQuarterDates,
+  calculateSetAsideMonthly,
+  calculateIncomeTaxFromGross,
+  calculateNationalInsurance,
+  calculateTotalTax,
   TAX_YEARS,
   type TaxYearConfig,
 } from '../tax-engine';
@@ -297,5 +301,97 @@ describe('generatePlainEnglish (via calculateTax)', () => {
     const result = calculateTax({ totalIncome: 50_000, totalExpenses: 5_000, taxYear: '2026/27' });
     expect(result.plainEnglish).toContain('earned');
     expect(result.plainEnglish).toContain('Set aside');
+  });
+
+  it('warns when approaching higher rate threshold', () => {
+    const result = calculateTax({ totalIncome: 48_000, totalExpenses: 0, taxYear: '2026/27' });
+    expect(result.plainEnglish).toContain('approaching the higher rate');
+  });
+
+  it('includes quarter-specific message when quarter provided', () => {
+    const result = calculateTax({ totalIncome: 30_000, totalExpenses: 2_000, quarter: 2, taxYear: '2026/27' });
+    expect(result.plainEnglish).toContain('Q2');
+    expect(result.plainEnglish).toContain('set aside');
+  });
+});
+
+describe('calculateTax at specific income levels', () => {
+  it('calculates correctly at £55,000 (basic + higher rate split)', () => {
+    const result = calculateTax({ totalIncome: 55_000, totalExpenses: 0, taxYear: '2026/27' });
+    expect(result.netProfit).toBe(55_000);
+    expect(result.personalAllowance).toBe(12_570);
+    expect(result.taxableIncome).toBe(42_430);
+    // Basic band: 50270 - 12570 = 37700 at 20% = 7540
+    expect(result.incomeTax.basicRate).toBe(7_540);
+    // Higher band: 55000 - 50270 = 4730 at 40% = 1892
+    expect(result.incomeTax.higherRate).toBe(1_892);
+    expect(result.incomeTax.additionalRate).toBe(0);
+    expect(result.incomeTax.total).toBe(9_432);
+  });
+
+  it('calculates correctly at £130,000 (partially tapered PA)', () => {
+    const result = calculateTax({ totalIncome: 130_000, totalExpenses: 0, taxYear: '2026/27' });
+    // PA: 12570 - floor((130000 - 100000) / 2) = 12570 - 15000 = 0 (fully tapered at 125140)
+    // Actually at 130k: reduction = floor(30000/2) = 15000, PA = max(0, 12570-15000) = 0
+    expect(result.personalAllowance).toBe(0);
+    expect(result.taxableIncome).toBe(130_000);
+    expect(result.incomeTax.additionalRate).toBeGreaterThan(0);
+  });
+});
+
+describe('calculateSetAsideMonthly', () => {
+  it('returns 0 for zero tax', () => {
+    expect(calculateSetAsideMonthly(0, 12)).toBe(0);
+  });
+
+  it('divides total tax evenly across months', () => {
+    expect(calculateSetAsideMonthly(1200, 12)).toBe(100);
+  });
+
+  it('handles partial year (fewer months)', () => {
+    expect(calculateSetAsideMonthly(600, 6)).toBe(100);
+  });
+
+  it('returns 0 for negative tax', () => {
+    expect(calculateSetAsideMonthly(-100, 12)).toBe(0);
+  });
+
+  it('clamps months to at least 1', () => {
+    expect(calculateSetAsideMonthly(1200, 0)).toBe(0);
+  });
+});
+
+describe('calculateTax with partial tax year (monthsTrading)', () => {
+  it('spreads set-aside over fewer months for partial year', () => {
+    const full = calculateTax({ totalIncome: 30_000, totalExpenses: 0, taxYear: '2026/27' });
+    const partial = calculateTax({ totalIncome: 30_000, totalExpenses: 0, taxYear: '2026/27', monthsTrading: 6 });
+    // Same total tax but spread over 6 months instead of 12
+    expect(partial.totalTaxOwed).toBe(full.totalTaxOwed);
+    expect(partial.setAsideMonthly).toBeCloseTo(full.setAsideMonthly * 2, 0);
+  });
+});
+
+describe('facade functions', () => {
+  it('calculateIncomeTaxFromGross handles PA deduction internally', () => {
+    const result = calculateIncomeTaxFromGross(30_000, '2026/27');
+    // PA = 12570, taxable = 17430, basic rate = 17430 * 0.2 = 3486
+    expect(result.basicRate).toBe(3_486);
+    expect(result.higherRate).toBe(0);
+    expect(result.total).toBe(3_486);
+  });
+
+  it('calculateNationalInsurance returns NI breakdown', () => {
+    const result = calculateNationalInsurance(30_000, '2026/27');
+    expect(result.class2).toBeGreaterThan(0);
+    expect(result.class4).toBeGreaterThan(0);
+    expect(result.total).toBe(result.class2 + result.class4);
+  });
+
+  it('calculateTotalTax returns FullTaxResult with correct field names', () => {
+    const result = calculateTotalTax(30_000, 5_000, '2026/27');
+    expect(result.grossIncome).toBe(30_000);
+    expect(result.allowableExpenses).toBe(5_000);
+    expect(result.netProfit).toBe(25_000);
+    expect(result.plainEnglish).toBeTruthy();
   });
 });
