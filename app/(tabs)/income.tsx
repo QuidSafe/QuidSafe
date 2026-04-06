@@ -335,6 +335,8 @@ export default function IncomeScreen() {
                 placeholderTextColor={colors.textSecondary}
                 value={search}
                 onChangeText={setSearch}
+                accessibilityLabel="Search income sources"
+                accessibilityHint="Type to filter income sources by name"
               />
             </View>
 
@@ -436,6 +438,9 @@ export default function IncomeScreen() {
               style={[styles.viewInvoicesButton, { borderColor: colors.border }]}
               onPress={() => router.push('/invoices')}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View all invoices"
+              accessibilityHint="Tap to see your complete invoice list"
             >
               <FontAwesome name="file-text-o" size={16} color={Colors.accent} style={{ marginRight: 10 }} />
               <Text style={[styles.viewInvoicesText, { color: colors.text }]}>View All Invoices</Text>
@@ -496,6 +501,8 @@ export default function IncomeScreen() {
               value={invoiceClientName}
               onChangeText={setInvoiceClientName}
               onBlur={() => markTouched('clientName')}
+              accessibilityLabel="Client name"
+              accessibilityHint="Enter the client or company name for this invoice"
             />
             {touched.clientName && errors.clientName ? (
               <Text style={styles.fieldError}>{errors.clientName}</Text>
@@ -511,6 +518,8 @@ export default function IncomeScreen() {
               value={invoiceAmount}
               onChangeText={setInvoiceAmount}
               onBlur={() => markTouched('amount')}
+              accessibilityLabel="Invoice amount"
+              accessibilityHint="Enter the invoice amount in pounds"
             />
             {touched.amount && errors.amount ? (
               <Text style={styles.fieldError}>{errors.amount}</Text>
@@ -527,6 +536,8 @@ export default function IncomeScreen() {
               value={invoiceDescription}
               onChangeText={setInvoiceDescription}
               onBlur={() => markTouched('description')}
+              accessibilityLabel="Invoice description"
+              accessibilityHint="Describe what this invoice is for"
             />
             {touched.description && errors.description ? (
               <Text style={styles.fieldError}>{errors.description}</Text>

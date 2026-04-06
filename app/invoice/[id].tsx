@@ -1,0 +1,452 @@
+import { useCallback, useMemo, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Card } from '@/components/ui/Card';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
+import { useInvoices } from '@/lib/hooks/useApi';
+import {
+  useUpdateInvoiceWithToast,
+  useDeleteInvoiceWithToast,
+} from '@/lib/hooks/useApiWithToast';
+import { formatCurrency } from '@/lib/tax-engine';
+import { downloadInvoicePDF } from '@/lib/invoiceActions';
+import { hapticSuccess, hapticMedium } from '@/lib/haptics';
+import type { Invoice, InvoiceStatus } from '@/lib/types';
+
+const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string }> = {
+  draft: { bg: Colors.grey[200], text: Colors.grey[700] },
+  sent: { bg: '#DBEAFE', text: Colors.secondary },
+  paid: { bg: '#D1FAE5', text: Colors.success },
+  overdue: { bg: '#FEE2E2', text: Colors.error },
+};
+
+const STATUS_LABELS: Record<InvoiceStatus, string> = {
+  draft: 'Draft',
+  sent: 'Sent',
+  paid: 'Paid',
+  overdue: 'Overdue',
+};
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function InvoiceDetailSkeleton() {
+  return (
+    <View style={{ gap: Spacing.md }}>
+      <Skeleton width="60%" height={28} />
+      <Skeleton width="40%" height={16} />
+      <View style={{ marginTop: Spacing.lg }}>
+        <Skeleton width="100%" height={120} borderRadius={BorderRadius.card} />
+      </View>
+      <View style={{ marginTop: Spacing.md }}>
+        <Skeleton width="100%" height={80} borderRadius={BorderRadius.card} />
+      </View>
+      <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.lg }}>
+        <Skeleton width="48%" height={48} borderRadius={BorderRadius.button} />
+        <Skeleton width="48%" height={48} borderRadius={BorderRadius.button} />
+      </View>
+    </View>
+  );
+}
+
+export default function InvoiceDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
+  const router = useRouter();
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  const { data, isLoading, refetch, isRefetching } = useInvoices(undefined);
+  const updateMutation = useUpdateInvoiceWithToast();
+  const deleteMutation = useDeleteInvoiceWithToast();
+
+  const invoice: Invoice | undefined = useMemo(() => {
+    const invoices = data?.invoices ?? [];
+    return invoices.find((inv: Invoice) => inv.id === id);
+  }, [data, id]);
+
+  const isMutating = updateMutation.isPending || deleteMutation.isPending;
+
+  const handleMarkPaid = useCallback(async () => {
+    if (!invoice) return;
+    try {
+      await updateMutation.mutateAsync({
+        id: invoice.id,
+        data: { status: 'paid' },
+      });
+      hapticSuccess();
+    } catch {
+      // toast handled by hook
+    }
+  }, [invoice, updateMutation]);
+
+  const handleDownloadPDF = useCallback(() => {
+    if (!invoice) return;
+    downloadInvoicePDF(invoice);
+  }, [invoice]);
+
+  const handleDelete = useCallback(async () => {
+    if (!invoice) return;
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    try {
+      await deleteMutation.mutateAsync(invoice.id);
+      hapticMedium();
+      router.back();
+    } catch {
+      // toast handled by hook
+    }
+  }, [invoice, deleteConfirm, deleteMutation, router]);
+
+  const handleEdit = useCallback(() => {
+    // Navigate back to invoices list where editing modal exists
+    router.replace('/invoices');
+  }, [router]);
+
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+          />
+        }
+      >
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: colors.text }]}>Invoice</Text>
+          <View style={{ width: 20 }} />
+        </View>
+
+        {isLoading ? (
+          <InvoiceDetailSkeleton />
+        ) : !invoice ? (
+          <Card style={styles.errorCard}>
+            <FontAwesome name="exclamation-triangle" size={32} color={Colors.error} />
+            <Text style={[styles.errorTitle, { color: colors.text }]}>Invoice not found</Text>
+            <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
+              This invoice may have been deleted or the link is invalid.
+            </Text>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.replace('/invoices')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.backButtonText}>View All Invoices</Text>
+            </TouchableOpacity>
+          </Card>
+        ) : (
+          <>
+            {/* Client & Status */}
+            <View style={styles.topSection}>
+              <Text style={[styles.clientName, { color: colors.text }]}>{invoice.clientName}</Text>
+              {invoice.clientEmail ? (
+                <Text style={[styles.clientEmail, { color: colors.textSecondary }]}>
+                  {invoice.clientEmail}
+                </Text>
+              ) : null}
+              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[invoice.status].bg }]}>
+                <Text style={[styles.statusBadgeText, { color: STATUS_COLORS[invoice.status].text }]}>
+                  {STATUS_LABELS[invoice.status]}
+                </Text>
+              </View>
+            </View>
+
+            {/* Amount Card */}
+            <Card variant="elevated" style={styles.amountCard}>
+              <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Amount</Text>
+              <Text style={[styles.amountValue, { color: Colors.accent }]}>
+                {formatCurrency(invoice.amount)}
+              </Text>
+            </Card>
+
+            {/* Details Card */}
+            <Card style={styles.detailsCard}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Description</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{invoice.description}</Text>
+              </View>
+              <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Due Date</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(invoice.dueDate)}</Text>
+              </View>
+              {invoice.paidAt ? (
+                <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
+                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Paid On</Text>
+                  <Text style={[styles.detailValue, { color: Colors.success }]}>{formatDate(invoice.paidAt)}</Text>
+                </View>
+              ) : null}
+              <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Created</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(invoice.createdAt)}</Text>
+              </View>
+            </Card>
+
+            {/* Action Buttons */}
+            <View style={styles.actionsSection}>
+              {invoice.status !== 'paid' && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.markPaidButton, isMutating && styles.actionButtonDisabled]}
+                  onPress={handleMarkPaid}
+                  disabled={isMutating}
+                  activeOpacity={0.8}
+                >
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator color={Colors.white} size="small" />
+                  ) : (
+                    <>
+                      <FontAwesome name="check-circle" size={16} color={Colors.white} style={styles.actionIcon} />
+                      <Text style={styles.actionButtonTextLight}>Mark as Paid</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.pdfButton]}
+                onPress={handleDownloadPDF}
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="file-pdf-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Download PDF</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.editButton]}
+                onPress={handleEdit}
+                activeOpacity={0.8}
+              >
+                <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Invoice</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deleteButton, isMutating && styles.actionButtonDisabled]}
+                onPress={handleDelete}
+                disabled={isMutating}
+                activeOpacity={0.8}
+              >
+                {deleteMutation.isPending ? (
+                  <ActivityIndicator color={Colors.error} size="small" />
+                ) : (
+                  <>
+                    <FontAwesome name="trash-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                    <Text style={styles.deleteButtonText}>
+                      {deleteConfirm ? 'Tap again to confirm' : 'Delete Invoice'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scroll: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl + 40,
+  },
+
+  // Header
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+  },
+  title: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 24,
+  },
+
+  // Top section
+  topSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  clientName: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 28,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  clientEmail: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    marginBottom: Spacing.sm,
+  },
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 9999,
+    marginTop: Spacing.sm,
+  },
+  statusBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+
+  // Amount card
+  amountCard: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.lg,
+  },
+  amountLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  amountValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 36,
+  },
+
+  // Details card
+  detailsCard: {
+    marginBottom: Spacing.lg,
+  },
+  detailRow: {
+    paddingVertical: Spacing.sm,
+  },
+  detailRowBorder: {
+    borderTopWidth: 1,
+    marginTop: Spacing.xs,
+  },
+  detailLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+  },
+
+  // Actions
+  actionsSection: {
+    gap: Spacing.sm,
+  },
+  actionButton: {
+    borderRadius: BorderRadius.button,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionIcon: {
+    marginRight: 8,
+  },
+  actionButtonDisabled: {
+    opacity: 0.5,
+  },
+  actionButtonTextLight: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    color: Colors.white,
+  },
+  actionButtonTextDark: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+  },
+  markPaidButton: {
+    backgroundColor: Colors.success,
+  },
+  pdfButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.grey[300],
+  },
+  editButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.grey[300],
+  },
+  deleteButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  deleteButtonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    color: Colors.error,
+  },
+
+  // Error state
+  errorCard: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxl,
+    gap: Spacing.sm,
+  },
+  errorTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 18,
+    marginTop: Spacing.sm,
+  },
+  errorSubtitle: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  backButton: {
+    backgroundColor: Colors.accent,
+    borderRadius: BorderRadius.button,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    marginTop: Spacing.md,
+  },
+  backButtonText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: Colors.white,
+  },
+});

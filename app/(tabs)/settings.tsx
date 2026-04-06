@@ -178,7 +178,7 @@ function Chevron() {
 // --------------- Section Label ---------------
 const SectionLabel = memo(function SectionLabel({ label }: { label: string }) {
   const { colors } = useTheme();
-  return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{label}</Text>;
+  return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]} accessibilityRole="header">{label}</Text>;
 });
 
 // --------------- Theme Option ---------------
@@ -726,6 +726,20 @@ export default function SettingsScreen() {
             right={<Chevron />}
             isLast
             onPress={handleExportData}
+          />
+        </Card>
+
+        {/* APP */}
+        <SectionLabel label="APP" />
+        <Card style={styles.cardPadding}>
+          <SettingsRow
+            icon="th-large"
+            iconBg={Colors.accent}
+            title="Widget"
+            subtitle="Home screen widget preview"
+            right={<Chevron />}
+            isLast
+            onPress={() => router.push('/widget-preview')}
           />
         </Card>
 

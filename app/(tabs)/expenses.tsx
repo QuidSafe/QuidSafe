@@ -708,6 +708,8 @@ export default function ExpensesScreen() {
               onChangeText={setRecAmount}
               onBlur={() => setRecTouched((prev) => ({ ...prev, amount: true }))}
               keyboardType="decimal-pad"
+              accessibilityLabel="Recurring expense amount"
+              accessibilityHint="Enter the recurring expense amount in pounds"
             />
             {recTouched.amount && recErrors.amount ? (
               <Text style={styles.fieldError}>{recErrors.amount}</Text>
@@ -719,6 +721,8 @@ export default function ExpensesScreen() {
               value={recDescription}
               onChangeText={setRecDescription}
               onBlur={() => setRecTouched((prev) => ({ ...prev, description: true }))}
+              accessibilityLabel="Recurring expense description"
+              accessibilityHint="Describe this recurring expense"
             />
             {recTouched.description && recErrors.description ? (
               <Text style={styles.fieldError}>{recErrors.description}</Text>
@@ -802,6 +806,8 @@ export default function ExpensesScreen() {
               value={recStartDate}
               onChangeText={setRecStartDate}
               onBlur={() => setRecTouched((prev) => ({ ...prev, startDate: true }))}
+              accessibilityLabel="Start date"
+              accessibilityHint="Enter the start date in YYYY-MM-DD format"
             />
             {recTouched.startDate && recErrors.startDate ? (
               <Text style={styles.fieldError}>{recErrors.startDate}</Text>

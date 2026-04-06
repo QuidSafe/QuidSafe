@@ -21,6 +21,7 @@ import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
 import 'react-native-reanimated';
@@ -126,6 +127,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <ToastProvider>
+              <BiometricGate>
               <AppErrorBoundary>
                 <ThemedStatusBar />
                 <AuthRedirect>
@@ -138,15 +140,19 @@ export default function RootLayout() {
                     <Stack.Screen name="billing" options={{ headerShown: false }} />
                     <Stack.Screen name="mtd" options={{ headerShown: false, presentation: 'modal' }} />
                     <Stack.Screen name="invoices" options={{ headerShown: false }} />
+                    <Stack.Screen name="invoice/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="expense/[id]" options={{ headerShown: false }} />
                     <Stack.Screen name="status" options={{ headerShown: false }} />
                     <Stack.Screen name="self-assessment" options={{ headerShown: false }} />
                     <Stack.Screen name="privacy" options={{ headerShown: false }} />
                     <Stack.Screen name="terms" options={{ headerShown: false }} />
                     <Stack.Screen name="tax-history" options={{ headerShown: false }} />
+                    <Stack.Screen name="widget-preview" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </AuthRedirect>
               </AppErrorBoundary>
+              </BiometricGate>
             </ToastProvider>
           </ThemeProvider>
         </QueryClientProvider>
