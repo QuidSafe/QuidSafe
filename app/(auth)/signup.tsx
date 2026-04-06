@@ -4,10 +4,12 @@ import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function SignupScreen() {
   const { signUp, isLoaded } = useSignUp();
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
@@ -48,12 +50,12 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={styles.title}>
           {pendingVerification ? 'Check your email' : 'Create your account'}
         </Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {pendingVerification
             ? `We sent a code to ${email}`
             : 'Start tracking your tax in minutes'}
@@ -64,9 +66,9 @@ export default function SignupScreen() {
         {!pendingVerification ? (
           <>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
               placeholder="Email address"
-              placeholderTextColor={Colors.grey[500]}
+              placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -88,9 +90,9 @@ export default function SignupScreen() {
         ) : (
           <>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
               placeholder="Enter 6-digit code"
-              placeholderTextColor={Colors.grey[500]}
+              placeholderTextColor={colors.textSecondary}
               value={code}
               onChangeText={setCode}
               keyboardType="number-pad"
@@ -125,7 +127,6 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
     paddingHorizontal: Spacing.lg,
   },
   header: {
@@ -142,7 +143,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
-    color: Colors.light.textSecondary,
     marginTop: Spacing.sm,
     textAlign: 'center',
   },
@@ -151,15 +151,12 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   input: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.input,
     paddingVertical: 16,
     paddingHorizontal: Spacing.md,
     fontFamily: 'Manrope_400Regular',
     fontSize: 16,
-    color: Colors.light.text,
     borderWidth: 1,
-    borderColor: Colors.light.border,
   },
   button: {
     backgroundColor: Colors.primary,

@@ -116,12 +116,13 @@ function SettingsRow({
   isLast?: boolean;
   onPress?: () => void;
 }) {
+  const { colors } = useTheme();
   const content = (
-    <View style={[styles.row, !isLast && styles.rowBorder]}>
+    <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
       <IconBox name={icon} bg={iconBg} />
       <View style={styles.rowText}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.rowTitle, { color: colors.text }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text> : null}
       </View>
       {right}
     </View>
@@ -144,7 +145,8 @@ function Chevron() {
 
 // --------------- Section Label ---------------
 function SectionLabel({ label }: { label: string }) {
-  return <Text style={styles.sectionLabel}>{label}</Text>;
+  const { colors } = useTheme();
+  return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{label}</Text>;
 }
 
 // --------------- Theme Option ---------------
@@ -159,6 +161,7 @@ function ThemeOption({
   active: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={styles.themeOption}>
       <View style={styles.themeLeft}>
@@ -167,7 +170,7 @@ function ThemeOption({
           bg={active ? Colors.secondary : Colors.grey[200]}
           color={active ? Colors.white : Colors.grey[500]}
         />
-        <Text style={[styles.rowTitle, { marginLeft: 10 }]}>{label}</Text>
+        <Text style={[styles.rowTitle, { marginLeft: 10, color: colors.text }]}>{label}</Text>
       </View>
       {active && <FontAwesome name="check" size={14} color={Colors.success} />}
     </Pressable>
@@ -233,9 +236,9 @@ export default function SettingsScreen() {
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? '—';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
 
         {/* SECURITY */}
         <SectionLabel label="SECURITY" />
