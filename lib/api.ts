@@ -93,6 +93,10 @@ class ApiClient {
     return this.request<{ connections: BankConnection[] }>('/banking/connections');
   }
 
+  syncBank(id: string) {
+    return this.request<{ success: boolean; synced: number; skipped: number }>(`/banking/sync/${id}`, { method: 'POST' });
+  }
+
   disconnectBank(id: string) {
     return this.request<{ disconnected: boolean }>(`/banking/connections/${id}`, { method: 'DELETE' });
   }

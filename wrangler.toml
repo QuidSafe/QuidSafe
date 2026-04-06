@@ -2,6 +2,10 @@ name = "quidsafe-api"
 main = "worker/index.ts"
 compatibility_date = "2025-04-01"
 
+# Daily bank transaction sync at 6:00 AM UTC
+[triggers]
+crons = ["0 6 * * *"]
+
 # Shared D1 binding name used in code — each env points to its own database
 [[d1_databases]]
 binding = "DB"

@@ -2,7 +2,15 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { clerkAuth } from './middleware/auth';
-import { getConnectUrl, exchangeCode, encryptTokens } from './services/banking';
+import {
+  getConnectUrl,
+  exchangeCode,
+  encryptTokens,
+  refreshAccessToken,
+  syncTransactions,
+  detectBankName,
+} from './services/banking';
+import type { TrueLayerConfig, BankConnectionRow } from './services/banking';
 import { calculateTax, getCurrentQuarter, getQuarterDates } from '../lib/tax-engine';
 import { query, queryOne, execute } from '../lib/db';
 import {
@@ -30,6 +38,16 @@ export interface Env {
 }
 
 type AuthedEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };
+
+function getTrueLayerConfig(env: Env): TrueLayerConfig {
+  return {
+    clientId: env.TRUELAYER_CLIENT_ID,
+    clientSecret: env.TRUELAYER_CLIENT_SECRET,
+    redirectUri: env.TRUELAYER_REDIRECT_URI,
+    encryptionKey: env.ENCRYPTION_KEY,
+    sandbox: env.ENVIRONMENT !== 'production',
+  };
+}
 
 const app = new Hono<AuthedEnv>();
 
@@ -242,14 +260,27 @@ authed.put('/transactions/:id/category', async (c) => {
 // ── Banking ───────────────────────────────────────────────
 authed.get('/banking/connect', async (c) => {
   const userId = c.get('userId');
-  const config = {
-    clientId: c.env.TRUELAYER_CLIENT_ID,
-    clientSecret: c.env.TRUELAYER_CLIENT_SECRET,
-    redirectUri: c.env.TRUELAYER_REDIRECT_URI,
-    encryptionKey: c.env.ENCRYPTION_KEY,
-    sandbox: c.env.ENVIRONMENT !== 'production',
-  };
 
+  // Enforce multi-bank limits: 1 on free, 3 on pro
+  const user = await queryOne<{ subscription_tier: string }>(
+    c.env.DB,
+    'SELECT subscription_tier FROM users WHERE id = ?',
+    [userId],
+  );
+  const activeConns = await query(
+    c.env.DB,
+    'SELECT id FROM bank_connections WHERE user_id = ? AND active = 1',
+    [userId],
+  );
+  const limit = user?.subscription_tier === 'pro' ? 3 : 1;
+  if (activeConns.length >= limit) {
+    return c.json(
+      { error: { code: 'BANK_LIMIT_REACHED', message: `You can connect up to ${limit} bank${limit > 1 ? 's' : ''} on your current plan` } },
+      403,
+    );
+  }
+
+  const config = getTrueLayerConfig(c.env);
   const url = getConnectUrl(config, userId);
   return c.json({ url });
 });
@@ -261,35 +292,80 @@ authed.get('/banking/callback', async (c) => {
     return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
   }
 
-  const config = {
-    clientId: c.env.TRUELAYER_CLIENT_ID,
-    clientSecret: c.env.TRUELAYER_CLIENT_SECRET,
-    redirectUri: c.env.TRUELAYER_REDIRECT_URI,
-    encryptionKey: c.env.ENCRYPTION_KEY,
-    sandbox: c.env.ENVIRONMENT !== 'production',
-  };
-
+  const config = getTrueLayerConfig(c.env);
   const tokens = await exchangeCode(code, config);
   const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
+
+  // Detect bank name from TrueLayer
+  const bankName = await detectBankName(tokens.access_token, config);
 
   const connectionId = crypto.randomUUID();
   await execute(
     c.env.DB,
     'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
-    [connectionId, userId, 'Connected Bank', encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+    [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
   );
 
-  return c.json({ connectionId, success: true });
+  // Trigger initial transaction sync (last 30 days)
+  const connection: BankConnectionRow = {
+    id: connectionId,
+    user_id: userId,
+    bank_name: bankName,
+    access_token_encrypted: encrypted.accessTokenEncrypted,
+    refresh_token_encrypted: encrypted.refreshTokenEncrypted,
+    last_synced_at: null,
+    active: 1,
+  };
+
+  try {
+    const result = await syncTransactions(c.env.DB, connection, config);
+    return c.json({ connectionId, bankName, success: true, synced: result.synced });
+  } catch (err) {
+    // Connection saved even if initial sync fails — user can retry
+    console.error('Initial sync failed:', err);
+    return c.json({ connectionId, bankName, success: true, synced: 0, syncError: 'Initial sync failed — will retry automatically' });
+  }
 });
 
 authed.get('/banking/connections', async (c) => {
   const userId = c.get('userId');
   const connections = await query(
     c.env.DB,
-    'SELECT id, bank_name, last_synced_at, active, created_at FROM bank_connections WHERE user_id = ? AND active = 1',
+    `SELECT bc.id, bc.bank_name, bc.last_synced_at, bc.active, bc.created_at,
+            (SELECT COUNT(*) FROM transactions WHERE bank_connection_id = bc.id) as transaction_count
+     FROM bank_connections bc
+     WHERE bc.user_id = ? AND bc.active = 1`,
     [userId],
   );
   return c.json({ connections });
+});
+
+authed.post('/banking/sync/:id', async (c) => {
+  const userId = c.get('userId');
+  const connId = c.req.param('id');
+
+  const connection = await queryOne<BankConnectionRow>(
+    c.env.DB,
+    'SELECT * FROM bank_connections WHERE id = ? AND user_id = ? AND active = 1',
+    [connId, userId],
+  );
+
+  if (!connection) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Bank connection not found' } }, 404);
+  }
+
+  const config = getTrueLayerConfig(c.env);
+
+  try {
+    const result = await syncTransactions(c.env.DB, connection, config);
+    return c.json({ success: true, ...result });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Sync failed';
+    if (message === 'BANK_CONNECTION_EXPIRED') {
+      return c.json({ error: { code: 'BANK_CONNECTION_EXPIRED', message: 'Bank connection expired — please reconnect' } }, 401);
+    }
+    return c.json({ error: { code: 'SYNC_ERROR', message: 'Transaction sync failed' } }, 500);
+  }
 });
 
 authed.delete('/banking/connections/:id', async (c) => {
@@ -471,4 +547,64 @@ app.onError((err, c) => {
   );
 });
 
-export default app;
+// ─── Scheduled Handler (Cron) ────────────────────────────
+// Daily sync at 6:00 AM — configured in wrangler.toml [triggers]
+async function scheduled(_event: { scheduledTime: number; cron: string }, env: Env) {
+  console.log(`[Cron] Daily sync triggered at ${new Date().toISOString()}`);
+  const config = getTrueLayerConfig(env);
+
+  // Get all active bank connections
+  const connections = await env.DB
+    .prepare('SELECT * FROM bank_connections WHERE active = 1')
+    .all<BankConnectionRow>();
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const connection of connections.results) {
+    try {
+      // Try to refresh the token first
+      try {
+        const newTokens = await refreshAccessToken(
+          connection.refresh_token_encrypted,
+          config,
+        );
+        const encrypted = await encryptTokens(newTokens, env.ENCRYPTION_KEY);
+        await env.DB
+          .prepare('UPDATE bank_connections SET access_token_encrypted = ?, refresh_token_encrypted = ? WHERE id = ?')
+          .bind(encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted, connection.id)
+          .run();
+        // Update in-memory connection for sync
+        connection.access_token_encrypted = encrypted.accessTokenEncrypted;
+        connection.refresh_token_encrypted = encrypted.refreshTokenEncrypted;
+      } catch (refreshErr) {
+        const msg = refreshErr instanceof Error ? refreshErr.message : '';
+        if (msg.includes('BANK_CONNECTION_EXPIRED')) {
+          // Mark connection as inactive — user must reconnect
+          await env.DB
+            .prepare('UPDATE bank_connections SET active = 0 WHERE id = ?')
+            .bind(connection.id)
+            .run();
+          console.log(`[Cron] Connection ${connection.id} expired — deactivated`);
+          failCount++;
+          continue;
+        }
+        // Other refresh errors — try sync with existing token
+      }
+
+      const result = await syncTransactions(env.DB, connection, config);
+      console.log(`[Cron] Synced ${result.synced} txns for connection ${connection.id} (${result.skipped} skipped)`);
+      successCount++;
+    } catch (err) {
+      console.error(`[Cron] Sync failed for connection ${connection.id}:`, err);
+      failCount++;
+    }
+  }
+
+  console.log(`[Cron] Daily sync complete: ${successCount} success, ${failCount} failed out of ${connections.results.length} connections`);
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled,
+};

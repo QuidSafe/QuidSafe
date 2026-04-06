@@ -7,7 +7,7 @@ const TRUELAYER_API_URL = 'https://api.truelayer.com';
 const TRUELAYER_SANDBOX_AUTH_URL = 'https://auth.truelayer-sandbox.com';
 const TRUELAYER_SANDBOX_API_URL = 'https://api.truelayer-sandbox.com';
 
-interface TrueLayerConfig {
+export interface TrueLayerConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
@@ -15,14 +15,14 @@ interface TrueLayerConfig {
   sandbox?: boolean;
 }
 
-interface TrueLayerToken {
+export interface TrueLayerToken {
   access_token: string;
   refresh_token: string;
   expires_in: number;
   token_type: string;
 }
 
-interface TrueLayerTransaction {
+export interface TrueLayerTransaction {
   transaction_id: string;
   timestamp: string;
   description: string;
@@ -31,6 +31,16 @@ interface TrueLayerTransaction {
   transaction_type: string;
   transaction_category: string;
   merchant_name?: string;
+}
+
+export interface BankConnectionRow {
+  id: string;
+  user_id: string;
+  bank_name: string;
+  access_token_encrypted: string;
+  refresh_token_encrypted: string;
+  last_synced_at: string | null;
+  active: number;
 }
 
 function getAuthUrl(config: TrueLayerConfig): string {
@@ -170,4 +180,135 @@ export async function fetchTransactions(
   }
 
   return allTransactions;
+}
+
+/**
+ * Fetch with retry and exponential backoff for TrueLayer errors.
+ */
+export async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries = 3,
+): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.ok) return response;
+
+    // 401 = consent expired, don't retry
+    if (response.status === 401) {
+      throw new Error('BANK_CONNECTION_EXPIRED');
+    }
+
+    // 429 = rate limited, retry with backoff
+    if (response.status === 429 && attempt < retries) {
+      const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+
+    // 5xx = server error, retry with backoff
+    if (response.status >= 500 && attempt < retries) {
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+
+    throw new Error(`TrueLayer API error: ${response.status}`);
+  }
+
+  throw new Error('TrueLayer API: max retries exceeded');
+}
+
+/**
+ * Detect bank name from TrueLayer provider info.
+ */
+export async function detectBankName(
+  accessToken: string,
+  config: TrueLayerConfig,
+): Promise<string> {
+  const apiBase = getApiUrl(config);
+  try {
+    const res = await fetch(`${apiBase}/data/v1/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { results: { provider: { display_name: string } }[] };
+      if (data.results?.[0]?.provider?.display_name) {
+        return data.results[0].provider.display_name;
+      }
+    }
+  } catch {
+    // Fall through to default
+  }
+  return 'Connected Bank';
+}
+
+/**
+ * Sync transactions from TrueLayer into D1, deduplicating by bank_transaction_id.
+ */
+export async function syncTransactions(
+  db: D1Database,
+  connection: BankConnectionRow,
+  config: TrueLayerConfig,
+): Promise<{ synced: number; skipped: number }> {
+  // Determine sync window
+  const toDate = new Date().toISOString().split('T')[0];
+  const fromDate = connection.last_synced_at
+    ? connection.last_synced_at.split('T')[0]
+    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // last 30 days for initial
+
+  const transactions = await fetchTransactions(
+    connection.access_token_encrypted,
+    config,
+    fromDate,
+    toDate,
+  );
+
+  let synced = 0;
+  let skipped = 0;
+
+  for (const tx of transactions) {
+    // Check for duplicate by bank_transaction_id
+    const existing = await db
+      .prepare('SELECT id FROM transactions WHERE bank_transaction_id = ? AND user_id = ?')
+      .bind(tx.transaction_id, connection.user_id)
+      .first();
+
+    if (existing) {
+      skipped++;
+      continue;
+    }
+
+    const isIncome = tx.amount > 0;
+    await db
+      .prepare(
+        `INSERT INTO transactions (id, user_id, amount, description, merchant_name, raw_category, is_income, bank_connection_id, bank_transaction_id, transaction_date, currency, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      )
+      .bind(
+        crypto.randomUUID(),
+        connection.user_id,
+        tx.amount,
+        tx.description,
+        tx.merchant_name ?? null,
+        tx.transaction_category,
+        isIncome ? 1 : 0,
+        connection.id,
+        tx.transaction_id,
+        tx.timestamp.split('T')[0],
+        tx.currency,
+      )
+      .run();
+
+    synced++;
+  }
+
+  // Update last_synced_at
+  await db
+    .prepare("UPDATE bank_connections SET last_synced_at = datetime('now') WHERE id = ?")
+    .bind(connection.id)
+    .run();
+
+  return { synced, skipped };
 }
