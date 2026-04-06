@@ -61,6 +61,7 @@ class ApiClient {
         bySource: { name: string; amount: number; percentage: number }[];
       };
       quarters: { current: { taxYear: string; quarter: number } };
+      actions: { id: string; type: string; title: string; subtitle: string; priority: number }[];
     }>('/dashboard');
   }
 
@@ -137,6 +138,14 @@ class ApiClient {
     return this.request<{ id: string; success: boolean }>('/invoices', { method: 'POST', body: JSON.stringify(data) });
   }
 
+  updateInvoice(id: string, data: { status?: string; clientName?: string; amount?: number; description?: string; dueDate?: string }) {
+    return this.request<{ success: boolean }>(`/invoices/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  deleteInvoice(id: string) {
+    return this.request<{ deleted: boolean }>(`/invoices/${id}`, { method: 'DELETE' });
+  }
+
   // Billing
   createCheckout(plan: 'monthly' | 'annual') {
     return this.request<{ url: string }>('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan }) });
@@ -155,7 +164,12 @@ class ApiClient {
     return this.request<{ user: User }>('/settings');
   }
 
-  updateSettings(data: { name?: string }) {
+  updateSettings(data: {
+    name?: string;
+    notifyTaxDeadlines?: boolean;
+    notifyWeeklySummary?: boolean;
+    notifyTransactionAlerts?: boolean;
+  }) {
     return this.request<{ user: User }>('/settings', { method: 'PUT', body: JSON.stringify(data) });
   }
 }

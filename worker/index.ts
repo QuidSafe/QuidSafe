@@ -53,6 +53,36 @@ function getTrueLayerConfig(env: Env): TrueLayerConfig {
 const app = new Hono<AuthedEnv>();
 
 // ─── Global Middleware ────────────────────────────────────
+// ─── Helper: categorise and save results to D1 ─────────
+async function categoriseAndSave(
+  db: D1Database,
+  uncategorised: { id: string; amount: number; description: string; merchant_name: string | null }[],
+  userId: string,
+  anthropicApiKey: string,
+) {
+  const corrections = await query<{ merchant_name: string; corrected_category: string }>(
+    db,
+    'SELECT DISTINCT merchant_name, corrected_category FROM category_corrections WHERE user_id = ? AND merchant_name IS NOT NULL LIMIT 20',
+    [userId],
+  );
+
+  const results = await categoriseTransactions(
+    uncategorised.map((tx) => ({ id: tx.id, amount: tx.amount, description: tx.description, merchantName: tx.merchant_name })),
+    anthropicApiKey,
+    corrections.map((c) => ({ merchantName: c.merchant_name, category: c.corrected_category })),
+  );
+
+  for (const result of results) {
+    await execute(
+      db,
+      'UPDATE transactions SET ai_category = ?, ai_confidence = ?, ai_reasoning = ?, is_income = ?, is_expense_claimable = ?, income_source = ? WHERE id = ? AND user_id = ?',
+      [result.category, result.confidence, result.reasoning, result.category === 'income' ? 1 : 0, result.category === 'business_expense' ? 1 : 0, result.incomeSourceType, result.id, userId],
+    );
+  }
+
+  return results.length;
+}
+
 app.use('*', logger());
 app.use(
   '*',
@@ -177,11 +207,80 @@ authed.get('/dashboard', async (c) => {
     percentage: totalIncome > 0 ? Math.round((s.total / totalIncome) * 100) : 0,
   }));
 
+  // Compute dynamic action items
+  const actions: { id: string; type: string; title: string; subtitle: string; priority: number }[] = [];
+
+  const uncatCount = await queryOne<{ count: number }>(
+    c.env.DB,
+    'SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND (ai_category IS NULL OR ai_confidence < 0.6)',
+    [userId],
+  );
+  if (uncatCount && uncatCount.count > 0) {
+    actions.push({
+      id: 'review_transactions',
+      type: 'warning',
+      title: `${uncatCount.count} transaction${uncatCount.count === 1 ? '' : 's'} need${uncatCount.count === 1 ? 's' : ''} review`,
+      subtitle: 'Categorise them to improve your tax estimate',
+      priority: 1,
+    });
+  }
+
+  const bankCount = await queryOne<{ count: number }>(
+    c.env.DB,
+    'SELECT COUNT(*) as count FROM bank_connections WHERE user_id = ? AND status = ?',
+    [userId, 'active'],
+  );
+  if (!bankCount || bankCount.count === 0) {
+    actions.push({
+      id: 'connect_bank',
+      type: 'info',
+      title: 'Connect your bank account',
+      subtitle: 'Automatically import transactions for tax tracking',
+      priority: 2,
+    });
+  }
+
+  const overdueInvoices = await queryOne<{ count: number }>(
+    c.env.DB,
+    'SELECT COUNT(*) as count FROM invoices WHERE user_id = ? AND status = ? AND due_date < date(\'now\')',
+    [userId, 'sent'],
+  );
+  if (overdueInvoices && overdueInvoices.count > 0) {
+    actions.push({
+      id: 'overdue_invoices',
+      type: 'warning',
+      title: `${overdueInvoices.count} overdue invoice${overdueInvoices.count === 1 ? '' : 's'}`,
+      subtitle: 'Follow up on unpaid invoices',
+      priority: 1,
+    });
+  }
+
+  // Quarterly payment deadline reminder
+  const quarterDates = getQuarterDates(taxYear);
+  const now = new Date();
+  for (const qd of quarterDates) {
+    const deadline = new Date(qd.deadline);
+    const daysUntil = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysUntil > 0 && daysUntil <= 30) {
+      actions.push({
+        id: `deadline_q${qd.quarter}`,
+        type: 'urgent',
+        title: `Q${qd.quarter} payment due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}`,
+        subtitle: `Deadline: ${qd.deadline}`,
+        priority: 0,
+      });
+      break; // Only show the nearest deadline
+    }
+  }
+
+  actions.sort((a, b) => a.priority - b.priority);
+
   return c.json({
     user: { name: user?.name ?? '', subscriptionTier: user?.subscription_tier ?? 'free' },
     tax,
     income: { total: totalIncome, bySource },
     quarters: { current: { taxYear, quarter } },
+    actions,
   });
 });
 
@@ -397,6 +496,23 @@ authed.get('/banking/callback', async (c) => {
 
   try {
     const result = await syncTransactions(c.env.DB, connection, config);
+
+    // Auto-trigger AI categorisation for newly synced transactions
+    if (result.synced > 0) {
+      try {
+        const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string | null }>(
+          c.env.DB,
+          'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL LIMIT 200',
+          [userId],
+        );
+        if (uncategorised.length > 0) {
+          await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+        }
+      } catch (catErr) {
+        console.error('Auto-categorisation after connect failed:', catErr);
+      }
+    }
+
     return c.json({ connectionId, bankName, success: true, synced: result.synced });
   } catch (err) {
     // Connection saved even if initial sync fails — user can retry
@@ -567,6 +683,48 @@ authed.post('/invoices', async (c) => {
   return c.json({ id, success: true }, 201);
 });
 
+authed.put('/invoices/:id', async (c) => {
+  const userId = c.get('userId');
+  const invoiceId = c.req.param('id');
+  const body = await c.req.json<{ status?: string; clientName?: string; clientEmail?: string; amount?: number; description?: string; dueDate?: string }>();
+
+  // Build dynamic update
+  const updates: string[] = [];
+  const params: unknown[] = [];
+
+  if (body.status) { updates.push('status = ?'); params.push(body.status); }
+  if (body.clientName) { updates.push('client_name = ?'); params.push(body.clientName); }
+  if (body.clientEmail !== undefined) { updates.push('client_email = ?'); params.push(body.clientEmail); }
+  if (body.amount) { updates.push('amount = ?'); params.push(body.amount); }
+  if (body.description) { updates.push('description = ?'); params.push(body.description); }
+  if (body.dueDate) { updates.push('due_date = ?'); params.push(body.dueDate); }
+  if (body.status === 'paid') { updates.push("paid_at = datetime('now')"); }
+
+  if (updates.length === 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'No fields to update' } }, 400);
+  }
+
+  params.push(invoiceId, userId);
+  await execute(
+    c.env.DB,
+    `UPDATE invoices SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+  );
+
+  return c.json({ success: true });
+});
+
+authed.delete('/invoices/:id', async (c) => {
+  const userId = c.get('userId');
+  const invoiceId = c.req.param('id');
+  await execute(
+    c.env.DB,
+    'DELETE FROM invoices WHERE id = ? AND user_id = ?',
+    [invoiceId, userId],
+  );
+  return c.json({ deleted: true });
+});
+
 // ── Billing ──────────────────────────────────────────────
 authed.post('/billing/checkout', async (c) => {
   const userId = c.get('userId');
@@ -598,10 +756,37 @@ authed.get('/settings', async (c) => {
 
 authed.put('/settings', async (c) => {
   const userId = c.get('userId');
-  const body = await c.req.json<{ name?: string }>();
+  const body = await c.req.json<{
+    name?: string;
+    notifyTaxDeadlines?: boolean;
+    notifyWeeklySummary?: boolean;
+    notifyTransactionAlerts?: boolean;
+  }>();
+
+  const updates: string[] = [];
+  const values: (string | number)[] = [];
 
   if (body.name !== undefined) {
-    await execute(c.env.DB, 'UPDATE users SET name = ?, updated_at = datetime(\'now\') WHERE id = ?', [body.name, userId]);
+    updates.push('name = ?');
+    values.push(body.name);
+  }
+  if (body.notifyTaxDeadlines !== undefined) {
+    updates.push('notify_tax_deadlines = ?');
+    values.push(body.notifyTaxDeadlines ? 1 : 0);
+  }
+  if (body.notifyWeeklySummary !== undefined) {
+    updates.push('notify_weekly_summary = ?');
+    values.push(body.notifyWeeklySummary ? 1 : 0);
+  }
+  if (body.notifyTransactionAlerts !== undefined) {
+    updates.push('notify_transaction_alerts = ?');
+    values.push(body.notifyTransactionAlerts ? 1 : 0);
+  }
+
+  if (updates.length > 0) {
+    updates.push('updated_at = datetime(\'now\')');
+    values.push(userId);
+    await execute(c.env.DB, `UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
   }
 
   const user = await queryOne(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
@@ -672,6 +857,23 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
 
       const result = await syncTransactions(env.DB, connection, config);
       console.log(`[Cron] Synced ${result.synced} txns for connection ${connection.id} (${result.skipped} skipped)`);
+
+      // Auto-categorise newly synced transactions
+      if (result.synced > 0) {
+        try {
+          const uncatTxns = await env.DB
+            .prepare('SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL LIMIT 200')
+            .bind(connection.user_id)
+            .all<{ id: string; amount: number; description: string; merchant_name: string | null }>();
+          if (uncatTxns.results.length > 0) {
+            const catCount = await categoriseAndSave(env.DB, uncatTxns.results, connection.user_id, env.ANTHROPIC_API_KEY);
+            console.log(`[Cron] Auto-categorised ${catCount} txns for user ${connection.user_id}`);
+          }
+        } catch (catErr) {
+          console.error(`[Cron] Auto-categorisation failed for ${connection.user_id}:`, catErr);
+        }
+      }
+
       successCount++;
     } catch (err) {
       console.error(`[Cron] Sync failed for connection ${connection.id}:`, err);

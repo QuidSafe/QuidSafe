@@ -16,7 +16,8 @@
     "d1:migrate:dev": "wrangler d1 migrations apply quidsafe-dev --remote",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
@@ -55,6 +56,7 @@
     "prettier": "^3.4.2",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2",
+    "vitest": "^4.1.2",
     "wrangler": "^4.80.0"
   }
 }

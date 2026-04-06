@@ -9,6 +9,8 @@ import {
   ScrollView,
   TextInput,
   Easing,
+  Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +19,7 @@ import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Card } from '@/components/ui/Card';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
+import * as Linking from 'expo-linking';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -162,8 +165,27 @@ function FeatureCard({
 /* ------------------------------------------------------------------ */
 /*  Step 2 — Bank Connect                                             */
 /* ------------------------------------------------------------------ */
-function StepBankConnect() {
+function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) {
   const [search, setSearch] = useState('');
+  const [connecting, setConnecting] = useState(false);
+
+  const handleConnectBank = async () => {
+    try {
+      setConnecting(true);
+      const { url } = await api.getConnectUrl();
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank');
+      } else {
+        await Linking.openURL(url);
+      }
+      // After returning from TrueLayer, advance to step 3
+      onBankConnected?.();
+    } catch (err) {
+      Alert.alert('Connection failed', 'Could not connect to your bank. Please try again.');
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const filtered = BANKS.filter((b) =>
     b.name.toLowerCase().includes(search.toLowerCase())
@@ -224,7 +246,7 @@ function StepBankConnect() {
       {/* Bank list */}
       <View style={styles.bankList}>
         {filtered.map((bank) => (
-          <Pressable key={bank.name} style={styles.bankRow}>
+          <Pressable key={bank.name} style={styles.bankRow} onPress={handleConnectBank} disabled={connecting}>
             <View style={[styles.bankLogo, { backgroundColor: bank.color }]}>
               <Text style={styles.bankInitials}>{bank.initials}</Text>
             </View>
@@ -372,7 +394,7 @@ export default function OnboardingScreen() {
         </View>
         {/* Step 2 */}
         <View style={{ width: SCREEN_WIDTH }}>
-          <StepBankConnect />
+          <StepBankConnect onBankConnected={() => animateTo(2)} />
         </View>
         {/* Step 3 */}
         <View style={{ width: SCREEN_WIDTH }}>
