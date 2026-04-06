@@ -13,6 +13,7 @@ import {
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
@@ -89,6 +90,25 @@ export default function RootLayout() {
   }
 
   return (
+    <>
+    <Head>
+      <title>QuidSafe — Tax Tracking for UK Sole Traders</title>
+      <meta name="description" content="Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC. Smart tax tracking for UK sole traders." />
+      <meta name="theme-color" content="#0F172A" />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      <meta property="og:title" content="QuidSafe — Tax Tracking for UK Sole Traders" />
+      <meta property="og:description" content="Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC." />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://quidsafe.pages.dev" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="QuidSafe — Tax Tracking for UK Sole Traders" />
+      <meta name="twitter:description" content="Smart tax tracking for UK sole traders." />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-title" content="QuidSafe" />
+      <link rel="apple-touch-icon" href="/assets/images/icon.png" />
+      <link rel="manifest" href="/manifest.json" />
+    </Head>
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
@@ -114,5 +134,6 @@ export default function RootLayout() {
         </QueryClientProvider>
       </ClerkLoaded>
     </ClerkProvider>
+    </>
   );
 }

@@ -15,7 +15,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "uk.co.quidsafe.app"
+      "bundleIdentifier": "uk.co.quidsafe.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "QuidSafe needs camera access to scan receipts for expense tracking.",
+        "NSFaceIDUsageDescription": "QuidSafe uses Face ID to securely access your financial data.",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,12 +32,23 @@
         "backgroundColor": "#0F172A"
       },
       "package": "uk.co.quidsafe.app",
-      "edgeToEdgeEnabled": true
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "INTERNET",
+        "CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "QuidSafe - Tax Tracking for UK Sole Traders",
+      "shortName": "QuidSafe",
+      "description": "Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC. The smart tax tracker for UK sole traders.",
+      "themeColor": "#0F172A",
+      "backgroundColor": "#0F172A",
+      "lang": "en-GB"
     },
     "plugins": [
       "expo-router",
