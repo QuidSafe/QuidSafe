@@ -1,13 +1,16 @@
 import { StyleSheet, View, ViewProps } from 'react-native';
-import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface CardProps extends ViewProps {
   children: React.ReactNode;
 }
 
 export function Card({ children, style, ...props }: CardProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={[styles.card, style]} {...props}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style]} {...props}>
       {children}
     </View>
   );
@@ -15,9 +18,9 @@ export function Card({ children, style, ...props }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.card,
     padding: Spacing.lg,
+    borderWidth: 1,
     ...Shadows.soft,
   },
 });

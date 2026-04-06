@@ -2,6 +2,7 @@
 
 import { StyleSheet, View, Text } from 'react-native';
 import { Colors, Spacing } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface QuarterTimelineProps {
   currentQuarter: number;
@@ -16,14 +17,15 @@ const QUARTERS = [
 ];
 
 export function QuarterTimeline({ currentQuarter, taxYear }: QuarterTimelineProps) {
+  const { colors, isDark } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tax Year {taxYear}</Text>
+      <Text style={[styles.title, { color: colors.textSecondary }]}>Tax Year {taxYear}</Text>
       <View style={styles.timeline}>
         {QUARTERS.map(({ q, label, months }) => {
           const isDone = q < currentQuarter;
           const isCurrent = q === currentQuarter;
-          const isUpcoming = q > currentQuarter;
 
           return (
             <View key={q} style={styles.quarterBox}>
@@ -31,20 +33,20 @@ export function QuarterTimeline({ currentQuarter, taxYear }: QuarterTimelineProp
                 style={[
                   styles.dot,
                   isDone && styles.dotDone,
-                  isCurrent && styles.dotCurrent,
-                  isUpcoming && styles.dotUpcoming,
+                  isCurrent && [styles.dotCurrent, { backgroundColor: colors.tint }],
+                  !isDone && !isCurrent && { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] },
                 ]}
               >
                 {isDone && <Text style={styles.check}>✓</Text>}
                 {isCurrent && <View style={styles.pulse} />}
               </View>
-              <Text style={[styles.label, isCurrent && styles.labelCurrent]}>{label}</Text>
-              <Text style={styles.months}>{months}</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }, isCurrent && { color: colors.tint }]}>{label}</Text>
+              <Text style={[styles.months, { color: colors.textSecondary }]}>{months}</Text>
             </View>
           );
         })}
       </View>
-      <View style={styles.line} />
+      <View style={[styles.line, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]} />
     </View>
   );
 }
@@ -56,7 +58,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.textSecondary,
     marginBottom: Spacing.md,
   },
   timeline: {
@@ -83,9 +84,6 @@ const styles = StyleSheet.create({
   dotCurrent: {
     backgroundColor: Colors.primary,
   },
-  dotUpcoming: {
-    backgroundColor: Colors.grey[200],
-  },
   pulse: {
     width: 10,
     height: 10,
@@ -95,20 +93,15 @@ const styles = StyleSheet.create({
   check: {
     color: Colors.white,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
   },
   label: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 13,
-    color: Colors.light.textSecondary,
-  },
-  labelCurrent: {
-    color: Colors.primary,
   },
   months: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 10,
-    color: Colors.grey[500],
     marginTop: 2,
   },
   line: {
@@ -117,7 +110,6 @@ const styles = StyleSheet.create({
     left: '12%',
     right: '12%',
     height: 2,
-    backgroundColor: Colors.grey[200],
     zIndex: 0,
   },
 });

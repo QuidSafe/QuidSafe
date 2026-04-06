@@ -1,5 +1,6 @@
 import { StyleSheet, Pressable, Text, PressableProps, ViewStyle } from 'react-native';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface ButtonProps extends PressableProps {
   title: string;
@@ -8,18 +9,28 @@ interface ButtonProps extends PressableProps {
 }
 
 export function Button({ title, variant = 'primary', size = 'md', style, ...props }: ButtonProps) {
+  const { colors } = useTheme();
+
+  const variantTextColor =
+    variant === 'primary' || variant === 'secondary'
+      ? Colors.white
+      : colors.tint;
+
+  const variantBorderColor = variant === 'outline' ? colors.tint : undefined;
+
   return (
     <Pressable
       style={({ pressed }) => [
         styles.base,
         styles[variant],
         styles[size],
+        variantBorderColor ? { borderColor: variantBorderColor } : undefined,
         pressed && styles.pressed,
         style as ViewStyle,
       ]}
       {...props}
     >
-      <Text style={[styles.text, styles[`${variant}Text` as keyof typeof styles]]}>
+      <Text style={[styles.text, { color: variantTextColor }]}>
         {title}
       </Text>
     </Pressable>
@@ -45,7 +56,6 @@ const styles = StyleSheet.create({
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: Colors.primary,
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -69,17 +79,5 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
-  },
-  primaryText: {
-    color: Colors.white,
-  },
-  secondaryText: {
-    color: Colors.white,
-  },
-  outlineText: {
-    color: Colors.primary,
-  },
-  ghostText: {
-    color: Colors.primary,
   },
 });

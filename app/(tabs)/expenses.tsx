@@ -17,6 +17,7 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useExpenses, useAddExpense, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
+import { useTheme } from '@/lib/ThemeContext';
 
 const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; color: string }> = {
   mileage: { icon: 'car', bg: '#EFF6FF', color: Colors.secondary },
@@ -47,6 +48,7 @@ function formatDate(dateStr: string): string {
 
 export default function ExpensesScreen() {
   useApiToken();
+  const { colors } = useTheme();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const addExpense = useAddExpense();
@@ -77,7 +79,7 @@ export default function ExpensesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -85,13 +87,13 @@ export default function ExpensesScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={Colors.primary}
+            tintColor={colors.tint}
           />
         }
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Expenses</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Expenses</Text>
           <Pressable
             style={({ pressed }) => [styles.fabButton, pressed && styles.pressed]}
             onPress={() => setShowForm(true)}
@@ -103,13 +105,13 @@ export default function ExpensesScreen() {
         {/* Metric Cards */}
         <View style={styles.metricsRow}>
           <Card style={styles.metricCard}>
-            <Text style={styles.metricLabel}>Total claimed</Text>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Total claimed</Text>
             <Text style={[styles.metricValue, { color: Colors.success }]}>
               {formatCurrency(totalClaimed)}
             </Text>
           </Card>
           <Card style={styles.metricCard}>
-            <Text style={styles.metricLabel}>Tax saved</Text>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Tax saved</Text>
             <Text style={[styles.metricValue, { color: Colors.secondary }]}>
               {formatCurrency(taxSaved)}
             </Text>
@@ -127,7 +129,7 @@ export default function ExpensesScreen() {
 
         {/* What Can I Claim Button */}
         <Pressable
-          style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.outlineButton, { backgroundColor: colors.surface }, pressed && styles.pressed]}
           onPress={() => router.push('/(tabs)/learn')}
         >
           <FontAwesome name="info-circle" size={16} color={Colors.secondary} />
@@ -140,7 +142,7 @@ export default function ExpensesScreen() {
         ) : expenses.length > 0 ? (
           <>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Claimed expenses</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Claimed expenses</Text>
               <View style={styles.itemsBadge}>
                 <Text style={styles.itemsBadgeText}>{expenses.length} items</Text>
               </View>
@@ -154,22 +156,22 @@ export default function ExpensesScreen() {
                     key={exp.id}
                     style={[
                       styles.expenseRow,
-                      index < expenses.length - 1 && styles.expenseRowBorder,
+                      index < expenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
                     ]}
                   >
                     <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
                       <FontAwesome name={meta.icon} size={16} color={meta.color} />
                     </View>
                     <View style={styles.expenseMiddle}>
-                      <Text style={styles.expenseDesc} numberOfLines={1}>
+                      <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
                         {exp.description}
                       </Text>
-                      <Text style={styles.expenseSub} numberOfLines={1}>
+                      <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
                         {exp.hmrc_category || 'Expense'} · {formatDate(exp.date)}
                       </Text>
                     </View>
                     <View style={styles.expenseRight}>
-                      <Text style={styles.expenseAmount}>{formatCurrency(exp.amount)}</Text>
+                      <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(exp.amount)}</Text>
                       <View style={styles.claimedBadge}>
                         <Text style={styles.claimedBadgeText}>Claimed</Text>
                       </View>
@@ -183,8 +185,8 @@ export default function ExpensesScreen() {
           <Card>
             <View style={styles.emptyState}>
               <FontAwesome name="file-text-o" size={32} color={Colors.grey[400]} />
-              <Text style={styles.emptyTitle}>No expenses yet</Text>
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No expenses yet</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 Add business expenses to reduce your tax bill. Every little helps!
               </Text>
             </View>
@@ -201,12 +203,12 @@ export default function ExpensesScreen() {
         </View>
 
         {/* Auto Mileage Coming Soon Card */}
-        <View style={styles.comingSoonCard}>
+        <View style={[styles.comingSoonCard, { backgroundColor: colors.surface }]}>
           <View style={styles.comingSoonContent}>
             <FontAwesome name="map-marker" size={20} color={Colors.secondary} />
             <View style={styles.comingSoonText}>
-              <Text style={styles.comingSoonTitle}>Auto mileage tracking</Text>
-              <Text style={styles.comingSoonSub}>Coming soon</Text>
+              <Text style={[styles.comingSoonTitle, { color: colors.text }]}>Auto mileage tracking</Text>
+              <Text style={[styles.comingSoonSub, { color: colors.textSecondary }]}>Coming soon</Text>
             </View>
             <View style={styles.soonBadge}>
               <Text style={styles.soonBadgeText}>SOON</Text>
@@ -218,25 +220,25 @@ export default function ExpensesScreen() {
       {/* Add Expense Modal */}
       <Modal visible={showForm} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.formTitle}>New Expense</Text>
+              <Text style={[styles.formTitle, { color: colors.text }]}>New Expense</Text>
               <Pressable onPress={() => setShowForm(false)}>
-                <FontAwesome name="times" size={20} color={Colors.grey[500]} />
+                <FontAwesome name="times" size={20} color={colors.textSecondary} />
               </Pressable>
             </View>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
               placeholder="Amount (e.g. 45.99)"
-              placeholderTextColor={Colors.grey[500]}
+              placeholderTextColor={colors.textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="decimal-pad"
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
               placeholder="Description"
-              placeholderTextColor={Colors.grey[500]}
+              placeholderTextColor={colors.textSecondary}
               value={description}
               onChangeText={setDescription}
             />
@@ -258,7 +260,6 @@ export default function ExpensesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   scroll: {
     padding: Spacing.lg,
@@ -278,7 +279,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 19,
-    color: Colors.light.text,
   },
   fabButton: {
     width: 36,
@@ -302,7 +302,6 @@ const styles = StyleSheet.create({
   metricLabel: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 13,
-    color: Colors.light.textSecondary,
   },
   metricValue: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -337,7 +336,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.button,
     borderWidth: 1.5,
     borderColor: Colors.secondary,
-    backgroundColor: Colors.white,
   },
   outlineButtonText: {
     fontFamily: 'Manrope_600SemiBold',
@@ -355,7 +353,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
-    color: Colors.light.text,
   },
   itemsBadge: {
     backgroundColor: '#F0FDF4',
@@ -382,7 +379,6 @@ const styles = StyleSheet.create({
   },
   expenseRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
   },
   iconBadge: {
     width: 38,
@@ -399,12 +395,10 @@ const styles = StyleSheet.create({
   expenseDesc: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   expenseSub: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.light.textSecondary,
     marginTop: 2,
   },
   expenseRight: {
@@ -413,7 +407,6 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   claimedBadge: {
     backgroundColor: '#F0FDF4',
@@ -436,13 +429,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
-    color: Colors.light.text,
     marginTop: Spacing.md,
   },
   emptyText: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.sm,
   },
@@ -477,7 +468,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.grey[300],
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
-    backgroundColor: Colors.white,
   },
   comingSoonContent: {
     flexDirection: 'row',
@@ -490,12 +480,10 @@ const styles = StyleSheet.create({
   comingSoonTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   comingSoonSub: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.light.textSecondary,
     marginTop: 2,
   },
   soonBadge: {
@@ -517,7 +505,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.lg,
@@ -532,16 +519,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 18,
-    color: Colors.light.text,
   },
   input: {
-    backgroundColor: Colors.light.background,
     borderRadius: BorderRadius.input,
     paddingVertical: 14,
     paddingHorizontal: Spacing.md,
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
-    color: Colors.light.text,
     marginBottom: Spacing.sm,
   },
   submitButton: {

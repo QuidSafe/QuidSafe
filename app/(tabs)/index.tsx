@@ -10,6 +10,7 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useDashboard, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
+import { useTheme } from '@/lib/ThemeContext';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -22,6 +23,7 @@ export default function DashboardScreen() {
   useApiToken();
   const { user } = useUser();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
+  const { colors, isDark } = useTheme();
 
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
@@ -31,16 +33,18 @@ export default function DashboardScreen() {
   const actions = data?.actions;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />}
       >
         {/* Header */}
         <View style={styles.header} accessible={true} accessibilityRole="header">
-          <Text style={styles.greeting}>{getGreeting()}</Text>
-          <Text style={styles.name} accessibilityRole="header">{firstName ? `Hey, ${firstName}` : 'Welcome to QuidSafe'}</Text>
+          <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+          <Text style={[styles.name, { color: colors.text }]} accessibilityRole="header">
+            {firstName ? `Hey, ${firstName}` : 'Welcome to QuidSafe'}
+          </Text>
         </View>
 
         {isLoading ? (
@@ -59,7 +63,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [pressed && styles.pressedCard]}
             >
               <LinearGradient
-                colors={['#0F172A', '#1E3A8A']}
+                colors={isDark ? ['#1E293B', '#0F172A'] : ['#0F172A', '#1E3A8A']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
@@ -107,12 +111,16 @@ export default function DashboardScreen() {
                 accessible={true}
                 accessibilityRole="text"
                 accessibilityLabel={`Tax insight: ${tax.plainEnglish}`}
-                style={({ pressed }) => [styles.insightBanner, pressed && styles.pressedCard]}
+                style={({ pressed }) => [
+                  styles.insightBanner,
+                  { backgroundColor: colors.surface },
+                  pressed && styles.pressedCard,
+                ]}
               >
                 <View style={styles.insightIcon}>
                   <FontAwesome name="lightbulb-o" size={14} color={Colors.secondary} />
                 </View>
-                <Text style={styles.insightText}>{tax.plainEnglish}</Text>
+                <Text style={[styles.insightText, { color: colors.text }]}>{tax.plainEnglish}</Text>
               </Pressable>
             ) : null}
 
@@ -121,11 +129,15 @@ export default function DashboardScreen() {
               accessible={true}
               accessibilityRole="summary"
               accessibilityLabel={`Set aside ${formatCurrency(tax?.setAsideMonthly ?? 0)} this month. Effective tax rate ${tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}`}
-              style={({ pressed }) => [styles.setAsideCard, pressed && styles.pressedCard]}
+              style={({ pressed }) => [
+                styles.setAsideCard,
+                { backgroundColor: isDark ? '#292524' : Colors.gold[50] },
+                pressed && styles.pressedCard,
+              ]}
             >
               <View>
                 <Text style={styles.setAsideLabel}>SET ASIDE THIS MONTH</Text>
-                <Text style={styles.setAsideAmount}>
+                <Text style={[styles.setAsideAmount, { color: colors.text }]}>
                   {formatCurrency(tax?.setAsideMonthly ?? 0)}
                 </Text>
               </View>
@@ -164,6 +176,12 @@ export default function DashboardScreen() {
                     description="Submit your quarterly update to HMRC before the deadline."
                     icon="clock-o"
                   />
+                  <ActionCard
+                    type="success"
+                    title="Tax pot on track"
+                    description="You're setting aside enough to cover your tax bill."
+                    icon="check-circle"
+                  />
                 </>
               )}
             </View>
@@ -176,16 +194,16 @@ export default function DashboardScreen() {
             {/* Income by Source */}
             {income && income.bySource.length > 0 && (
               <Card>
-                <Text style={styles.sectionTitle}>Income by Source</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Income by Source</Text>
                 {income.bySource.map((src) => (
-                  <View key={src.name} style={styles.sourceRow}>
+                  <View key={src.name} style={[styles.sourceRow, { borderBottomColor: colors.border }]}>
                     <View style={styles.sourceLeft}>
                       <View style={[styles.sourceDot, { backgroundColor: Colors.secondary }]} />
-                      <Text style={styles.sourceName}>{src.name}</Text>
+                      <Text style={[styles.sourceName, { color: colors.text }]}>{src.name}</Text>
                     </View>
                     <View style={styles.sourceRight}>
-                      <Text style={styles.sourceAmount}>{formatCurrency(src.amount)}</Text>
-                      <View style={styles.sourceBar}>
+                      <Text style={[styles.sourceAmount, { color: colors.text }]}>{formatCurrency(src.amount)}</Text>
+                      <View style={[styles.sourceBar, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]}>
                         <View style={[styles.sourceBarFill, { width: `${src.percentage}%` }]} />
                       </View>
                     </View>
@@ -203,7 +221,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   scroll: {
     padding: Spacing.lg,
@@ -216,12 +233,10 @@ const styles = StyleSheet.create({
   greeting: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.textSecondary,
   },
   name: {
     fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 28,
-    color: Colors.light.text,
     marginTop: 2,
   },
 
@@ -304,7 +319,6 @@ const styles = StyleSheet.create({
 
   // Insight banner
   insightBanner: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
     borderLeftWidth: 3,
@@ -326,14 +340,12 @@ const styles = StyleSheet.create({
   insightText: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.light.text,
     lineHeight: 22,
     flex: 1,
   },
 
   // Set Aside card
   setAsideCard: {
-    backgroundColor: Colors.gold[50],
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
     borderWidth: 2,
@@ -352,7 +364,6 @@ const styles = StyleSheet.create({
   setAsideAmount: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 26,
-    color: Colors.light.text,
     marginTop: 2,
   },
   setAsideRight: {
@@ -378,7 +389,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 16,
-    color: Colors.light.text,
     marginBottom: Spacing.md,
   },
 
@@ -389,7 +399,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
   },
   sourceLeft: {
     flexDirection: 'row',
@@ -405,7 +414,6 @@ const styles = StyleSheet.create({
   sourceName: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.light.text,
   },
   sourceRight: {
     alignItems: 'flex-end',
@@ -414,12 +422,10 @@ const styles = StyleSheet.create({
   sourceAmount: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   sourceBar: {
     width: 60,
     height: 4,
-    backgroundColor: Colors.grey[200],
     borderRadius: 2,
   },
   sourceBarFill: {

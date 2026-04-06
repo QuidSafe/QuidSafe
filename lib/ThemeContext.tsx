@@ -1,0 +1,54 @@
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { useColorScheme } from 'react-native';
+import { Colors } from '@/constants/Colors';
+
+export type ThemeMode = 'light' | 'dark' | 'auto';
+
+export interface ThemeColors {
+  text: string;
+  textSecondary: string;
+  background: string;
+  surface: string;
+  tint: string;
+  tabIconDefault: string;
+  tabIconSelected: string;
+  border: string;
+}
+
+interface ThemeContextValue {
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
+  isDark: boolean;
+  colors: ThemeColors;
+}
+
+const ThemeContext = createContext<ThemeContextValue>({
+  mode: 'auto',
+  setMode: () => {},
+  isDark: false,
+  colors: Colors.light,
+});
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const systemScheme = useColorScheme();
+  const [mode, setMode] = useState<ThemeMode>('auto');
+
+  const isDark = useMemo(() => {
+    if (mode === 'auto') return systemScheme === 'dark';
+    return mode === 'dark';
+  }, [mode, systemScheme]);
+
+  const colors = useMemo(() => (isDark ? Colors.dark : Colors.light), [isDark]);
+
+  const value = useMemo(() => ({ mode, setMode, isDark, colors }), [mode, isDark, colors]);
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}

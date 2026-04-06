@@ -3,11 +3,12 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface ActionCardProps {
   title: string;
   description: string;
-  type: 'warning' | 'info' | 'action' | 'success' | 'error';
+  type: 'warning' | 'info' | 'action' | 'success' | 'error' | 'urgent';
   icon?: React.ComponentProps<typeof FontAwesome>['name'];
   onPress?: () => void;
 }
@@ -18,14 +19,17 @@ const typeColors: Record<string, string> = {
   action: Colors.success,
   success: Colors.success,
   error: Colors.error,
+  urgent: Colors.error,
 };
 
 export function ActionCard({ title, description, type, icon, onPress }: ActionCardProps) {
-  const color = typeColors[type];
+  const { colors } = useTheme();
+  const color = typeColors[type] ?? Colors.secondary;
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, { backgroundColor: colors.surface }, pressed && styles.pressed]}
     >
       <View style={[styles.border, { backgroundColor: color }]} />
       {icon && (
@@ -34,17 +38,16 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
         </View>
       )}
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>
       </View>
-      <FontAwesome name="chevron-right" size={12} color={Colors.grey[400]} style={styles.chevron} />
+      <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} style={styles.chevron} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.card,
     flexDirection: 'row',
     alignItems: 'center',
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.9,
-    transform: [{ translateY: -1 }],
+    transform: [{ scale: 0.98 }],
   },
   border: {
     width: 3,
@@ -75,12 +78,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   description: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.light.textSecondary,
     marginTop: 2,
   },
   chevron: {

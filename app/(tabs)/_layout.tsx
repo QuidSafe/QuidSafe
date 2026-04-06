@@ -1,20 +1,22 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>['name']; color: string }) {
   return <FontAwesome size={22} style={{ marginBottom: -2 }} {...props} />;
 }
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.light.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           paddingBottom: 4,
           height: 56,
         },
@@ -23,11 +25,11 @@ export default function TabLayout() {
           fontSize: 10,
         },
         headerStyle: {
-          backgroundColor: Colors.white,
+          backgroundColor: colors.surface,
         },
         headerTitleStyle: {
           fontFamily: 'Manrope_700Bold',
-          color: Colors.light.text,
+          color: colors.text,
         },
         headerShown: false,
       }}

@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 type TagVariant = 'tag-n' | 'tag-ok' | 'tag-g';
 
@@ -72,26 +73,28 @@ const tagStyles: Record<TagVariant, { bg: string; color: string }> = {
 };
 
 export default function LearnScreen() {
+  const { colors } = useTheme();
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.heading}>Learn</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.heading, { color: colors.text }]}>Learn</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
         </Text>
 
         {articles.map((article) => {
           const variant = tagStyles[article.tagVariant];
           return (
-            <View key={article.id} style={styles.card}>
+            <View key={article.id} style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.tagPill, { backgroundColor: variant.bg }]}>
                 <Text style={[styles.tagText, { color: variant.color }]}>{article.tag}</Text>
               </View>
-              <Text style={styles.cardTitle}>{article.title}</Text>
-              <Text style={styles.cardDescription}>{article.description}</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{article.title}</Text>
+              <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>{article.description}</Text>
               <View style={styles.meta}>
-                <FontAwesome name="clock-o" size={10.5} color={Colors.grey[400]} />
-                <Text style={styles.metaText}>{article.readMin} min read</Text>
+                <FontAwesome name="clock-o" size={10.5} color={colors.textSecondary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{article.readMin} min read</Text>
               </View>
             </View>
           );
@@ -104,7 +107,6 @@ export default function LearnScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   scroll: {
     padding: 24,
@@ -112,21 +114,18 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 19,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontFamily: 'Manrope_800ExtraBold',
   },
   subtitle: {
     fontSize: 12,
-    color: Colors.grey[500],
+    fontFamily: 'Manrope_400Regular',
     marginBottom: 4,
   },
   card: {
-    backgroundColor: Colors.white,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: Colors.light.border,
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -142,19 +141,18 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 9.5,
-    fontWeight: '700',
+    fontFamily: 'Manrope_700Bold',
     letterSpacing: 0.05 * 9.5,
     textTransform: 'uppercase',
   },
   cardTitle: {
     fontSize: 13.5,
-    fontWeight: '700',
-    color: Colors.primary,
+    fontFamily: 'Manrope_700Bold',
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 12,
-    color: Colors.grey[500],
+    fontFamily: 'Manrope_400Regular',
     lineHeight: 12 * 1.45,
     marginBottom: 8,
   },
@@ -165,7 +163,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 10.5,
-    fontWeight: '600',
-    color: Colors.grey[400],
+    fontFamily: 'Manrope_600SemiBold',
   },
 });

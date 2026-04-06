@@ -13,6 +13,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 import { useDashboard, useQuarterlyBreakdown, useApiToken } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
@@ -37,6 +38,7 @@ const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function IncomeScreen() {
+  const { colors } = useTheme();
   useApiToken();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   const { data: _quarterly } = useQuarterlyBreakdown();
@@ -84,7 +86,7 @@ export default function IncomeScreen() {
   }, [refetch]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -97,7 +99,7 @@ export default function IncomeScreen() {
         }
       >
         {/* Heading */}
-        <Text style={styles.title}>Income</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Income</Text>
 
         {isLoading ? (
           <>
@@ -119,8 +121,8 @@ export default function IncomeScreen() {
               <View style={styles.summaryRow}>
                 {/* Gross income */}
                 <View style={styles.summaryLeft}>
-                  <Text style={styles.summaryLabel}>Gross income</Text>
-                  <Text style={styles.grossAmount}>{formatCurrency(grossIncome)}</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Gross income</Text>
+                  <Text style={[styles.grossAmount, { color: colors.text }]}>{formatCurrency(grossIncome)}</Text>
                   <View style={styles.yoyRow}>
                     <FontAwesome name="arrow-up" size={10} color={Colors.success} />
                     <Text style={styles.yoyText}>+{yoyPercent}% vs last year</Text>
@@ -129,9 +131,9 @@ export default function IncomeScreen() {
 
                 {/* Net profit */}
                 <View style={styles.summaryRight}>
-                  <Text style={styles.summaryLabel}>Net profit</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Net profit</Text>
                   <Text style={styles.netAmount}>{formatCurrency(netProfit)}</Text>
-                  <Text style={styles.afterExpenses}>
+                  <Text style={[styles.afterExpenses, { color: colors.textSecondary }]}>
                     After {formatCurrency(totalExpenses)} expenses
                   </Text>
                 </View>
@@ -159,7 +161,7 @@ export default function IncomeScreen() {
                           ]}
                         />
                       </View>
-                      <Text style={styles.chartLabel}>{label}</Text>
+                      <Text style={[styles.chartLabel, { color: colors.textSecondary }]}>{label}</Text>
                     </View>
                   );
                 })}
@@ -169,37 +171,37 @@ export default function IncomeScreen() {
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: Colors.secondary }]} />
-                  <Text style={styles.legendText}>Income</Text>
+                  <Text style={[styles.legendText, { color: colors.textSecondary }]}>Income</Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
-                  <Text style={styles.legendText}>Expenses</Text>
+                  <Text style={[styles.legendText, { color: colors.textSecondary }]}>Expenses</Text>
                 </View>
               </View>
             </Card>
 
             {/* Sources section header */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Sources</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Sources</Text>
               <View style={styles.sourceBadge}>
-                <Text style={styles.sourceBadgeText}>
+                <Text style={[styles.sourceBadgeText, { color: colors.textSecondary }]}>
                   {sourceCount} source{sourceCount !== 1 ? 's' : ''}
                 </Text>
               </View>
             </View>
 
             {/* Search input */}
-            <View style={styles.searchContainer}>
+            <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <FontAwesome
                 name="search"
                 size={14}
-                color={Colors.grey[400]}
+                color={colors.textSecondary}
                 style={styles.searchIcon}
               />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search sources..."
-                placeholderTextColor={Colors.grey[400]}
+                placeholderTextColor={colors.textSecondary}
                 value={search}
                 onChangeText={setSearch}
               />
@@ -245,7 +247,7 @@ export default function IncomeScreen() {
                       key={src.name}
                       style={[
                         styles.sourceRow,
-                        !isLast && styles.sourceRowBorder,
+                        !isLast && [styles.sourceRowBorder, { borderBottomColor: colors.border }],
                       ]}
                     >
                       {/* Icon badge */}
@@ -264,24 +266,24 @@ export default function IncomeScreen() {
 
                       {/* Name + subtitle */}
                       <View style={styles.sourceInfo}>
-                        <Text style={styles.sourceName}>{src.name}</Text>
-                        <Text style={styles.sourceSubtitle}>
+                        <Text style={[styles.sourceName, { color: colors.text }]}>{src.name}</Text>
+                        <Text style={[styles.sourceSubtitle, { color: colors.textSecondary }]}>
                           {getSourceSubtitle(src.name)}
                         </Text>
                       </View>
 
                       {/* Amount + percentage */}
                       <View style={styles.sourceAmounts}>
-                        <Text style={styles.sourceAmount}>
+                        <Text style={[styles.sourceAmount, { color: colors.text }]}>
                           {formatCurrency(src.amount)}
                         </Text>
-                        <Text style={styles.sourcePercent}>{src.percentage}%</Text>
+                        <Text style={[styles.sourcePercent, { color: colors.textSecondary }]}>{src.percentage}%</Text>
                       </View>
                     </View>
                   );
                 })
               ) : (
-                <Text style={styles.emptyText}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                   {search
                     ? 'No sources match your search.'
                     : 'Connect your bank account to see income broken down by source.'}
@@ -308,7 +310,6 @@ function getSourceSubtitle(name: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   scroll: {
     padding: Spacing.lg,
@@ -319,7 +320,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 19,
-    color: Colors.light.text,
     marginBottom: Spacing.md,
   },
 
@@ -342,7 +342,6 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 10.5,
-    color: Colors.grey[500],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -350,7 +349,6 @@ const styles = StyleSheet.create({
   grossAmount: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 30,
-    color: Colors.primary,
     marginBottom: 4,
   },
   yoyRow: {
@@ -372,7 +370,6 @@ const styles = StyleSheet.create({
   afterExpenses: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 11,
-    color: Colors.grey[500],
   },
 
   // Chart
@@ -406,7 +403,6 @@ const styles = StyleSheet.create({
   chartLabel: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 9,
-    color: Colors.grey[400],
     marginTop: 4,
   },
 
@@ -430,7 +426,6 @@ const styles = StyleSheet.create({
   legendText: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-    color: Colors.grey[500],
   },
 
   // Section header
@@ -443,7 +438,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 16,
-    color: Colors.light.text,
   },
   sourceBadge: {
     backgroundColor: Colors.grey[100],
@@ -454,17 +448,14 @@ const styles = StyleSheet.create({
   sourceBadgeText: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-    color: Colors.grey[500],
   },
 
   // Search
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.input,
     borderWidth: 1,
-    borderColor: Colors.light.border,
     paddingHorizontal: 12,
     height: 44,
     marginBottom: Spacing.sm,
@@ -476,7 +467,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.text,
     padding: 0,
   },
 

@@ -17,6 +17,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
+import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 import 'react-native-reanimated';
 
 export { ErrorBoundary } from 'expo-router';
@@ -32,6 +33,11 @@ const queryClient = new QueryClient({
     queries: { retry: 2, refetchOnWindowFocus: false },
   },
 });
+
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -82,15 +88,17 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="auto" />
-          <AuthRedirect>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </AuthRedirect>
+          <ThemeProvider>
+            <ThemedStatusBar />
+            <AuthRedirect>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+            </AuthRedirect>
+          </ThemeProvider>
         </QueryClientProvider>
       </ClerkLoaded>
     </ClerkProvider>
