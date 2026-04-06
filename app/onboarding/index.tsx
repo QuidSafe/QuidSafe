@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -25,11 +25,12 @@ import * as Linking from 'expo-linking';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const BANKS = [
-  { name: 'Monzo', initials: 'M', color: '#FF5C57' },
-  { name: 'Starling', initials: 'S', color: '#7C3AED' },
-  { name: 'Halifax', initials: 'H', color: '#0F172A' },
-  { name: 'HSBC', initials: 'H', color: '#1E293B' },
-  { name: 'NatWest', initials: 'N', color: '#6D28D9' },
+  { name: 'Monzo', initials: 'M', color: '#FF4B4B' },
+  { name: 'Starling', initials: 'S', color: '#7433FF' },
+  { name: 'Halifax', initials: 'H', color: '#006BBF' },
+  { name: 'HSBC', initials: 'H', color: '#DB0011' },
+  { name: 'NatWest', initials: 'N', color: '#42145F' },
+  { name: 'Barclays', initials: 'B', color: '#00AEEF' },
 ];
 
 const TRUST_PILLS = [
@@ -40,26 +41,144 @@ const TRUST_PILLS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Step Dots                                                         */
+/*  Animated Step Dots                                                 */
 /* ------------------------------------------------------------------ */
 function StepDots({ current, total }: { current: number; total: number }) {
+  const widths = useRef(
+    Array.from({ length: total }).map(
+      (_, i) => new Animated.Value(i === 0 ? 24 : 8)
+    )
+  ).current;
+
+  useEffect(() => {
+    const anims = widths.map((w, i) =>
+      Animated.spring(w, {
+        toValue: i === current ? 24 : 8,
+        useNativeDriver: false,
+        tension: 120,
+        friction: 14,
+      })
+    );
+    Animated.parallel(anims).start();
+  }, [current, widths]);
+
   return (
     <View style={styles.dotsRow}>
-      {Array.from({ length: total }).map((_, i) => {
+      {widths.map((w, i) => {
         const isDone = i < current;
         const isActive = i === current;
         return (
-          <View
+          <Animated.View
             key={i}
             style={[
               styles.dot,
-              isDone && styles.dotDone,
-              isActive && styles.dotActive,
+              {
+                width: w,
+                backgroundColor: isActive
+                  ? Colors.secondary
+                  : isDone
+                  ? Colors.success
+                  : Colors.grey[300],
+              },
             ]}
           />
         );
       })}
     </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Counting number animation                                          */
+/* ------------------------------------------------------------------ */
+function CountingNumber({ target }: { target: number }) {
+  const { colors } = useTheme();
+  const animValue = useRef(new Animated.Value(0)).current;
+  const [display, setDisplay] = useState('£0');
+
+  useEffect(() => {
+    animValue.setValue(0);
+    const listener = animValue.addListener(({ value }) => {
+      const num = Math.round(value);
+      setDisplay(`£${num.toLocaleString('en-GB')}`);
+    });
+
+    Animated.timing(animValue, {
+      toValue: target,
+      duration: 2000,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    return () => animValue.removeListener(listener);
+  }, [target, animValue]);
+
+  return (
+    <View style={styles.countingContainer}>
+      <Text style={[styles.countingNumber, { color: Colors.accent }]}>
+        {display}
+      </Text>
+      <Text style={[styles.countingSub, { color: colors.textSecondary }]}>
+        That's how much the average sole trader saves
+      </Text>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Staggered Feature Card                                             */
+/* ------------------------------------------------------------------ */
+function AnimatedFeatureCard({
+  badgeColor,
+  iconName,
+  title,
+  description,
+  delay,
+}: {
+  badgeColor: string;
+  iconName: React.ComponentProps<typeof FontAwesome>['name'];
+  title: string;
+  description: string;
+  delay: number;
+}) {
+  const { colors } = useTheme();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.cubic),
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 12,
+        }),
+      ]).start();
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [fadeAnim, translateY, delay]);
+
+  return (
+    <Animated.View
+      style={{ opacity: fadeAnim, transform: [{ translateY }] }}
+    >
+      <Card style={styles.featureCard}>
+        <View style={[styles.featureBadge, { backgroundColor: badgeColor + '18' }]}>
+          <FontAwesome name={iconName} size={18} color={badgeColor} />
+        </View>
+        <View style={styles.featureCardText}>
+          <Text style={[styles.featureCardTitle, { color: colors.text }]}>{title}</Text>
+          <Text style={[styles.featureCardDesc, { color: colors.textSecondary }]}>{description}</Text>
+        </View>
+      </Card>
+    </Animated.View>
   );
 }
 
@@ -86,6 +205,9 @@ function StepWelcome() {
         expenses — sorted.
       </Text>
 
+      {/* Animated counting number */}
+      <CountingNumber target={2847} />
+
       <Text style={styles.subSubtitle}>
         Whether you earn £15k or £150k — know exactly what you owe.
       </Text>
@@ -109,25 +231,28 @@ function StepWelcome() {
         </View>
       </Card>
 
-      {/* Feature cards */}
+      {/* Feature cards — stagger in */}
       <View style={styles.featureCards}>
-        <FeatureCard
+        <AnimatedFeatureCard
           badgeColor={Colors.secondary}
           iconName="magic"
           title="AI-powered categorisation"
           description="Anonymised AI sorts your income vs spending automatically — no manual tagging."
+          delay={200}
         />
-        <FeatureCard
+        <AnimatedFeatureCard
           badgeColor={Colors.accent}
           iconName="commenting"
           title="Plain English tax"
           description={'"Set aside £648 this month." No jargon, no spreadsheets.'}
+          delay={300}
         />
-        <FeatureCard
+        <AnimatedFeatureCard
           badgeColor={Colors.success}
           iconName="file-text-o"
           title="MTD + Invoices + Expenses"
           description="Submit to HMRC, send invoices, and track expenses — all in one place."
+          delay={400}
         />
       </View>
 
@@ -140,28 +265,52 @@ function StepWelcome() {
   );
 }
 
-function FeatureCard({
-  badgeColor,
-  iconName,
-  title,
-  description,
+/* ------------------------------------------------------------------ */
+/*  Pulsing Connect Button                                             */
+/* ------------------------------------------------------------------ */
+function PulsingButton({
+  onPress,
+  disabled,
 }: {
-  badgeColor: string;
-  iconName: React.ComponentProps<typeof FontAwesome>['name'];
-  title: string;
-  description: string;
+  onPress: () => void;
+  disabled: boolean;
 }) {
-  const { colors } = useTheme();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.04,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
+
   return (
-    <Card style={styles.featureCard}>
-      <View style={[styles.featureBadge, { backgroundColor: badgeColor + '18' }]}>
-        <FontAwesome name={iconName} size={18} color={badgeColor} />
-      </View>
-      <View style={styles.featureCardText}>
-        <Text style={[styles.featureCardTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[styles.featureCardDesc, { color: colors.textSecondary }]}>{description}</Text>
-      </View>
-    </Card>
+    <Animated.View style={{ transform: [{ scale: pulseAnim }], alignSelf: 'stretch' }}>
+      <Pressable
+        style={({ pressed }) => [styles.connectButton, pressed && styles.pressed]}
+        onPress={onPress}
+        disabled={disabled}
+      >
+        <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
+        <Text style={styles.connectButtonText}>
+          {disabled ? 'Connecting...' : 'Connect your bank'}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -263,7 +412,111 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
           </Pressable>
         ))}
       </View>
+
+      {/* Pulsing connect button */}
+      <View style={{ height: Spacing.lg }} />
+      <PulsingButton onPress={handleConnectBank} disabled={connecting} />
     </ScrollView>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Confetti particle                                                  */
+/* ------------------------------------------------------------------ */
+function ConfettiParticle({ delay, startX }: { delay: number; startX: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.timing(translateY, {
+          toValue: -80,
+          duration: 1100,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: startX,
+          duration: 1100,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1.2,
+          duration: 1100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [delay, startX, opacity, translateY, translateX, scale]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.confettiDot,
+        {
+          opacity,
+          transform: [{ translateY }, { translateX }, { scale }],
+        },
+      ]}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Animated Checkmark                                                 */
+/* ------------------------------------------------------------------ */
+function AnimatedCheckmark() {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 60,
+          friction: 8,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [scaleAnim, opacityAnim]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.checkmarkCircle,
+        {
+          opacity: opacityAnim,
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
+    >
+      <FontAwesome name="check" size={40} color={Colors.white} />
+    </Animated.View>
   );
 }
 
@@ -273,8 +526,29 @@ function StepBankConnect({ onBankConnected }: { onBankConnected?: () => void }) 
 function StepAllSet() {
   const { colors } = useTheme();
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const titleScale = useRef(new Animated.Value(0.8)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Title scale-up animation
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.parallel([
+        Animated.spring(titleScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 80,
+          friction: 10,
+        }),
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Progress bar loop
     Animated.loop(
       Animated.sequence([
         Animated.timing(progressAnim, {
@@ -290,12 +564,24 @@ function StepAllSet() {
         }),
       ])
     ).start();
-  }, [progressAnim]);
+  }, [progressAnim, titleScale, titleOpacity]);
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
+
+  // Confetti particles — scattered positions
+  const confettiData = [
+    { delay: 400, startX: -30 },
+    { delay: 500, startX: 20 },
+    { delay: 600, startX: -50 },
+    { delay: 700, startX: 40 },
+    { delay: 550, startX: -10 },
+    { delay: 650, startX: 55 },
+    { delay: 450, startX: -40 },
+    { delay: 750, startX: 15 },
+  ];
 
   return (
     <ScrollView
@@ -303,14 +589,28 @@ function StepAllSet() {
       contentContainerStyle={styles.slideContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Hero icon */}
-      <View style={styles.heroIconGreen}>
-        <FontAwesome name="check" size={28} color={Colors.success} />
+      {/* Confetti particles */}
+      <View style={styles.confettiContainer}>
+        {confettiData.map((c, i) => (
+          <ConfettiParticle key={i} delay={c.delay} startX={c.startX} />
+        ))}
       </View>
 
-      <Text style={[styles.stepTitle, { color: Colors.success }]}>
-        You&apos;re all set
-      </Text>
+      {/* Animated checkmark */}
+      <AnimatedCheckmark />
+
+      <Animated.Text
+        style={[
+          styles.stepTitle,
+          {
+            color: Colors.success,
+            opacity: titleOpacity,
+            transform: [{ scale: titleScale }],
+          },
+        ]}
+      >
+        You&apos;re all set!
+      </Animated.Text>
 
       <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
         We&apos;re syncing your transactions now. This usually takes about 30 seconds.
@@ -354,14 +654,18 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const animateTo = (nextStep: number) => {
-    Animated.timing(slideAnim, {
-      toValue: -nextStep * SCREEN_WIDTH,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-    setStep(nextStep);
-  };
+  const animateTo = useCallback(
+    (nextStep: number) => {
+      Animated.spring(slideAnim, {
+        toValue: -nextStep * SCREEN_WIDTH,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 14,
+      }).start();
+      setStep(nextStep);
+    },
+    [slideAnim]
+  );
 
   const handleNext = async () => {
     if (step < 2) {
@@ -389,6 +693,11 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Subtle gradient overlay */}
+      <View style={[styles.gradientOverlay, { backgroundColor: colors.background }]}>
+        <View style={styles.gradientTop} />
+      </View>
+
       {/* Slides */}
       <Animated.View
         style={[styles.slides, { transform: [{ translateX: slideAnim }] }]}
@@ -482,9 +791,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  gradientTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    backgroundColor: Colors.secondary,
+    opacity: 0.03,
+  },
   slides: {
     flex: 1,
     flexDirection: 'row',
+    zIndex: 1,
   },
   slideScroll: {
     flex: 1,
@@ -504,18 +827,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   dot: {
-    width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.grey[300],
-  },
-  dotActive: {
-    width: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.secondary,
-  },
-  dotDone: {
-    backgroundColor: Colors.success,
   },
 
   /* Hero icons */
@@ -545,6 +858,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+  },
+
+  /* Counting number animation */
+  countingContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  countingNumber: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 48,
+    letterSpacing: -1,
+    marginBottom: Spacing.xs,
+  },
+  countingSub: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
   /* Step 1 — Welcome */
@@ -736,16 +1068,16 @@ const styles = StyleSheet.create({
     ...Shadows.soft,
   },
   bankLogo: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
   },
   bankInitials: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.white,
   },
   bankName: {
@@ -754,7 +1086,48 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
+  /* Connect button (pulsing) */
+  connectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    ...Shadows.medium,
+  },
+  connectButtonText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16,
+    color: Colors.white,
+  },
+
   /* Step 3 — All Set */
+  confettiContainer: {
+    position: 'relative',
+    height: 0,
+    width: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  confettiDot: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.accent,
+  },
+  checkmarkCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+    ...Shadows.medium,
+  },
   syncCard: {
     alignSelf: 'stretch',
     marginBottom: Spacing.md,
@@ -817,6 +1190,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     alignItems: 'center',
     borderTopWidth: 1,
+    zIndex: 1,
   },
 
   /* CTA button (gold) — Step 1 */
