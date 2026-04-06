@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -77,6 +78,7 @@ function getLastNMonths(byMonth: { month: string; income: number; expenses: numb
 
 export default function IncomeScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   useQuarterlyBreakdown();
   const createInvoiceMutation = useCreateInvoice();
@@ -426,6 +428,17 @@ export default function IncomeScreen() {
                 </Text>
               )}
             </Card>
+
+            {/* View All Invoices button */}
+            <TouchableOpacity
+              style={[styles.viewInvoicesButton, { borderColor: colors.border }]}
+              onPress={() => router.push('/invoices')}
+              activeOpacity={0.7}
+            >
+              <FontAwesome name="file-text-o" size={16} color={Colors.accent} style={{ marginRight: 10 }} />
+              <Text style={[styles.viewInvoicesText, { color: colors.text }]}>View All Invoices</Text>
+              <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} />
+            </TouchableOpacity>
           </>
         )}
       </ScrollView>
@@ -915,5 +928,21 @@ const styles = StyleSheet.create({
     color: Colors.error,
     textAlign: 'center',
     marginTop: Spacing.sm,
+  },
+
+  // View Invoices button
+  viewInvoicesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    borderWidth: 1,
+    marginTop: Spacing.sm,
+  },
+  viewInvoicesText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    flex: 1,
   },
 });
