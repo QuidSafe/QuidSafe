@@ -27,7 +27,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.logo}>QuidSafe</Text>
+        <Text style={styles.logo} accessibilityRole="header">QuidSafe</Text>
         <View style={styles.goldAccent} />
         <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your tax. Sorted. Safe.</Text>
         <Text style={[styles.descriptor, { color: colors.textSecondary }]}>
@@ -47,6 +47,9 @@ export default function LoginScreen() {
             pressed && styles.pressed,
           ]}
           onPress={handleGoogleSignIn}
+          accessibilityRole="button"
+          accessibilityLabel="Continue with Google"
+          accessibilityHint="Tap to sign in with your Google account"
         >
           <Text style={styles.googleText}>Continue with Google</Text>
         </Pressable>
@@ -58,7 +61,7 @@ export default function LoginScreen() {
         </View>
 
         <Link href="/(auth)/signup" asChild>
-          <Pressable style={({ pressed }) => [styles.emailButton, { backgroundColor: colors.surface }, pressed && styles.pressed]}>
+          <Pressable style={({ pressed }) => [styles.emailButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Continue with Email" accessibilityHint="Tap to sign up or sign in with your email address">
             <Text style={styles.emailText}>Continue with Email</Text>
           </Pressable>
         </Link>

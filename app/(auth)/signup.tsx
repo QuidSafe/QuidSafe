@@ -65,7 +65,7 @@ export default function SignupScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>
+        <Text style={styles.title} accessibilityRole="header">
           {pendingVerification ? 'Check your email' : 'Create your account'}
         </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -116,6 +116,9 @@ export default function SignupScreen() {
               ]}
               onPress={handleSignUp}
               disabled={!isSignupValid || loading}
+              accessibilityRole="button"
+              accessibilityLabel="Send verification code"
+              accessibilityHint="Tap to send a verification code to your email"
             >
               {loading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -149,6 +152,9 @@ export default function SignupScreen() {
               style={({ pressed }) => [styles.button, pressed && styles.pressed]}
               onPress={handleVerify}
               disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel="Verify and continue"
+              accessibilityHint="Tap to verify your email code and continue"
             >
               {loading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -163,7 +169,7 @@ export default function SignupScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => router.back()} accessibilityRole="link" accessibilityLabel="Back to login">
           <Text style={styles.backLink}>Back to login</Text>
         </Pressable>
       </View>
