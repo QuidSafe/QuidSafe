@@ -7,7 +7,6 @@ import {
   Pressable,
   Alert,
   Animated,
-  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
@@ -17,6 +16,7 @@ import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { useBankConnections, useApiToken, useSettings, useUpdateSettings } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
+import { useTheme } from '@/lib/ThemeContext';
 
 // --------------- Custom Toggle ---------------
 function Toggle({
@@ -177,13 +177,13 @@ function ThemeOption({
 // --------------- Main Screen ---------------
 export default function SettingsScreen() {
   useApiToken();
+  const { colors, mode, setMode } = useTheme();
   const { user } = useUser();
   const { signOut } = useAuth();
   const router = useRouter();
   const { data: _bankData } = useBankConnections();
   const { data: settingsData } = useSettings();
   const updateSettings = useUpdateSettings();
-  const _systemScheme = useColorScheme();
 
   // Toggle states — initialise from API
   const [biometricLock, setBiometricLock] = useState(true);
@@ -205,9 +205,6 @@ export default function SettingsScreen() {
   const handleToggle = (key: 'notifyTaxDeadlines' | 'notifyWeeklySummary' | 'notifyTransactionAlerts', value: boolean) => {
     updateSettings.mutate({ [key]: value });
   };
-
-  // Theme state
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
 
   const handleSignOut = async () => {
     await signOut();
@@ -273,22 +270,22 @@ export default function SettingsScreen() {
           <ThemeOption
             icon="sun-o"
             label="Light"
-            active={theme === 'light'}
-            onPress={() => setTheme('light')}
+            active={mode === 'light'}
+            onPress={() => setMode('light')}
           />
-          <View style={styles.rowBorderOnly} />
+          <View style={[styles.rowBorderOnly, { backgroundColor: colors.border }]} />
           <ThemeOption
             icon="moon-o"
             label="Dark"
-            active={theme === 'dark'}
-            onPress={() => setTheme('dark')}
+            active={mode === 'dark'}
+            onPress={() => setMode('dark')}
           />
-          <View style={styles.rowBorderOnly} />
+          <View style={[styles.rowBorderOnly, { backgroundColor: colors.border }]} />
           <ThemeOption
             icon="desktop"
             label="Auto"
-            active={theme === 'auto'}
-            onPress={() => setTheme('auto')}
+            active={mode === 'auto'}
+            onPress={() => setMode('auto')}
           />
         </Card>
 

@@ -506,7 +506,6 @@ const styles = StyleSheet.create({
   },
   sourceRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
   },
   sourceIcon: {
     width: 38,
@@ -522,13 +521,11 @@ const styles = StyleSheet.create({
   sourceName: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
     marginBottom: 2,
   },
   sourceSubtitle: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.grey[400],
   },
   sourceAmounts: {
     alignItems: 'flex-end',
@@ -536,20 +533,17 @@ const styles = StyleSheet.create({
   sourceAmount: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 14,
-    color: Colors.light.text,
     marginBottom: 2,
   },
   sourcePercent: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-    color: Colors.grey[400],
   },
 
   // Empty state
   emptyText: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.textSecondary,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
   },

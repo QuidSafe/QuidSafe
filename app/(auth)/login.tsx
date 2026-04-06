@@ -5,11 +5,13 @@ import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
+  const { colors, isDark } = useTheme();
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
@@ -23,10 +25,10 @@ export default function LoginScreen() {
   }, [startSSOFlow]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={styles.logo}>QuidSafe</Text>
-        <Text style={styles.tagline}>Your tax. Sorted. Safe.</Text>
+        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your tax. Sorted. Safe.</Text>
       </View>
 
       <View style={styles.form}>
@@ -42,20 +44,20 @@ export default function LoginScreen() {
         </Pressable>
 
         <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
         </View>
 
         <Link href="/(auth)/signup" asChild>
-          <Pressable style={({ pressed }) => [styles.emailButton, pressed && styles.pressed]}>
+          <Pressable style={({ pressed }) => [styles.emailButton, { backgroundColor: colors.surface }, pressed && styles.pressed]}>
             <Text style={styles.emailText}>Continue with Email</Text>
           </Pressable>
         </Link>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
+        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
           By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
       </View>
@@ -66,7 +68,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
     paddingHorizontal: Spacing.lg,
   },
   header: {
@@ -82,7 +83,6 @@ const styles = StyleSheet.create({
   tagline: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 16,
-    color: Colors.light.textSecondary,
     marginTop: Spacing.sm,
   },
   form: {
@@ -123,15 +123,12 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.light.border,
   },
   dividerText: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: Colors.light.textSecondary,
   },
   emailButton: {
-    backgroundColor: Colors.white,
     paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
@@ -154,7 +151,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
-    color: Colors.grey[500],
     textAlign: 'center',
   },
 });
