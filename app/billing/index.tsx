@@ -234,6 +234,6 @@ const styles = StyleSheet.create({
   planName: { fontFamily: 'Manrope_500Medium', fontSize: 14 },
   trialText: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.accent, marginTop: Spacing.sm },
   periodText: { fontFamily: 'Manrope_400Regular', fontSize: 13, marginTop: Spacing.xs },
-  manageButton: { backgroundColor: Colors.white, paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', borderWidth: 1, borderColor: Colors.primary },
+  manageButton: { paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', borderWidth: 1, borderColor: Colors.primary },
   manageText: { fontFamily: 'Manrope_600SemiBold', fontSize: 15, color: Colors.primary },
 });

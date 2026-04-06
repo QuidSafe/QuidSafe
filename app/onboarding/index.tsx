@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { useTheme } from '@/lib/ThemeContext';
 import { Card } from '@/components/ui/Card';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
