@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -qE '\\.(ts|tsx)$' && [ -f \"$file\" ]; then npx tsc --noEmit --pretty 2>&1 | head -20; fi",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}
