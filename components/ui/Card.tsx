@@ -1,4 +1,5 @@
-import { StyleSheet, View, ViewProps, Pressable } from 'react-native';
+import { useRef } from 'react';
+import { StyleSheet, View, ViewProps, Pressable, Animated } from 'react-native';
 import { BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 

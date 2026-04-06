@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,13 +7,14 @@ import {
   ScrollView,
   useWindowDimensions,
   Platform,
+  Animated,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
+import type { ThemeColors } from '@/lib/ThemeContext';
 
 // ─── Feature data ────────────────────────────────────────
 const FEATURES = [
@@ -118,37 +119,330 @@ const PRO_FEATURES = [
 ];
 
 // ─── FAQ Item ────────────────────────────────────────────
-function FAQItem({ question, answer }: { question: string; answer: string }) {
+function FAQItem({ question, answer, darkColors }: { question: string; answer: string; darkColors: ThemeColors }) {
   const [open, setOpen] = useState(false);
   return (
     <Pressable
       onPress={() => setOpen(!open)}
       style={({ pressed }) => [
         styles.faqItem,
+        { backgroundColor: darkColors.surface, borderColor: darkColors.cardBorder, borderWidth: 1 },
         pressed && { opacity: 0.9 },
       ]}
       accessibilityRole="button"
       accessibilityLabel={question}
     >
       <View style={styles.faqHeader}>
-        <Text style={styles.faqQuestion}>{question}</Text>
+        <Text style={[styles.faqQuestion, { color: darkColors.text }]}>{question}</Text>
         <Text style={styles.faqChevron}>{open ? '−' : '+'}</Text>
       </View>
-      {open && <Text style={styles.faqAnswer}>{answer}</Text>}
+      {open && <Text style={[styles.faqAnswer, { color: darkColors.textSecondary }]}>{answer}</Text>}
     </Pressable>
   );
 }
+
+// ─── Phone Mockup ────────────────────────────────────────
+function PhoneMockup({ scale = 1 }: { scale?: number }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -8,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 8,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [floatAnim]);
+
+  return (
+    <Animated.View
+      style={[
+        phoneMockupStyles.wrapper,
+        {
+          transform: [
+            { scale },
+            { translateY: floatAnim },
+          ],
+        },
+      ]}
+    >
+      {/* Phone frame */}
+      <View style={phoneMockupStyles.frame}>
+        {/* Notch */}
+        <View style={phoneMockupStyles.notch} />
+
+        {/* Status bar */}
+        <View style={phoneMockupStyles.statusBar}>
+          <Text style={phoneMockupStyles.statusTime}>9:41</Text>
+          <View style={phoneMockupStyles.statusRight}>
+            <Text style={phoneMockupStyles.statusIcon}>●●●</Text>
+            <Text style={phoneMockupStyles.statusIcon}>▌</Text>
+          </View>
+        </View>
+
+        {/* Screen content */}
+        <View style={phoneMockupStyles.screen}>
+          {/* Mini header */}
+          <View style={phoneMockupStyles.miniHeader}>
+            <Text style={phoneMockupStyles.miniGreeting}>Good morning</Text>
+            <Text style={phoneMockupStyles.miniName}>Sarah</Text>
+          </View>
+
+          {/* Gold set-aside card */}
+          <View style={phoneMockupStyles.goldCard}>
+            <Text style={phoneMockupStyles.goldCardLabel}>Set aside for tax</Text>
+            <Text style={phoneMockupStyles.goldCardAmount}>£2,847</Text>
+            <View style={phoneMockupStyles.goldCardBar}>
+              <View style={phoneMockupStyles.goldCardBarFill} />
+            </View>
+          </View>
+
+          {/* Three metric boxes */}
+          <View style={phoneMockupStyles.metricsRow}>
+            <View style={phoneMockupStyles.metricBox}>
+              <Text style={phoneMockupStyles.metricLabel}>Income Tax</Text>
+              <Text style={phoneMockupStyles.metricValue}>£1,640</Text>
+            </View>
+            <View style={phoneMockupStyles.metricBox}>
+              <Text style={phoneMockupStyles.metricLabel}>NI</Text>
+              <Text style={phoneMockupStyles.metricValue}>£407</Text>
+            </View>
+            <View style={phoneMockupStyles.metricBox}>
+              <Text style={phoneMockupStyles.metricLabel}>Expenses</Text>
+              <Text style={[phoneMockupStyles.metricValue, { color: '#16A34A' }]}>£3,210</Text>
+            </View>
+          </View>
+
+          {/* Two action card rectangles */}
+          <View style={phoneMockupStyles.actionCard}>
+            <View style={phoneMockupStyles.actionDot} />
+            <View style={phoneMockupStyles.actionLines}>
+              <View style={phoneMockupStyles.actionLine} />
+              <View style={[phoneMockupStyles.actionLine, { width: '60%' }]} />
+            </View>
+          </View>
+          <View style={phoneMockupStyles.actionCard}>
+            <View style={[phoneMockupStyles.actionDot, { backgroundColor: '#1E3A8A' }]} />
+            <View style={phoneMockupStyles.actionLines}>
+              <View style={phoneMockupStyles.actionLine} />
+              <View style={[phoneMockupStyles.actionLine, { width: '45%' }]} />
+            </View>
+          </View>
+        </View>
+
+        {/* Bottom tab bar */}
+        <View style={phoneMockupStyles.tabBar}>
+          <View style={[phoneMockupStyles.tabDot, phoneMockupStyles.tabDotActive]} />
+          <View style={phoneMockupStyles.tabDot} />
+          <View style={phoneMockupStyles.tabDot} />
+          <View style={phoneMockupStyles.tabDot} />
+          <View style={phoneMockupStyles.tabDot} />
+        </View>
+
+        {/* Home indicator */}
+        <View style={phoneMockupStyles.homeIndicator} />
+      </View>
+    </Animated.View>
+  );
+}
+
+const phoneMockupStyles = StyleSheet.create({
+  wrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  frame: {
+    width: 200,
+    height: 400,
+    borderWidth: 3,
+    borderColor: '#1A1A2E',
+    borderRadius: 24,
+    backgroundColor: '#0A0A0F',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  notch: {
+    width: 60,
+    height: 14,
+    backgroundColor: '#1A1A2E',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    alignSelf: 'center',
+    position: 'absolute',
+    top: 0,
+    zIndex: 10,
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  statusTime: {
+    fontFamily: Fonts.manrope.semiBold,
+    fontSize: 7,
+    color: 'rgba(248,250,252,0.8)',
+  },
+  statusRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  statusIcon: {
+    fontSize: 5,
+    color: 'rgba(248,250,252,0.6)',
+  },
+  screen: {
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingTop: 2,
+  },
+  miniHeader: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  miniGreeting: {
+    fontFamily: Fonts.manrope.regular,
+    fontSize: 6,
+    color: 'rgba(248,250,252,0.6)',
+  },
+  miniName: {
+    fontFamily: Fonts.playfair.bold,
+    fontSize: 10,
+    color: '#F8FAFC',
+    marginTop: 1,
+  },
+  goldCard: {
+    backgroundColor: 'rgba(202,138,4,0.15)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(202,138,4,0.3)',
+    padding: 8,
+    marginBottom: 6,
+  },
+  goldCardLabel: {
+    fontFamily: Fonts.manrope.medium,
+    fontSize: 5,
+    color: '#CA8A04',
+    marginBottom: 2,
+  },
+  goldCardAmount: {
+    fontFamily: Fonts.playfair.bold,
+    fontSize: 16,
+    color: '#FEF9C3',
+    marginBottom: 4,
+  },
+  goldCardBar: {
+    height: 3,
+    backgroundColor: 'rgba(202,138,4,0.2)',
+    borderRadius: 2,
+  },
+  goldCardBarFill: {
+    height: 3,
+    width: '65%',
+    backgroundColor: '#CA8A04',
+    borderRadius: 2,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: 4,
+    marginBottom: 6,
+  },
+  metricBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 6,
+    padding: 5,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontFamily: Fonts.manrope.regular,
+    fontSize: 4.5,
+    color: 'rgba(148,163,184,0.9)',
+    marginBottom: 2,
+  },
+  metricValue: {
+    fontFamily: Fonts.manrope.bold,
+    fontSize: 7,
+    color: '#F8FAFC',
+  },
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 6,
+    padding: 7,
+    marginBottom: 4,
+    gap: 6,
+  },
+  actionDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#CA8A04',
+  },
+  actionLines: {
+    flex: 1,
+    gap: 3,
+  },
+  actionLine: {
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 2,
+    width: '80%',
+  },
+  tabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  tabDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  tabDotActive: {
+    backgroundColor: '#CA8A04',
+  },
+  homeIndicator: {
+    width: 40,
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 4,
+  },
+});
 
 // ─── Main Landing Page ───────────────────────────────────
 export default function LandingScreen() {
   const { width } = useWindowDimensions();
   const router = useRouter();
-  const { colors } = useTheme();
+  // Always use dark colors on landing — it's a marketing page
+  const colors = Colors.dark;
   const scrollRef = useRef<ScrollView>(null);
   const featuresYRef = useRef(0);
 
   const isDesktop = width >= 768;
   const isWideDesktop = width >= 1024;
+  const isWideHero = width > 800;
   const contentMaxWidth = 1100;
 
   const scrollToFeatures = useCallback(() => {
@@ -193,32 +487,56 @@ export default function LandingScreen() {
             </View>
 
             {/* Hero content */}
-            <View style={[styles.heroContent, { maxWidth: contentMaxWidth }]}>
-              <Text style={[styles.heroHeadline, isDesktop && styles.heroHeadlineDesktop]}>
-                Tax tracking for{'\n'}UK sole traders
-              </Text>
-              <Text style={[styles.heroSubtitle, isDesktop && styles.heroSubtitleDesktop]}>
-                Connect your bank. Auto-categorise expenses.{'\n'}Know exactly what to set aside for HMRC.
-              </Text>
+            <View style={[
+              styles.heroContent,
+              { maxWidth: contentMaxWidth },
+              isWideHero && styles.heroContentDesktop,
+            ]}>
+              <View style={[
+                styles.heroTextColumn,
+                isWideHero && styles.heroTextColumnDesktop,
+              ]}>
+                <Text style={[
+                  styles.heroHeadline,
+                  isDesktop && styles.heroHeadlineDesktop,
+                  isWideHero && styles.heroHeadlineLeft,
+                ]}>
+                  Tax tracking for{'\n'}UK sole traders
+                </Text>
+                <Text style={[
+                  styles.heroSubtitle,
+                  isDesktop && styles.heroSubtitleDesktop,
+                  isWideHero && styles.heroSubtitleLeft,
+                ]}>
+                  Connect your bank. Auto-categorise expenses.{'\n'}Know exactly what to set aside for HMRC.
+                </Text>
 
-              <View style={[styles.heroCTAs, isDesktop && styles.heroCTAsDesktop]}>
-                <Link href="/(auth)/signup" asChild>
+                <View style={[styles.heroCTAs, isDesktop && styles.heroCTAsDesktop]}>
+                  <Link href="/(auth)/signup" asChild>
+                    <Pressable
+                      style={({ pressed }) => [styles.ctaGold, pressed && styles.pressed]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Start Free Trial"
+                    >
+                      <Text style={styles.ctaGoldText}>Start Free Trial</Text>
+                    </Pressable>
+                  </Link>
                   <Pressable
-                    style={({ pressed }) => [styles.ctaGold, pressed && styles.pressed]}
+                    style={({ pressed }) => [styles.ctaOutline, pressed && styles.pressed]}
+                    onPress={scrollToFeatures}
                     accessibilityRole="button"
-                    accessibilityLabel="Start Free Trial"
+                    accessibilityLabel="Learn More"
                   >
-                    <Text style={styles.ctaGoldText}>Start Free Trial</Text>
+                    <Text style={styles.ctaOutlineText}>Learn More</Text>
                   </Pressable>
-                </Link>
-                <Pressable
-                  style={({ pressed }) => [styles.ctaOutline, pressed && styles.pressed]}
-                  onPress={scrollToFeatures}
-                  accessibilityRole="button"
-                  accessibilityLabel="Learn More"
-                >
-                  <Text style={styles.ctaOutlineText}>Learn More</Text>
-                </Pressable>
+                </View>
+              </View>
+
+              <View style={[
+                styles.heroPhoneColumn,
+                isWideHero && styles.heroPhoneColumnDesktop,
+              ]}>
+                <PhoneMockup scale={isWideHero ? 1 : 0.85} />
               </View>
             </View>
           </SafeAreaView>
@@ -282,10 +600,10 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══ PRICING ═══ */}
-        <View style={[styles.section, { backgroundColor: Colors.grey[50] }]}>
+        <View style={[styles.section, { backgroundColor: '#0E0E14' }]}>
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>PRICING</Text>
-            <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Simple, transparent pricing
             </Text>
 
@@ -295,33 +613,33 @@ export default function LandingScreen() {
                 style={[
                   styles.pricingCard,
                   {
-                    backgroundColor: Colors.white,
-                    borderColor: Colors.grey[200],
+                    backgroundColor: colors.surface,
+                    borderColor: colors.cardBorder,
                     flex: isDesktop ? 1 : undefined,
                     width: isDesktop ? undefined : '100%' as unknown as number,
                   },
                 ]}
               >
-                <Text style={styles.pricingTier}>Free</Text>
+                <Text style={[styles.pricingTier, { color: colors.text }]}>Free</Text>
                 <View style={styles.priceRow}>
-                  <Text style={styles.priceAmount}>£0</Text>
-                  <Text style={styles.pricePeriod}>/month</Text>
+                  <Text style={[styles.priceAmount, { color: colors.text }]}>£0</Text>
+                  <Text style={[styles.pricePeriod, { color: colors.textSecondary }]}>/month</Text>
                 </View>
-                <Text style={styles.pricingSubtitle}>Get started with the basics</Text>
-                <View style={styles.pricingDivider} />
+                <Text style={[styles.pricingSubtitle, { color: colors.textSecondary }]}>Get started with the basics</Text>
+                <View style={[styles.pricingDivider, { backgroundColor: colors.border }]} />
                 {FREE_FEATURES.map((feat) => (
                   <View key={feat} style={styles.pricingFeatureRow}>
                     <Text style={styles.checkMark}>✓</Text>
-                    <Text style={styles.pricingFeatureText}>{feat}</Text>
+                    <Text style={[styles.pricingFeatureText, { color: colors.textSecondary }]}>{feat}</Text>
                   </View>
                 ))}
                 <Link href="/(auth)/signup" asChild>
                   <Pressable
-                    style={({ pressed }) => [styles.pricingCTAOutline, pressed && styles.pressed]}
+                    style={({ pressed }) => [styles.pricingCTAOutline, { borderColor: colors.text }, pressed && styles.pressed]}
                     accessibilityRole="button"
                     accessibilityLabel="Get Started Free"
                   >
-                    <Text style={styles.pricingCTAOutlineText}>Get Started</Text>
+                    <Text style={[styles.pricingCTAOutlineText, { color: colors.text }]}>Get Started</Text>
                   </Pressable>
                 </Link>
               </View>
@@ -416,15 +734,15 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══ FAQ ═══ */}
-        <View style={[styles.section, { backgroundColor: Colors.grey[50] }]}>
+        <View style={[styles.section, { backgroundColor: colors.background }]}>
           <View style={[styles.sectionInner, { maxWidth: 700 }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>FAQ</Text>
-            <Text style={[styles.sectionTitle, { color: Colors.primary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               Frequently asked questions
             </Text>
 
             {FAQS.map((faq) => (
-              <FAQItem key={faq.q} question={faq.q} answer={faq.a} />
+              <FAQItem key={faq.q} question={faq.q} answer={faq.a} darkColors={colors} />
             ))}
           </View>
         </View>
@@ -545,6 +863,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingTop: 40,
+    width: '100%',
+  },
+  heroContentDesktop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroTextColumn: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  heroTextColumnDesktop: {
+    flex: 1,
+    alignItems: 'flex-start',
+    paddingRight: Spacing.xl,
+  },
+  heroPhoneColumn: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  heroPhoneColumnDesktop: {
+    marginTop: 0,
+    flexShrink: 0,
+  },
+  heroHeadlineLeft: {
+    textAlign: 'left',
+  },
+  heroSubtitleLeft: {
+    textAlign: 'left',
   },
   heroHeadline: {
     fontFamily: Fonts.playfair.bold,

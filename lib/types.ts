@@ -62,6 +62,21 @@ export interface Expense {
   createdAt: string;
 }
 
+export type RecurringFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface RecurringExpense {
+  id: string;
+  userId: string;
+  amount: number;
+  description: string;
+  hmrcCategory: string;
+  frequency: RecurringFrequency;
+  startDate: string;
+  nextDueDate: string;
+  active: boolean;
+  createdAt: string;
+}
+
 export interface Invoice {
   id: string;
   userId: string;

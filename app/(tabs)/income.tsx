@@ -23,6 +23,7 @@ import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
+import { hapticSuccess } from '@/lib/haptics';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
 
@@ -164,6 +165,7 @@ export default function IncomeScreen() {
       },
       {
         onSuccess: () => {
+          hapticSuccess();
           resetInvoiceForm();
           setInvoiceModalVisible(false);
         },

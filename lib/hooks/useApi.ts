@@ -65,10 +65,10 @@ export function useBankConnections() {
   });
 }
 
-export function useQuarterlyBreakdown() {
+export function useQuarterlyBreakdown(taxYear?: string) {
   return useQuery({
-    queryKey: ['tax', 'quarterly'],
-    queryFn: () => api.getQuarterlyBreakdown(),
+    queryKey: ['tax', 'quarterly', taxYear],
+    queryFn: () => api.getQuarterlyBreakdown(taxYear),
     staleTime: 60_000,
   });
 }
@@ -89,6 +89,35 @@ export function useAddExpense() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useRecurringExpenses() {
+  return useQuery({
+    queryKey: ['expenses', 'recurring'],
+    queryFn: () => api.getRecurringExpenses(),
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateRecurringExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { amount: number; description: string; hmrcCategory?: string; frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly'; startDate: string }) =>
+      api.createRecurringExpense(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses', 'recurring'] });
+    },
+  });
+}
+
+export function useDeleteRecurringExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteRecurringExpense(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses', 'recurring'] });
     },
   });
 }

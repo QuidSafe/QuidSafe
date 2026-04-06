@@ -29,6 +29,7 @@ import {
   useDeleteInvoiceWithToast,
 } from '@/lib/hooks/useApiWithToast';
 import { formatCurrency } from '@/lib/tax-engine';
+import { hapticSuccess, hapticMedium } from '@/lib/haptics';
 import type { Invoice, InvoiceStatus } from '@/lib/types';
 
 type FilterKey = 'all' | 'draft' | 'sent' | 'paid' | 'overdue';
@@ -243,6 +244,7 @@ export default function InvoicesScreen() {
         id: selectedInvoice.id,
         data: { status: 'paid' },
       });
+      hapticSuccess();
       closeModal();
     } catch {
       // toast handled by hook
@@ -257,6 +259,7 @@ export default function InvoicesScreen() {
     }
     try {
       await deleteMutation.mutateAsync(selectedInvoice.id);
+      hapticMedium();
       closeModal();
     } catch {
       // toast handled by hook

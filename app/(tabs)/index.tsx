@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
+import { MiniChart } from '@/components/ui/MiniChart';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -64,6 +65,7 @@ export default function DashboardScreen() {
   const heroSlide = useRef(new Animated.Value(20)).current;
   const contentFade = useRef(new Animated.Value(0)).current;
   const contentSlide = useRef(new Animated.Value(14)).current;
+  const heroScale = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
     if (!isLoading) {
@@ -95,6 +97,12 @@ export default function DashboardScreen() {
             duration: 450,
             useNativeDriver: true,
           }),
+          Animated.spring(heroScale, {
+            toValue: 1,
+            friction: 8,
+            tension: 60,
+            useNativeDriver: true,
+          }),
         ]),
       ]).start();
 
@@ -115,7 +123,7 @@ export default function DashboardScreen() {
         ]),
       ]).start();
     }
-  }, [isLoading, headerFade, headerSlide, heroFade, heroSlide, contentFade, contentSlide]);
+  }, [isLoading, headerFade, headerSlide, heroFade, heroSlide, heroScale, contentFade, contentSlide]);
 
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
@@ -209,7 +217,7 @@ export default function DashboardScreen() {
                 style={({ pressed }) => [pressed && styles.pressedCard]}
               >
                 <LinearGradient
-                  colors={isDark ? ['#1E293B', '#0F172A'] : ['#0F172A', '#1E3A8A']}
+                  colors={isDark ? ['#0F172A', '#0A0A0F'] : ['#0F172A', '#1E3A8A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.heroCard}
@@ -224,9 +232,9 @@ export default function DashboardScreen() {
                     <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
                   </View>
 
-                  <Text style={styles.heroAmount}>
+                  <Animated.Text style={[styles.heroAmount, { transform: [{ scale: heroScale }] }]}>
                     {formatCurrency(tax?.totalTaxOwed ?? 0)}
-                  </Text>
+                  </Animated.Text>
                   <Text style={styles.heroSubtext}>
                     Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
                   </Text>
@@ -263,6 +271,35 @@ export default function DashboardScreen() {
                 </LinearGradient>
               </Pressable>
             </Animated.View>
+
+            {/* Income Trend Chart */}
+            {income?.byMonth && income.byMonth.length > 0 && (() => {
+              const sorted = [...income.byMonth].sort((a, b) => a.month.localeCompare(b.month));
+              const last6 = sorted.slice(-6);
+              const MONTH_SHORT: Record<string, string> = {
+                '01': 'J', '02': 'F', '03': 'M', '04': 'A', '05': 'M', '06': 'J',
+                '07': 'J', '08': 'A', '09': 'S', '10': 'O', '11': 'N', '12': 'D',
+              };
+              const chartData = last6.map((m) => ({
+                label: MONTH_SHORT[m.month.split('-')[1]] ?? m.month.slice(-2),
+                value: m.income,
+              }));
+              const periodTotal = last6.reduce((s, m) => s + m.income, 0);
+
+              return (
+                <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
+                  <Card>
+                    <View style={styles.chartHeader}>
+                      <Text style={[styles.chartTitle, { color: colors.text }]}>Income Trend</Text>
+                      <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
+                        {formatCurrency(periodTotal)} over {last6.length} months
+                      </Text>
+                    </View>
+                    <MiniChart data={chartData} color={Colors.success} height={72} />
+                  </Card>
+                </Animated.View>
+              );
+            })()}
 
             <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
               {/* Plain English Insight */}
@@ -371,6 +408,16 @@ export default function DashboardScreen() {
               <Card>
                 <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
               </Card>
+              <Pressable
+                style={({ pressed }) => [styles.taxHistoryLink, { borderColor: colors.border }, pressed && styles.pressedCard]}
+                onPress={() => router.push('/tax-history')}
+                accessibilityRole="button"
+                accessibilityLabel="View full tax history"
+              >
+                <FontAwesome name="history" size={14} color={Colors.accent} style={{ marginRight: 8 }} />
+                <Text style={[styles.taxHistoryText, { color: colors.text }]}>View Tax History</Text>
+                <FontAwesome name="chevron-right" size={11} color={colors.textSecondary} />
+              </Pressable>
 
               {/* Income by Source */}
               {income && income.bySource.length > 0 && (
@@ -683,6 +730,21 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
 
+  // Income trend chart
+  chartHeader: {
+    marginBottom: 12,
+  },
+  chartTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16,
+    letterSpacing: -0.2,
+  },
+  chartSubtitle: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    marginTop: 2,
+  },
+
   // Income sources
   sourceRow: {
     flexDirection: 'row',
@@ -722,5 +784,19 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: Colors.secondary,
     borderRadius: 2,
+  },
+  taxHistoryLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: BorderRadius.card,
+  },
+  taxHistoryText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+    flex: 1,
   },
 });

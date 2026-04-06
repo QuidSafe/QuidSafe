@@ -45,14 +45,14 @@ export const Colors = {
     text: '#F8FAFC',
     textSecondary: '#94A3B8',
     background: '#0A0A0F',
-    surface: '#141419',
+    surface: '#16161D',
     tint: '#CA8A04',
     tabIconDefault: '#475569',
     tabIconSelected: '#CA8A04',
-    border: '#1E293B',
-    surfaceGlass: 'rgba(255,255,255,0.07)',
+    border: '#222233',
+    surfaceGlass: 'rgba(255,255,255,0.05)',
     shadowColor: 'rgba(0,0,0,0.3)',
-    cardBorder: 'rgba(30,41,59,0.5)',
+    cardBorder: 'rgba(255,255,255,0.06)',
   },
 };
 

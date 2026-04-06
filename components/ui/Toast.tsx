@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
+import { hapticSuccess, hapticError } from '@/lib/haptics';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -137,6 +138,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       const translateY = new Animated.Value(-20);
 
       const newToast: ToastItem = { id, message, type, opacity, translateY };
+
+      // Trigger haptic feedback based on toast type
+      if (type === 'success') {
+        hapticSuccess();
+      } else if (type === 'error') {
+        hapticError();
+      }
 
       setToasts((prev) => {
         // If at max, remove the oldest

@@ -18,9 +18,10 @@ import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
-import { useExpenses, useAddExpense, useDeleteExpense, useDashboard } from '@/lib/hooks/useApi';
+import { useExpenses, useAddExpense, useDeleteExpense, useDashboard, useRecurringExpenses, useCreateRecurringExpense, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
+import { hapticSuccess, hapticMedium } from '@/lib/haptics';
 
 const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; color: string }> = {
   mileage: { icon: 'car', bg: '#EFF6FF', color: Colors.secondary },
@@ -42,6 +43,23 @@ function getCategoryMeta(category?: string) {
   }
   return CATEGORY_ICONS.default;
 }
+
+const FREQUENCY_OPTIONS = ['weekly', 'monthly', 'quarterly', 'yearly'] as const;
+type Frequency = typeof FREQUENCY_OPTIONS[number];
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  yearly: 'Yearly',
+};
+
+const FREQUENCY_COLORS: Record<string, { bg: string; color: string }> = {
+  weekly: { bg: '#FEF9C3', color: '#A16207' },
+  monthly: { bg: '#EFF6FF', color: '#1E3A8A' },
+  quarterly: { bg: '#F0FDF4', color: '#16A34A' },
+  yearly: { bg: '#F5F3FF', color: '#7C3AED' },
+};
 
 const HMRC_CATEGORIES = [
   'office_costs',
@@ -92,6 +110,18 @@ export default function ExpensesScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>('other');
   const [expTouched, setExpTouched] = useState<Record<string, boolean>>({});
 
+  // Recurring expenses state
+  const { data: recurringData, refetch: refetchRecurring } = useRecurringExpenses();
+  const createRecurring = useCreateRecurringExpense();
+  const deleteRecurringExpense = useDeleteRecurringExpense();
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
+  const [recAmount, setRecAmount] = useState('');
+  const [recDescription, setRecDescription] = useState('');
+  const [recCategory, setRecCategory] = useState<string>('other');
+  const [recFrequency, setRecFrequency] = useState<Frequency>('monthly');
+  const [recStartDate, setRecStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [recTouched, setRecTouched] = useState<Record<string, boolean>>({});
+
   const expErrors = useMemo(() => {
     const e: Record<string, string> = {};
     const parsed = parseFloat(amount);
@@ -106,6 +136,23 @@ export default function ExpensesScreen() {
 
   const isExpenseFormValid = Object.keys(expErrors).length === 0;
 
+  const recErrors = useMemo(() => {
+    const e: Record<string, string> = {};
+    const parsed = parseFloat(recAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      e.amount = 'Amount must be greater than 0';
+    }
+    if (recDescription.trim().length < 3) {
+      e.description = 'Description must be at least 3 characters';
+    }
+    if (!recStartDate) {
+      e.startDate = 'Start date is required';
+    }
+    return e;
+  }, [recAmount, recDescription, recStartDate]);
+
+  const isRecFormValid = Object.keys(recErrors).length === 0;
+
   const expenses = (data?.expenses ?? []) as {
     id: string;
     amount: number;
@@ -117,6 +164,18 @@ export default function ExpensesScreen() {
   const effectiveRate = dashboardData?.tax?.effectiveRate ?? 0.2;
   const taxSaved = totalClaimed * effectiveRate;
 
+  const recurringExpenses = (recurringData?.recurringExpenses ?? []).map((r) => {
+    const raw = r as unknown as Record<string, unknown>;
+    return {
+      id: r.id,
+      amount: r.amount,
+      description: r.description,
+      hmrc_category: r.hmrcCategory ?? (raw['hmrc_category'] as string | undefined),
+      frequency: r.frequency,
+      next_due_date: r.nextDueDate ?? (raw['next_due_date'] as string),
+    };
+  });
+
   const handleAdd = async () => {
     if (!isExpenseFormValid) return;
     await addExpense.mutateAsync({
@@ -125,6 +184,7 @@ export default function ExpensesScreen() {
       date: new Date().toISOString().split('T')[0],
       hmrcCategory: selectedCategory,
     });
+    hapticSuccess();
     setAmount('');
     setDescription('');
     setSelectedCategory('other');
@@ -137,6 +197,7 @@ export default function ExpensesScreen() {
     if (Platform.OS === 'web') {
       if (window.confirm(`Delete expense "${desc}"?`)) {
         deleteExpense.mutate(id);
+        hapticMedium();
       }
     } else {
       Alert.alert(
@@ -147,7 +208,46 @@ export default function ExpensesScreen() {
           {
             text: 'Delete',
             style: 'destructive',
-            onPress: () => deleteExpense.mutate(id),
+            onPress: () => { deleteExpense.mutate(id); hapticMedium(); },
+          },
+        ],
+      );
+    }
+  };
+
+  const handleAddRecurring = async () => {
+    if (!isRecFormValid) return;
+    await createRecurring.mutateAsync({
+      amount: Number(recAmount),
+      description: recDescription,
+      hmrcCategory: recCategory,
+      frequency: recFrequency,
+      startDate: recStartDate,
+    });
+    setRecAmount('');
+    setRecDescription('');
+    setRecCategory('other');
+    setRecFrequency('monthly');
+    setRecStartDate(new Date().toISOString().split('T')[0]);
+    setRecTouched({});
+    setShowRecurringForm(false);
+  };
+
+  const handleDeleteRecurring = (id: string, desc: string) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Cancel recurring expense "${desc}"?`)) {
+        deleteRecurringExpense.mutate(id);
+      }
+    } else {
+      Alert.alert(
+        'Cancel recurring expense',
+        `Are you sure you want to cancel "${desc}"?`,
+        [
+          { text: 'Keep', style: 'cancel' },
+          {
+            text: 'Cancel',
+            style: 'destructive',
+            onPress: () => deleteRecurringExpense.mutate(id),
           },
         ],
       );
@@ -306,6 +406,83 @@ export default function ExpensesScreen() {
           />
         )}
 
+        {/* Recurring Expenses Section */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">Recurring expenses</Text>
+          {recurringExpenses.length > 0 && (
+            <View style={styles.itemsBadge}>
+              <Text style={styles.itemsBadgeText}>{recurringExpenses.length} active</Text>
+            </View>
+          )}
+          <View style={{ flex: 1 }} />
+          <Pressable
+            style={({ pressed }) => [styles.addRecurringButton, pressed && styles.pressed]}
+            onPress={() => setShowRecurringForm(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add recurring expense"
+          >
+            <FontAwesome name="plus" size={12} color={Colors.white} />
+            <Text style={styles.addRecurringText}>Add Recurring</Text>
+          </Pressable>
+        </View>
+
+        {recurringExpenses.length > 0 ? (
+          <Card style={styles.listCard}>
+            {recurringExpenses.map((rec, index) => {
+              const meta = getCategoryMeta(rec.hmrc_category);
+              const freqColor = FREQUENCY_COLORS[rec.frequency] ?? FREQUENCY_COLORS.monthly;
+              return (
+                <View
+                  key={rec.id}
+                  style={[
+                    styles.expenseRow,
+                    index < recurringExpenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
+                  ]}
+                >
+                  <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
+                    <FontAwesome name="refresh" size={16} color={meta.color} />
+                  </View>
+                  <View style={styles.expenseMiddle}>
+                    <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
+                      {rec.description}
+                    </Text>
+                    <View style={styles.expenseSubRow}>
+                      <View style={[styles.hmrcBadge, { backgroundColor: freqColor.bg }]}>
+                        <Text style={[styles.hmrcBadgeText, { color: freqColor.color }]}>
+                          {FREQUENCY_LABELS[rec.frequency] ?? rec.frequency}
+                        </Text>
+                      </View>
+                      <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                        Next: {formatDate(rec.next_due_date)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.expenseRight}>
+                    <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(rec.amount)}</Text>
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
+                    onPress={() => handleDeleteRecurring(rec.id, rec.description)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cancel recurring expense: ${rec.description}`}
+                  >
+                    <FontAwesome name="trash-o" size={16} color={Colors.error} />
+                  </Pressable>
+                </View>
+              );
+            })}
+          </Card>
+        ) : (
+          <Card variant="elevated" style={styles.recurringEmpty}>
+            <FontAwesome name="refresh" size={20} color={colors.textSecondary} />
+            <Text style={[styles.recurringEmptyTitle, { color: colors.text }]}>No recurring expenses</Text>
+            <Text style={[styles.recurringEmptyText, { color: colors.textSecondary }]}>
+              Add monthly subscriptions, rent, or phone bills to auto-log them.
+            </Text>
+          </Card>
+        )}
+
         {/* Gold Insight Banner */}
         <View style={styles.insightBanner} accessibilityLabel="Tip: Do you use your car for work? Track your mileage to claim up to 45p per mile in tax relief.">
           <FontAwesome name="lightbulb-o" size={18} color={Colors.gold[700]} style={styles.insightIcon} />
@@ -424,6 +601,143 @@ export default function ExpensesScreen() {
             >
               <Text style={styles.submitText}>
                 {addExpense.isPending ? 'Adding...' : 'Add Expense'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      {/* Add Recurring Expense Modal */}
+      <Modal visible={showRecurringForm} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalHeader}>
+              <Text style={[styles.formTitle, { color: colors.text }]} accessibilityRole="header">New Recurring Expense</Text>
+              <Pressable onPress={() => setShowRecurringForm(false)} accessibilityRole="button" accessibilityLabel="Close recurring expense form">
+                <FontAwesome name="times" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.amount && recErrors.amount ? Colors.error : colors.border }]}
+              placeholder="Amount (e.g. 29.99)"
+              placeholderTextColor={colors.textSecondary}
+              value={recAmount}
+              onChangeText={setRecAmount}
+              onBlur={() => setRecTouched((prev) => ({ ...prev, amount: true }))}
+              keyboardType="decimal-pad"
+            />
+            {recTouched.amount && recErrors.amount ? (
+              <Text style={styles.fieldError}>{recErrors.amount}</Text>
+            ) : null}
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.description && recErrors.description ? Colors.error : colors.border }]}
+              placeholder="Description (e.g. Xero subscription)"
+              placeholderTextColor={colors.textSecondary}
+              value={recDescription}
+              onChangeText={setRecDescription}
+              onBlur={() => setRecTouched((prev) => ({ ...prev, description: true }))}
+            />
+            {recTouched.description && recErrors.description ? (
+              <Text style={styles.fieldError}>{recErrors.description}</Text>
+            ) : null}
+
+            <Text style={[styles.categoryLabel, { color: colors.text }]}>Frequency</Text>
+            <View style={styles.frequencyRow}>
+              {FREQUENCY_OPTIONS.map((freq) => {
+                const isSelected = recFrequency === freq;
+                const freqColor = FREQUENCY_COLORS[freq];
+                return (
+                  <Pressable
+                    key={freq}
+                    style={[
+                      styles.frequencyPill,
+                      isSelected
+                        ? { backgroundColor: freqColor.bg, borderColor: freqColor.color }
+                        : { backgroundColor: colors.background, borderColor: colors.border },
+                    ]}
+                    onPress={() => setRecFrequency(freq)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Frequency: ${FREQUENCY_LABELS[freq]}`}
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <Text
+                      style={[
+                        styles.frequencyPillText,
+                        { color: isSelected ? freqColor.color : colors.textSecondary },
+                      ]}
+                    >
+                      {FREQUENCY_LABELS[freq]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.categoryLabel, { color: colors.text }]}>HMRC Category</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryPillsContainer}
+              style={styles.categoryPillsScroll}
+            >
+              {HMRC_CATEGORIES.map((cat) => {
+                const isSelected = recCategory === cat;
+                return (
+                  <Pressable
+                    key={cat}
+                    style={[
+                      styles.categoryPill,
+                      isSelected
+                        ? styles.categoryPillSelected
+                        : { backgroundColor: colors.background },
+                    ]}
+                    onPress={() => setRecCategory(cat)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Category: ${HMRC_CATEGORY_LABELS[cat]}`}
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryPillText,
+                        isSelected
+                          ? styles.categoryPillTextSelected
+                          : { color: colors.textSecondary },
+                      ]}
+                    >
+                      {HMRC_CATEGORY_LABELS[cat]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <Text style={[styles.categoryLabel, { color: colors.text }]}>Start Date</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.startDate && recErrors.startDate ? Colors.error : colors.border }]}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.textSecondary}
+              value={recStartDate}
+              onChangeText={setRecStartDate}
+              onBlur={() => setRecTouched((prev) => ({ ...prev, startDate: true }))}
+            />
+            {recTouched.startDate && recErrors.startDate ? (
+              <Text style={styles.fieldError}>{recErrors.startDate}</Text>
+            ) : null}
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.submitButton,
+                (!isRecFormValid || createRecurring.isPending) && styles.submitButtonDisabled,
+                pressed && styles.pressed,
+              ]}
+              onPress={handleAddRecurring}
+              disabled={!isRecFormValid || createRecurring.isPending}
+              accessibilityRole="button"
+              accessibilityLabel={createRecurring.isPending ? 'Adding recurring expense' : 'Add recurring expense'}
+              accessibilityState={{ disabled: !isRecFormValid || createRecurring.isPending }}
+            >
+              <Text style={styles.submitText}>
+                {createRecurring.isPending ? 'Adding...' : 'Add Recurring Expense'}
               </Text>
             </Pressable>
           </View>
@@ -808,5 +1122,56 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     flex: 1,
     lineHeight: 18,
+  },
+
+  /* Add Recurring Button */
+  addRecurringButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.pill,
+  },
+  addRecurringText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.white,
+  },
+
+  /* Recurring Empty State */
+  recurringEmpty: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  recurringEmptyTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+  },
+  recurringEmptyText: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    textAlign: 'center',
+    maxWidth: 260,
+  },
+
+  /* Frequency Pills */
+  frequencyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: Spacing.md,
+  },
+  frequencyPill: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.button,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  frequencyPillText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
   },
 });

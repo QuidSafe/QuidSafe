@@ -26,15 +26,15 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  mode: 'auto',
+  mode: 'dark',
   setMode: () => {},
-  isDark: false,
-  colors: Colors.light,
+  isDark: true,
+  colors: Colors.dark,
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>('auto');
+  const [mode, setMode] = useState<ThemeMode>('dark');
 
   const isDark = useMemo(() => {
     if (mode === 'auto') return systemScheme === 'dark';

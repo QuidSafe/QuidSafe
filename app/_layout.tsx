@@ -15,13 +15,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { useApiToken } from '@/lib/hooks/useApi';
+import { registerForPushNotifications } from '@/lib/notifications';
 import 'react-native-reanimated';
 
 export { ErrorBoundary } from 'expo-router';
@@ -48,6 +49,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const pushTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -61,6 +63,15 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       router.replace('/landing');
     }
   }, [isSignedIn, isLoaded, segments, router]);
+
+  // Register for push notifications once when signed in
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || pushTokenRef.current) return;
+
+    registerForPushNotifications().then((token) => {
+      if (token) pushTokenRef.current = token;
+    });
+  }, [isLoaded, isSignedIn]);
 
   return <>{children}</>;
 }
@@ -128,6 +139,10 @@ export default function RootLayout() {
                     <Stack.Screen name="mtd" options={{ headerShown: false, presentation: 'modal' }} />
                     <Stack.Screen name="invoices" options={{ headerShown: false }} />
                     <Stack.Screen name="status" options={{ headerShown: false }} />
+                    <Stack.Screen name="self-assessment" options={{ headerShown: false }} />
+                    <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                    <Stack.Screen name="terms" options={{ headerShown: false }} />
+                    <Stack.Screen name="tax-history" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </AuthRedirect>

@@ -24,6 +24,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
+import { getNotificationPermissionStatus } from '@/lib/notifications';
 import {
   exportTransactionsCSV,
   exportExpensesCSV,
@@ -310,6 +311,13 @@ export default function SettingsScreen() {
   const [taxPotCheck, setTaxPotCheck] = useState(false);
   const [mtdReady, setMtdReady] = useState(true);
 
+  // Push notification permission status
+  const [pushStatus, setPushStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    getNotificationPermissionStatus().then(setPushStatus);
+  }, []);
+
   // Export modal state
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -536,6 +544,19 @@ export default function SettingsScreen() {
             accessibilityHint="Toggle Making Tax Digital submission ready notifications on or off"
           />
         </Card>
+        {Platform.OS === 'web' ? (
+          <Text style={[styles.pushStatusCaption, { color: colors.textSecondary }]}>
+            Push notifications available on mobile app
+          </Text>
+        ) : pushStatus === 'denied' ? (
+          <Text style={[styles.pushStatusCaption, { color: Colors.error }]}>
+            Notifications disabled — enable in device settings
+          </Text>
+        ) : pushStatus === 'granted' ? (
+          <Text style={[styles.pushStatusCaption, { color: colors.textSecondary }]}>
+            Push notifications enabled
+          </Text>
+        ) : null}
 
         {/* CONNECTED BANKS */}
         <SectionLabel label="CONNECTED BANKS" />
@@ -639,12 +660,28 @@ export default function SettingsScreen() {
             onPress={() => router.push('/billing')}
           />
           <SettingsRow
+            icon="history"
+            iconBg={Colors.accent}
+            title="Tax History"
+            subtitle="Multi-year tax overview"
+            right={<Chevron />}
+            onPress={() => router.push('/tax-history')}
+          />
+          <SettingsRow
             icon="file-text-o"
             iconBg={Colors.secondary}
             title="HMRC MTD"
             subtitle="Making Tax Digital submissions"
             right={<Chevron />}
             onPress={() => router.push('/mtd')}
+          />
+          <SettingsRow
+            icon="list-alt"
+            iconBg={Colors.accent}
+            title="Self Assessment"
+            subtitle="SA103 annual tax summary"
+            right={<Chevron />}
+            onPress={() => router.push('/self-assessment')}
           />
           <SettingsRow
             icon="download"
@@ -679,7 +716,7 @@ export default function SettingsScreen() {
             iconBg={Colors.grey[400]}
             title="Terms of Service"
             right={<Chevron />}
-            onPress={() => Linking.openURL('https://quidsafe.pages.dev/terms')}
+            onPress={() => router.push('/terms')}
           />
           <SettingsRow
             icon="shield"
@@ -687,7 +724,7 @@ export default function SettingsScreen() {
             title="Privacy Policy"
             right={<Chevron />}
             isLast
-            onPress={() => Linking.openURL('https://quidsafe.pages.dev/privacy')}
+            onPress={() => router.push('/privacy')}
           />
         </Card>
 
@@ -1026,5 +1063,11 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 13,
+  },
+  pushStatusCaption: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 10.5,
+    marginLeft: Spacing.xs,
+    marginTop: 2,
   },
 });

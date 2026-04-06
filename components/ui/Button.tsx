@@ -1,6 +1,7 @@
 import { StyleSheet, Pressable, Text, PressableProps, ViewStyle } from 'react-native';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
+import { hapticLight } from '@/lib/haptics';
 
 interface ButtonProps extends PressableProps {
   title: string;
@@ -10,8 +11,13 @@ interface ButtonProps extends PressableProps {
   accessibilityHint?: string;
 }
 
-export function Button({ title, variant = 'primary', size = 'md', style, accessibilityLabel, accessibilityHint, ...props }: ButtonProps) {
+export function Button({ title, variant = 'primary', size = 'md', style, accessibilityLabel, accessibilityHint, onPress, ...props }: ButtonProps) {
   const { colors } = useTheme();
+
+  const handlePress = (e: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
+    hapticLight();
+    onPress?.(e);
+  };
 
   const variantTextColor =
     variant === 'primary' || variant === 'secondary' || variant === 'cta'
@@ -25,6 +31,7 @@ export function Button({ title, variant = 'primary', size = 'md', style, accessi
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
+      onPress={handlePress}
       style={({ pressed }) => [
         styles.base,
         styles[variant],

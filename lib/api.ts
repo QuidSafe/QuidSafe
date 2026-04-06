@@ -1,6 +1,6 @@
 // API client for QuidSafe Cloudflare Worker backend
 
-import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation } from './types';
+import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
 
@@ -132,6 +132,23 @@ class ApiClient {
 
   deleteExpense(id: string) {
     return this.request<{ deleted: boolean }>(`/expenses/${id}`, { method: 'DELETE' });
+  }
+
+  // Recurring Expenses
+  getRecurringExpenses() {
+    return this.request<{ recurringExpenses: RecurringExpense[] }>('/expenses/recurring');
+  }
+
+  createRecurringExpense(data: { amount: number; description: string; hmrcCategory?: string; frequency: RecurringFrequency; startDate: string }) {
+    return this.request<{ id: string; success: boolean }>('/expenses/recurring', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  updateRecurringExpense(id: string, data: { amount?: number; description?: string; hmrcCategory?: string; frequency?: RecurringFrequency; active?: boolean }) {
+    return this.request<{ success: boolean }>(`/expenses/recurring/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  deleteRecurringExpense(id: string) {
+    return this.request<{ deleted: boolean }>(`/expenses/recurring/${id}`, { method: 'DELETE' });
   }
 
   // Invoices

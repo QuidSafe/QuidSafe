@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { clerkAuth } from './middleware/auth';
+import { rateLimit, purgeExpiredRateLimits } from './middleware/rateLimit';
 import {
   getConnectUrl,
   exchangeCode,
@@ -110,6 +111,7 @@ app.use(
     maxAge: 86400,
   }),
 );
+app.use('*', rateLimit());
 
 // ─── Public Routes ────────────────────────────────────────
 
@@ -782,6 +784,96 @@ authed.delete('/expenses/:id', async (c) => {
   return c.json({ deleted: true });
 });
 
+// ── Recurring Expenses ──────────────────────────────────
+authed.get('/expenses/recurring', async (c) => {
+  const userId = c.get('userId');
+  const recurringExpenses = await query(
+    c.env.DB,
+    'SELECT * FROM recurring_expenses WHERE user_id = ? AND active = 1 ORDER BY next_due_date ASC',
+    [userId],
+  );
+  return c.json({ recurringExpenses });
+});
+
+authed.post('/expenses/recurring', async (c) => {
+  const userId = c.get('userId');
+  const body = await c.req.json<{
+    amount: number;
+    description: string;
+    hmrcCategory?: string;
+    frequency: string;
+    startDate: string;
+  }>();
+
+  if (!body.amount || body.amount <= 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Amount must be greater than 0' } }, 400);
+  }
+  if (!body.description || body.description.trim().length < 3) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Description must be at least 3 characters' } }, 400);
+  }
+  const validFrequencies = ['weekly', 'monthly', 'quarterly', 'yearly'];
+  if (!validFrequencies.includes(body.frequency)) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Frequency must be weekly, monthly, quarterly, or yearly' } }, 400);
+  }
+  if (!body.startDate) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Start date is required' } }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  await execute(
+    c.env.DB,
+    'INSERT INTO recurring_expenses (id, user_id, amount, description, hmrc_category, frequency, start_date, next_due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, body.amount, body.description.trim(), body.hmrcCategory ?? 'other', body.frequency, body.startDate, body.startDate],
+  );
+
+  return c.json({ id, success: true }, 201);
+});
+
+authed.put('/expenses/recurring/:id', async (c) => {
+  const userId = c.get('userId');
+  const recId = c.req.param('id');
+  const body = await c.req.json<{
+    amount?: number;
+    description?: string;
+    hmrcCategory?: string;
+    frequency?: string;
+    active?: boolean;
+  }>();
+
+  const updates: string[] = [];
+  const params: unknown[] = [];
+
+  if (body.amount !== undefined) { updates.push('amount = ?'); params.push(body.amount); }
+  if (body.description !== undefined) { updates.push('description = ?'); params.push(body.description); }
+  if (body.hmrcCategory !== undefined) { updates.push('hmrc_category = ?'); params.push(body.hmrcCategory); }
+  if (body.frequency !== undefined) { updates.push('frequency = ?'); params.push(body.frequency); }
+  if (body.active !== undefined) { updates.push('active = ?'); params.push(body.active ? 1 : 0); }
+
+  if (updates.length === 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'No fields to update' } }, 400);
+  }
+
+  params.push(recId, userId);
+  await execute(
+    c.env.DB,
+    `UPDATE recurring_expenses SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+  );
+
+  return c.json({ success: true });
+});
+
+authed.delete('/expenses/recurring/:id', async (c) => {
+  const userId = c.get('userId');
+  const recId = c.req.param('id');
+  await execute(
+    c.env.DB,
+    'UPDATE recurring_expenses SET active = 0 WHERE id = ? AND user_id = ?',
+    [recId, userId],
+  );
+  return c.json({ deleted: true });
+});
+
 // ── Invoices ──────────────────────────────────────────────
 authed.get('/invoices', async (c) => {
   const userId = c.get('userId');
@@ -1227,6 +1319,56 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     console.error('[Cron] Grace period check failed:', graceErr);
   }
 
+  // ── Recurring Expenses Auto-Log ───────────────────────────
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const dueRecurring = await env.DB
+      .prepare('SELECT * FROM recurring_expenses WHERE active = 1 AND next_due_date <= ?')
+      .bind(today)
+      .all<{ id: string; user_id: string; amount: number; description: string; hmrc_category: string; frequency: string; next_due_date: string }>();
+
+    let recurringLogged = 0;
+    for (const rec of dueRecurring.results) {
+      // Create the expense entry
+      const expenseId = crypto.randomUUID();
+      await env.DB
+        .prepare('INSERT INTO expenses (id, user_id, amount, description, hmrc_category, date) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(expenseId, rec.user_id, rec.amount, rec.description, rec.hmrc_category, rec.next_due_date)
+        .run();
+
+      // Advance next_due_date based on frequency
+      const nextDate = new Date(rec.next_due_date);
+      switch (rec.frequency) {
+        case 'weekly':
+          nextDate.setDate(nextDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDate.setMonth(nextDate.getMonth() + 1);
+          break;
+        case 'quarterly':
+          nextDate.setMonth(nextDate.getMonth() + 3);
+          break;
+        case 'yearly':
+          nextDate.setFullYear(nextDate.getFullYear() + 1);
+          break;
+      }
+      const nextDueDateStr = nextDate.toISOString().split('T')[0];
+
+      await env.DB
+        .prepare('UPDATE recurring_expenses SET next_due_date = ? WHERE id = ?')
+        .bind(nextDueDateStr, rec.id)
+        .run();
+
+      recurringLogged++;
+    }
+
+    if (recurringLogged > 0) {
+      console.log(`[Cron] Auto-logged ${recurringLogged} recurring expense(s)`);
+    }
+  } catch (recurringErr) {
+    console.error('[Cron] Recurring expenses auto-log failed:', recurringErr);
+  }
+
   // ── Notification checks ──────────────────────────────────
   try {
     const now = new Date();
@@ -1316,6 +1458,14 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     console.log(`[Cron] Notification checks complete for ${usersWithDevices.results.length} users`);
   } catch (notifErr) {
     console.error('[Cron] Notification checks failed:', notifErr);
+  }
+
+  // ── Rate Limit Cleanup ──────────────────────────────────
+  try {
+    const purged = await purgeExpiredRateLimits(env.DB);
+    console.log(`[Cron] Purged ${purged} expired rate limit entries`);
+  } catch (rlErr) {
+    console.error('[Cron] Rate limit cleanup failed:', rlErr);
   }
 }
 
