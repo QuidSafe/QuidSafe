@@ -665,6 +665,8 @@ export default function SettingsScreen() {
                   placeholder="Your name"
                   placeholderTextColor={Colors.grey[400]}
                   autoCapitalize="words"
+                  accessibilityLabel="Your name"
+                  accessibilityHint="Enter your display name"
                 />
                 <Pressable
                   onPress={handleSaveName}

@@ -407,7 +407,7 @@ export default function InvoicesScreen() {
                   <TouchableOpacity
                     key={invoice.id}
                     activeOpacity={0.7}
-                    onPress={() => openEditModal(invoice)}
+                    onPress={() => router.push(`/invoice/${invoice.id}`)}
                   >
                     <Card
                       style={[

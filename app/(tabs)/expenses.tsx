@@ -421,12 +421,17 @@ export default function ExpensesScreen() {
               {filteredExpenses.map((exp, index) => {
                 const meta = getCategoryMeta(exp.hmrc_category);
                 return (
-                  <View
+                  <Pressable
                     key={exp.id}
-                    style={[
+                    onPress={() => router.push(`/expense/${exp.id}`)}
+                    style={({ pressed }) => [
                       styles.expenseRow,
                       index < filteredExpenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
+                      pressed && styles.pressed,
                     ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View expense: ${exp.description}`}
+                    accessibilityHint="Tap to view expense details"
                   >
                     <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
                       <FontAwesome name={meta.icon} size={16} color={meta.color} />
@@ -455,8 +460,8 @@ export default function ExpensesScreen() {
                       </View>
                     </View>
                     <Pressable
-                      style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
-                      onPress={() => handleDelete(exp.id, exp.description)}
+                      style={({ pressed: p }) => [styles.deleteButton, p && styles.pressed]}
+                      onPress={(e) => { e.stopPropagation(); handleDelete(exp.id, exp.description); }}
                       hitSlop={8}
                       accessibilityRole="button"
                       accessibilityLabel={`Delete expense: ${exp.description}`}
@@ -464,7 +469,7 @@ export default function ExpensesScreen() {
                     >
                       <FontAwesome name="trash-o" size={16} color={Colors.error} />
                     </Pressable>
-                  </View>
+                  </Pressable>
                 );
               })}
             </Card>
