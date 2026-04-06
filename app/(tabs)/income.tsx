@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,14 +7,18 @@ import {
   RefreshControl,
   TextInput,
   TouchableOpacity,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
+import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
@@ -37,13 +41,53 @@ const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+function getCurrentMonthLabel(): string {
+  return MONTH_LABELS[new Date().getMonth()];
+}
+
+/** Compute YoY growth from byMonth data if we have at least 12 months */
+function computeYoYGrowth(byMonth: { month: string; income: number }[]): number | null {
+  if (byMonth.length < 12) return null;
+  const recent6 = byMonth.slice(-6);
+  const prior6 = byMonth.slice(-12, -6);
+  const recentTotal = recent6.reduce((s, m) => s + m.income, 0);
+  const priorTotal = prior6.reduce((s, m) => s + m.income, 0);
+  if (priorTotal === 0) return null;
+  return Math.round(((recentTotal - priorTotal) / priorTotal) * 100);
+}
+
+/** Get last N months of data, padding with empty bars if needed */
+function getLastNMonths(byMonth: { month: string; income: number; expenses: number }[], n: number) {
+  if (byMonth.length >= n) {
+    return byMonth.slice(-n);
+  }
+  // Pad from the left with empty entries
+  const now = new Date();
+  const result: { month: string; income: number; expenses: number }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = MONTH_LABELS[d.getMonth()];
+    const existing = byMonth.find((m) => m.month === label);
+    result.push(existing ?? { month: label, income: 0, expenses: 0 });
+  }
+  return result;
+}
+
 export default function IncomeScreen() {
   const { colors } = useTheme();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   const { data: _quarterly } = useQuarterlyBreakdown();
+  const createInvoiceMutation = useCreateInvoice();
 
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
+
+  // Invoice form state
+  const [invoiceClientName, setInvoiceClientName] = useState('');
+  const [invoiceAmount, setInvoiceAmount] = useState('');
+  const [invoiceDescription, setInvoiceDescription] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
@@ -52,37 +96,81 @@ export default function IncomeScreen() {
   const totalExpenses = tax?.totalExpenses ?? 0;
   const netProfit = tax?.netProfit ?? 0;
 
-  // Compute YoY placeholder (static +12% as in mockup since API has no prior year)
-  const yoyPercent = 12;
+  // Monthly data for chart — use real byMonth data, fall back to empty bars
+  const rawByMonth = useMemo<{ month: string; income: number; expenses: number }[]>(
+    () => income?.byMonth ?? [],
+    [income?.byMonth]
+  );
+  const months = useMemo(() => getLastNMonths(rawByMonth, 6), [rawByMonth]);
+  const maxMonthValue = Math.max(...months.map((m) => Math.max(m.income, m.expenses)), 1);
 
-  // Monthly data for chart (placeholder until API provides monthly breakdown)
-  const months: { month: string; income: number; expenses: number }[] = (income as any)?.byMonth ?? [
-    { month: 'Jan', income: 2400, expenses: 800 },
-    { month: 'Feb', income: 3100, expenses: 950 },
-    { month: 'Mar', income: 2800, expenses: 700 },
-    { month: 'Apr', income: 3600, expenses: 1100 },
-    { month: 'May', income: 3200, expenses: 900 },
-    { month: 'Jun', income: 4100, expenses: 1200 },
-  ];
-  const maxMonthValue = Math.max(...months.map((m: { income: number; expenses: number }) => Math.max(m.income, m.expenses)), 1);
+  // YoY growth — computed from real data, hidden if insufficient
+  const yoyPercent = useMemo(() => computeYoYGrowth(rawByMonth), [rawByMonth]);
 
   // Source list with search and filter
   const sources = income?.bySource ?? [];
   const sourceCount = sources.length;
+  const currentMonthLabel = getCurrentMonthLabel();
 
   const filteredSources = sources.filter((src) => {
     if (search) {
       const q = search.toLowerCase();
       if (!src.name.toLowerCase().includes(q)) return false;
     }
-    // "income" filter: show all since bySource is income; "expenses" filter: hide all
+    // "expenses" filter: hide all since bySource is income
     if (activeFilter === 'expenses') return false;
+    // "this_month" filter: check if there's income for this source in the current month
+    if (activeFilter === 'this_month') {
+      // We check whether any byMonth entry for the current month has income > 0.
+      // Since bySource doesn't have per-month breakdown, we filter by checking
+      // if the current month in byMonth has any income at all. If the current month
+      // has zero income, no sources should show. Otherwise show all sources.
+      const currentMonthData = rawByMonth.find((m) => m.month === currentMonthLabel);
+      if (!currentMonthData || currentMonthData.income <= 0) return false;
+      // Source-level filtering: sources with amount > 0 are shown
+      return src.amount > 0;
+    }
     return true;
   });
 
   const onRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const resetInvoiceForm = useCallback(() => {
+    setInvoiceClientName('');
+    setInvoiceAmount('');
+    setInvoiceDescription('');
+    setInvoiceDueDate('');
+  }, []);
+
+  const handleCreateInvoice = useCallback(() => {
+    const amount = parseFloat(invoiceAmount);
+    if (!invoiceClientName.trim() || isNaN(amount) || amount <= 0 || !invoiceDescription.trim() || !invoiceDueDate.trim()) {
+      return;
+    }
+    createInvoiceMutation.mutate(
+      {
+        clientName: invoiceClientName.trim(),
+        amount,
+        description: invoiceDescription.trim(),
+        dueDate: invoiceDueDate.trim(),
+      },
+      {
+        onSuccess: () => {
+          resetInvoiceForm();
+          setInvoiceModalVisible(false);
+        },
+      }
+    );
+  }, [invoiceClientName, invoiceAmount, invoiceDescription, invoiceDueDate, createInvoiceMutation, resetInvoiceForm]);
+
+  const isFormValid =
+    invoiceClientName.trim().length > 0 &&
+    !isNaN(parseFloat(invoiceAmount)) &&
+    parseFloat(invoiceAmount) > 0 &&
+    invoiceDescription.trim().length > 0 &&
+    invoiceDueDate.trim().length > 0;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -122,10 +210,18 @@ export default function IncomeScreen() {
                 <View style={styles.summaryLeft}>
                   <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Gross income</Text>
                   <Text style={[styles.grossAmount, { color: colors.text }]}>{formatCurrency(grossIncome)}</Text>
-                  <View style={styles.yoyRow}>
-                    <FontAwesome name="arrow-up" size={10} color={Colors.success} />
-                    <Text style={styles.yoyText}>+{yoyPercent}% vs last year</Text>
-                  </View>
+                  {yoyPercent !== null && (
+                    <View style={styles.yoyRow}>
+                      <FontAwesome
+                        name={yoyPercent >= 0 ? 'arrow-up' : 'arrow-down'}
+                        size={10}
+                        color={yoyPercent >= 0 ? Colors.success : Colors.error}
+                      />
+                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? Colors.success : Colors.error }]}>
+                        {yoyPercent >= 0 ? '+' : ''}{yoyPercent}% vs last year
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 {/* Net profit */}
@@ -140,10 +236,10 @@ export default function IncomeScreen() {
 
               {/* Monthly bar chart */}
               <View style={styles.chartContainer}>
-                {months.map((m, i) => {
+                {months.map((m) => {
                   const incomeHeight = Math.max((m.income / maxMonthValue) * 100, 2);
                   const expenseHeight = Math.max((m.expenses / maxMonthValue) * 100, 2);
-                  const label = MONTH_LABELS[i] ?? m.month.slice(0, 3);
+                  const label = m.month.slice(0, 3);
                   return (
                     <View key={m.month} style={styles.chartColumn}>
                       <View style={styles.barsWrapper}>
@@ -285,6 +381,8 @@ export default function IncomeScreen() {
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                   {search
                     ? 'No sources match your search.'
+                    : activeFilter === 'this_month'
+                    ? 'No income recorded this month yet.'
                     : 'Connect your bank account to see income broken down by source.'}
                 </Text>
               )}
@@ -292,6 +390,111 @@ export default function IncomeScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Floating Action Button — Create Invoice */}
+      {!isLoading && (
+        <TouchableOpacity
+          style={[styles.fab, Shadows.medium]}
+          onPress={() => setInvoiceModalVisible(true)}
+          activeOpacity={0.8}
+        >
+          <FontAwesome name="plus" size={20} color={Colors.white} />
+        </TouchableOpacity>
+      )}
+
+      {/* Create Invoice Modal */}
+      <Modal
+        visible={invoiceModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setInvoiceModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Create Invoice</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  resetInvoiceForm();
+                  setInvoiceModalVisible(false);
+                }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <FontAwesome name="times" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Client Name */}
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Client name</Text>
+            <TextInput
+              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              placeholder="e.g. Acme Ltd"
+              placeholderTextColor={colors.textSecondary}
+              value={invoiceClientName}
+              onChangeText={setInvoiceClientName}
+            />
+
+            {/* Amount */}
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount</Text>
+            <TextInput
+              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              placeholder="0.00"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="decimal-pad"
+              value={invoiceAmount}
+              onChangeText={setInvoiceAmount}
+            />
+
+            {/* Description */}
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Description</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalInputMultiline, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              placeholder="What is this invoice for?"
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              numberOfLines={3}
+              value={invoiceDescription}
+              onChangeText={setInvoiceDescription}
+            />
+
+            {/* Due Date */}
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Due date (YYYY-MM-DD)</Text>
+            <TextInput
+              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              placeholder="2026-05-01"
+              placeholderTextColor={colors.textSecondary}
+              value={invoiceDueDate}
+              onChangeText={setInvoiceDueDate}
+            />
+
+            {/* Submit button */}
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                (!isFormValid || createInvoiceMutation.isPending) && styles.submitButtonDisabled,
+              ]}
+              onPress={handleCreateInvoice}
+              disabled={!isFormValid || createInvoiceMutation.isPending}
+              activeOpacity={0.8}
+            >
+              {createInvoiceMutation.isPending ? (
+                <ActivityIndicator color={Colors.white} size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Create Invoice</Text>
+              )}
+            </TouchableOpacity>
+
+            {createInvoiceMutation.isError && (
+              <Text style={styles.errorText}>
+                Failed to create invoice. Please try again.
+              </Text>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -358,7 +561,6 @@ const styles = StyleSheet.create({
   yoyText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12,
-    color: Colors.success,
   },
   netAmount: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -545,5 +747,85 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
+  },
+
+  // FAB
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: BorderRadius.hero,
+    borderTopRightRadius: BorderRadius.hero,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 18,
+  },
+  fieldLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    marginTop: Spacing.sm,
+  },
+  modalInput: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 14,
+    borderWidth: 1,
+    borderRadius: BorderRadius.input,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: Spacing.xs,
+  },
+  modalInputMultiline: {
+    minHeight: 72,
+    textAlignVertical: 'top',
+  },
+  submitButton: {
+    backgroundColor: Colors.accent,
+    borderRadius: BorderRadius.button,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.md,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    color: Colors.white,
+  },
+  errorText: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    color: Colors.error,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
   },
 });

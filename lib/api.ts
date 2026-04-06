@@ -59,6 +59,7 @@ class ApiClient {
       income: {
         total: number;
         bySource: { name: string; amount: number; percentage: number }[];
+        byMonth?: { month: string; income: number; expenses: number }[];
       };
       quarters: { current: { taxYear: string; quarter: number } };
       actions: { id: string; type: string; title: string; subtitle: string; priority: number }[];
@@ -174,6 +175,7 @@ class ApiClient {
     notifyTaxDeadlines?: boolean;
     notifyWeeklySummary?: boolean;
     notifyTransactionAlerts?: boolean;
+    notifyMtdReady?: boolean;
   }) {
     return this.request<{ user: User }>('/settings', { method: 'PUT', body: JSON.stringify(data) });
   }

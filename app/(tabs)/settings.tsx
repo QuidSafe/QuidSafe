@@ -7,6 +7,9 @@ import {
   Pressable,
   Alert,
   Animated,
+  TextInput,
+  Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
@@ -14,9 +17,10 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
-import { useBankConnections, useSettings, useUpdateSettings } from '@/lib/hooks/useApi';
+import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
+import type { BankConnection } from '@/lib/types';
 
 // --------------- Custom Toggle ---------------
 function Toggle({
@@ -177,22 +181,77 @@ const ThemeOption = memo(function ThemeOption({
   );
 });
 
+// --------------- Bank Connection Row ---------------
+const BankConnectionRow = memo(function BankConnectionRow({
+  connection,
+  isLast,
+  onDisconnect,
+  isDisconnecting,
+}: {
+  connection: BankConnection;
+  isLast: boolean;
+  onDisconnect: (id: string) => void;
+  isDisconnecting: boolean;
+}) {
+  const { colors } = useTheme();
+  const lastSynced = connection.lastSyncedAt
+    ? new Date(connection.lastSyncedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Never';
+
+  const handleDisconnect = () => {
+    Alert.alert(
+      'Disconnect Bank',
+      `Are you sure you want to disconnect ${connection.bankName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Disconnect', style: 'destructive', onPress: () => onDisconnect(connection.id) },
+      ],
+    );
+  };
+
+  return (
+    <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
+      <IconBox name="bank" bg={Colors.secondary} />
+      <View style={styles.rowText}>
+        <Text style={[styles.rowTitle, { color: colors.text }]}>{connection.bankName}</Text>
+        <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>Last synced: {lastSynced}</Text>
+      </View>
+      <Pressable
+        onPress={handleDisconnect}
+        disabled={isDisconnecting}
+        style={({ pressed }) => [styles.disconnectButton, pressed && styles.pressed]}
+      >
+        {isDisconnecting ? (
+          <ActivityIndicator size="small" color={Colors.error} />
+        ) : (
+          <Text style={styles.disconnectText}>Disconnect</Text>
+        )}
+      </Pressable>
+    </View>
+  );
+});
+
 // --------------- Main Screen ---------------
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { user } = useUser();
   const { signOut } = useAuth();
   const router = useRouter();
-  const { data: _bankData } = useBankConnections();
+  const { data: bankData } = useBankConnections();
   const { data: settingsData } = useSettings();
   const updateSettings = useUpdateSettings();
+  const disconnectBank = useDisconnectBank();
 
   // Toggle states — initialise from API
-  const [biometricLock, setBiometricLock] = useState(true);
   const [taxReminders, setTaxReminders] = useState(true);
   const [weeklySum, setWeeklySum] = useState(true);
   const [taxPotCheck, setTaxPotCheck] = useState(false);
   const [mtdReady, setMtdReady] = useState(true);
+
+  // Profile expand/collapse state
+  const [profileExpanded, setProfileExpanded] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Sync API settings to local state
   useEffect(() => {
@@ -201,11 +260,30 @@ export default function SettingsScreen() {
       if (typeof u.notify_tax_deadlines === 'number') setTaxReminders(u.notify_tax_deadlines === 1);
       if (typeof u.notify_weekly_summary === 'number') setWeeklySum(u.notify_weekly_summary === 1);
       if (typeof u.notify_transaction_alerts === 'number') setTaxPotCheck(u.notify_transaction_alerts === 1);
+      if (typeof u.notify_mtd_ready === 'number') setMtdReady(u.notify_mtd_ready === 1);
+      if (typeof u.name === 'string') setEditName(u.name);
     }
   }, [settingsData]);
 
-  const handleToggle = (key: 'notifyTaxDeadlines' | 'notifyWeeklySummary' | 'notifyTransactionAlerts', value: boolean) => {
+  const handleToggle = (key: 'notifyTaxDeadlines' | 'notifyWeeklySummary' | 'notifyTransactionAlerts' | 'notifyMtdReady', value: boolean) => {
     updateSettings.mutate({ [key]: value });
+  };
+
+  const handleSaveName = () => {
+    const trimmed = editName.trim();
+    if (!trimmed) return;
+    setIsSavingName(true);
+    updateSettings.mutate({ name: trimmed }, {
+      onSettled: () => setIsSavingName(false),
+    });
+  };
+
+  const handleExportData = () => {
+    Alert.alert('Export Data', 'Export coming soon. You will be able to download your data as CSV or PDF.');
+  };
+
+  const handleDisconnectBank = (id: string) => {
+    disconnectBank.mutate(id);
   };
 
   const handleSignOut = async () => {
@@ -233,6 +311,7 @@ export default function SettingsScreen() {
   };
 
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? '—';
+  const bankConnections = bankData?.connections?.filter((c) => c.active) ?? [];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -253,8 +332,12 @@ export default function SettingsScreen() {
             icon="lock"
             iconBg={Colors.secondary}
             title="Biometric lock"
-            subtitle="Face ID / Fingerprint"
-            right={<Toggle value={biometricLock} onValueChange={setBiometricLock} />}
+            subtitle="Coming soon"
+            right={
+              <View style={styles.comingSoonBadge}>
+                <Text style={styles.comingSoonText}>Coming soon</Text>
+              </View>
+            }
           />
           <SettingsRow
             icon="eye"
@@ -316,10 +399,28 @@ export default function SettingsScreen() {
             icon="file-text-o"
             iconBg={Colors.secondary}
             title="MTD submission ready"
-            right={<Toggle value={mtdReady} onValueChange={setMtdReady} />}
+            right={<Toggle value={mtdReady} onValueChange={(v) => { setMtdReady(v); handleToggle('notifyMtdReady', v); }} />}
             isLast
           />
         </Card>
+
+        {/* CONNECTED BANKS */}
+        {bankConnections.length > 0 && (
+          <>
+            <SectionLabel label="CONNECTED BANKS" />
+            <Card style={styles.cardPadding}>
+              {bankConnections.map((conn, idx) => (
+                <BankConnectionRow
+                  key={conn.id}
+                  connection={conn}
+                  isLast={idx === bankConnections.length - 1}
+                  onDisconnect={handleDisconnectBank}
+                  isDisconnecting={disconnectBank.isPending}
+                />
+              ))}
+            </Card>
+          </>
+        )}
 
         {/* ACCOUNT */}
         <SectionLabel label="ACCOUNT" />
@@ -329,9 +430,50 @@ export default function SettingsScreen() {
             iconBg={Colors.secondary}
             title="Profile & account"
             subtitle={userEmail}
-            right={<Chevron />}
-            onPress={() => {}}
+            right={
+              <FontAwesome
+                name={profileExpanded ? 'chevron-down' : 'chevron-right'}
+                size={12}
+                color={Colors.grey[400]}
+              />
+            }
+            onPress={() => setProfileExpanded((prev) => !prev)}
           />
+          {profileExpanded && (
+            <View style={styles.profileExpandedSection}>
+              <Text style={[styles.rowSubtitle, { color: colors.textSecondary, marginBottom: 6 }]}>
+                Email: {userEmail}
+              </Text>
+              <Text style={[styles.rowTitle, { color: colors.text, marginBottom: 4, fontSize: 11 }]}>
+                Change name
+              </Text>
+              <View style={styles.nameInputRow}>
+                <TextInput
+                  style={[styles.nameInput, { color: colors.text, borderColor: colors.border }]}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Your name"
+                  placeholderTextColor={Colors.grey[400]}
+                  autoCapitalize="words"
+                />
+                <Pressable
+                  onPress={handleSaveName}
+                  disabled={isSavingName || !editName.trim()}
+                  style={({ pressed }) => [
+                    styles.saveButton,
+                    pressed && styles.pressed,
+                    (!editName.trim() || isSavingName) && styles.saveButtonDisabled,
+                  ]}
+                >
+                  {isSavingName ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          )}
           <SettingsRow
             icon="download"
             iconBg={Colors.success}
@@ -339,7 +481,7 @@ export default function SettingsScreen() {
             subtitle="Download CSV or PDF"
             right={<Chevron />}
             isLast
-            onPress={() => {}}
+            onPress={handleExportData}
           />
         </Card>
 
@@ -357,7 +499,7 @@ export default function SettingsScreen() {
             iconBg={Colors.grey[400]}
             title="Terms of Service"
             right={<Chevron />}
-            onPress={() => {}}
+            onPress={() => Linking.openURL('https://quidsafe.pages.dev/terms')}
           />
           <SettingsRow
             icon="shield"
@@ -365,7 +507,7 @@ export default function SettingsScreen() {
             title="Privacy Policy"
             right={<Chevron />}
             isLast
-            onPress={() => {}}
+            onPress={() => Linking.openURL('https://quidsafe.pages.dev/privacy')}
           />
         </Card>
 
@@ -488,5 +630,60 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  comingSoonBadge: {
+    backgroundColor: Colors.grey[200],
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.pill,
+  },
+  comingSoonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10.5,
+    color: Colors.grey[500],
+  },
+  profileExpandedSection: {
+    paddingLeft: 40,
+    paddingBottom: 10,
+  },
+  nameInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  nameInput: {
+    flex: 1,
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  saveButton: {
+    backgroundColor: Colors.secondary,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: Colors.white,
+  },
+  disconnectButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  disconnectText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10.5,
+    color: Colors.error,
   },
 });

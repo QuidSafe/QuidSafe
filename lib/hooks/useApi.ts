@@ -104,7 +104,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; notifyTaxDeadlines?: boolean; notifyWeeklySummary?: boolean; notifyTransactionAlerts?: boolean }) =>
+    mutationFn: (data: { name?: string; notifyTaxDeadlines?: boolean; notifyWeeklySummary?: boolean; notifyTransactionAlerts?: boolean; notifyMtdReady?: boolean }) =>
       api.updateSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -127,6 +127,104 @@ export function useCreateInvoice() {
       api.createInvoice(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+  });
+}
+
+export function useUpdateInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { status?: string; clientName?: string; amount?: number; description?: string; dueDate?: string } }) =>
+      api.updateInvoice(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useDeleteInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteInvoice(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useDeleteExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteExpense(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useSyncBank() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.syncBank(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['banking'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+export function useDisconnectBank() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.disconnectBank(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['banking'] });
+    },
+  });
+}
+
+export function useCreateCheckout() {
+  return useMutation({
+    mutationFn: (plan: 'monthly' | 'annual') => api.createCheckout(plan),
+  });
+}
+
+export function useBillingStatus() {
+  return useQuery({
+    queryKey: ['billing', 'status'],
+    queryFn: () => api.getBillingStatus(),
+    staleTime: 60_000,
+  });
+}
+
+export function useTaxCalculation() {
+  return useQuery({
+    queryKey: ['tax', 'calculation'],
+    queryFn: () => api.getTaxCalculation(),
+    staleTime: 60_000,
+  });
+}
+
+export function useMtdObligations() {
+  return useQuery({
+    queryKey: ['mtd', 'obligations'],
+    queryFn: () => api.getMtdObligations(),
+    staleTime: 60_000,
+  });
+}
+
+export function useSubmitQuarterly() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taxYear, quarter }: { taxYear: string; quarter: number }) =>
+      api.submitQuarterly(taxYear, quarter),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mtd'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

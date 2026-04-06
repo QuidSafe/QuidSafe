@@ -8,6 +8,8 @@ import {
   TextInput,
   RefreshControl,
   Modal,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,7 +17,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
-import { useExpenses, useAddExpense } from '@/lib/hooks/useApi';
+import { useExpenses, useAddExpense, useDeleteExpense, useDashboard } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -40,6 +42,34 @@ function getCategoryMeta(category?: string) {
   return CATEGORY_ICONS.default;
 }
 
+const HMRC_CATEGORIES = [
+  'office_costs',
+  'travel',
+  'clothing',
+  'staff',
+  'stock',
+  'financial',
+  'premises',
+  'legal',
+  'marketing',
+  'training',
+  'other',
+] as const;
+
+const HMRC_CATEGORY_LABELS: Record<string, string> = {
+  office_costs: 'Office costs',
+  travel: 'Travel',
+  clothing: 'Clothing',
+  staff: 'Staff',
+  stock: 'Stock',
+  financial: 'Financial',
+  premises: 'Premises',
+  legal: 'Legal',
+  marketing: 'Marketing',
+  training: 'Training',
+  other: 'Other',
+};
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -50,10 +80,13 @@ export default function ExpensesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useExpenses();
+  const { data: dashboardData } = useDashboard();
   const addExpense = useAddExpense();
+  const deleteExpense = useDeleteExpense();
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('other');
 
   const expenses = (data?.expenses ?? []) as {
     id: string;
@@ -63,7 +96,8 @@ export default function ExpensesScreen() {
     hmrc_category?: string;
   }[];
   const totalClaimed = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const taxSaved = totalClaimed * 0.2;
+  const effectiveRate = dashboardData?.tax?.effectiveRate ?? 0.2;
+  const taxSaved = totalClaimed * effectiveRate;
 
   const handleAdd = async () => {
     if (!amount || !description || !/^[0-9]+(\.[0-9]{1,2})?$/.test(amount)) return;
@@ -71,10 +105,33 @@ export default function ExpensesScreen() {
       amount: Number(amount),
       description,
       date: new Date().toISOString().split('T')[0],
+      hmrcCategory: selectedCategory,
     });
     setAmount('');
     setDescription('');
+    setSelectedCategory('other');
     setShowForm(false);
+  };
+
+  const handleDelete = (id: string, desc: string) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Delete expense "${desc}"?`)) {
+        deleteExpense.mutate(id);
+      }
+    } else {
+      Alert.alert(
+        'Delete expense',
+        `Are you sure you want to delete "${desc}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => deleteExpense.mutate(id),
+          },
+        ],
+      );
+    }
   };
 
   return (
@@ -123,7 +180,7 @@ export default function ExpensesScreen() {
           onPress={() => setShowForm(true)}
         >
           <FontAwesome name="camera" size={16} color={Colors.white} />
-          <Text style={styles.scanButtonText}>Scan receipt</Text>
+          <Text style={styles.scanButtonText}>Add expense from receipt</Text>
         </Pressable>
 
         {/* What Can I Claim Button */}
@@ -175,6 +232,13 @@ export default function ExpensesScreen() {
                         <Text style={styles.claimedBadgeText}>Claimed</Text>
                       </View>
                     </View>
+                    <Pressable
+                      style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
+                      onPress={() => handleDelete(exp.id, exp.description)}
+                      hitSlop={8}
+                    >
+                      <FontAwesome name="trash-o" size={16} color={Colors.error} />
+                    </Pressable>
                   </View>
                 );
               })}
@@ -241,6 +305,40 @@ export default function ExpensesScreen() {
               value={description}
               onChangeText={setDescription}
             />
+            <Text style={[styles.categoryLabel, { color: colors.text }]}>HMRC Category</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryPillsContainer}
+              style={styles.categoryPillsScroll}
+            >
+              {HMRC_CATEGORIES.map((cat) => {
+                const isSelected = selectedCategory === cat;
+                return (
+                  <Pressable
+                    key={cat}
+                    style={[
+                      styles.categoryPill,
+                      isSelected
+                        ? styles.categoryPillSelected
+                        : { backgroundColor: colors.background },
+                    ]}
+                    onPress={() => setSelectedCategory(cat)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryPillText,
+                        isSelected
+                          ? styles.categoryPillTextSelected
+                          : { color: colors.textSecondary },
+                      ]}
+                    >
+                      {HMRC_CATEGORY_LABELS[cat]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
             <Pressable
               style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
               onPress={handleAdd}
@@ -526,6 +624,41 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
     marginBottom: Spacing.sm,
+  },
+  categoryLabel: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    marginBottom: Spacing.xs,
+  },
+  categoryPillsScroll: {
+    marginBottom: Spacing.sm,
+    flexGrow: 0,
+  },
+  categoryPillsContainer: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  categoryPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1.5,
+    borderColor: Colors.grey[300],
+  },
+  categoryPillSelected: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
+  categoryPillText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+  categoryPillTextSelected: {
+    color: Colors.white,
+  },
+  deleteButton: {
+    marginLeft: 10,
+    padding: 4,
   },
   submitButton: {
     backgroundColor: Colors.primary,

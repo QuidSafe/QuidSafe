@@ -1044,6 +1044,7 @@ authed.put('/settings', async (c) => {
     notifyTaxDeadlines?: boolean;
     notifyWeeklySummary?: boolean;
     notifyTransactionAlerts?: boolean;
+    notifyMtdReady?: boolean;
   }>();
 
   const updates: string[] = [];
@@ -1064,6 +1065,10 @@ authed.put('/settings', async (c) => {
   if (body.notifyTransactionAlerts !== undefined) {
     updates.push('notify_transaction_alerts = ?');
     values.push(body.notifyTransactionAlerts ? 1 : 0);
+  }
+  if (body.notifyMtdReady !== undefined) {
+    updates.push('notify_mtd_ready = ?');
+    values.push(body.notifyMtdReady ? 1 : 0);
   }
 
   if (updates.length > 0) {
