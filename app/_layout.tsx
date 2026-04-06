@@ -148,6 +148,7 @@ export default function RootLayout() {
                     <Stack.Screen name="terms" options={{ headerShown: false }} />
                     <Stack.Screen name="tax-history" options={{ headerShown: false }} />
                     <Stack.Screen name="widget-preview" options={{ headerShown: false }} />
+                    <Stack.Screen name="screenshots" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </AuthRedirect>
