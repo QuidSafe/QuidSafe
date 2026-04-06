@@ -13,6 +13,9 @@ export interface ThemeColors {
   tabIconDefault: string;
   tabIconSelected: string;
   border: string;
+  surfaceGlass: string;
+  shadowColor: string;
+  cardBorder: string;
 }
 
 interface ThemeContextValue {

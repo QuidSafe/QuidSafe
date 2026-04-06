@@ -154,7 +154,13 @@ export default function BillingScreen() {
           {PLANS.map((plan) => (
             <Pressable
               key={plan.id}
-              style={[styles.planCard, { backgroundColor: colors.surface, borderColor: colors.border }, selectedPlan === plan.id && styles.planCardSelected]}
+              style={({ pressed }) => [
+                styles.planCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                selectedPlan === plan.id && styles.planCardSelected,
+                selectedPlan === plan.id && { shadowColor: Colors.primary, shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+                pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
+              ]}
               onPress={() => setSelectedPlan(plan.id)}
             >
               {plan.badge && (
@@ -184,7 +190,7 @@ export default function BillingScreen() {
           {PRO_FEATURES.map((f, i) => (
             <View key={i} style={styles.featureRow}>
               <View style={styles.featureIcon}>
-                <FontAwesome name={f.icon} size={14} color={Colors.secondary} />
+                <FontAwesome name="check" size={12} color={Colors.success} />
               </View>
               <Text style={[styles.featureText, { color: colors.text }]}>{f.text}</Text>
             </View>
@@ -208,6 +214,13 @@ export default function BillingScreen() {
           No charge until your trial ends. Cancel anytime.
         </Text>
 
+        <View style={[styles.guaranteeBadge, { borderColor: colors.border }]}>
+          <FontAwesome name="shield" size={14} color={Colors.success} />
+          <Text style={[styles.guaranteeText, { color: colors.textSecondary }]}>
+            14-day money-back guarantee  ·  Cancel anytime  ·  Secure checkout
+          </Text>
+        </View>
+
         <Text style={[styles.restoreNote, { color: colors.textSecondary }]}>
           Already subscribed? Pull down to refresh.
         </Text>
@@ -227,8 +240,8 @@ const styles = StyleSheet.create({
   plans: { flexDirection: 'row', gap: Spacing.sm },
   planCard: { flex: 1, borderRadius: BorderRadius.card, padding: Spacing.md, borderWidth: 2, ...Shadows.soft },
   planCardSelected: { borderColor: Colors.primary },
-  badgeContainer: { position: 'absolute', top: -10, right: 12, backgroundColor: Colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: BorderRadius.pill },
-  badgeText: { fontFamily: 'Manrope_700Bold', fontSize: 9, color: Colors.white, letterSpacing: 0.5 },
+  badgeContainer: { position: 'absolute', top: -10, right: 12, backgroundColor: Colors.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: BorderRadius.pill, ...Shadows.soft },
+  badgeText: { fontFamily: 'Manrope_700Bold', fontSize: 9, color: Colors.white, letterSpacing: 0.8 },
   radioRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: Colors.grey[400], alignItems: 'center', justifyContent: 'center' },
   radioSelected: { borderColor: Colors.primary },
@@ -242,13 +255,15 @@ const styles = StyleSheet.create({
 
   featuresTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, marginBottom: Spacing.md },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
-  featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.success + '12', alignItems: 'center', justifyContent: 'center' },
+  featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.success + '15', alignItems: 'center', justifyContent: 'center' },
   featureText: { fontFamily: 'Manrope_500Medium', fontSize: 14, flex: 1 },
 
-  ctaButton: { backgroundColor: Colors.primary, paddingVertical: 16, borderRadius: BorderRadius.button, alignItems: 'center', ...Shadows.medium },
+  ctaButton: { backgroundColor: Colors.accent, paddingVertical: 16, borderRadius: BorderRadius.button, alignItems: 'center', ...Shadows.large },
   ctaText: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: Colors.white },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   trialNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center' },
+  guaranteeBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.pill, borderWidth: 1, justifyContent: 'center' },
+  guaranteeText: { fontFamily: 'Manrope_500Medium', fontSize: 11, textAlign: 'center', flex: 1 },
   restoreNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center', marginTop: Spacing.sm },
 
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

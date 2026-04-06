@@ -160,19 +160,29 @@ export default function ExpensesScreen() {
 
         {/* Metric Cards */}
         <View style={styles.metricsRow}>
-          <Card style={styles.metricCard}>
+          <Card variant="elevated" style={styles.metricCard}>
             <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Total claimed</Text>
             <Text style={[styles.metricValue, { color: Colors.success }]}>
               {formatCurrency(totalClaimed)}
             </Text>
           </Card>
-          <Card style={styles.metricCard}>
+          <Card variant="elevated" style={styles.metricCard}>
             <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Tax saved</Text>
             <Text style={[styles.metricValue, { color: Colors.secondary }]}>
               {formatCurrency(taxSaved)}
             </Text>
           </Card>
         </View>
+        <Card variant="elevated" style={styles.metricCardFull}>
+          <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>This month</Text>
+          <Text style={[styles.metricValue, { color: colors.text }]}>
+            {formatCurrency(expenses.filter(e => {
+              const d = new Date(e.date);
+              const now = new Date();
+              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).reduce((s, e) => s + e.amount, 0))}
+          </Text>
+        </Card>
 
         {/* Scan Receipt Button */}
         <Pressable
@@ -222,9 +232,18 @@ export default function ExpensesScreen() {
                       <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
                         {exp.description}
                       </Text>
-                      <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
-                        {exp.hmrc_category || 'Expense'} · {formatDate(exp.date)}
-                      </Text>
+                      <View style={styles.expenseSubRow}>
+                        {exp.hmrc_category ? (
+                          <View style={[styles.hmrcBadge, { backgroundColor: meta.bg }]}>
+                            <Text style={[styles.hmrcBadgeText, { color: meta.color }]}>
+                              {HMRC_CATEGORY_LABELS[exp.hmrc_category] || exp.hmrc_category}
+                            </Text>
+                          </View>
+                        ) : null}
+                        <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
+                          {formatDate(exp.date)}
+                        </Text>
+                      </View>
                     </View>
                     <View style={styles.expenseRight}>
                       <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(exp.amount)}</Text>
@@ -284,6 +303,7 @@ export default function ExpensesScreen() {
       <Modal visible={showForm} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={[styles.formTitle, { color: colors.text }]}>New Expense</Text>
               <Pressable onPress={() => setShowForm(false)}>
@@ -291,7 +311,7 @@ export default function ExpensesScreen() {
               </Pressable>
             </View>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
               placeholder="Amount (e.g. 45.99)"
               placeholderTextColor={colors.textSecondary}
               value={amount}
@@ -299,7 +319,7 @@ export default function ExpensesScreen() {
               keyboardType="decimal-pad"
             />
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
               placeholder="Description"
               placeholderTextColor={colors.textSecondary}
               value={description}
@@ -374,17 +394,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 19,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 24,
   },
   fabButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.soft,
+    ...Shadows.large,
   },
 
   /* Metric Cards */
@@ -396,14 +416,20 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.md,
   },
+  metricCardFull: {
+    width: '100%',
+    padding: Spacing.md,
+  },
   metricLabel: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   metricValue: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 22,
-    marginTop: 4,
+    marginTop: 6,
   },
 
   /* Scan Receipt Button */
@@ -411,11 +437,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: Colors.primary,
     paddingVertical: 14,
     borderRadius: BorderRadius.button,
-    ...Shadows.soft,
+    ...Shadows.medium,
   },
   scanButtonText: {
     fontFamily: 'Manrope_600SemiBold',
@@ -428,11 +454,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 14,
     borderRadius: BorderRadius.button,
     borderWidth: 1.5,
     borderColor: Colors.secondary,
+    ...Shadows.soft,
   },
   outlineButtonText: {
     fontFamily: 'Manrope_600SemiBold',
@@ -493,6 +520,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
   },
+  expenseSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: 2,
+  },
+  hmrcBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+  },
+  hmrcBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+  },
   expenseSub: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
@@ -542,6 +584,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
     alignItems: 'flex-start',
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
   },
   insightIcon: {
     marginRight: 10,
@@ -598,7 +642,7 @@ const styles = StyleSheet.create({
   /* Modal / Form */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -607,6 +651,14 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.grey[300],
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
+  },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -614,11 +666,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   formTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Manrope_700Bold',
     fontSize: 18,
   },
   input: {
     borderRadius: BorderRadius.input,
+    borderWidth: 1,
     paddingVertical: 14,
     paddingHorizontal: Spacing.md,
     fontFamily: 'Manrope_400Regular',
@@ -639,15 +692,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   categoryPill: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: BorderRadius.pill,
+    borderRadius: 9999,
     borderWidth: 1.5,
     borderColor: Colors.grey[300],
   },
   categoryPillSelected: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   categoryPillText: {
     fontFamily: 'Manrope_600SemiBold',

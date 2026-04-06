@@ -28,16 +28,24 @@ export default function LoginScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={styles.logo}>QuidSafe</Text>
+        <View style={styles.goldAccent} />
         <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your tax. Sorted. Safe.</Text>
+        <Text style={[styles.descriptor, { color: colors.textSecondary }]}>
+          Tax tracking for UK sole traders
+        </Text>
       </View>
 
       <View style={styles.form}>
-        <View style={styles.trustBadge}>
+        <View style={[styles.trustBadge, { borderColor: colors.border }]}>
           <Text style={styles.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.googleButton,
+            { shadowColor: colors.shadowColor },
+            pressed && styles.pressed,
+          ]}
           onPress={handleGoogleSignIn}
         >
           <Text style={styles.googleText}>Continue with Google</Text>
@@ -80,10 +88,23 @@ const styles = StyleSheet.create({
     fontSize: 44,
     color: Colors.primary,
   },
+  goldAccent: {
+    width: 32,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+    marginTop: Spacing.sm,
+  },
   tagline: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 16,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  descriptor: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    marginTop: Spacing.xs,
+    opacity: 0.7,
   },
   form: {
     flex: 1,
@@ -92,11 +113,13 @@ const styles = StyleSheet.create({
   },
   trustBadge: {
     backgroundColor: Colors.secondary + '10',
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.pill,
     alignItems: 'center',
     marginBottom: Spacing.sm,
+    borderWidth: 1,
+    ...Shadows.soft,
   },
   trustText: {
     fontFamily: 'Manrope_500Medium',
@@ -108,7 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
-    ...Shadows.soft,
+    ...Shadows.large,
   },
   googleText: {
     fontFamily: 'Manrope_600SemiBold',

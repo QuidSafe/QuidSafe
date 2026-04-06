@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,8 @@ export default function SignupScreen() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [codeFocused, setCodeFocused] = useState(false);
 
   const handleSignUp = async () => {
     if (!isLoaded || !email) return;
@@ -66,11 +68,21 @@ export default function SignupScreen() {
         {!pendingVerification ? (
           <>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderColor: emailFocused ? Colors.secondary : colors.border,
+                  borderWidth: emailFocused ? 2 : 1,
+                },
+              ]}
               placeholder="Email address"
               placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
@@ -90,11 +102,21 @@ export default function SignupScreen() {
         ) : (
           <>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderColor: codeFocused ? Colors.secondary : colors.border,
+                  borderWidth: codeFocused ? 2 : 1,
+                },
+              ]}
               placeholder="Enter 6-digit code"
               placeholderTextColor={colors.textSecondary}
               value={code}
               onChangeText={setCode}
+              onFocus={() => setCodeFocused(true)}
+              onBlur={() => setCodeFocused(false)}
               keyboardType="number-pad"
               maxLength={6}
             />
@@ -148,7 +170,7 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-    gap: Spacing.md,
+    gap: Spacing.md + 4,
   },
   input: {
     borderRadius: BorderRadius.input,
@@ -156,14 +178,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     fontFamily: 'Manrope_400Regular',
     fontSize: 16,
-    borderWidth: 1,
+    ...Shadows.soft,
   },
   button: {
     backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
-    ...Shadows.soft,
+    marginTop: Spacing.xs,
+    ...Shadows.medium,
   },
   buttonText: {
     fontFamily: 'Manrope_600SemiBold',

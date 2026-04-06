@@ -23,13 +23,28 @@ const typeColors: Record<string, string> = {
 };
 
 export function ActionCard({ title, description, type, icon, onPress }: ActionCardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const color = typeColors[type] ?? Colors.secondary;
+
+  const cardShadow = isDark
+    ? {
+        shadowColor: 'rgba(0,0,0,0.3)',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 1,
+        shadowRadius: 3,
+        elevation: 2,
+      }
+    : Shadows.soft;
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, { backgroundColor: colors.surface }, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+        cardShadow,
+        pressed && styles.pressed,
+      ]}
     >
       <View style={[styles.border, { backgroundColor: color }]} />
       {icon && (
@@ -49,10 +64,10 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
 const styles = StyleSheet.create({
   card: {
     borderRadius: BorderRadius.card,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
-    ...Shadows.soft,
   },
   pressed: {
     opacity: 0.9,

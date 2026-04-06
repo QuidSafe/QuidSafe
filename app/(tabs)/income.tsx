@@ -30,14 +30,14 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'this_month', label: 'This month' },
 ];
 
-const SOURCE_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string }> = {
-  'Uber / Deliveroo': { icon: 'car', bg: '#DBEAFE' },
-  'Cleaning clients': { icon: 'paint-brush', bg: '#D1FAE5' },
-  'Freelance dev': { icon: 'laptop', bg: '#FEF3C7' },
-  'Consulting': { icon: 'briefcase', bg: '#F3E8FF' },
+const SOURCE_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string }> = {
+  'Uber / Deliveroo': { icon: 'car', bg: '#DBEAFE', dot: Colors.secondary },
+  'Cleaning clients': { icon: 'paint-brush', bg: '#D1FAE5', dot: Colors.success },
+  'Freelance dev': { icon: 'laptop', bg: '#FEF3C7', dot: Colors.accent },
+  'Consulting': { icon: 'briefcase', bg: '#F3E8FF', dot: '#7C3AED' },
 };
 
-const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string } = { icon: 'gbp', bg: Colors.grey[100] };
+const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string } = { icon: 'gbp', bg: Colors.grey[100], dot: Colors.grey[400] };
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -345,6 +345,9 @@ export default function IncomeScreen() {
                         !isLast && [styles.sourceRowBorder, { borderBottomColor: colors.border }],
                       ]}
                     >
+                      {/* Colored dot indicator */}
+                      <View style={[styles.sourceDot, { backgroundColor: iconInfo.dot }]} />
+
                       {/* Icon badge */}
                       <View
                         style={[
@@ -414,6 +417,7 @@ export default function IncomeScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Create Invoice</Text>
               <TouchableOpacity
@@ -520,8 +524,8 @@ const styles = StyleSheet.create({
 
   // Heading
   title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 19,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 24,
     marginBottom: Spacing.md,
   },
 
@@ -678,13 +682,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: BorderRadius.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
     backgroundColor: Colors.grey[100],
+    borderWidth: 1,
+    borderColor: Colors.grey[200],
   },
   filterPillActive: {
     backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   filterPillText: {
     fontFamily: 'Manrope_600SemiBold',
@@ -704,6 +711,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: Spacing.xs,
+  },
+  sourceDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
   },
   sourceRowBorder: {
     borderBottomWidth: 1,
@@ -760,6 +773,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Shadows.large,
   },
 
   // Modal
@@ -769,10 +783,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    borderTopLeftRadius: BorderRadius.hero,
-    borderTopRightRadius: BorderRadius.hero,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.grey[300],
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
   },
   modalHeader: {
     flexDirection: 'row',

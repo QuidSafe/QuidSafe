@@ -4,7 +4,7 @@ import { useTheme } from '@/lib/ThemeContext';
 
 interface ButtonProps extends PressableProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'cta';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -12,7 +12,7 @@ export function Button({ title, variant = 'primary', size = 'md', style, ...prop
   const { colors } = useTheme();
 
   const variantTextColor =
-    variant === 'primary' || variant === 'secondary'
+    variant === 'primary' || variant === 'secondary' || variant === 'cta'
       ? Colors.white
       : colors.tint;
 
@@ -46,12 +46,17 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+    transform: [{ scale: 0.97 }],
   },
   primary: {
     backgroundColor: Colors.primary,
   },
   secondary: {
     backgroundColor: Colors.secondary,
+  },
+  cta: {
+    backgroundColor: Colors.accent,
+    ...Shadows.medium,
   },
   outline: {
     backgroundColor: 'transparent',

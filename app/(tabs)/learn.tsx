@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
+import { Colors, Shadows, BorderRadius } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -104,14 +104,23 @@ const articles: Article[] = [
 
 const ALL_TAGS = ['All', 'MTD', 'Tax Basics', 'Expenses', 'Security', 'Deadlines', 'VAT'] as const;
 
-const tagStyles: Record<TagVariant, { bg: string; color: string }> = {
-  'tag-n': { bg: '#DBEAFE', color: '#1E3A8A' },
-  'tag-ok': { bg: '#DCFCE7', color: '#16A34A' },
-  'tag-g': { bg: '#FEF9C3', color: '#A16207' },
-};
+function getTagColors(variant: TagVariant, isDark: boolean): { bg: string; color: string } {
+  if (isDark) {
+    switch (variant) {
+      case 'tag-n': return { bg: Colors.secondary + '30', color: '#93B5FF' };
+      case 'tag-ok': return { bg: Colors.success + '20', color: '#4ADE80' };
+      case 'tag-g': return { bg: Colors.accent + '25', color: Colors.gold[50] };
+    }
+  }
+  switch (variant) {
+    case 'tag-n': return { bg: Colors.secondary + '15', color: Colors.secondary };
+    case 'tag-ok': return { bg: Colors.success + '15', color: Colors.success };
+    case 'tag-g': return { bg: Colors.gold[50], color: Colors.gold[700] };
+  }
+}
 
 export default function LearnScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -145,6 +154,8 @@ export default function LearnScreen() {
     Linking.openURL(url);
   }, []);
 
+  const expandedContentBg = isDark ? 'rgba(255,255,255,0.03)' : Colors.grey[50];
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -155,7 +166,7 @@ export default function LearnScreen() {
 
         {/* Search bar */}
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <FontAwesome name="search" size={13} color={colors.textSecondary} />
+          <FontAwesome name="search" size={14} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search articles..."
@@ -183,18 +194,19 @@ export default function LearnScreen() {
               <Pressable
                 key={tag}
                 onPress={() => handleTagPress(tag)}
-                style={[
+                style={({ pressed }) => [
                   styles.filterPill,
                   {
-                    backgroundColor: isActive ? colors.text : colors.surface,
-                    borderColor: isActive ? colors.text : colors.border,
+                    backgroundColor: isActive ? Colors.primary : 'transparent',
+                    borderColor: isActive ? Colors.primary : colors.border,
                   },
+                  pressed && { opacity: 0.8 },
                 ]}
               >
                 <Text
                   style={[
                     styles.filterPillText,
-                    { color: isActive ? colors.background : colors.textSecondary },
+                    { color: isActive ? Colors.white : colors.textSecondary },
                   ]}
                 >
                   {tag}
@@ -215,13 +227,22 @@ export default function LearnScreen() {
         )}
 
         {filteredArticles.map((article) => {
-          const variant = tagStyles[article.tagVariant];
+          const variant = getTagColors(article.tagVariant, isDark);
           const isExpanded = expandedId === article.id;
           return (
             <Pressable
               key={article.id}
               onPress={() => handleToggleExpand(article.id)}
-              style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              style={({ pressed }) => [
+                styles.card,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                  shadowColor: colors.shadowColor,
+                },
+                isExpanded && styles.cardExpanded,
+                pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
+              ]}
             >
               <View style={styles.cardHeader}>
                 <View style={[styles.tagPill, { backgroundColor: variant.bg }]}>
@@ -239,14 +260,14 @@ export default function LearnScreen() {
               </Text>
 
               {isExpanded && (
-                <View style={[styles.expandedContent, { borderTopColor: colors.border }]}>
+                <View style={[styles.expandedContent, { borderTopColor: colors.border, backgroundColor: expandedContentBg }]}>
                   <Text style={[styles.contentText, { color: colors.text }]}>
                     {article.content}
                   </Text>
                   {article.url && (
                     <Pressable
                       onPress={() => handleOpenUrl(article.url!)}
-                      style={styles.readMoreRow}
+                      style={[styles.readMoreButton, { borderColor: Colors.secondary }]}
                     >
                       <Text style={[styles.readMoreText, { color: Colors.secondary }]}>
                         Read more on HMRC
@@ -280,8 +301,9 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   heading: {
-    fontSize: 19,
-    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 24,
+    fontFamily: 'PlayfairDisplay_700Bold',
+    lineHeight: 32,
   },
   subtitle: {
     fontSize: 12,
@@ -291,11 +313,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderRadius: BorderRadius.input,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     gap: 8,
+  },
+  searchIcon: {
+    width: 18,
   },
   searchInput: {
     flex: 1,
@@ -328,15 +353,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
   },
   card: {
-    borderRadius: 12,
+    borderRadius: BorderRadius.card,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
+    ...Shadows.large,
+  },
+  cardExpanded: {
+    ...Shadows.large,
+    shadowOpacity: 0.1,
+    elevation: 8,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -369,23 +395,33 @@ const styles = StyleSheet.create({
   },
   expandedContent: {
     borderTopWidth: 1,
-    paddingTop: 10,
+    paddingTop: 14,
+    paddingBottom: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: -10,
     marginBottom: 8,
+    borderRadius: 10,
+    marginTop: 4,
   },
   contentText: {
     fontSize: 12.5,
     fontFamily: 'Manrope_400Regular',
     lineHeight: 12.5 * 1.6,
   },
-  readMoreRow: {
+  readMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     gap: 6,
-    marginTop: 10,
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: BorderRadius.pill,
   },
   readMoreText: {
     fontSize: 12,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Manrope_600SemiBold',
   },
   meta: {
     flexDirection: 'row',
