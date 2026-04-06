@@ -17,6 +17,20 @@ import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 
+/** Calculate YoY income growth from byMonth data.
+ *  Compares last 6 months total vs prior 6 months.
+ *  Returns null if fewer than 12 months of data. */
+function calcYoYGrowth(byMonth?: { month: string; income: number }[]): number | null {
+  if (!byMonth || byMonth.length < 12) return null;
+  const sorted = [...byMonth].sort((a, b) => a.month.localeCompare(b.month));
+  const recent6 = sorted.slice(-6);
+  const prior6 = sorted.slice(-12, -6);
+  const recentTotal = recent6.reduce((s, m) => s + m.income, 0);
+  const priorTotal = prior6.reduce((s, m) => s + m.income, 0);
+  if (priorTotal === 0) return null;
+  return Math.round(((recentTotal - priorTotal) / priorTotal) * 100);
+}
+
 const SOURCE_COLORS = [
   Colors.secondary,   // Royal Blue
   Colors.accent,      // Warm Gold
@@ -106,6 +120,7 @@ export default function DashboardScreen() {
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
   const income = data?.income;
+  const yoyGrowth = calcYoYGrowth(income?.byMonth);
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
@@ -128,6 +143,8 @@ export default function DashboardScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        accessibilityRole="list"
+        accessibilityLabel="Dashboard"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />}
       >
         {/* Header / Greeting */}
@@ -143,16 +160,25 @@ export default function DashboardScreen() {
             </Text>
           </View>
           <View style={styles.headerRight}>
-            {/* Health badge -- income growth indicator */}
-            {income && (income.total ?? 0) > 0 && (
-              <View style={styles.healthBadge}>
-                <FontAwesome name="arrow-up" size={11} color={Colors.success} />
-                <Text style={styles.healthText}>+12%</Text>
+            {/* Health badge -- income growth indicator (YoY from byMonth data) */}
+            {yoyGrowth !== null && (
+              <View
+                style={[styles.healthBadge, { backgroundColor: yoyGrowth >= 0 ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)' }]}
+                accessibilityLabel={`Income growth: ${yoyGrowth >= 0 ? 'plus' : 'minus'} ${Math.abs(yoyGrowth)} percent`}
+              >
+                <FontAwesome
+                  name={yoyGrowth >= 0 ? 'arrow-up' : 'arrow-down'}
+                  size={11}
+                  color={yoyGrowth >= 0 ? Colors.success : Colors.error}
+                />
+                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? Colors.success : Colors.error }]}>
+                  {yoyGrowth >= 0 ? '+' : ''}{yoyGrowth}%
+                </Text>
               </View>
             )}
             {/* Avatar circle */}
             {firstName ? (
-              <View style={styles.avatar}>
+              <View style={styles.avatar} accessibilityLabel={`Profile avatar for ${firstName}`}>
                 <Text style={styles.avatarText}>{firstName.charAt(0).toUpperCase()}</Text>
               </View>
             ) : null}
@@ -207,19 +233,19 @@ export default function DashboardScreen() {
 
                   {/* 3 glassmorphic boxes */}
                   <View style={styles.heroRow}>
-                    <View style={styles.heroBox}>
+                    <View style={styles.heroBox} accessibilityLabel={`Income Tax: ${formatCurrency(tax?.incomeTax?.total ?? 0)}`}>
                       <Text style={styles.heroBoxLabel}>Income Tax</Text>
                       <Text style={styles.heroBoxValue}>
                         {formatCurrency(tax?.incomeTax?.total ?? 0)}
                       </Text>
                     </View>
-                    <View style={styles.heroBox}>
+                    <View style={styles.heroBox} accessibilityLabel={`National Insurance Class 4: ${formatCurrency(tax?.nationalInsurance?.total ?? 0)}`}>
                       <Text style={styles.heroBoxLabel}>NI (Class 4)</Text>
                       <Text style={styles.heroBoxValue}>
                         {formatCurrency(tax?.nationalInsurance?.total ?? 0)}
                       </Text>
                     </View>
-                    <View style={styles.heroBox}>
+                    <View style={styles.heroBox} accessibilityLabel={`Expenses: minus ${formatCurrency(tax?.totalExpenses ?? 0)}`}>
                       <Text style={styles.heroBoxLabel}>Expenses</Text>
                       <Text style={[styles.heroBoxValue, styles.heroBoxExpenses]}>
                         -{formatCurrency(tax?.totalExpenses ?? 0)}
@@ -228,7 +254,7 @@ export default function DashboardScreen() {
                   </View>
 
                   {/* Monthly set-aside -- gold highlight inside hero */}
-                  <View style={styles.heroSetAside}>
+                  <View style={styles.heroSetAside} accessibilityLabel={`Set aside this month: ${formatCurrency(tax?.setAsideMonthly ?? 0)}`}>
                     <Text style={styles.heroSetAsideLabel}>SET ASIDE THIS MONTH</Text>
                     <Text style={styles.heroSetAsideAmount}>
                       {formatCurrency(tax?.setAsideMonthly ?? 0)}
@@ -281,7 +307,7 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
                 <View style={styles.setAsideRight}>
-                  <View style={styles.onTrackBadge}>
+                  <View style={styles.onTrackBadge} accessibilityLabel="Status: On track">
                     <FontAwesome name="check" size={11} color={Colors.success} />
                     <Text style={styles.onTrackText}>On track</Text>
                   </View>
@@ -290,7 +316,7 @@ export default function DashboardScreen() {
 
               {/* Section heading */}
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionHeading, { color: colors.text }]}>What needs doing</Text>
+                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">What needs doing</Text>
               </View>
 
               {/* Action Items */}
@@ -325,12 +351,14 @@ export default function DashboardScreen() {
                       title={`Q${quarter} payment due`}
                       description="Submit your quarterly update to HMRC before the deadline."
                       icon="clock-o"
+                      onPress={() => router.push('/mtd')}
                     />
                     <ActionCard
                       type="success"
                       title="Tax pot on track"
                       description="You're setting aside enough to cover your tax bill."
                       icon="check-circle"
+                      onPress={() => router.push('/(tabs)/settings')}
                     />
                   </>
                 )}
@@ -442,7 +470,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22, 163, 74, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: BorderRadius.pill,
@@ -450,7 +477,6 @@ const styles = StyleSheet.create({
   healthText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 11.5,
-    color: Colors.success,
   },
 
   // Press state for interactive cards

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
@@ -17,9 +17,20 @@ export default function SignupScreen() {
   const [error, setError] = useState('');
   const [emailFocused, setEmailFocused] = useState(false);
   const [codeFocused, setCodeFocused] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailError = useMemo(() => {
+    if (!email.trim()) return 'Email is required';
+    if (!EMAIL_REGEX.test(email.trim())) return 'Please enter a valid email address';
+    return '';
+  }, [email]);
+
+  const isSignupValid = !emailError;
 
   const handleSignUp = async () => {
-    if (!isLoaded || !email) return;
+    if (!isLoaded || !isSignupValid) return;
+    setEmailTouched(true);
     setLoading(true);
     setError('');
     try {
@@ -73,7 +84,11 @@ export default function SignupScreen() {
                 {
                   backgroundColor: colors.surface,
                   color: colors.text,
-                  borderColor: emailFocused ? Colors.secondary : colors.border,
+                  borderColor: emailTouched && emailError
+                    ? Colors.error
+                    : emailFocused
+                    ? Colors.secondary
+                    : colors.border,
                   borderWidth: emailFocused ? 2 : 1,
                 },
               ]}
@@ -82,15 +97,25 @@ export default function SignupScreen() {
               value={email}
               onChangeText={setEmail}
               onFocus={() => setEmailFocused(true)}
-              onBlur={() => setEmailFocused(false)}
+              onBlur={() => {
+                setEmailFocused(false);
+                setEmailTouched(true);
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
             />
+            {emailTouched && emailError ? (
+              <Text style={styles.fieldError}>{emailError}</Text>
+            ) : null}
             <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.button,
+                (!isSignupValid || loading) && styles.buttonDisabled,
+                pressed && styles.pressed,
+              ]}
               onPress={handleSignUp}
-              disabled={loading}
+              disabled={!isSignupValid || loading}
             >
               {loading ? (
                 <ActivityIndicator color={Colors.white} />
@@ -202,6 +227,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.error,
     textAlign: 'center',
+  },
+  fieldError: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.error,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   footer: {
     paddingBottom: Spacing.xl,

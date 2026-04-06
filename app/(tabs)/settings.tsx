@@ -10,17 +10,27 @@ import {
   TextInput,
   Linking,
   ActivityIndicator,
+  Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import * as WebBrowser from 'expo-web-browser';
 import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { useTheme } from '@/lib/ThemeContext';
+import {
+  exportTransactionsCSV,
+  exportExpensesCSV,
+  exportInvoicesCSV,
+  exportTaxSummaryCSV,
+  downloadCSV,
+} from '@/lib/export';
 import type { BankConnection } from '@/lib/types';
 
 // --------------- Custom Toggle ---------------
@@ -282,6 +292,10 @@ export default function SettingsScreen() {
   const [taxPotCheck, setTaxPotCheck] = useState(false);
   const [mtdReady, setMtdReady] = useState(true);
 
+  // Export modal state
+  const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
   // Profile expand/collapse state
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [editName, setEditName] = useState('');
@@ -313,7 +327,48 @@ export default function SettingsScreen() {
   };
 
   const handleExportData = () => {
-    Alert.alert('Export Data', 'Export coming soon. You will be able to download your data as CSV or PDF.');
+    setExportModalVisible(true);
+  };
+
+  const handleExportOption = async (type: 'transactions' | 'expenses' | 'invoices' | 'tax') => {
+    setIsExporting(true);
+    try {
+      switch (type) {
+        case 'transactions': {
+          const { transactions } = await api.getTransactions({ limit: 10000 });
+          const csv = exportTransactionsCSV(transactions);
+          downloadCSV(csv, 'transactions.csv');
+          Alert.alert('Exported', 'Exported transactions.csv');
+          break;
+        }
+        case 'expenses': {
+          const { expenses } = await api.getExpenses();
+          const csv = exportExpensesCSV(expenses);
+          downloadCSV(csv, 'expenses.csv');
+          Alert.alert('Exported', 'Exported expenses.csv');
+          break;
+        }
+        case 'invoices': {
+          const { invoices } = await api.getInvoices();
+          const csv = exportInvoicesCSV(invoices);
+          downloadCSV(csv, 'invoices.csv');
+          Alert.alert('Exported', 'Exported invoices.csv');
+          break;
+        }
+        case 'tax': {
+          const taxData = await api.getTaxCalculation();
+          const csv = exportTaxSummaryCSV(taxData);
+          downloadCSV(csv, 'tax-summary.csv');
+          Alert.alert('Exported', 'Exported tax-summary.csv');
+          break;
+        }
+      }
+    } catch {
+      Alert.alert('Export Failed', 'Could not export data. Please try again.');
+    } finally {
+      setIsExporting(false);
+      setExportModalVisible(false);
+    }
   };
 
   const handleSyncBank = (id: string) => {
@@ -545,6 +600,22 @@ export default function SettingsScreen() {
             </View>
           )}
           <SettingsRow
+            icon="credit-card"
+            iconBg={Colors.accent}
+            title="Manage Plan"
+            subtitle="View or change your subscription"
+            right={<Chevron />}
+            onPress={() => router.push('/billing')}
+          />
+          <SettingsRow
+            icon="file-text-o"
+            iconBg={Colors.secondary}
+            title="HMRC MTD"
+            subtitle="Making Tax Digital submissions"
+            right={<Chevron />}
+            onPress={() => router.push('/mtd')}
+          />
+          <SettingsRow
             icon="download"
             iconBg={Colors.success}
             title="Export data"
@@ -562,7 +633,7 @@ export default function SettingsScreen() {
             icon="info-circle"
             iconBg={Colors.grey[400]}
             title="App version"
-            subtitle="1.0.0 (build 42)"
+            subtitle={Constants.expoConfig?.version ?? '0.1.0'}
           />
           <SettingsRow
             icon="file-o"
@@ -594,6 +665,69 @@ export default function SettingsScreen() {
           <Text style={styles.deleteText}>Delete account</Text>
         </Pressable>
       </ScrollView>
+
+      {/* Export Modal */}
+      <Modal
+        visible={exportModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setExportModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => !isExporting && setExportModalVisible(false)}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Export Data</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+              Choose data to export as CSV
+            </Text>
+
+            {isExporting ? (
+              <ActivityIndicator size="large" color={Colors.secondary} style={{ marginVertical: 24 }} />
+            ) : (
+              <View style={styles.modalOptions}>
+                <Pressable
+                  style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+                  onPress={() => handleExportOption('transactions')}
+                >
+                  <IconBox name="exchange" bg={Colors.secondary} />
+                  <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Transactions</Text>
+                </Pressable>
+                <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
+                <Pressable
+                  style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+                  onPress={() => handleExportOption('expenses')}
+                >
+                  <IconBox name="shopping-cart" bg={Colors.error} />
+                  <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Expenses</Text>
+                </Pressable>
+                <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
+                <Pressable
+                  style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+                  onPress={() => handleExportOption('invoices')}
+                >
+                  <IconBox name="file-text-o" bg={Colors.accent} />
+                  <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Invoices</Text>
+                </Pressable>
+                <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
+                <Pressable
+                  style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
+                  onPress={() => handleExportOption('tax')}
+                >
+                  <IconBox name="calculator" bg={Colors.success} />
+                  <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Tax Summary</Text>
+                </Pressable>
+              </View>
+            )}
+
+            <Pressable
+              style={({ pressed }) => [styles.modalCancel, pressed && styles.pressed]}
+              onPress={() => setExportModalVisible(false)}
+              disabled={isExporting}
+            >
+              <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -791,5 +925,54 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12.5,
     color: Colors.secondary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: BorderRadius.card,
+    padding: Spacing.lg,
+  },
+  modalTitle: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 20,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12.5,
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalOptions: {
+    marginBottom: Spacing.md,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalOptionText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+    marginLeft: 10,
+  },
+  modalDivider: {
+    height: 1,
+  },
+  modalCancel: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  modalCancelText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
   },
 });

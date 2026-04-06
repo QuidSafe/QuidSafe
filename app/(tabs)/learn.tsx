@@ -159,7 +159,7 @@ export default function LearnScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.heading, { color: colors.text }]}>Learn</Text>
+        <Text style={[styles.heading, { color: colors.text }]} accessibilityRole="header">Learn</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
         </Text>
@@ -176,7 +176,7 @@ export default function LearnScreen() {
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
-            <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+            <Pressable onPress={() => setSearchQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
               <FontAwesome name="times-circle" size={14} color={colors.textSecondary} />
             </Pressable>
           )}
@@ -202,6 +202,9 @@ export default function LearnScreen() {
                   },
                   pressed && { opacity: 0.8 },
                 ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter: ${tag}`}
+                accessibilityState={{ selected: isActive }}
               >
                 <Text
                   style={[
@@ -243,6 +246,10 @@ export default function LearnScreen() {
                 isExpanded && styles.cardExpanded,
                 pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={`${article.tag}: ${article.title}. ${article.description} ${article.readMin} minute read`}
+              accessibilityHint={isExpanded ? 'Tap to collapse' : 'Tap to expand and read more'}
+              accessibilityState={{ expanded: isExpanded }}
             >
               <View style={styles.cardHeader}>
                 <View style={[styles.tagPill, { backgroundColor: variant.bg }]}>
@@ -268,6 +275,9 @@ export default function LearnScreen() {
                     <Pressable
                       onPress={() => handleOpenUrl(article.url!)}
                       style={[styles.readMoreButton, { borderColor: Colors.secondary }]}
+                      accessibilityRole="link"
+                      accessibilityLabel="Read more on HMRC"
+                      accessibilityHint="Opens the HMRC website in your browser"
                     >
                       <Text style={[styles.readMoreText, { color: Colors.secondary }]}>
                         Read more on HMRC

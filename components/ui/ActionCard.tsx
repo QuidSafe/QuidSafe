@@ -39,6 +39,10 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
   return (
     <Pressable
       onPress={onPress}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${description}`}
+      accessibilityHint={onPress ? 'Tap to take action' : undefined}
       style={({ pressed }) => [
         styles.card,
         { backgroundColor: colors.surface, borderColor: colors.cardBorder },

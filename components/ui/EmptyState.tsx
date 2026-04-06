@@ -24,7 +24,7 @@ export function EmptyState({
   const { colors } = useTheme();
 
   return (
-    <View style={styles.container} accessible accessibilityRole="text" accessibilityLabel={`${title}. ${subtitle}`}>
+    <View style={styles.container} accessible accessibilityRole="alert" accessibilityLabel={`${title}. ${subtitle}`}>
       {/* Circular icon container with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: tintColor + '1A' }]}>
         <Ionicons name={icon} size={64} color={tintColor} />
@@ -39,6 +39,7 @@ export function EmptyState({
           onPress={onAction}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
+          accessibilityHint={`Tap to ${actionLabel.toLowerCase()}`}
         >
           <Text style={styles.actionButtonText}>{actionLabel}</Text>
         </Pressable>

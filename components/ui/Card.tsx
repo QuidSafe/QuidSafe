@@ -6,9 +6,10 @@ interface CardProps extends ViewProps {
   children: React.ReactNode;
   variant?: 'default' | 'glass' | 'elevated';
   onPress?: () => void;
+  accessibilityLabel?: string;
 }
 
-export function Card({ children, variant = 'default', style, onPress, ...props }: CardProps) {
+export function Card({ children, variant = 'default', style, onPress, accessibilityLabel, ...props }: CardProps) {
   const { colors, isDark } = useTheme();
 
   const darkShadow = {
@@ -49,6 +50,8 @@ export function Card({ children, variant = 'default', style, onPress, ...props }
     return (
       <Pressable
         onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
         style={({ pressed }) => [
           styles.card,
           variantStyles[variant],
@@ -63,7 +66,12 @@ export function Card({ children, variant = 'default', style, onPress, ...props }
   }
 
   return (
-    <View style={[styles.card, variantStyles[variant], style]} {...props}>
+    <View
+      style={[styles.card, variantStyles[variant], style]}
+      accessibilityRole="summary"
+      accessibilityLabel={accessibilityLabel}
+      {...props}
+    >
       {children}
     </View>
   );

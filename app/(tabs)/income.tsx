@@ -17,6 +17,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { DateInput } from '@/components/ui/DateInput';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
@@ -89,6 +90,7 @@ export default function IncomeScreen() {
   const [invoiceAmount, setInvoiceAmount] = useState('');
   const [invoiceDescription, setInvoiceDescription] = useState('');
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
@@ -143,6 +145,7 @@ export default function IncomeScreen() {
     setInvoiceAmount('');
     setInvoiceDescription('');
     setInvoiceDueDate('');
+    setTouched({});
   }, []);
 
   const handleCreateInvoice = useCallback(() => {
@@ -166,12 +169,42 @@ export default function IncomeScreen() {
     );
   }, [invoiceClientName, invoiceAmount, invoiceDescription, invoiceDueDate, createInvoiceMutation, resetInvoiceForm]);
 
-  const isFormValid =
-    invoiceClientName.trim().length > 0 &&
-    !isNaN(parseFloat(invoiceAmount)) &&
-    parseFloat(invoiceAmount) > 0 &&
-    invoiceDescription.trim().length > 0 &&
-    invoiceDueDate.trim().length > 0;
+  const markTouched = useCallback((field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }, []);
+
+  // Validation logic
+  const parsedAmount = parseFloat(invoiceAmount);
+  const errors = useMemo(() => {
+    const e: Record<string, string> = {};
+    if (invoiceClientName.trim().length < 2) {
+      e.clientName = 'Client name must be at least 2 characters';
+    }
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      e.amount = 'Amount must be greater than 0';
+    }
+    if (invoiceDescription.trim().length < 3) {
+      e.description = 'Description must be at least 3 characters';
+    }
+    if (!invoiceDueDate.trim()) {
+      e.dueDate = 'Due date is required';
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(invoiceDueDate);
+      if (isNaN(due.getTime())) {
+        e.dueDate = 'Please enter a valid date';
+      } else if (due < today) {
+        e.dueDate = 'Due date must be today or in the future';
+      }
+    }
+    return e;
+  }, [invoiceClientName, parsedAmount, invoiceDescription, invoiceDueDate]);
+
+  const isFormValid = Object.keys(errors).length === 0;
+
+  // Today in YYYY-MM-DD for minDate
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -187,7 +220,7 @@ export default function IncomeScreen() {
         }
       >
         {/* Heading */}
-        <Text style={[styles.title, { color: colors.text }]}>Income</Text>
+        <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Income</Text>
 
         {isLoading ? (
           <IncomeSkeleton />
@@ -202,11 +235,11 @@ export default function IncomeScreen() {
         ) : (
           <>
             {/* Top summary card */}
-            <Card style={styles.topCard}>
+            <Card style={styles.topCard} accessibilityLabel={`Gross income: ${formatCurrency(grossIncome)}. Net profit: ${formatCurrency(netProfit)}`}>
               {/* Summary row */}
               <View style={styles.summaryRow}>
                 {/* Gross income */}
-                <View style={styles.summaryLeft}>
+                <View style={styles.summaryLeft} accessibilityLabel={`Gross income: ${formatCurrency(grossIncome)}`}>
                   <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Gross income</Text>
                   <Text style={[styles.grossAmount, { color: colors.text }]}>{formatCurrency(grossIncome)}</Text>
                   {yoyPercent !== null && (
@@ -224,7 +257,7 @@ export default function IncomeScreen() {
                 </View>
 
                 {/* Net profit */}
-                <View style={styles.summaryRight}>
+                <View style={styles.summaryRight} accessibilityLabel={`Net profit: ${formatCurrency(netProfit)}, after ${formatCurrency(totalExpenses)} expenses`}>
                   <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Net profit</Text>
                   <Text style={styles.netAmount}>{formatCurrency(netProfit)}</Text>
                   <Text style={[styles.afterExpenses, { color: colors.textSecondary }]}>
@@ -276,7 +309,7 @@ export default function IncomeScreen() {
 
             {/* Sources section header */}
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Sources</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">Sources</Text>
               <View style={styles.sourceBadge}>
                 <Text style={[styles.sourceBadgeText, { color: colors.textSecondary }]}>
                   {sourceCount} source{sourceCount !== 1 ? 's' : ''}
@@ -315,6 +348,9 @@ export default function IncomeScreen() {
                     style={[styles.filterPill, isActive && styles.filterPillActive]}
                     onPress={() => setActiveFilter(f.key)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filter: ${f.label}`}
+                    accessibilityState={{ selected: isActive }}
                   >
                     <Text
                       style={[
@@ -343,6 +379,7 @@ export default function IncomeScreen() {
                         styles.sourceRow,
                         !isLast && [styles.sourceRowBorder, { borderBottomColor: colors.border }],
                       ]}
+                      accessibilityLabel={`${src.name}: ${formatCurrency(src.amount)}, ${src.percentage}% of income`}
                     >
                       {/* Colored dot indicator */}
                       <View style={[styles.sourceDot, { backgroundColor: iconInfo.dot }]} />
@@ -399,6 +436,9 @@ export default function IncomeScreen() {
           style={[styles.fab, Shadows.medium]}
           onPress={() => setInvoiceModalVisible(true)}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Create new invoice"
+          accessibilityHint="Tap to open the create invoice form"
         >
           <FontAwesome name="plus" size={20} color={Colors.white} />
         </TouchableOpacity>
@@ -425,6 +465,8 @@ export default function IncomeScreen() {
                   setInvoiceModalVisible(false);
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Close invoice form"
               >
                 <FontAwesome name="times" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -433,44 +475,58 @@ export default function IncomeScreen() {
             {/* Client Name */}
             <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Client name</Text>
             <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.clientName && errors.clientName ? Colors.error : colors.border }]}
               placeholder="e.g. Acme Ltd"
               placeholderTextColor={colors.textSecondary}
               value={invoiceClientName}
               onChangeText={setInvoiceClientName}
+              onBlur={() => markTouched('clientName')}
             />
+            {touched.clientName && errors.clientName ? (
+              <Text style={styles.fieldError}>{errors.clientName}</Text>
+            ) : null}
 
             {/* Amount */}
             <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount</Text>
             <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.amount && errors.amount ? Colors.error : colors.border }]}
               placeholder="0.00"
               placeholderTextColor={colors.textSecondary}
               keyboardType="decimal-pad"
               value={invoiceAmount}
               onChangeText={setInvoiceAmount}
+              onBlur={() => markTouched('amount')}
             />
+            {touched.amount && errors.amount ? (
+              <Text style={styles.fieldError}>{errors.amount}</Text>
+            ) : null}
 
             {/* Description */}
             <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Description</Text>
             <TextInput
-              style={[styles.modalInput, styles.modalInputMultiline, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+              style={[styles.modalInput, styles.modalInputMultiline, { color: colors.text, backgroundColor: colors.background, borderColor: touched.description && errors.description ? Colors.error : colors.border }]}
               placeholder="What is this invoice for?"
               placeholderTextColor={colors.textSecondary}
               multiline
               numberOfLines={3}
               value={invoiceDescription}
               onChangeText={setInvoiceDescription}
+              onBlur={() => markTouched('description')}
             />
+            {touched.description && errors.description ? (
+              <Text style={styles.fieldError}>{errors.description}</Text>
+            ) : null}
 
             {/* Due Date */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Due date (YYYY-MM-DD)</Text>
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
-              placeholder="2026-05-01"
-              placeholderTextColor={colors.textSecondary}
+            <DateInput
+              label="Due date"
               value={invoiceDueDate}
-              onChangeText={setInvoiceDueDate}
+              onChange={(date) => {
+                setInvoiceDueDate(date);
+                markTouched('dueDate');
+              }}
+              minDate={todayStr}
+              error={touched.dueDate ? errors.dueDate : undefined}
             />
 
             {/* Submit button */}
@@ -482,6 +538,10 @@ export default function IncomeScreen() {
               onPress={handleCreateInvoice}
               disabled={!isFormValid || createInvoiceMutation.isPending}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Create invoice"
+              accessibilityHint="Tap to create a new invoice"
+              accessibilityState={{ disabled: !isFormValid || createInvoiceMutation.isPending }}
             >
               {createInvoiceMutation.isPending ? (
                 <ActivityIndicator color={Colors.white} size="small" />
@@ -841,6 +901,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 15,
     color: Colors.white,
+  },
+  fieldError: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.error,
+    marginBottom: Spacing.xs,
+    marginTop: -2,
   },
   errorText: {
     fontFamily: 'Manrope_400Regular',

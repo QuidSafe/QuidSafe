@@ -6,9 +6,11 @@ interface ButtonProps extends PressableProps {
   title: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'cta';
   size?: 'sm' | 'md' | 'lg';
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export function Button({ title, variant = 'primary', size = 'md', style, ...props }: ButtonProps) {
+export function Button({ title, variant = 'primary', size = 'md', style, accessibilityLabel, accessibilityHint, ...props }: ButtonProps) {
   const { colors } = useTheme();
 
   const variantTextColor =
@@ -20,6 +22,9 @@ export function Button({ title, variant = 'primary', size = 'md', style, ...prop
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={accessibilityHint}
       style={({ pressed }) => [
         styles.base,
         styles[variant],

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -85,9 +85,26 @@ export default function ExpensesScreen() {
   const addExpense = useAddExpense();
   const deleteExpense = useDeleteExpense();
   const [showForm, setShowForm] = useState(false);
+  const [openedFromReceipt, setOpenedFromReceipt] = useState(false);
   const [amount, setAmount] = useState('');
+
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('other');
+  const [expTouched, setExpTouched] = useState<Record<string, boolean>>({});
+
+  const expErrors = useMemo(() => {
+    const e: Record<string, string> = {};
+    const parsed = parseFloat(amount);
+    if (isNaN(parsed) || parsed <= 0) {
+      e.amount = 'Amount must be greater than 0';
+    }
+    if (description.trim().length < 3) {
+      e.description = 'Description must be at least 3 characters';
+    }
+    return e;
+  }, [amount, description]);
+
+  const isExpenseFormValid = Object.keys(expErrors).length === 0;
 
   const expenses = (data?.expenses ?? []) as {
     id: string;
@@ -101,7 +118,7 @@ export default function ExpensesScreen() {
   const taxSaved = totalClaimed * effectiveRate;
 
   const handleAdd = async () => {
-    if (!amount || !description || !/^[0-9]+(\.[0-9]{1,2})?$/.test(amount)) return;
+    if (!isExpenseFormValid) return;
     await addExpense.mutateAsync({
       amount: Number(amount),
       description,
@@ -111,6 +128,8 @@ export default function ExpensesScreen() {
     setAmount('');
     setDescription('');
     setSelectedCategory('other');
+    setExpTouched({});
+    setOpenedFromReceipt(false);
     setShowForm(false);
   };
 
@@ -150,10 +169,13 @@ export default function ExpensesScreen() {
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: colors.text }]}>Expenses</Text>
+          <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Expenses</Text>
           <Pressable
             style={({ pressed }) => [styles.fabButton, pressed && styles.pressed]}
             onPress={() => setShowForm(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add new expense"
+            accessibilityHint="Tap to open the add expense form"
           >
             <FontAwesome name="plus" size={16} color={Colors.white} />
           </Pressable>
@@ -161,13 +183,13 @@ export default function ExpensesScreen() {
 
         {/* Metric Cards */}
         <View style={styles.metricsRow}>
-          <Card variant="elevated" style={styles.metricCard}>
+          <Card variant="elevated" style={styles.metricCard} accessibilityLabel={`Total claimed: ${formatCurrency(totalClaimed)}`}>
             <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Total claimed</Text>
             <Text style={[styles.metricValue, { color: Colors.success }]}>
               {formatCurrency(totalClaimed)}
             </Text>
           </Card>
-          <Card variant="elevated" style={styles.metricCard}>
+          <Card variant="elevated" style={styles.metricCard} accessibilityLabel={`Tax saved: ${formatCurrency(taxSaved)}`}>
             <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Tax saved</Text>
             <Text style={[styles.metricValue, { color: Colors.secondary }]}>
               {formatCurrency(taxSaved)}
@@ -188,7 +210,10 @@ export default function ExpensesScreen() {
         {/* Scan Receipt Button */}
         <Pressable
           style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}
-          onPress={() => setShowForm(true)}
+          onPress={() => { setOpenedFromReceipt(true); setShowForm(true); }}
+          accessibilityRole="button"
+          accessibilityLabel="Add expense from receipt"
+          accessibilityHint="Tap to add a new expense"
         >
           <FontAwesome name="camera" size={16} color={Colors.white} />
           <Text style={styles.scanButtonText}>Add expense from receipt</Text>
@@ -198,6 +223,9 @@ export default function ExpensesScreen() {
         <Pressable
           style={({ pressed }) => [styles.outlineButton, { backgroundColor: colors.surface }, pressed && styles.pressed]}
           onPress={() => router.push('/(tabs)/learn')}
+          accessibilityRole="link"
+          accessibilityLabel="What can I claim? See the full list"
+          accessibilityHint="Opens the Learn page with claimable expenses"
         >
           <FontAwesome name="info-circle" size={16} color={Colors.secondary} />
           <Text style={styles.outlineButtonText}>What can I claim? See the full list</Text>
@@ -209,7 +237,7 @@ export default function ExpensesScreen() {
         ) : expenses.length > 0 ? (
           <>
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Claimed expenses</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">Claimed expenses</Text>
               <View style={styles.itemsBadge}>
                 <Text style={styles.itemsBadgeText}>{expenses.length} items</Text>
               </View>
@@ -248,7 +276,7 @@ export default function ExpensesScreen() {
                     </View>
                     <View style={styles.expenseRight}>
                       <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(exp.amount)}</Text>
-                      <View style={styles.claimedBadge}>
+                      <View style={styles.claimedBadge} accessibilityLabel="Status: Claimed">
                         <Text style={styles.claimedBadgeText}>Claimed</Text>
                       </View>
                     </View>
@@ -256,6 +284,9 @@ export default function ExpensesScreen() {
                       style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
                       onPress={() => handleDelete(exp.id, exp.description)}
                       hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete expense: ${exp.description}`}
+                      accessibilityHint="Tap to delete this expense"
                     >
                       <FontAwesome name="trash-o" size={16} color={Colors.error} />
                     </Pressable>
@@ -276,7 +307,7 @@ export default function ExpensesScreen() {
         )}
 
         {/* Gold Insight Banner */}
-        <View style={styles.insightBanner}>
+        <View style={styles.insightBanner} accessibilityLabel="Tip: Do you use your car for work? Track your mileage to claim up to 45p per mile in tax relief.">
           <FontAwesome name="lightbulb-o" size={18} color={Colors.gold[700]} style={styles.insightIcon} />
           <Text style={styles.insightText}>
             <Text style={styles.insightBold}>Tip: </Text>
@@ -305,26 +336,42 @@ export default function ExpensesScreen() {
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={[styles.formTitle, { color: colors.text }]}>New Expense</Text>
-              <Pressable onPress={() => setShowForm(false)}>
+              <Text style={[styles.formTitle, { color: colors.text }]} accessibilityRole="header">New Expense</Text>
+              <Pressable onPress={() => { setOpenedFromReceipt(false); setShowForm(false); }} accessibilityRole="button" accessibilityLabel="Close expense form">
                 <FontAwesome name="times" size={20} color={colors.textSecondary} />
               </Pressable>
             </View>
+            {openedFromReceipt && (
+              <View style={styles.receiptNotice}>
+                <FontAwesome name="camera" size={13} color={Colors.secondary} />
+                <Text style={[styles.receiptNoticeText, { color: colors.textSecondary }]}>
+                  Receipt scanning coming soon — add your expense manually for now.
+                </Text>
+              </View>
+            )}
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.amount && expErrors.amount ? Colors.error : colors.border }]}
               placeholder="Amount (e.g. 45.99)"
               placeholderTextColor={colors.textSecondary}
               value={amount}
               onChangeText={setAmount}
+              onBlur={() => setExpTouched((prev) => ({ ...prev, amount: true }))}
               keyboardType="decimal-pad"
             />
+            {expTouched.amount && expErrors.amount ? (
+              <Text style={styles.fieldError}>{expErrors.amount}</Text>
+            ) : null}
             <TextInput
-              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
-              placeholder="Description"
+              style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.description && expErrors.description ? Colors.error : colors.border }]}
+              placeholder="Description (min 3 characters)"
               placeholderTextColor={colors.textSecondary}
               value={description}
               onChangeText={setDescription}
+              onBlur={() => setExpTouched((prev) => ({ ...prev, description: true }))}
             />
+            {expTouched.description && expErrors.description ? (
+              <Text style={styles.fieldError}>{expErrors.description}</Text>
+            ) : null}
             <Text style={[styles.categoryLabel, { color: colors.text }]}>HMRC Category</Text>
             <ScrollView
               horizontal
@@ -344,6 +391,9 @@ export default function ExpensesScreen() {
                         : { backgroundColor: colors.background },
                     ]}
                     onPress={() => setSelectedCategory(cat)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Category: ${HMRC_CATEGORY_LABELS[cat]}`}
+                    accessibilityState={{ selected: isSelected }}
                   >
                     <Text
                       style={[
@@ -360,8 +410,17 @@ export default function ExpensesScreen() {
               })}
             </ScrollView>
             <Pressable
-              style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.submitButton,
+                (!isExpenseFormValid || addExpense.isPending) && styles.submitButtonDisabled,
+                pressed && styles.pressed,
+              ]}
               onPress={handleAdd}
+              disabled={!isExpenseFormValid || addExpense.isPending}
+              accessibilityRole="button"
+              accessibilityLabel={addExpense.isPending ? 'Adding expense' : 'Add expense'}
+              accessibilityHint="Tap to submit the new expense"
+              accessibilityState={{ disabled: !isExpenseFormValid || addExpense.isPending }}
             >
               <Text style={styles.submitText}>
                 {addExpense.isPending ? 'Adding...' : 'Add Expense'}
@@ -720,9 +779,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.sm,
   },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
   submitText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 15,
     color: Colors.white,
+  },
+  fieldError: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    color: Colors.error,
+    marginBottom: Spacing.xs,
+    marginTop: -4,
+  },
+  receiptNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: BorderRadius.card,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  receiptNoticeText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12.5,
+    flex: 1,
+    lineHeight: 18,
   },
 });
