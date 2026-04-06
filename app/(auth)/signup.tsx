@@ -9,7 +9,7 @@ import { useTheme } from '@/lib/ThemeContext';
 export default function SignupScreen() {
   const { signUp, isLoaded } = useSignUp();
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');

@@ -11,7 +11,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
