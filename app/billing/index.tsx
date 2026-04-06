@@ -85,10 +85,10 @@ export default function BillingScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
         >
-          <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+          <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
             <FontAwesome name="arrow-left" size={16} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Your Plan</Text>
+          <Text style={styles.title} accessibilityRole="header">Your Plan</Text>
 
           <Card>
             <View style={styles.activeRow}>
@@ -119,7 +119,7 @@ export default function BillingScreen() {
             )}
           </Card>
 
-          <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={handleManage}>
+          <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={handleManage} accessibilityRole="button" accessibilityLabel="Manage Subscription" accessibilityHint="Tap to manage your subscription in the Stripe portal">
             {portalLoading ? (
               <ActivityIndicator color={Colors.primary} />
             ) : (
@@ -138,12 +138,12 @@ export default function BillingScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
       >
-        <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+        <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
           <FontAwesome name="arrow-left" size={16} color={colors.text} />
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Go Pro</Text>
+          <Text style={styles.title} accessibilityRole="header">Go Pro</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Everything you need to stay on top of your sole trader taxes.
           </Text>
@@ -162,6 +162,9 @@ export default function BillingScreen() {
                 pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
               ]}
               onPress={() => setSelectedPlan(plan.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${plan.name} plan: ${plan.price} pounds ${plan.interval}. ${plan.description}`}
+              accessibilityState={{ selected: selectedPlan === plan.id }}
             >
               {plan.badge && (
                 <View style={styles.badgeContainer}>
@@ -202,6 +205,9 @@ export default function BillingScreen() {
           style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
           onPress={handleCheckout}
           disabled={checkoutMutation.isPending}
+          accessibilityRole="button"
+          accessibilityLabel="Start 14-day free trial"
+          accessibilityHint="Tap to start the checkout process for your free trial"
         >
           {checkoutMutation.isPending ? (
             <ActivityIndicator color={Colors.white} />
