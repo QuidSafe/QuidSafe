@@ -1,6 +1,3 @@
 # Cloudflare Pages configuration
 name = "quidsafe"
 pages_build_output_dir = "dist"
-
-[build]
-command = "npx expo export --platform web"
