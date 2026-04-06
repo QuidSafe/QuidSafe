@@ -375,7 +375,7 @@ export default function SettingsScreen() {
           style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
           onPress={handleSignOut}
         >
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Text style={[styles.signOutText, { color: colors.text }]}>Sign out</Text>
         </Pressable>
 
         {/* Delete account */}
@@ -390,7 +390,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   scroll: {
     padding: Spacing.lg,
@@ -400,13 +399,11 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'PlayfairDisplay_700Bold',
     fontSize: 28,
-    color: Colors.light.text,
     marginBottom: Spacing.xs,
   },
   sectionLabel: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 10,
-    color: Colors.grey[400],
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     marginTop: Spacing.md,
@@ -424,11 +421,9 @@ const styles = StyleSheet.create({
   },
   rowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
   },
   rowBorderOnly: {
     height: 1,
-    backgroundColor: Colors.light.border,
   },
   iconBox: {
     width: 30,
@@ -444,12 +439,10 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12.5,
-    color: Colors.light.text,
   },
   rowSubtitle: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 10.5,
-    color: Colors.grey[400],
     marginTop: 1,
   },
   activeBadge: {
@@ -484,7 +477,6 @@ const styles = StyleSheet.create({
   signOutText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
-    color: Colors.light.text,
   },
   deleteButton: {
     alignItems: 'center',
