@@ -278,6 +278,8 @@ const BankConnectionRow = memo(function BankConnectionRow({
           onPress={handleDisconnect}
           disabled={isDisconnecting}
           style={({ pressed }) => [styles.disconnectButton, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={`Disconnect ${connection.bankName}`}
         >
           {isDisconnecting ? (
             <ActivityIndicator size="small" color={Colors.error} />
@@ -616,6 +618,8 @@ export default function SettingsScreen() {
                     pressed && styles.pressed,
                     (!editName.trim() || isSavingName) && styles.saveButtonDisabled,
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Save name"
                 >
                   {isSavingName ? (
                     <ActivityIndicator size="small" color={Colors.white} />
@@ -717,6 +721,8 @@ export default function SettingsScreen() {
                 <Pressable
                   style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
                   onPress={() => handleExportOption('transactions')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Export Transactions"
                 >
                   <IconBox name="exchange" bg={Colors.secondary} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Transactions</Text>
@@ -725,6 +731,8 @@ export default function SettingsScreen() {
                 <Pressable
                   style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
                   onPress={() => handleExportOption('expenses')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Export Expenses"
                 >
                   <IconBox name="shopping-cart" bg={Colors.error} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Expenses</Text>
@@ -733,6 +741,8 @@ export default function SettingsScreen() {
                 <Pressable
                   style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
                   onPress={() => handleExportOption('invoices')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Export Invoices"
                 >
                   <IconBox name="file-text-o" bg={Colors.accent} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Invoices</Text>
@@ -741,6 +751,8 @@ export default function SettingsScreen() {
                 <Pressable
                   style={({ pressed }) => [styles.modalOption, pressed && styles.pressed]}
                   onPress={() => handleExportOption('tax')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Export Tax Summary"
                 >
                   <IconBox name="calculator" bg={Colors.success} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Tax Summary</Text>
@@ -752,6 +764,8 @@ export default function SettingsScreen() {
               style={({ pressed }) => [styles.modalCancel, pressed && styles.pressed]}
               onPress={() => setExportModalVisible(false)}
               disabled={isExporting}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel export"
             >
               <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
             </Pressable>
