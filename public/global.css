@@ -8,11 +8,6 @@
  *     The app renders null until useFonts() resolves, so there's no FOUT.
  *  3. FontAwesome CDN CSS is loaded as a fallback so icon glyphs render even
  *     before expo-font finishes loading the FontAwesome.ttf from the bundle.
- *
- * NOTE: Do NOT add @font-face aliases using local() for expo font names —
- * local() only resolves OS-installed fonts and will silently fail for CDN
- * fonts, potentially leaving the browser with a broken font-family entry
- * that blocks expo-font's dynamic @font-face injection.
  */
 
 /* ── Web Fonts ── */
@@ -30,9 +25,10 @@ html, body, #root {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* iOS Safari bottom safe area — prevent tab bar being clipped */
+/* iOS Safari bottom safe area */
 body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -40,11 +36,29 @@ body {
 /* ── Scrollbars ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
 }
-*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar { width: 5px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ── Smooth transitions on all interactive React Native Web elements ── */
+[role="button"],
+[role="link"],
+a {
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* ── Hover lift effect for card-like Pressable wrappers ── */
+[data-testid] > [role="button"]:hover {
+  transform: translateY(-1px);
+}
 
 /* ── Base Typography ── */
 input, button, textarea, select {
@@ -66,4 +80,22 @@ input, button, textarea, select {
 /* ── Mobile web tap highlight ── */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Smooth scroll behavior ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Premium glass backdrop-filter support ── */
+@supports (backdrop-filter: blur(20px)) {
+  .glass-surface {
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+
+/* ── Image rendering ── */
+img {
+  image-rendering: -webkit-optimize-contrast;
 }

@@ -12,6 +12,7 @@ import {
 import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
@@ -45,57 +46,70 @@ const HOW_IT_WORKS = [
   },
 ];
 
-const FEATURES = [
+const FEATURES: {
+  iconName: React.ComponentProps<typeof FontAwesome>['name'];
+  title: string;
+  description: string;
+  gradient: readonly [string, string];
+  iconBg: string;
+  iconColor: string;
+}[] = [
   {
-    icon: 'AI',
+    iconName: 'magic',
     title: 'AI Categorisation',
     description: 'Every transaction auto-categorised by AI. No more "is this an allowable expense?" guessing.',
-    gradient: ['rgba(202,138,4,0.15)', 'rgba(202,138,4,0.05)'] as const,
+    gradient: ['rgba(202,138,4,0.15)', 'rgba(202,138,4,0.05)'],
     iconBg: 'rgba(202,138,4,0.2)',
+    iconColor: '#CA8A04',
   },
   {
-    icon: '£',
+    iconName: 'calculator',
     title: 'Tax Set-Aside Calculator',
     description: 'Know your Income Tax and National Insurance in real time — not as a surprise in January.',
-    gradient: ['rgba(22,163,74,0.15)', 'rgba(22,163,74,0.05)'] as const,
+    gradient: ['rgba(22,163,74,0.15)', 'rgba(22,163,74,0.05)'],
     iconBg: 'rgba(22,163,74,0.2)',
+    iconColor: '#16A34A',
   },
   {
-    icon: 'Q',
+    iconName: 'calendar-check-o',
     title: 'MTD Quarterly Submissions',
     description: 'Submit to HMRC directly from the app. Making Tax Digital compliant from day one.',
-    gradient: ['rgba(30,58,138,0.2)', 'rgba(30,58,138,0.05)'] as const,
+    gradient: ['rgba(30,58,138,0.2)', 'rgba(30,58,138,0.05)'],
     iconBg: 'rgba(30,58,138,0.3)',
+    iconColor: '#3B82F6',
   },
   {
-    icon: 'OB',
+    iconName: 'university',
     title: 'Open Banking Integration',
     description: 'Connect your existing bank accounts. No new accounts needed. FCA regulated via TrueLayer.',
-    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.03)'] as const,
+    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.03)'],
     iconBg: 'rgba(148,163,184,0.15)',
+    iconColor: '#94A3B8',
   },
   {
-    icon: 'INV',
+    iconName: 'file-text-o',
     title: 'Professional Invoices',
     description: 'Create, send, and track invoices. Know when you have been paid — all in one place.',
-    gradient: ['rgba(202,138,4,0.1)', 'rgba(30,58,138,0.05)'] as const,
+    gradient: ['rgba(202,138,4,0.1)', 'rgba(30,58,138,0.05)'],
     iconBg: 'rgba(202,138,4,0.15)',
+    iconColor: '#CA8A04',
   },
   {
-    icon: 'CSV',
+    iconName: 'download',
     title: 'Full Data Export',
     description: 'Download everything as CSV anytime. Your data always belongs to you.',
-    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.02)'] as const,
+    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.02)'],
     iconBg: 'rgba(148,163,184,0.12)',
+    iconColor: '#94A3B8',
   },
 ];
 
-const TRUST_ITEMS = [
-  { icon: 'FCA', label: 'FCA Regulated', sublabel: 'Open Banking via TrueLayer' },
-  { icon: 'AES', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
-  { icon: 'MTD', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
-  { icon: 'R/O', label: 'Read-Only Access', sublabel: 'We can never move money' },
-  { icon: 'HMRC', label: 'HMRC Recognised', sublabel: 'Approved for MTD submissions' },
+const TRUST_ITEMS: { iconName: React.ComponentProps<typeof FontAwesome>['name']; label: string; sublabel: string }[] = [
+  { iconName: 'shield', label: 'FCA Regulated', sublabel: 'Open Banking via TrueLayer' },
+  { iconName: 'lock', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
+  { iconName: 'check-circle', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
+  { iconName: 'eye', label: 'Read-Only Access', sublabel: 'We can never move money' },
+  { iconName: 'building-o', label: 'HMRC Recognised', sublabel: 'Approved for MTD submissions' },
 ];
 
 const SUPPORTED_BANKS = [
@@ -546,7 +560,7 @@ export default function LandingScreen() {
                 </View>
 
                 <Text style={styles.heroNoCard}>No credit card required · Cancel anytime</Text>
-                <Text style={styles.heroJoinCount}>Join 500+ sole traders already using QuidSafe</Text>
+                <Text style={styles.heroJoinCount}>Built for UK sole traders. Try free for 14 days.</Text>
               </View>
 
               <View style={[styles.heroPhoneColumn, isDesktop && styles.heroPhoneColumnDesktop]}>
@@ -561,7 +575,9 @@ export default function LandingScreen() {
           <View style={[styles.trustBarInner, { maxWidth: contentMaxWidth }, isDesktop && styles.trustBarDesktop]}>
             {TRUST_ITEMS.map((item) => (
               <View key={item.label} style={styles.trustItem}>
-                <Text style={styles.trustIcon}>{item.icon}</Text>
+                <View style={styles.trustIconCircle}>
+                  <FontAwesome name={item.iconName} size={14} color={Colors.accent} />
+                </View>
                 <View>
                   <Text style={styles.trustLabel}>{item.label}</Text>
                   <Text style={styles.trustSublabel}>{item.sublabel}</Text>
@@ -658,7 +674,7 @@ export default function LandingScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={[styles.featureIconCircle, { backgroundColor: f.iconBg }]}>
-                    <Text style={styles.featureIcon}>{f.icon}</Text>
+                    <FontAwesome name={f.iconName} size={22} color={f.iconColor} />
                   </View>
                   <Text style={styles.featureTitle}>{f.title}</Text>
                   <Text style={styles.featureDesc}>{f.description}</Text>
@@ -890,7 +906,7 @@ export default function LandingScreen() {
             Stop guessing.{'\n'}Start knowing.
           </Text>
           <Text style={styles.finalCTASubtitle}>
-            Join thousands of UK sole traders who never worry about tax again.
+            The simplest way for UK sole traders to stay on top of tax.
           </Text>
           <Link href="/(auth)/signup" asChild>
             <Pressable style={({ pressed }) => [styles.ctaGold, { maxWidth: 340 }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Start free trial">
@@ -1035,13 +1051,18 @@ const styles = StyleSheet.create({
   // CTAs
   ctaGold: {
     backgroundColor: Colors.accent, paddingVertical: 18, paddingHorizontal: 36,
-    borderRadius: BorderRadius.button, alignItems: 'center', width: '100%',
-    ...Shadows.large,
+    borderRadius: 14, alignItems: 'center', width: '100%',
+    shadowColor: 'rgba(202,138,4,0.4)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
   ctaGoldText: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white, letterSpacing: 0.3 },
   ctaGhost: {
-    paddingVertical: 16, paddingHorizontal: 32, borderRadius: BorderRadius.button,
-    alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', width: '100%',
+    paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14,
+    alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)', width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   ctaGhostText: { fontFamily: Fonts.manrope.semiBold, fontSize: 16, color: 'rgba(255,255,255,0.8)' },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
@@ -1056,8 +1077,13 @@ const styles = StyleSheet.create({
     gap: Spacing.xl, paddingHorizontal: Spacing.lg, width: '100%',
   },
   trustBarDesktop: { gap: 56 },
-  trustItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  trustIcon: { fontFamily: Fonts.manrope.bold, fontSize: 11, color: Colors.accent, letterSpacing: 0.5 },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  trustIconCircle: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(202,138,4,0.1)',
+    borderWidth: 1, borderColor: 'rgba(202,138,4,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
   trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
   trustSublabel: { fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
   bankStrip: {
@@ -1141,15 +1167,22 @@ const styles = StyleSheet.create({
   },
   featuresGridDesktop: { gap: Spacing.lg },
   featureCard: {
-    borderRadius: BorderRadius.hero, borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', padding: Spacing.xl,
+    borderRadius: 20, borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)', padding: Spacing.xl,
     overflow: 'hidden', position: 'relative',
+    shadowColor: 'rgba(0,0,0,0.3)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   featureIconCircle: {
     width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
-  featureIcon: { fontSize: 22, color: Colors.white },
+  // featureIcon removed — using FontAwesome component instead
   featureTitle: {
     fontFamily: Fonts.manrope.bold, fontSize: 18, color: Colors.white, marginBottom: Spacing.sm,
     letterSpacing: -0.2,
@@ -1223,12 +1256,17 @@ const styles = StyleSheet.create({
 
   // ── Pricing ──
   pricingCard: {
-    width: '100%', borderRadius: BorderRadius.hero, overflow: 'hidden',
+    width: '100%', borderRadius: 24, overflow: 'hidden',
     padding: Spacing.xl, position: 'relative',
+    shadowColor: 'rgba(202,138,4,0.15)',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 1,
+    shadowRadius: 32,
+    elevation: 8,
   },
   pricingCardBorder: {
     ...StyleSheet.absoluteFillObject,
-    borderWidth: 1, borderColor: 'rgba(202,138,4,0.2)', borderRadius: BorderRadius.hero,
+    borderWidth: 1.5, borderColor: 'rgba(202,138,4,0.25)', borderRadius: 24,
   },
   proBadge: {
     backgroundColor: Colors.accent, paddingVertical: 5, paddingHorizontal: 14,

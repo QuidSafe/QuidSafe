@@ -14,35 +14,35 @@ export function Card({ children, variant = 'default', style, onPress, accessibil
   const { colors, isDark } = useTheme();
 
   const darkShadow = {
-    shadowColor: 'rgba(0,0,0,0.3)',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: 'rgba(0,0,0,0.4)',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   };
 
   const darkShadowMedium = {
-    shadowColor: 'rgba(0,0,0,0.3)',
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: 'rgba(0,0,0,0.5)',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 16,
+    elevation: 5,
   };
 
   const variantStyles = {
     default: {
-      backgroundColor: colors.surface,
-      borderColor: colors.cardBorder,
+      backgroundColor: isDark ? '#17171F' : colors.surface,
+      borderColor: isDark ? 'rgba(255,255,255,0.07)' : colors.cardBorder,
       ...(isDark ? darkShadow : Shadows.soft),
     },
     glass: {
-      backgroundColor: colors.surfaceGlass,
-      borderColor: colors.cardBorder,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.surfaceGlass,
+      borderColor: isDark ? 'rgba(255,255,255,0.08)' : colors.cardBorder,
       ...(isDark ? darkShadow : Shadows.soft),
     },
     elevated: {
-      backgroundColor: colors.surface,
-      borderColor: colors.cardBorder,
+      backgroundColor: isDark ? '#1A1A24' : colors.surface,
+      borderColor: isDark ? 'rgba(255,255,255,0.09)' : colors.cardBorder,
       ...(isDark ? darkShadowMedium : Shadows.medium),
     },
   };
