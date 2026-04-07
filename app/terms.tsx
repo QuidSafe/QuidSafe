@@ -199,6 +199,9 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
+    maxWidth: 680,
+    width: '100%' as unknown as number,
+    alignSelf: 'center' as const,
   },
   backButton: {
     flexDirection: 'row',

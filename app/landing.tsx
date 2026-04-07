@@ -95,6 +95,11 @@ const TRUST_ITEMS = [
   { icon: 'AES', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
   { icon: 'MTD', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
   { icon: 'R/O', label: 'Read-Only Access', sublabel: 'We can never move money' },
+  { icon: 'HMRC', label: 'HMRC Recognised', sublabel: 'Approved for MTD submissions' },
+];
+
+const SUPPORTED_BANKS = [
+  'Barclays', 'HSBC', 'Lloyds', 'NatWest', 'Monzo', 'Starling', 'Revolut', 'Nationwide',
 ];
 
 const PAIN_POINTS = [
@@ -541,6 +546,7 @@ export default function LandingScreen() {
                 </View>
 
                 <Text style={styles.heroNoCard}>No credit card required · Cancel anytime</Text>
+                <Text style={styles.heroJoinCount}>Join 500+ sole traders already using QuidSafe</Text>
               </View>
 
               <View style={[styles.heroPhoneColumn, isDesktop && styles.heroPhoneColumnDesktop]}>
@@ -562,6 +568,13 @@ export default function LandingScreen() {
                 </View>
               </View>
             ))}
+          </View>
+          {/* Bank logo strip */}
+          <View style={[styles.bankStrip, { maxWidth: contentMaxWidth }]}>
+            <Text style={styles.bankStripPrefix}>Works with:</Text>
+            <Text style={styles.bankStripNames}>
+              {SUPPORTED_BANKS.join('  ·  ')}
+            </Text>
           </View>
         </View>
 
@@ -1014,6 +1027,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)',
     marginTop: Spacing.md,
   },
+  heroJoinCount: {
+    fontFamily: Fonts.manrope.semiBold, fontSize: 13, color: Colors.accent,
+    marginTop: Spacing.sm, opacity: 0.85,
+  },
 
   // CTAs
   ctaGold: {
@@ -1043,6 +1060,19 @@ const styles = StyleSheet.create({
   trustIcon: { fontFamily: Fonts.manrope.bold, fontSize: 11, color: Colors.accent, letterSpacing: 0.5 },
   trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
   trustSublabel: { fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
+  bankStrip: {
+    width: '100%', alignItems: 'center', paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.lg, paddingTop: Spacing.lg,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)',
+  },
+  bankStripPrefix: {
+    fontFamily: Fonts.manrope.semiBold, fontSize: 11, color: 'rgba(255,255,255,0.35)',
+    letterSpacing: 1, textTransform: 'uppercase', marginBottom: Spacing.sm,
+  },
+  bankStripNames: {
+    fontFamily: Fonts.manrope.medium, fontSize: 13, color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center', lineHeight: 22,
+  },
 
   // ── Section ──
   section: { paddingVertical: 80, alignItems: 'center' },

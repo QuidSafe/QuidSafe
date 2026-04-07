@@ -15,6 +15,7 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
@@ -69,6 +70,12 @@ function StepWelcome() {
       contentContainerStyle={styles.slideContent}
       showsVerticalScrollIndicator={false}
     >
+      {/* Set up in 2 minutes badge */}
+      <View style={[styles.setupTimeBadge, { backgroundColor: Colors.accent + '15', borderColor: Colors.accent + '30' }]}>
+        <FontAwesome name="clock-o" size={12} color={Colors.accent} style={{ marginRight: Spacing.xs }} />
+        <Text style={[styles.setupTimeBadgeText, { color: Colors.accent }]}>Set up in 2 minutes</Text>
+      </View>
+
       {/* Animated illustration — shield with pound sign */}
       <View style={styles.illustrationArea}>
         <WelcomeIllustration />
@@ -283,16 +290,35 @@ function StepConnectBank() {
         ))}
       </View>
 
+      {/* Supported banks strip */}
+      <View style={styles.bankStripContainer}>
+        <Text style={[styles.bankStripLabel, { color: colors.textSecondary }]}>Supported banks:</Text>
+        <View style={styles.bankStripRow}>
+          {['Barclays', 'HSBC', 'Lloyds', 'NatWest', 'Monzo', 'Starling', 'Revolut', 'Nationwide'].map((bank, i) => (
+            <View key={bank} style={[styles.bankPill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.bankPillText, { color: colors.textSecondary }]}>{bank}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
       {/* Connect button */}
       <Pressable
         style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
         onPress={handleConnectBank}
         disabled={connecting}
       >
-        <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
-        <Text style={styles.ctaButtonText}>
-          {connecting ? 'Connecting...' : 'Connect Bank'}
-        </Text>
+        <LinearGradient
+          colors={['#D4A017', '#CA8A04', '#A16207']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.ctaGradient}
+        >
+          <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
+          <Text style={styles.ctaButtonText}>
+            {connecting ? 'Connecting...' : 'Connect Bank'}
+          </Text>
+        </LinearGradient>
       </Pressable>
 
       {/* Info note */}
@@ -301,6 +327,12 @@ function StepConnectBank() {
         <Text style={[styles.infoNoteText, { color: colors.textSecondary }]}>
           We use Open Banking — we can see transactions but never move money, see your PIN, or access your login details.
         </Text>
+      </View>
+
+      {/* HMRC Recognised badge */}
+      <View style={[styles.hmrcBadge, { backgroundColor: Colors.success + '10', borderColor: Colors.success + '25' }]}>
+        <FontAwesome name="check-circle" size={14} color={Colors.success} style={{ marginRight: Spacing.xs }} />
+        <Text style={[styles.hmrcBadgeText, { color: Colors.success }]}>HMRC Recognised for MTD</Text>
       </View>
     </ScrollView>
   );
@@ -395,8 +427,15 @@ export default function OnboardingScreen() {
             style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
             onPress={handleNext}
           >
-            <Text style={styles.ctaButtonText}>Get Started</Text>
-            <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+            <LinearGradient
+              colors={['#D4A017', '#CA8A04', '#A16207']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              <Text style={styles.ctaButtonText}>Get Started</Text>
+              <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+            </LinearGradient>
           </Pressable>
         )}
 
@@ -410,8 +449,15 @@ export default function OnboardingScreen() {
             onPress={handleNext}
             disabled={!canContinueStep2}
           >
-            <Text style={styles.ctaButtonText}>Continue</Text>
-            <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+            <LinearGradient
+              colors={['#D4A017', '#CA8A04', '#A16207']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              <Text style={styles.ctaButtonText}>Continue</Text>
+              <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
+            </LinearGradient>
           </Pressable>
         )}
 
@@ -752,16 +798,76 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  /* CTA Button (gold) */
+  /* Set up time badge */
+  setupTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    marginBottom: Spacing.md,
+  },
+  setupTimeBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+  },
+
+  /* Bank strip */
+  bankStripContainer: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  bankStripLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    marginBottom: Spacing.sm,
+  },
+  bankStripRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+  },
+  bankPill: {
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 4,
+  },
+  bankPillText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+  },
+
+  /* HMRC badge */
+  hmrcBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    marginTop: Spacing.lg,
+  },
+  hmrcBadgeText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+  },
+
+  /* CTA Button (gold gradient) */
   ctaButton: {
+    borderRadius: BorderRadius.button,
+    overflow: 'hidden' as const,
+    width: '100%',
+    ...Shadows.medium,
+  },
+  ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accent,
     paddingVertical: 14,
-    borderRadius: BorderRadius.button,
-    width: '100%',
-    ...Shadows.medium,
   },
   ctaButtonDisabled: {
     opacity: 0.45,
