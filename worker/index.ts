@@ -269,33 +269,63 @@ authed.get('/dashboard', async (c) => {
   const userId = c.get('userId');
   const { taxYear, quarter } = getCurrentQuarter();
 
-  const user = await queryOne<{ name: string; subscription_tier: string }>(
-    c.env.DB,
-    'SELECT name, subscription_tier FROM users WHERE id = ?',
-    [userId],
-  );
+  const taxYearStart = `${taxYear.split('/')[0]}-04-06`;
 
-  const incomeResult = await queryOne<{ total: number }>(
-    c.env.DB,
-    'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ?',
-    [userId, `${taxYear.split('/')[0]}-04-06`],
-  );
-
-  const expenseResult = await queryOne<{ total: number }>(
-    c.env.DB,
-    'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ?',
-    [userId, `${taxYear.split('/')[0]}-04-06`],
-  );
+  const [
+    user,
+    incomeResult,
+    expenseResult,
+    incomeBySrc,
+    uncatCount,
+    bankCount,
+    overdueInvoices,
+    byMonthRows,
+  ] = await Promise.all([
+    queryOne<{ name: string; subscription_tier: string }>(
+      c.env.DB,
+      'SELECT name, subscription_tier FROM users WHERE id = ?',
+      [userId],
+    ),
+    queryOne<{ total: number }>(
+      c.env.DB,
+      'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ?',
+      [userId, taxYearStart],
+    ),
+    queryOne<{ total: number }>(
+      c.env.DB,
+      'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ?',
+      [userId, taxYearStart],
+    ),
+    query<{ income_source: string; total: number }>(
+      c.env.DB,
+      'SELECT COALESCE(income_source, \'Other\') as income_source, SUM(amount) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? GROUP BY income_source ORDER BY total DESC',
+      [userId, taxYearStart],
+    ),
+    queryOne<{ count: number }>(
+      c.env.DB,
+      'SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND (ai_category IS NULL OR ai_confidence < 0.6)',
+      [userId],
+    ),
+    queryOne<{ count: number }>(
+      c.env.DB,
+      'SELECT COUNT(*) as count FROM bank_connections WHERE user_id = ? AND active = 1',
+      [userId],
+    ),
+    queryOne<{ count: number }>(
+      c.env.DB,
+      'SELECT COUNT(*) as count FROM invoices WHERE user_id = ? AND status = ? AND due_date < date(\'now\')',
+      [userId, 'sent'],
+    ),
+    query<{ month: string; income: number }>(
+      c.env.DB,
+      'SELECT strftime(\'%Y-%m\', transaction_date) as month, SUM(amount) as income FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= date(\'now\', \'-12 months\') GROUP BY month ORDER BY month',
+      [userId],
+    ),
+  ]);
 
   const totalIncome = incomeResult?.total ?? 0;
   const totalExpenses = expenseResult?.total ?? 0;
   const tax = calculateTax({ totalIncome, totalExpenses, quarter, taxYear });
-
-  const incomeBySrc = await query<{ income_source: string; total: number }>(
-    c.env.DB,
-    'SELECT COALESCE(income_source, \'Other\') as income_source, SUM(amount) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? GROUP BY income_source ORDER BY total DESC',
-    [userId, `${taxYear.split('/')[0]}-04-06`],
-  );
 
   const bySource = incomeBySrc.map((s) => ({
     name: s.income_source,
@@ -303,14 +333,11 @@ authed.get('/dashboard', async (c) => {
     percentage: totalIncome > 0 ? Math.round((s.total / totalIncome) * 100) : 0,
   }));
 
+  const byMonth = byMonthRows.map((r) => ({ month: r.month, income: r.income }));
+
   // Compute dynamic action items
   const actions: { id: string; type: string; title: string; subtitle: string; priority: number }[] = [];
 
-  const uncatCount = await queryOne<{ count: number }>(
-    c.env.DB,
-    'SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND (ai_category IS NULL OR ai_confidence < 0.6)',
-    [userId],
-  );
   if (uncatCount && uncatCount.count > 0) {
     actions.push({
       id: 'review_transactions',
@@ -321,11 +348,6 @@ authed.get('/dashboard', async (c) => {
     });
   }
 
-  const bankCount = await queryOne<{ count: number }>(
-    c.env.DB,
-    'SELECT COUNT(*) as count FROM bank_connections WHERE user_id = ? AND status = ?',
-    [userId, 'active'],
-  );
   if (!bankCount || bankCount.count === 0) {
     actions.push({
       id: 'connect_bank',
@@ -336,11 +358,6 @@ authed.get('/dashboard', async (c) => {
     });
   }
 
-  const overdueInvoices = await queryOne<{ count: number }>(
-    c.env.DB,
-    'SELECT COUNT(*) as count FROM invoices WHERE user_id = ? AND status = ? AND due_date < date(\'now\')',
-    [userId, 'sent'],
-  );
   if (overdueInvoices && overdueInvoices.count > 0) {
     actions.push({
       id: 'overdue_invoices',
@@ -374,7 +391,7 @@ authed.get('/dashboard', async (c) => {
   return c.json({
     user: { name: user?.name ?? '', subscriptionTier: user?.subscription_tier ?? 'trialing' },
     tax,
-    income: { total: totalIncome, bySource },
+    income: { total: totalIncome, bySource, byMonth },
     quarters: { current: { taxYear, quarter } },
     actions,
   });
@@ -388,16 +405,18 @@ authed.get('/tax/quarters', async (c) => {
 
   const populated = await Promise.all(
     quarters.map(async (q) => {
-      const income = await queryOne<{ total: number }>(
-        c.env.DB,
-        'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? AND transaction_date <= ?',
-        [userId, q.startDate, q.endDate],
-      );
-      const expenses = await queryOne<{ total: number }>(
-        c.env.DB,
-        'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ? AND transaction_date <= ?',
-        [userId, q.startDate, q.endDate],
-      );
+      const [income, expenses] = await Promise.all([
+        queryOne<{ total: number }>(
+          c.env.DB,
+          'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ? AND transaction_date <= ?',
+          [userId, q.startDate, q.endDate],
+        ),
+        queryOne<{ total: number }>(
+          c.env.DB,
+          'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ? AND transaction_date <= ?',
+          [userId, q.startDate, q.endDate],
+        ),
+      ]);
 
       const qIncome = income?.total ?? 0;
       const qExpenses = expenses?.total ?? 0;

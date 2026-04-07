@@ -147,20 +147,29 @@ async function callClaude(
   prompt: string,
   apiKey: string,
 ): Promise<CategorisationResult[]> {
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'zero-data-retention-2025-04-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+  let response: Response;
+  try {
+    response = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'zero-data-retention-2025-04-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     throw new Error(`Claude API error: ${response.status}`);
@@ -222,26 +231,37 @@ export async function categoriseTransactions(
     }
   }
 
-  // Phase 2: AI categorisation for ambiguous transactions (batches of 30)
+  // Phase 2: AI categorisation for ambiguous transactions (batches of 30, max 3 concurrent)
   if (needsAI.length > 0) {
     const BATCH_SIZE = 30;
+    const CONCURRENCY = 3;
+
+    const batches: AnonymisedTx[][] = [];
     for (let i = 0; i < needsAI.length; i += BATCH_SIZE) {
-      const batch = needsAI.slice(i, i + BATCH_SIZE);
-      const prompt = buildPrompt(batch, corrections);
-      try {
-        const aiResults = await callClaude(prompt, anthropicApiKey);
-        results.push(...aiResults);
-      } catch {
-        // If AI fails, mark as uncategorised with low confidence
-        for (const tx of batch) {
-          results.push({
-            id: tx.id,
-            category: 'personal',
-            confidence: 0.0,
-            incomeSourceType: null,
-            reasoning: 'AI categorisation unavailable — defaulted to personal',
-          });
-        }
+      batches.push(needsAI.slice(i, i + BATCH_SIZE));
+    }
+
+    for (let i = 0; i < batches.length; i += CONCURRENCY) {
+      const chunk = batches.slice(i, i + CONCURRENCY);
+      const chunkResults = await Promise.all(
+        chunk.map(async (batch) => {
+          const prompt = buildPrompt(batch, corrections);
+          try {
+            return await callClaude(prompt, anthropicApiKey);
+          } catch {
+            // If AI fails, mark as uncategorised with low confidence
+            return batch.map((tx) => ({
+              id: tx.id,
+              category: 'personal' as const,
+              confidence: 0.0,
+              incomeSourceType: null,
+              reasoning: 'AI categorisation unavailable — defaulted to personal',
+            }));
+          }
+        }),
+      );
+      for (const batchResult of chunkResults) {
+        results.push(...batchResult);
       }
     }
   }

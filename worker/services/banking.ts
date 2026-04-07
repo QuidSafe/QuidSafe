@@ -265,28 +265,27 @@ export async function syncTransactions(
     toDate,
   );
 
-  let synced = 0;
-  let skipped = 0;
+  // Load all existing bank_transaction_id values for this connection upfront
+  const existingRows = await db
+    .prepare('SELECT bank_transaction_id FROM transactions WHERE bank_connection_id = ? AND user_id = ?')
+    .bind(connection.id, connection.user_id)
+    .all<{ bank_transaction_id: string }>();
 
-  for (const tx of transactions) {
-    // Check for duplicate by bank_transaction_id
-    const existing = await db
-      .prepare('SELECT id FROM transactions WHERE bank_transaction_id = ? AND user_id = ?')
-      .bind(tx.transaction_id, connection.user_id)
-      .first();
+  const existingIds = new Set(existingRows.results.map((r) => r.bank_transaction_id));
 
-    if (existing) {
-      skipped++;
-      continue;
-    }
+  const newTransactions = transactions.filter((tx) => !existingIds.has(tx.transaction_id));
+  const skipped = transactions.length - newTransactions.length;
+  const synced = newTransactions.length;
 
-    const isIncome = tx.amount > 0;
-    await db
-      .prepare(
-        `INSERT INTO transactions (id, user_id, amount, description, merchant_name, raw_category, is_income, bank_connection_id, bank_transaction_id, transaction_date, currency, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-      )
-      .bind(
+  if (newTransactions.length > 0) {
+    const insertStmt = db.prepare(
+      `INSERT INTO transactions (id, user_id, amount, description, merchant_name, raw_category, is_income, bank_connection_id, bank_transaction_id, transaction_date, currency, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+    );
+
+    const batchStatements = newTransactions.map((tx) => {
+      const isIncome = tx.amount > 0;
+      return insertStmt.bind(
         crypto.randomUUID(),
         connection.user_id,
         tx.amount,
@@ -298,10 +297,10 @@ export async function syncTransactions(
         tx.transaction_id,
         tx.timestamp.split('T')[0],
         tx.currency,
-      )
-      .run();
+      );
+    });
 
-    synced++;
+    await db.batch(batchStatements);
   }
 
   // Update last_synced_at
