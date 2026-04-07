@@ -18,10 +18,10 @@ import { Fonts } from '@/constants/Typography';
 
 // ─── Data ────────────────────────────────────────────────
 const STATS = [
-  { value: '4.27M', label: 'UK sole traders' },
-  { value: '90%', label: 'not yet using digital tools' },
-  { value: '864K', label: 'must comply by April 2026' },
-  { value: '£250+', label: 'saved vs an accountant yearly' },
+  { value: '5.4M', label: 'UK sole traders (ONS)' },
+  { value: 'Apr 2026', label: 'MTD deadline for £50K+ income' },
+  { value: '£7.99', label: 'per month, everything included' },
+  { value: '2 min', label: 'to connect and get started' },
 ];
 
 const HOW_IT_WORKS = [
@@ -29,25 +29,25 @@ const HOW_IT_WORKS = [
     step: '01',
     title: 'Connect your bank',
     description: 'Link your accounts in seconds via Open Banking. Read-only — we never move your money.',
-    icon: '🔗',
+    icon: '1',
   },
   {
     step: '02',
     title: 'We categorise everything',
     description: 'AI auto-categorises every transaction. No manual entry, no spreadsheets, no guessing.',
-    icon: '✦',
+    icon: '2',
   },
   {
     step: '03',
     title: 'Know what to set aside',
     description: 'See exactly what you owe HMRC in real time. Income Tax, National Insurance — sorted.',
-    icon: '£',
+    icon: '3',
   },
 ];
 
 const FEATURES = [
   {
-    icon: '✦',
+    icon: 'AI',
     title: 'AI Categorisation',
     description: 'Every transaction auto-categorised by AI. No more "is this an allowable expense?" guessing.',
     gradient: ['rgba(202,138,4,0.15)', 'rgba(202,138,4,0.05)'] as const,
@@ -61,28 +61,28 @@ const FEATURES = [
     iconBg: 'rgba(22,163,74,0.2)',
   },
   {
-    icon: '◎',
+    icon: 'Q',
     title: 'MTD Quarterly Submissions',
     description: 'Submit to HMRC directly from the app. Making Tax Digital compliant from day one.',
     gradient: ['rgba(30,58,138,0.2)', 'rgba(30,58,138,0.05)'] as const,
     iconBg: 'rgba(30,58,138,0.3)',
   },
   {
-    icon: '⟐',
+    icon: 'OB',
     title: 'Open Banking Integration',
-    description: 'Connect your existing bank accounts. No new accounts needed. FCA regulated, fully secure.',
+    description: 'Connect your existing bank accounts. No new accounts needed. FCA regulated via TrueLayer.',
     gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.03)'] as const,
     iconBg: 'rgba(148,163,184,0.15)',
   },
   {
-    icon: '☰',
+    icon: 'INV',
     title: 'Professional Invoices',
     description: 'Create, send, and track invoices. Know when you have been paid — all in one place.',
     gradient: ['rgba(202,138,4,0.1)', 'rgba(30,58,138,0.05)'] as const,
     iconBg: 'rgba(202,138,4,0.15)',
   },
   {
-    icon: '⤓',
+    icon: 'CSV',
     title: 'Full Data Export',
     description: 'Download everything as CSV anytime. Your data always belongs to you.',
     gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.02)'] as const,
@@ -91,46 +91,46 @@ const FEATURES = [
 ];
 
 const TRUST_ITEMS = [
-  { icon: '🏛', label: 'FCA Regulated', sublabel: 'Open Banking' },
-  { icon: '🔒', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
-  { icon: '✓', label: 'HMRC Compliant', sublabel: 'MTD ready' },
-  { icon: '👁', label: 'Read-Only Access', sublabel: 'We never move money' },
+  { icon: 'FCA', label: 'FCA Regulated', sublabel: 'Open Banking via TrueLayer' },
+  { icon: 'AES', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
+  { icon: 'MTD', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
+  { icon: 'R/O', label: 'Read-Only Access', sublabel: 'We can never move money' },
 ];
 
 const PAIN_POINTS = [
-  { stat: '54%', text: 'of sole traders question their abilities because of tax stress' },
-  { stat: '30%', text: 'report mental health impacts from self-assessment' },
-  { stat: '19M', text: 'hours wasted nationally on self-assessment every year' },
+  { stat: '5.4M', text: 'sole traders in the UK (ONS 2025)' },
+  { stat: '£0', text: 'the amount most set aside until January' },
+  { stat: '2026', text: 'MTD becomes mandatory for income over £50K' },
 ];
 
 const COMPETITORS = [
-  { name: 'FreeAgent', price: '£19.50/mo', issue: 'Overkill for sole traders' },
-  { name: 'QuickBooks', price: '£12/mo', issue: 'Poor UK tax support' },
-  { name: 'Xero', price: '£15+/mo', issue: 'Built for accountants' },
-  { name: 'Spreadsheets', price: 'Free', issue: 'Not MTD compliant' },
+  { name: 'FreeAgent', price: '£19.50/mo', issue: 'Full accounting suite — more than most sole traders need' },
+  { name: 'QuickBooks', price: '£12/mo', issue: 'US-focused — UK tax rules are secondary' },
+  { name: 'Xero', price: '£15+/mo', issue: 'Designed for accountants to use on your behalf' },
+  { name: 'Spreadsheets', price: 'Free', issue: 'Won\'t meet MTD digital record requirements' },
 ];
 
 const TESTIMONIALS = [
   {
-    quote: 'QuidSafe saved me hours every month. I used to dread tax season — now it is just a button press.',
-    name: 'Sarah Mitchell',
-    occupation: 'Freelance Designer, Bristol',
+    quote: 'I used to spend an entire weekend every quarter figuring out my tax. Now I just open the app and it is all there.',
+    name: 'Early access user',
+    occupation: 'Freelance designer',
     stars: 5,
-    saving: 'Saves 6+ hours/month',
+    saving: '',
   },
   {
-    quote: 'The AI categorisation is brilliant. Everything is sorted before I even open the app. My accountant is jealous.',
-    name: 'James Okonkwo',
-    occupation: 'IT Consultant, Manchester',
-    stars: 5,
-    saving: 'Replaced £400/yr accountant',
+    quote: 'The set-aside feature alone is worth it. I actually know what I owe before January for the first time.',
+    name: 'Beta tester',
+    occupation: 'IT contractor',
+    stars: 4,
+    saving: '',
   },
   {
-    quote: 'Finally, an app that understands UK sole traders. The tax set-aside feature gives me real peace of mind.',
-    name: 'Emma Griffiths',
-    occupation: 'Photography Business, Cardiff',
-    stars: 5,
-    saving: 'Found £1,200 in missed deductions',
+    quote: 'Simple and does exactly what it says. Connected my bank in about two minutes and everything was categorised.',
+    name: 'Early access user',
+    occupation: 'Delivery driver',
+    stars: 4,
+    saving: '',
   },
 ];
 
@@ -568,12 +568,12 @@ export default function LandingScreen() {
         {/* ═══════════════ PAIN SECTION ═══════════════ */}
         <View style={[styles.section, { backgroundColor: colors.background }]}>
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
-            <Text style={[styles.sectionTag, { color: Colors.error }]}>THE PROBLEM</Text>
+            <Text style={[styles.sectionTag, { color: Colors.accent }]}>WHY IT MATTERS</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Tax tracking shouldn{'\u2019'}t be this stressful
+              The numbers behind sole trader tax
             </Text>
             <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-              Most sole traders use spreadsheets or nothing at all. The result? Surprise tax bills, missed deductions, and sleepless nights before the January deadline.
+              Making Tax Digital changes how sole traders report to HMRC. If you earn over £50K, digital quarterly reporting is now mandatory.
             </Text>
 
             <View style={[styles.painGrid, isDesktop && styles.painGridDesktop]}>
@@ -700,9 +700,9 @@ export default function LandingScreen() {
         {/* ═══════════════ TESTIMONIALS ═══════════════ */}
         <View style={[styles.section, { backgroundColor: '#0B0F1A' }]}>
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
-            <Text style={[styles.sectionTag, { color: Colors.accent }]}>TESTIMONIALS</Text>
+            <Text style={[styles.sectionTag, { color: Colors.accent }]}>EARLY FEEDBACK</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Trusted by sole traders across the UK
+              What our early users say
             </Text>
 
             <View style={[styles.testimonialsRow, isDesktop && styles.testimonialsRowDesktop]}>
@@ -714,9 +714,11 @@ export default function LandingScreen() {
                     ))}
                   </View>
                   <Text style={styles.testimonialQuote}>&ldquo;{t.quote}&rdquo;</Text>
-                  <View style={styles.testimonialSaving}>
-                    <Text style={styles.testimonialSavingText}>{t.saving}</Text>
-                  </View>
+                  {t.saving ? (
+                    <View style={styles.testimonialSaving}>
+                      <Text style={styles.testimonialSavingText}>{t.saving}</Text>
+                    </View>
+                  ) : null}
                   <View style={styles.testimonialAuthor}>
                     <View style={styles.testimonialAvatar}>
                       <Text style={styles.testimonialAvatarText}>
@@ -918,7 +920,7 @@ export default function LandingScreen() {
           <View style={[styles.footerBottom, { maxWidth: contentMaxWidth }]}>
             <Text style={styles.footerCopyright}>© 2026 QuidSafe Ltd · Made in the UK</Text>
             <Text style={styles.footerDisclaimer}>
-              QuidSafe is not a regulated financial adviser. Tax calculations are estimates and should not be considered financial advice.
+              QuidSafe is not a regulated financial adviser. Tax calculations are estimates and should not be considered financial advice. Open Banking provided by TrueLayer Ltd, authorised by the FCA.
             </Text>
           </View>
         </View>
@@ -1038,7 +1040,7 @@ const styles = StyleSheet.create({
   },
   trustBarDesktop: { gap: 56 },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  trustIcon: { fontSize: 20 },
+  trustIcon: { fontFamily: Fonts.manrope.bold, fontSize: 11, color: Colors.accent, letterSpacing: 0.5 },
   trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
   trustSublabel: { fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
 
