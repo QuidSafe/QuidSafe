@@ -505,7 +505,7 @@ export default function StatusScreen() {
         {/* Section 2 — Financial Summary */}
         <Animated.View style={{ opacity: sectionAnims[1].fade, transform: [{ translateY: sectionAnims[1].slide }] }}>
         <SectionTitle title="Financial Summary" colors={colors} />
-        <Card style={styles.cardPadding}>
+        <Card style={[styles.cardPadding, styles.goldLeftBorder]}>
           {dashboard.isLoading ? (
             <ActivityIndicator size="small" color={Colors.secondary} />
           ) : (
@@ -1167,8 +1167,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingVertical: Spacing.sm + 2,
+    marginTop: Spacing.xs,
   },
   linkText: {
     fontFamily: 'Manrope_600SemiBold',
@@ -1180,6 +1180,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     fontSize: 13,
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: Spacing.md,
+  },
+
+  // Gold accent left border for key sections
+  goldLeftBorder: {
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
   },
 });
