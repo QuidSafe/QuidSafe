@@ -123,7 +123,14 @@ app.use('*', logger((str) => {
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:8081', 'https://quidsafe.co.uk', 'https://app.quidsafe.co.uk', 'https://quidsafe.pages.dev'],
+    origin: (origin: string) => {
+      const allowed = ['http://localhost:8081', 'https://quidsafe.co.uk', 'https://app.quidsafe.co.uk', 'https://quidsafe.pages.dev'];
+      // Allow exact matches + Cloudflare Pages preview deployments
+      if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
+        return origin;
+      }
+      return allowed[0]; // fallback
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
@@ -1050,14 +1057,16 @@ authed.post('/billing/checkout', async (c) => {
   }
   const body = result.data;
   const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
-  const session = await createCheckoutSession(userId, body.plan, config, c.env.DB);
+  const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+  const session = await createCheckoutSession(userId, body.plan, config, c.env.DB, appUrl);
   return c.json(session);
 });
 
 authed.post('/billing/portal', async (c) => {
   const userId = c.get('userId');
   const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
-  const session = await createPortalSession(userId, config, c.env.DB);
+  const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+  const session = await createPortalSession(userId, config, c.env.DB, appUrl);
   return c.json(session);
 });
 

@@ -39,6 +39,7 @@ export async function createCheckoutSession(
   plan: 'monthly' | 'annual',
   config: StripeConfig,
   db: D1Database,
+  appUrl = 'https://quidsafe.pages.dev',
 ): Promise<{ url: string }> {
   // Get or create Stripe customer
   let user = await queryOne<{ stripe_customer_id: string; email: string }>(
@@ -72,8 +73,8 @@ export async function createCheckoutSession(
     'line_items[0][price_data][currency]': 'gbp',
     'line_items[0][price_data][product_data][name]': 'QuidSafe Pro',
     ...priceParam,
-    success_url: 'https://app.quidsafe.co.uk/billing/success?session_id={CHECKOUT_SESSION_ID}',
-    cancel_url: 'https://app.quidsafe.co.uk/billing/cancel',
+    success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${appUrl}/billing/cancel`,
     'subscription_data[trial_period_days]': '14',
     'subscription_data[metadata][user_id]': userId,
     'metadata[user_id]': userId,
@@ -89,6 +90,7 @@ export async function createPortalSession(
   userId: string,
   config: StripeConfig,
   db: D1Database,
+  appUrl = 'https://quidsafe.pages.dev',
 ): Promise<{ url: string }> {
   const user = await queryOne<{ stripe_customer_id: string }>(
     db,
@@ -102,7 +104,7 @@ export async function createPortalSession(
 
   const params = new URLSearchParams({
     customer: user.stripe_customer_id,
-    return_url: 'https://app.quidsafe.co.uk/settings',
+    return_url: `${appUrl}/settings`,
   });
 
   const session = await stripeRequest<{ url: string }>('/billing_portal/sessions', config, { body: params });
