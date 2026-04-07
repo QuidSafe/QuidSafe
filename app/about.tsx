@@ -64,7 +64,7 @@ export default function AboutScreen() {
 
         <Section title="Our Mission">
           <Paragraph>
-            There are 5.4 million sole traders in the UK. Most are skilled at what they do, whether that is plumbing, photography, consulting, or freelance design, but few enjoy the tax side of running a business. HMRC's Making Tax Digital programme is making quarterly reporting mandatory, and many sole traders are not prepared.
+            There are 5.4 million sole traders in the UK. Most are skilled at what they do, whether that is plumbing, photography, consulting, or freelance design, but few enjoy the tax side of running a business. HMRC&apos;s Making Tax Digital programme is making quarterly reporting mandatory, and many sole traders are not prepared.
           </Paragraph>
           <Paragraph>
             QuidSafe exists to make tax simple. We believe every sole trader should be able to understand their tax position at a glance, without needing an accounting degree or an expensive bookkeeper.

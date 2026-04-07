@@ -12,11 +12,6 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const appState = useRef(AppState.currentState);
 
-  // Skip entirely on web
-  if (Platform.OS === 'web') {
-    return <>{children}</>;
-  }
-
   const unlock = useCallback(async () => {
     const success = await authenticate();
     if (success) {
@@ -66,6 +61,11 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
       subscription.remove();
     };
   }, [fadeAnim, unlock]);
+
+  // Skip entirely on web
+  if (Platform.OS === 'web') {
+    return <>{children}</>;
+  }
 
   if (checking) {
     return null;

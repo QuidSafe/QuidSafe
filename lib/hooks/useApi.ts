@@ -176,7 +176,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; notifyTaxDeadlines?: boolean; notifyWeeklySummary?: boolean; notifyTransactionAlerts?: boolean; notifyMtdReady?: boolean }) =>
+    mutationFn: (data: { name?: string; nino?: string; notifyTaxDeadlines?: boolean; notifyWeeklySummary?: boolean; notifyTransactionAlerts?: boolean; notifyMtdReady?: boolean }) =>
       api.updateSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });

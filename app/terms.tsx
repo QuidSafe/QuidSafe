@@ -55,7 +55,7 @@ export default function TermsOfServiceScreen() {
         <Text style={[styles.updated, { color: colors.textSecondary }]}>Last updated: April 2026</Text>
 
         <Paragraph>
-          These Terms of Service ("Terms") govern your use of the QuidSafe application and services provided by QuidSafe Ltd ("we", "us", "our"), a company registered in England and Wales. By creating an account or using QuidSafe, you agree to be bound by these Terms.
+          These Terms of Service (&quot;Terms&quot;) govern your use of the QuidSafe application and services provided by QuidSafe Ltd (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;), a company registered in England and Wales. By creating an account or using QuidSafe, you agree to be bound by these Terms.
         </Paragraph>
 
         <Section title="1. Service Description">

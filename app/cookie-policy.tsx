@@ -81,7 +81,7 @@ export default function CookiePolicyScreen() {
 
         <Section title="4. Local Storage">
           <Paragraph>
-            In addition to cookies, QuidSafe uses your browser's local storage for the following purposes:
+            In addition to cookies, QuidSafe uses your browser&apos;s local storage for the following purposes:
           </Paragraph>
           <BulletList
             items={[
@@ -110,7 +110,7 @@ export default function CookiePolicyScreen() {
             You can clear cookies at any time through your browser settings. Most browsers allow you to block or delete cookies under their privacy or security settings. Please note that clearing essential cookies will sign you out of QuidSafe and you will need to log in again.
           </Paragraph>
           <Paragraph>
-            To clear local storage, you can use your browser's developer tools or clear all site data through your browser's settings for quidsafe.pages.dev.
+            To clear local storage, you can use your browser&apos;s developer tools or clear all site data through your browser&apos;s settings for quidsafe.pages.dev.
           </Paragraph>
         </Section>
 

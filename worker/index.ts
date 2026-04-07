@@ -70,6 +70,7 @@ export interface Env {
   HMRC_CLIENT_SECRET: string;
   ENCRYPTION_KEY: string;
   ANTHROPIC_API_KEY: string;
+  APP_URL?: string;
 }
 
 type AuthedEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };

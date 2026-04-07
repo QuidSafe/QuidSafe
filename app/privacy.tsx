@@ -219,7 +219,7 @@ export default function PrivacyPolicyScreen() {
             QuidSafe Ltd{'\n'}Data Protection Officer{'\n'}United Kingdom
           </Paragraph>
           <Paragraph>
-            You also have the right to lodge a complaint with the Information Commissioner's Office (ICO) at ico.org.uk if you are not satisfied with how we handle your data.
+            You also have the right to lodge a complaint with the Information Commissioner&apos;s Office (ICO) at ico.org.uk if you are not satisfied with how we handle your data.
           </Paragraph>
         </Section>
 
