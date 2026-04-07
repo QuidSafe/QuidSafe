@@ -1,9 +1,11 @@
-import { useCallback } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { useCallback, useRef, useEffect } from 'react';
+import { StyleSheet, View, Text, Pressable, Animated } from 'react-native';
 import { Link } from 'expo-router';
 import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -12,6 +14,54 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
   const { colors } = useTheme();
+
+  // ── Orchestrated entrance ──
+  const logoFade = useRef(new Animated.Value(0)).current;
+  const logoSlide = useRef(new Animated.Value(-20)).current;
+  const accentScale = useRef(new Animated.Value(0)).current;
+  const bodyFade = useRef(new Animated.Value(0)).current;
+  const bodySlide = useRef(new Animated.Value(24)).current;
+  const ctaFade = useRef(new Animated.Value(0)).current;
+  const ctaScale = useRef(new Animated.Value(0.9)).current;
+  const footerFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, dur: number) =>
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration: dur, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration: dur, useNativeDriver: true }),
+      ]);
+
+    // 1. Logo drops in
+    fadeSlide(logoFade, logoSlide, 500).start();
+
+    // 2. Gold accent line scales from center
+    Animated.sequence([
+      Animated.delay(250),
+      Animated.spring(accentScale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
+    ]).start();
+
+    // 3. Body content rises
+    Animated.sequence([
+      Animated.delay(400),
+      fadeSlide(bodyFade, bodySlide, 450),
+    ]).start();
+
+    // 4. CTA buttons pop in
+    Animated.sequence([
+      Animated.delay(650),
+      Animated.parallel([
+        Animated.timing(ctaFade, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.spring(ctaScale, { toValue: 1, friction: 6, tension: 70, useNativeDriver: true }),
+      ]),
+    ]).start();
+
+    // 5. Footer fades
+    Animated.sequence([
+      Animated.delay(850),
+      Animated.timing(footerFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
@@ -25,158 +75,293 @@ export default function LoginScreen() {
   }, [startSSOFlow]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={styles.logo} accessibilityRole="header">QuidSafe</Text>
-        <View style={styles.goldAccent} />
-        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your tax. Sorted. Safe.</Text>
-        <Text style={[styles.descriptor, { color: colors.textSecondary }]}>
-          Tax tracking for UK sole traders
-        </Text>
-      </View>
+    <View style={s.root}>
+      <LinearGradient
+        colors={['#080C18', '#0C1222', '#142044', '#0C1222', '#080C18']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
-      <View style={styles.form}>
-        <View style={[styles.trustBadge, { borderColor: colors.border }]}>
-          <Text style={styles.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
-        </View>
+      {/* Atmospheric glows */}
+      <View style={s.glowGold} />
+      <View style={s.glowBlue} />
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.googleButton,
-            { shadowColor: colors.shadowColor },
-            pressed && styles.pressed,
-          ]}
-          onPress={handleGoogleSignIn}
-          accessibilityRole="button"
-          accessibilityLabel="Continue with Google"
-          accessibilityHint="Tap to sign in with your Google account"
-        >
-          <Text style={styles.googleText}>Continue with Google</Text>
-        </Pressable>
+      <SafeAreaView style={s.safe}>
+        {/* ── Brand ── */}
+        <Animated.View style={[s.brandWrap, { opacity: logoFade, transform: [{ translateY: logoSlide }] }]}>
+          <Text style={s.logo}>QuidSafe</Text>
+          <Animated.View style={[s.accentBar, { transform: [{ scaleX: accentScale }] }]} />
+          <Text style={s.tagline}>Your tax. Sorted. Safe.</Text>
+        </Animated.View>
 
-        <View style={styles.divider}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or</Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-        </View>
+        {/* ── Content ── */}
+        <Animated.View style={[s.content, { opacity: bodyFade, transform: [{ translateY: bodySlide }] }]}>
+          {/* Value props */}
+          <View style={s.propsRow}>
+            {[
+              { icon: 'bolt' as const, text: 'Auto-track income' },
+              { icon: 'calculator' as const, text: 'Real-time tax' },
+              { icon: 'shield' as const, text: 'MTD ready' },
+            ].map((p) => (
+              <View key={p.text} style={s.propChip}>
+                <FontAwesome name={p.icon} size={11} color={Colors.accent} />
+                <Text style={s.propText}>{p.text}</Text>
+              </View>
+            ))}
+          </View>
 
-        <Link href="/(auth)/signup" asChild>
-          <Pressable style={({ pressed }) => [styles.emailButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Continue with Email" accessibilityHint="Tap to sign up or sign in with your email address">
-            <Text style={styles.emailText}>Continue with Email</Text>
+          {/* Trust badge */}
+          <View style={s.trustBadge}>
+            <FontAwesome name="lock" size={10} color="rgba(202,138,4,0.6)" />
+            <Text style={s.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
+          </View>
+        </Animated.View>
+
+        {/* ── Auth buttons ── */}
+        <Animated.View style={[s.authSection, { opacity: ctaFade, transform: [{ scale: ctaScale }] }]}>
+          {/* Google SSO */}
+          <Pressable
+            style={({ pressed }) => [s.googleBtn, pressed && s.pressed]}
+            onPress={handleGoogleSignIn}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+          >
+            <LinearGradient
+              colors={['#D4A017', '#CA8A04', '#A16207']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={s.googleGradient}
+            >
+              <FontAwesome name="google" size={18} color="#FFF" />
+              <Text style={s.googleText}>Continue with Google</Text>
+            </LinearGradient>
           </Pressable>
-        </Link>
-      </View>
 
-      <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </Text>
-      </View>
-    </SafeAreaView>
+          {/* Divider */}
+          <View style={s.divider}>
+            <View style={s.dividerLine} />
+            <Text style={s.dividerText}>or</Text>
+            <View style={s.dividerLine} />
+          </View>
+
+          {/* Email */}
+          <Link href="/(auth)/signup" asChild>
+            <Pressable
+              style={({ pressed }) => [s.emailBtn, pressed && s.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Continue with Email"
+            >
+              <FontAwesome name="envelope-o" size={16} color={Colors.white} style={{ marginRight: 10 }} />
+              <Text style={s.emailText}>Continue with Email</Text>
+            </Pressable>
+          </Link>
+        </Animated.View>
+
+        {/* ── Footer ── */}
+        <Animated.View style={[s.footer, { opacity: footerFade }]}>
+          <Text style={s.footerText}>
+            By continuing, you agree to our{' '}
+            <Link href="/terms"><Text style={s.footerLink}>Terms of Service</Text></Link>
+            {' '}and{' '}
+            <Link href="/privacy"><Text style={s.footerLink}>Privacy Policy</Text></Link>
+          </Text>
+          <Text style={s.footerSub}>Tax tracking for UK sole traders</Text>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const s = StyleSheet.create({
+  root: {
     flex: 1,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: '#080C18',
   },
-  header: {
+  safe: {
     flex: 1,
+    paddingHorizontal: Spacing.lg + 4,
     justifyContent: 'center',
+  },
+
+  // Atmospheric glows
+  glowGold: {
+    position: 'absolute',
+    top: '15%',
+    right: -60,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(202, 138, 4, 0.08)',
+  },
+  glowBlue: {
+    position: 'absolute',
+    bottom: '20%',
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(30, 58, 138, 0.12)',
+  },
+
+  // Brand
+  brandWrap: {
     alignItems: 'center',
+    marginBottom: 40,
   },
   logo: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 44,
-    color: Colors.primary,
+    fontSize: 48,
+    color: Colors.white,
+    letterSpacing: -1,
   },
-  goldAccent: {
-    width: 32,
+  accentBar: {
+    width: 40,
     height: 3,
     borderRadius: 2,
     backgroundColor: Colors.accent,
-    marginTop: Spacing.sm,
+    marginTop: 12,
+    marginBottom: 14,
   },
   tagline: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 16,
-    marginTop: Spacing.md,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.3,
   },
-  descriptor: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    marginTop: Spacing.xs,
-    opacity: 0.7,
+
+  // Value props
+  content: {
+    marginBottom: 32,
   },
-  form: {
-    flex: 1,
+  propsRow: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    gap: Spacing.md,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
   },
-  trustBadge: {
-    backgroundColor: Colors.secondary + '10',
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.pill,
+  propChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: BorderRadius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderWidth: 1,
-    ...Shadows.soft,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  propText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+  },
+
+  // Trust
+  trustBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(202, 138, 4, 0.06)',
+    borderRadius: BorderRadius.pill,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(202, 138, 4, 0.12)',
   },
   trustText: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: Colors.secondary,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 0.2,
   },
-  googleButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: BorderRadius.button,
+
+  // Auth section
+  authSection: {
+    gap: 14,
+    marginBottom: 32,
+  },
+
+  // Google button — gold gradient
+  googleBtn: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    ...Shadows.medium,
+  },
+  googleGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
-    ...Shadows.large,
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 16,
   },
   googleText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: 'Manrope_800ExtraBold',
     fontSize: 16,
     color: Colors.white,
+    letterSpacing: -0.2,
   },
+
+  // Divider
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: 14,
   },
   dividerLine: {
     flex: 1,
     height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   dividerText: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 14,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.3)',
   },
-  emailButton: {
-    paddingVertical: 16,
-    borderRadius: BorderRadius.button,
+
+  // Email button — glass outline
+  emailBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   emailText: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 16,
-    color: Colors.primary,
+    fontSize: 15,
+    color: Colors.white,
   },
+
   pressed: {
     opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+    transform: [{ scale: 0.97 }],
   },
+
+  // Footer
   footer: {
-    paddingBottom: Spacing.xl,
     alignItems: 'center',
+    gap: 8,
   },
   footerText: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
+    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
+    lineHeight: 18,
+  },
+  footerLink: {
+    color: Colors.accent,
+    textDecorationLine: 'underline',
+  },
+  footerSub: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.2)',
   },
 });

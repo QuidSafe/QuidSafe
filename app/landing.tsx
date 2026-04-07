@@ -445,6 +445,7 @@ export default function LandingScreen() {
   const colors = Colors.dark;
   const scrollRef = useRef<ScrollView>(null);
   const featuresYRef = useRef(0);
+  const pricingYRef = useRef(0);
 
   const isDesktop = width >= 768;
   const isWide = width >= 1024;
@@ -453,6 +454,12 @@ export default function LandingScreen() {
   const scrollToFeatures = useCallback(() => {
     if (scrollRef.current && featuresYRef.current > 0) {
       scrollRef.current.scrollTo({ y: featuresYRef.current, animated: true });
+    }
+  }, []);
+
+  const scrollToPricing = useCallback(() => {
+    if (scrollRef.current && pricingYRef.current > 0) {
+      scrollRef.current.scrollTo({ y: pricingYRef.current, animated: true });
     }
   }, []);
 
@@ -728,7 +735,7 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ PRICING ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: colors.background }]}>
+        <View style={[styles.section, { backgroundColor: colors.background }]} onLayout={(e) => { pricingYRef.current = e.nativeEvent.layout.y; }}>
           <View style={[styles.sectionInner, { maxWidth: 560 }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>PRICING</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -889,21 +896,21 @@ export default function LandingScreen() {
             <View style={[styles.footerColsRow, isDesktop && styles.footerColsRowDesktop]}>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Product</Text>
-                <Text style={styles.footerLink}>Features</Text>
-                <Text style={styles.footerLink}>Pricing</Text>
-                <Text style={styles.footerLink}>MTD Guide</Text>
+                <Pressable onPress={scrollToFeatures}><Text style={styles.footerLink}>Features</Text></Pressable>
+                <Pressable onPress={scrollToPricing}><Text style={styles.footerLink}>Pricing</Text></Pressable>
+                <Link href="/mtd" asChild><Pressable><Text style={styles.footerLink}>MTD Guide</Text></Pressable></Link>
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Company</Text>
-                <Text style={styles.footerLink}>About</Text>
-                <Text style={styles.footerLink}>Contact</Text>
-                <Text style={styles.footerLink}>Blog</Text>
+                <Link href="/landing" asChild><Pressable><Text style={styles.footerLink}>About</Text></Pressable></Link>
+                <Link href="/landing" asChild><Pressable><Text style={styles.footerLink}>Contact</Text></Pressable></Link>
+                <Link href="/learn" asChild><Pressable><Text style={styles.footerLink}>Blog</Text></Pressable></Link>
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Legal</Text>
-                <Text style={styles.footerLink}>Privacy Policy</Text>
-                <Text style={styles.footerLink}>Terms of Service</Text>
-                <Text style={styles.footerLink}>Cookie Policy</Text>
+                <Link href="/privacy" asChild><Pressable><Text style={styles.footerLink}>Privacy Policy</Text></Pressable></Link>
+                <Link href="/terms" asChild><Pressable><Text style={styles.footerLink}>Terms of Service</Text></Pressable></Link>
+                <Link href="/privacy" asChild><Pressable><Text style={styles.footerLink}>Cookie Policy</Text></Pressable></Link>
               </View>
             </View>
           </View>
