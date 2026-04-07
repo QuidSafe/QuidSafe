@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,12 +26,14 @@ import {
 } from '@/components/ui/OnboardingIllustrations';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const MAX_SLIDE_WIDTH = 480;
 const TOTAL_STEPS = 3;
 
 /* ------------------------------------------------------------------ */
 /*  Progress Dots                                                      */
 /* ------------------------------------------------------------------ */
 function ProgressDots({ current }: { current: number }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.dotsRow}>
       {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -45,7 +48,7 @@ function ProgressDots({ current }: { current: number }) {
                   ? Colors.accent
                   : i < current
                   ? Colors.accent + '60'
-                  : Colors.grey[300],
+                  : colors.border,
             },
           ]}
         />
@@ -310,6 +313,8 @@ export default function OnboardingScreen() {
   const { colors } = useTheme();
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const { width: windowWidth } = useWindowDimensions();
+  const slideWidth = Platform.OS === 'web' ? Math.min(windowWidth, MAX_SLIDE_WIDTH) : SCREEN_WIDTH;
 
   // Step 2 form state
   const [businessName, setBusinessName] = useState('');
@@ -318,14 +323,14 @@ export default function OnboardingScreen() {
   const animateTo = useCallback(
     (nextStep: number) => {
       Animated.spring(slideAnim, {
-        toValue: -nextStep * SCREEN_WIDTH,
+        toValue: -nextStep * slideWidth,
         useNativeDriver: true,
         tension: 80,
         friction: 14,
       }).start();
       setStep(nextStep);
     },
-    [slideAnim]
+    [slideAnim, slideWidth]
   );
 
   const handleNext = () => {
@@ -349,6 +354,7 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.innerContainer, Platform.OS === 'web' && { maxWidth: MAX_SLIDE_WIDTH, alignSelf: 'center' as const, width: '100%' as unknown as number }]}>
       {/* Top bar: back button + dots */}
       <View style={styles.topBar}>
         {step > 0 ? (
@@ -366,10 +372,10 @@ export default function OnboardingScreen() {
       <Animated.View
         style={[styles.slides, { transform: [{ translateX: slideAnim }] }]}
       >
-        <View style={{ width: SCREEN_WIDTH }}>
+        <View style={{ width: slideWidth }}>
           <StepWelcome />
         </View>
-        <View style={{ width: SCREEN_WIDTH }}>
+        <View style={{ width: slideWidth }}>
           <StepBusinessInfo
             businessName={businessName}
             onBusinessNameChange={setBusinessName}
@@ -377,7 +383,7 @@ export default function OnboardingScreen() {
             onDisclaimerChange={setDisclaimerChecked}
           />
         </View>
-        <View style={{ width: SCREEN_WIDTH }}>
+        <View style={{ width: slideWidth }}>
           <StepConnectBank />
         </View>
       </Animated.View>
@@ -416,6 +422,7 @@ export default function OnboardingScreen() {
             </Text>
           </Pressable>
         )}
+      </View>
       </View>
     </SafeAreaView>
   );

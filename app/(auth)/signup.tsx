@@ -1,8 +1,10 @@
-import { useState, useRef, useMemo } from 'react';
-import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -18,6 +20,33 @@ export default function SignupScreen() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [codeFocused, setCodeFocused] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+
+  // Entrance animations
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-20)).current;
+  const formFade = useRef(new Animated.Value(0)).current;
+  const formSlide = useRef(new Animated.Value(24)).current;
+  const footerFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, dur: number) =>
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration: dur, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration: dur, useNativeDriver: true }),
+      ]);
+
+    fadeSlide(headerFade, headerSlide, 500).start();
+
+    Animated.sequence([
+      Animated.delay(300),
+      fadeSlide(formFade, formSlide, 450),
+    ]).start();
+
+    Animated.sequence([
+      Animated.delay(550),
+      Animated.timing(footerFade, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const emailError = useMemo(() => {
@@ -63,171 +92,261 @@ export default function SignupScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={styles.title} accessibilityRole="header">
-          {pendingVerification ? 'Check your email' : 'Create your account'}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          {pendingVerification
-            ? `We sent a code to ${email}`
-            : 'Start tracking your tax in minutes'}
-        </Text>
-      </View>
+    <View style={s.root}>
+      <LinearGradient
+        colors={['#080C18', '#0C1222', '#142044', '#0C1222', '#080C18']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
-      <View style={styles.form}>
-        {!pendingVerification ? (
-          <>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: emailTouched && emailError
-                    ? Colors.error
-                    : emailFocused
-                    ? Colors.secondary
-                    : colors.border,
-                  borderWidth: emailFocused ? 2 : 1,
-                },
-              ]}
-              placeholder="Email address"
-              placeholderTextColor={colors.textSecondary}
-              value={email}
-              onChangeText={setEmail}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={() => {
-                setEmailFocused(false);
-                setEmailTouched(true);
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-            />
-            {emailTouched && emailError ? (
-              <Text style={styles.fieldError}>{emailError}</Text>
-            ) : null}
-            <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                (!isSignupValid || loading) && styles.buttonDisabled,
-                pressed && styles.pressed,
-              ]}
-              onPress={handleSignUp}
-              disabled={!isSignupValid || loading}
-              accessibilityRole="button"
-              accessibilityLabel="Send verification code"
-              accessibilityHint="Tap to send a verification code to your email"
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.white} />
-              ) : (
-                <Text style={styles.buttonText}>Send Verification Code</Text>
-              )}
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderColor: codeFocused ? Colors.secondary : colors.border,
-                  borderWidth: codeFocused ? 2 : 1,
-                },
-              ]}
-              placeholder="Enter 6-digit code"
-              placeholderTextColor={colors.textSecondary}
-              value={code}
-              onChangeText={setCode}
-              onFocus={() => setCodeFocused(true)}
-              onBlur={() => setCodeFocused(false)}
-              keyboardType="number-pad"
-              maxLength={6}
-            />
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-              onPress={handleVerify}
-              disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel="Verify and continue"
-              accessibilityHint="Tap to verify your email code and continue"
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.white} />
-              ) : (
-                <Text style={styles.buttonText}>Verify & Continue</Text>
-              )}
-            </Pressable>
-          </>
-        )}
+      {/* Atmospheric glows */}
+      <View style={s.glowGold} />
+      <View style={s.glowBlue} />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-      </View>
+      <SafeAreaView style={s.safe}>
+        {/* Header */}
+        <Animated.View style={[s.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
+          <Text style={s.title} accessibilityRole="header">
+            {pendingVerification ? 'Check your email' : 'Create your account'}
+          </Text>
+          <View style={s.accentBar} />
+          <Text style={s.subtitle}>
+            {pendingVerification
+              ? `We sent a code to ${email}`
+              : 'Start tracking your tax in minutes'}
+          </Text>
+        </Animated.View>
 
-      <View style={styles.footer}>
-        <Pressable onPress={() => router.back()} accessibilityRole="link" accessibilityLabel="Back to login">
-          <Text style={styles.backLink}>Back to login</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+        {/* Form */}
+        <Animated.View style={[s.form, { opacity: formFade, transform: [{ translateY: formSlide }] }]}>
+          {!pendingVerification ? (
+            <>
+              <View style={[
+                s.inputWrap,
+                emailFocused && s.inputFocused,
+                emailTouched && emailError ? s.inputError : null,
+              ]}>
+                <FontAwesome name="envelope-o" size={15} color="rgba(255,255,255,0.35)" style={{ marginRight: 12 }} />
+                <TextInput
+                  style={s.input}
+                  placeholder="Email address"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={email}
+                  onChangeText={setEmail}
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={() => {
+                    setEmailFocused(false);
+                    setEmailTouched(true);
+                  }}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                />
+              </View>
+              {emailTouched && emailError ? (
+                <Text style={s.fieldError}>{emailError}</Text>
+              ) : null}
+
+              <Pressable
+                style={({ pressed }) => [
+                  s.ctaBtn,
+                  (!isSignupValid || loading) && s.ctaBtnDisabled,
+                  pressed && s.pressed,
+                ]}
+                onPress={handleSignUp}
+                disabled={!isSignupValid || loading}
+                accessibilityRole="button"
+                accessibilityLabel="Send verification code"
+                accessibilityHint="Tap to send a verification code to your email"
+              >
+                {loading ? (
+                  <ActivityIndicator color={Colors.white} />
+                ) : (
+                  <LinearGradient
+                    colors={['#D4A017', '#CA8A04', '#A16207']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={s.ctaGradient}
+                  >
+                    <Text style={s.ctaText}>Send Verification Code</Text>
+                  </LinearGradient>
+                )}
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <View style={[s.inputWrap, codeFocused && s.inputFocused]}>
+                <FontAwesome name="lock" size={16} color="rgba(255,255,255,0.35)" style={{ marginRight: 12 }} />
+                <TextInput
+                  style={s.input}
+                  placeholder="Enter 6-digit code"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={code}
+                  onChangeText={setCode}
+                  onFocus={() => setCodeFocused(true)}
+                  onBlur={() => setCodeFocused(false)}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [s.ctaBtn, pressed && s.pressed]}
+                onPress={handleVerify}
+                disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Verify and continue"
+                accessibilityHint="Tap to verify your email code and continue"
+              >
+                {loading ? (
+                  <ActivityIndicator color={Colors.white} />
+                ) : (
+                  <LinearGradient
+                    colors={['#D4A017', '#CA8A04', '#A16207']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={s.ctaGradient}
+                  >
+                    <Text style={s.ctaText}>Verify & Continue</Text>
+                  </LinearGradient>
+                )}
+              </Pressable>
+            </>
+          )}
+
+          {error ? <Text style={s.error}>{error}</Text> : null}
+        </Animated.View>
+
+        {/* Footer */}
+        <Animated.View style={[s.footer, { opacity: footerFade }]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="link"
+            accessibilityLabel="Back to login"
+            style={({ pressed }) => [pressed && s.pressed]}
+          >
+            <Text style={s.backLink}>
+              <FontAwesome name="arrow-left" size={12} color={Colors.accent} />{' '}
+              Back to login
+            </Text>
+          </Pressable>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const s = StyleSheet.create({
+  root: {
     flex: 1,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: '#080C18',
   },
-  header: {
-    flex: 0.6,
+  safe: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg + 4,
     justifyContent: 'center',
+  },
+
+  // Atmospheric glows
+  glowGold: {
+    position: 'absolute',
+    top: '15%',
+    right: -60,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(202, 138, 4, 0.08)',
+  },
+  glowBlue: {
+    position: 'absolute',
+    bottom: '20%',
+    left: -80,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(30, 58, 138, 0.12)',
+  },
+
+  // Header
+  header: {
     alignItems: 'center',
+    marginBottom: 36,
   },
   title: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 28,
-    color: Colors.primary,
+    fontSize: 32,
+    color: Colors.white,
     textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  accentBar: {
+    width: 40,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+    marginTop: 14,
+    marginBottom: 14,
   },
   subtitle: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 15,
-    marginTop: Spacing.sm,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
+
+  // Form
   form: {
-    flex: 1,
-    gap: Spacing.md + 4,
+    gap: 16,
+    marginBottom: 32,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 15,
+  },
+  inputFocused: {
+    borderColor: 'rgba(202, 138, 4, 0.4)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  inputError: {
+    borderColor: 'rgba(220, 38, 38, 0.5)',
   },
   input: {
-    borderRadius: BorderRadius.input,
-    paddingVertical: 16,
-    paddingHorizontal: Spacing.md,
+    flex: 1,
     fontFamily: 'Manrope_400Regular',
     fontSize: 16,
-    ...Shadows.soft,
+    color: Colors.white,
+    padding: 0,
   },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: BorderRadius.button,
-    alignItems: 'center',
-    marginTop: Spacing.xs,
+
+  // CTA
+  ctaBtn: {
+    borderRadius: 14,
+    overflow: 'hidden',
     ...Shadows.medium,
   },
-  buttonText: {
-    fontFamily: 'Manrope_600SemiBold',
+  ctaGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  ctaText: {
+    fontFamily: 'Manrope_800ExtraBold',
     fontSize: 16,
     color: Colors.white,
+    letterSpacing: -0.2,
   },
-  pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+  ctaBtnDisabled: {
+    opacity: 0.5,
   },
+
   error: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 14,
@@ -238,19 +357,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     fontSize: 12,
     color: Colors.error,
-    marginTop: -Spacing.sm,
-    marginBottom: Spacing.xs,
+    marginTop: -8,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
   },
+
+  // Footer
   footer: {
-    paddingBottom: Spacing.xl,
     alignItems: 'center',
   },
   backLink: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    color: Colors.primary,
+    color: Colors.accent,
   },
 });

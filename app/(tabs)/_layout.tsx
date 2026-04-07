@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/lib/ThemeContext';
@@ -9,6 +10,8 @@ function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>['nam
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
 
+  const isWeb = Platform.OS === 'web';
+
   return (
     <Tabs
       screenOptions={{
@@ -19,13 +22,27 @@ export default function TabLayout() {
           position: 'absolute' as const,
           backgroundColor: isDark ? 'rgba(10,10,15,0.92)' : 'rgba(255,255,255,0.92)',
           borderTopColor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(226,232,240,0.8)',
-          paddingBottom: 4,
-          height: 56,
+          paddingBottom: isWeb ? 8 : 4,
+          height: isWeb ? 64 : 56,
           elevation: 0,
+          ...(isWeb ? {
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            maxWidth: 600,
+            alignSelf: 'center' as const,
+            width: '100%' as unknown as number,
+            left: '50%' as unknown as number,
+            transform: [{ translateX: -300 }],
+            borderRadius: 16,
+            bottom: 12,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          } : {}),
         },
         tabBarLabelStyle: {
           fontFamily: 'Manrope_500Medium',
-          fontSize: 10,
+          fontSize: isWeb ? 11 : 10,
+          ...(isWeb ? { marginTop: 2 } : {}),
         },
         headerStyle: {
           backgroundColor: colors.surface,
