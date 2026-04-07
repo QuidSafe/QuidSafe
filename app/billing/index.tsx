@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable, ScrollView, RefreshControl, Linking,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
@@ -35,6 +36,60 @@ const PRO_FEATURES = [
   { icon: 'line-chart' as const, text: 'Quarterly income & expense breakdown' },
   { icon: 'shield' as const, text: 'Bank-grade AES-256 encryption' },
 ];
+
+const SUPPORTED_BANKS = ['Barclays', 'HSBC', 'Lloyds', 'NatWest', 'Monzo', 'Starling', 'Revolut', 'Nationwide'];
+
+const COMPETITORS = [
+  { name: 'QuidSafe', price: '£7.99/mo', highlight: true },
+  { name: 'FreeAgent', price: '£24/mo', highlight: false },
+  { name: 'QuickBooks', price: '£12/mo', highlight: false },
+  { name: 'Xero', price: '£15/mo', highlight: false },
+];
+
+const FAQ_ITEMS = [
+  {
+    question: 'What happens after my free trial?',
+    answer: "You'll be asked to subscribe. No auto-charge.",
+  },
+  {
+    question: 'Can I cancel anytime?',
+    answer: 'Yes. No contracts, no cancellation fees.',
+  },
+  {
+    question: 'Is my payment data secure?',
+    answer: 'Yes. Payments processed by Stripe with PCI DSS compliance.',
+  },
+  {
+    question: "What's included?",
+    answer: 'Everything. AI categorisation, MTD submissions, unlimited banks, invoicing, expenses.',
+  },
+  {
+    question: 'Can I switch between monthly and annual?',
+    answer: 'Yes, anytime from your account settings.',
+  },
+];
+
+function FAQItem({ question, answer, colors }: { question: string; answer: string; colors: { text: string; textSecondary: string; border: string; [key: string]: string } }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Pressable
+      onPress={() => setExpanded(!expanded)}
+      style={[styles.faqItem, { borderBottomColor: colors.border }]}
+      accessibilityRole="button"
+      accessibilityLabel={question}
+      accessibilityState={{ expanded }}
+    >
+      <View style={styles.faqHeader}>
+        <Text style={[styles.faqQuestion, { color: colors.text }]}>{question}</Text>
+        <FontAwesome name={expanded ? 'chevron-up' : 'chevron-down'} size={12} color={colors.textSecondary} />
+      </View>
+      {expanded && (
+        <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>{answer}</Text>
+      )}
+    </Pressable>
+  );
+}
 
 export default function BillingScreen() {
   const { colors } = useTheme();
@@ -85,10 +140,11 @@ export default function BillingScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
         >
+          <View style={styles.webWrap}>
           <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
             <FontAwesome name="arrow-left" size={16} color={colors.text} />
           </Pressable>
-          <Text style={styles.title} accessibilityRole="header">Your Plan</Text>
+          <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Your Plan</Text>
 
           <Card>
             <View style={styles.activeRow}>
@@ -119,13 +175,14 @@ export default function BillingScreen() {
             )}
           </Card>
 
-          <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={handleManage} accessibilityRole="button" accessibilityLabel="Manage Subscription" accessibilityHint="Tap to manage your subscription in the Stripe portal">
+          <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} onPress={handleManage} accessibilityRole="button" accessibilityLabel="Manage Subscription" accessibilityHint="Tap to manage your subscription in the Stripe portal">
             {portalLoading ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={colors.text} />
             ) : (
-              <Text style={styles.manageText}>Manage Subscription</Text>
+              <Text style={[styles.manageText, { color: colors.text }]}>Manage Subscription</Text>
             )}
           </Pressable>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );
@@ -138,12 +195,13 @@ export default function BillingScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} tintColor={colors.text} />}
       >
+        <View style={styles.webWrap}>
         <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
           <FontAwesome name="arrow-left" size={16} color={colors.text} />
         </Pressable>
 
         <View style={styles.header}>
-          <Text style={styles.title} accessibilityRole="header">Go Pro</Text>
+          <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Go Pro</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Everything you need to stay on top of your sole trader taxes.
           </Text>
@@ -157,8 +215,8 @@ export default function BillingScreen() {
               style={({ pressed }) => [
                 styles.planCard,
                 { backgroundColor: colors.surface, borderColor: colors.border },
-                selectedPlan === plan.id && styles.planCardSelected,
-                selectedPlan === plan.id && { shadowColor: Colors.primary, shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+                selectedPlan === plan.id && { borderColor: Colors.accent },
+                selectedPlan === plan.id && { shadowColor: Colors.accent, shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
                 pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
               ]}
               onPress={() => setSelectedPlan(plan.id)}
@@ -172,16 +230,27 @@ export default function BillingScreen() {
                 </View>
               )}
               <View style={styles.radioRow}>
-                <View style={[styles.radio, selectedPlan === plan.id && styles.radioSelected]}>
+                <View style={[styles.radio, { borderColor: colors.textSecondary }, selectedPlan === plan.id && styles.radioSelected]}>
                   {selectedPlan === plan.id && <View style={styles.radioInner} />}
                 </View>
                 <Text style={[styles.planCardName, { color: colors.text }]}>{plan.name}</Text>
               </View>
               <View style={styles.priceRow}>
-                <Text style={styles.currency}>{'\u00A3'}</Text>
-                <Text style={styles.price}>{plan.price}</Text>
+                <Text style={[styles.currency, { color: colors.text }]}>{'\u00A3'}</Text>
+                <Text style={[styles.price, { color: colors.text }]}>{plan.price}</Text>
                 <Text style={[styles.interval, { color: colors.textSecondary }]}>{plan.interval}</Text>
               </View>
+              {/* Strikethrough price anchor for annual plan */}
+              {plan.id === 'annual' && (
+                <View style={styles.strikethroughRow}>
+                  <Text style={[styles.strikethroughPrice, { color: colors.textSecondary }]}>
+                    {'\u00A3'}7.99/mo
+                  </Text>
+                  <Text style={[styles.equivalentPrice, { color: Colors.accent }]}>
+                    {'\u00A3'}5.00/mo
+                  </Text>
+                </View>
+              )}
               <Text style={[styles.planDesc, { color: colors.textSecondary }]}>{plan.description}</Text>
             </Pressable>
           ))}
@@ -200,6 +269,45 @@ export default function BillingScreen() {
           ))}
         </Card>
 
+        {/* Competitor Comparison */}
+        <Card>
+          <Text style={[styles.featuresTitle, { color: colors.text }]}>How we compare</Text>
+          <View style={styles.comparisonGrid}>
+            {COMPETITORS.map((comp, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.comparisonRow,
+                  comp.highlight && styles.comparisonRowHighlight,
+                  i < COMPETITORS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                ]}
+              >
+                <View style={styles.comparisonNameCol}>
+                  <Text style={[
+                    styles.comparisonName,
+                    { color: comp.highlight ? Colors.accent : colors.text },
+                    comp.highlight && { fontFamily: 'Manrope_700Bold' },
+                  ]}>
+                    {comp.name}
+                  </Text>
+                </View>
+                <View style={styles.comparisonPriceCol}>
+                  <Text style={[
+                    styles.comparisonPrice,
+                    { color: comp.highlight ? Colors.accent : colors.textSecondary },
+                    comp.highlight && { fontFamily: 'Manrope_700Bold' },
+                  ]}>
+                    {comp.price}
+                  </Text>
+                  {comp.highlight && (
+                    <FontAwesome name="check" size={12} color={Colors.success} style={{ marginLeft: 6 }} />
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        </Card>
+
         {/* CTA */}
         <Pressable
           style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
@@ -212,9 +320,29 @@ export default function BillingScreen() {
           {checkoutMutation.isPending ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={styles.ctaText}>Start 14-day free trial</Text>
+            <LinearGradient
+              colors={['#D4A017', '#CA8A04', '#A16207']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              <Text style={styles.ctaText}>Start 14-day free trial</Text>
+            </LinearGradient>
           )}
         </Pressable>
+
+        {/* No commitment line */}
+        <Text style={[styles.noCommitmentText, { color: colors.textSecondary }]}>
+          No commitment  ·  Cancel anytime  ·  Your data is always yours
+        </Text>
+
+        {/* Security badge */}
+        <View style={[styles.securityBadge, { borderColor: colors.border }]}>
+          <FontAwesome name="lock" size={14} color={Colors.success} />
+          <Text style={[styles.securityBadgeText, { color: colors.textSecondary }]}>
+            256-bit encrypted checkout
+          </Text>
+        </View>
 
         <Text style={[styles.trialNote, { color: colors.textSecondary }]}>
           No charge until your trial ends. Cancel anytime.
@@ -227,9 +355,32 @@ export default function BillingScreen() {
           </Text>
         </View>
 
+        {/* Bank Logo Strip */}
+        <View style={styles.bankStripSection}>
+          <Text style={[styles.bankStripLabel, { color: colors.textSecondary }]}>
+            Works with your bank
+          </Text>
+          <View style={styles.bankStrip}>
+            {SUPPORTED_BANKS.map((bank) => (
+              <View key={bank} style={[styles.bankPill, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                <Text style={[styles.bankPillText, { color: colors.text }]}>{bank}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* FAQ Section */}
+        <View style={styles.faqSection}>
+          <Text style={[styles.faqTitle, { color: colors.text }]}>Frequently asked questions</Text>
+          {FAQ_ITEMS.map((item, i) => (
+            <FAQItem key={i} question={item.question} answer={item.answer} colors={colors} />
+          ))}
+        </View>
+
         <Text style={[styles.restoreNote, { color: colors.textSecondary }]}>
           Already subscribed? Pull down to refresh.
         </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,25 +389,33 @@ export default function BillingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: Spacing.lg, gap: Spacing.md, paddingBottom: Spacing.xxl },
+  webWrap: {
+    width: '100%' as unknown as number,
+    maxWidth: 540,
+    alignSelf: 'center' as const,
+    gap: Spacing.md,
+  },
   backButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', ...Shadows.soft },
   header: { marginTop: Spacing.sm },
-  title: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 28, color: Colors.primary },
+  title: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 28 },
   subtitle: { fontFamily: 'Manrope_400Regular', fontSize: 15, marginTop: Spacing.xs, lineHeight: 22 },
 
   plans: { flexDirection: 'row', gap: Spacing.sm },
   planCard: { flex: 1, borderRadius: BorderRadius.card, padding: Spacing.md, borderWidth: 2, ...Shadows.soft },
-  planCardSelected: { borderColor: Colors.primary },
   badgeContainer: { position: 'absolute', top: -10, right: 12, backgroundColor: Colors.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: BorderRadius.pill, ...Shadows.soft },
   badgeText: { fontFamily: 'Manrope_700Bold', fontSize: 9, color: Colors.white, letterSpacing: 0.8 },
   radioRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: Colors.grey[400], alignItems: 'center', justifyContent: 'center' },
-  radioSelected: { borderColor: Colors.primary },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.primary },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radioSelected: { borderColor: Colors.accent },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.accent },
   planCardName: { fontFamily: 'Manrope_600SemiBold', fontSize: 15 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: Spacing.sm },
-  currency: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: Colors.primary },
-  price: { fontFamily: 'Manrope_800ExtraBold', fontSize: 28, color: Colors.primary },
+  currency: { fontFamily: 'Manrope_700Bold', fontSize: 16 },
+  price: { fontFamily: 'Manrope_800ExtraBold', fontSize: 28 },
   interval: { fontFamily: 'Manrope_400Regular', fontSize: 13, marginLeft: 2 },
+  strikethroughRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.xs },
+  strikethroughPrice: { fontFamily: 'Manrope_500Medium', fontSize: 13, textDecorationLine: 'line-through' },
+  equivalentPrice: { fontFamily: 'Manrope_700Bold', fontSize: 13 },
   planDesc: { fontFamily: 'Manrope_400Regular', fontSize: 12, marginTop: Spacing.xs },
 
   featuresTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 16, marginBottom: Spacing.md },
@@ -264,12 +423,41 @@ const styles = StyleSheet.create({
   featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.success + '15', alignItems: 'center', justifyContent: 'center' },
   featureText: { fontFamily: 'Manrope_500Medium', fontSize: 14, flex: 1 },
 
-  ctaButton: { backgroundColor: Colors.accent, paddingVertical: 16, borderRadius: BorderRadius.button, alignItems: 'center', ...Shadows.large },
+  comparisonGrid: {},
+  comparisonRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.sm + 2 },
+  comparisonRowHighlight: { backgroundColor: Colors.accent + '10', marginHorizontal: -Spacing.md, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.input },
+  comparisonNameCol: { flex: 1 },
+  comparisonName: { fontFamily: 'Manrope_500Medium', fontSize: 14 },
+  comparisonPriceCol: { flexDirection: 'row', alignItems: 'center' },
+  comparisonPrice: { fontFamily: 'Manrope_500Medium', fontSize: 14 },
+
+  ctaButton: { borderRadius: BorderRadius.button, overflow: 'hidden' as const, ...Shadows.large },
+  ctaGradient: { alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
   ctaText: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: Colors.white },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+
+  noCommitmentText: { fontFamily: 'Manrope_500Medium', fontSize: 13, textAlign: 'center' },
+
+  securityBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, justifyContent: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.pill, borderWidth: 1 },
+  securityBadgeText: { fontFamily: 'Manrope_500Medium', fontSize: 12 },
+
   trialNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center' },
   guaranteeBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.pill, borderWidth: 1, justifyContent: 'center' },
   guaranteeText: { fontFamily: 'Manrope_500Medium', fontSize: 11, textAlign: 'center', flex: 1 },
+
+  bankStripSection: { alignItems: 'center', gap: Spacing.sm },
+  bankStripLabel: { fontFamily: 'Manrope_500Medium', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  bankStrip: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.xs },
+  bankPill: { paddingHorizontal: Spacing.sm + 2, paddingVertical: Spacing.xs + 1, borderRadius: BorderRadius.pill, borderWidth: 1 },
+  bankPillText: { fontFamily: 'Manrope_500Medium', fontSize: 11 },
+
+  faqSection: { gap: 0, marginTop: Spacing.sm },
+  faqTitle: { fontFamily: 'PlayfairDisplay_700Bold', fontSize: 20, marginBottom: Spacing.md },
+  faqItem: { borderBottomWidth: 1, paddingVertical: Spacing.md },
+  faqHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  faqQuestion: { fontFamily: 'Manrope_600SemiBold', fontSize: 14, flex: 1, marginRight: Spacing.sm },
+  faqAnswer: { fontFamily: 'Manrope_400Regular', fontSize: 13, marginTop: Spacing.sm, lineHeight: 20 },
+
   restoreNote: { fontFamily: 'Manrope_400Regular', fontSize: 12, textAlign: 'center', marginTop: Spacing.sm },
 
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -278,6 +466,6 @@ const styles = StyleSheet.create({
   planName: { fontFamily: 'Manrope_500Medium', fontSize: 14 },
   trialText: { fontFamily: 'Manrope_400Regular', fontSize: 13, color: Colors.accent, marginTop: Spacing.sm },
   periodText: { fontFamily: 'Manrope_400Regular', fontSize: 13, marginTop: Spacing.xs },
-  manageButton: { paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', borderWidth: 1, borderColor: Colors.primary },
-  manageText: { fontFamily: 'Manrope_600SemiBold', fontSize: 15, color: Colors.primary },
+  manageButton: { paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', borderWidth: 1 },
+  manageText: { fontFamily: 'Manrope_600SemiBold', fontSize: 15 },
 });
