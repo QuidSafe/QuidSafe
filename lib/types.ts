@@ -196,6 +196,19 @@ export interface Settings {
   };
 }
 
+export type ArticleCategory = 'mtd' | 'expenses' | 'vat' | 'deadlines' | 'bank-safety' | 'getting-started';
+
+export interface Article {
+  id: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: ArticleCategory;
+  read_time_min: number;
+  published_at: string;
+  updated_at: string;
+}
+
 export interface ApiError {
   error: {
     code: string;

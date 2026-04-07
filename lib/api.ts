@@ -1,6 +1,6 @@
 // API client for QuidSafe Cloudflare Worker backend
 
-import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission } from './types';
+import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission, Article } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://quidsafe-api.nathanlufc.workers.dev';
 
@@ -32,6 +32,15 @@ class ApiClient {
     }
 
     return response.json() as Promise<T>;
+  }
+
+  // Articles (public — no auth required)
+  getArticles() {
+    return this.request<{ articles: Article[] }>('/articles');
+  }
+
+  getArticle(id: string) {
+    return this.request<{ article: Article }>(`/articles/${id}`);
   }
 
   // Auth

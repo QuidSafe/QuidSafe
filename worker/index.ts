@@ -167,6 +167,19 @@ app.post('/webhooks/stripe', async (c) => {
   return c.json({ received: true });
 });
 
+// ─── Public Article Routes ───────────────────────────────
+
+app.get('/articles', async (c) => {
+  const articles = await query(c.env.DB, 'SELECT id, title, summary, category, read_time_min, published_at FROM articles ORDER BY published_at DESC');
+  return c.json({ articles: articles ?? [] });
+});
+
+app.get('/articles/:id', async (c) => {
+  const article = await queryOne(c.env.DB, 'SELECT * FROM articles WHERE id = ?', [c.req.param('id')]);
+  if (!article) return c.json({ error: 'Not found' }, 404);
+  return c.json({ article });
+});
+
 // ─── Auth-Protected Routes ────────────────────────────────
 // All routes below require a valid Clerk JWT
 

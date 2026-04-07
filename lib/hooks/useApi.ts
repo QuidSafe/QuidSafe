@@ -23,6 +23,14 @@ export function useApiToken() {
   }, [syncToken]);
 }
 
+export function useArticles() {
+  return useQuery({
+    queryKey: ['articles'],
+    queryFn: () => api.getArticles(),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useDashboard() {
   type DashboardResponse = Awaited<ReturnType<typeof api.getDashboard>>;
   return useQuery({
