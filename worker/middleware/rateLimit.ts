@@ -121,9 +121,21 @@ export function rateLimit(): MiddlewareHandler<RateLimitEnv> {
         );
       }
     } catch (err) {
-      // If rate limiting fails (e.g. table missing), log and allow the request through.
-      // Availability is more important than rate limiting.
-      console.error('[RateLimit] D1 error, allowing request through:', err);
+      // If rate limiting fails, fail closed for sensitive buckets, fail open for others.
+      console.error('[RateLimit] D1 error:', err);
+      const sensitiveBuckets = new Set(['auth', 'billing', 'banking', 'mtd']);
+      if (sensitiveBuckets.has(limitType)) {
+        c.header('Retry-After', String(Math.ceil(config.windowMs / 1000)));
+        return c.json(
+          {
+            error: {
+              code: 'RATE_LIMITED',
+              message: 'Too many requests. Please try again later.',
+            },
+          },
+          429,
+        );
+      }
     }
 
     await next();

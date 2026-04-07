@@ -1,6 +1,6 @@
 // API client for QuidSafe Cloudflare Worker backend
 
-import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency } from './types';
+import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://quidsafe-api.nathanlufc.workers.dev';
 
@@ -225,7 +225,7 @@ class ApiClient {
   }
 
   getMtdObligations() {
-    return this.request<{ obligations: unknown[]; submissions: { quarter: number; status: string; hmrc_receipt_id: string | null }[] }>('/mtd/obligations');
+    return this.request<{ obligations: MTDObligation[]; submissions: { quarter: number; status: string; hmrc_receipt_id: string | null }[] }>('/mtd/obligations');
   }
 
   submitQuarterly(taxYear: string, quarter: number) {
@@ -236,7 +236,7 @@ class ApiClient {
   }
 
   getMtdSubmission(id: string) {
-    return this.request<{ submission: unknown }>(`/mtd/submission/${id}`);
+    return this.request<{ submission: MTDSubmission }>(`/mtd/submission/${id}`);
   }
 }
 

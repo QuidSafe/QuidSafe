@@ -272,9 +272,9 @@ export default function ExpensesScreen() {
     });
   }, [expenses, searchQuery, dateRange]);
 
-  const totalClaimed = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalClaimed = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
   const effectiveRate = dashboardData?.tax?.effectiveRate ?? 0.2;
-  const taxSaved = totalClaimed * effectiveRate;
+  const taxSaved = useMemo(() => totalClaimed * effectiveRate, [totalClaimed, effectiveRate]);
 
   const categorySegments = useMemo(() => {
     const grouped: Record<string, number> = {};
@@ -289,7 +289,7 @@ export default function ExpensesScreen() {
     }));
   }, [expenses]);
 
-  const recurringExpenses = (recurringData?.recurringExpenses ?? []).map((r) => {
+  const recurringExpenses = useMemo(() => (recurringData?.recurringExpenses ?? []).map((r) => {
     const raw = r as unknown as Record<string, unknown>;
     return {
       id: r.id,
@@ -299,7 +299,7 @@ export default function ExpensesScreen() {
       frequency: r.frequency,
       next_due_date: r.nextDueDate ?? (raw['next_due_date'] as string),
     };
-  });
+  }), [recurringData?.recurringExpenses]);
 
   const handleAdd = async () => {
     if (!isExpenseFormValid) return;
@@ -380,6 +380,16 @@ export default function ExpensesScreen() {
     }
   };
 
+  const thisMonthTotal = useMemo(() => {
+    const now = new Date();
+    return expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((s, e) => s + e.amount, 0);
+  }, [expenses]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
@@ -425,11 +435,7 @@ export default function ExpensesScreen() {
         <Card variant="elevated" style={styles.metricCardFull}>
           <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>This month</Text>
           <Text style={[styles.metricValue, { color: colors.text }]}>
-            {formatCurrency(expenses.filter(e => {
-              const d = new Date(e.date);
-              const now = new Date();
-              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).reduce((s, e) => s + e.amount, 0))}
+            {formatCurrency(thisMonthTotal)}
           </Text>
         </Card>
 

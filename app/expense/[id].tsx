@@ -112,6 +112,7 @@ export default function ExpenseDetailScreen() {
   const [editDescription, setEditDescription] = useState('');
   const [editDate, setEditDate] = useState('');
   const [editCategory, setEditCategory] = useState('');
+  const [imageError, setImageError] = useState(false);
 
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const deleteMutation = useDeleteExpense();
@@ -400,12 +401,22 @@ export default function ExpenseDetailScreen() {
                 {receiptUrl ? (
                   <Card style={styles.receiptCard}>
                     <Text style={[styles.receiptLabel, { color: colors.textSecondary }]}>Receipt</Text>
-                    <Image
-                      source={{ uri: receiptUrl }}
-                      style={styles.receiptImage}
-                      resizeMode="contain"
-                      accessibilityLabel="Receipt image"
-                    />
+                    {imageError ? (
+                      <View style={styles.receiptFallback}>
+                        <FontAwesome name="image" size={32} color={Colors.grey[400]} />
+                        <Text style={[styles.receiptFallbackText, { color: colors.textSecondary }]}>
+                          Receipt unavailable
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: receiptUrl }}
+                        style={styles.receiptImage}
+                        resizeMode="contain"
+                        accessibilityLabel="Receipt image"
+                        onError={() => setImageError(true)}
+                      />
+                    )}
                   </Card>
                 ) : null}
 
@@ -553,6 +564,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 240,
     borderRadius: BorderRadius.input,
+  },
+  receiptFallback: {
+    width: '100%',
+    height: 120,
+    borderRadius: BorderRadius.input,
+    backgroundColor: Colors.grey[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  receiptFallbackText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
   },
 
   // Actions

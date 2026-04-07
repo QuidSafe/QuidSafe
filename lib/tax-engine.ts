@@ -119,7 +119,7 @@ export interface FullTaxResult {
   plainEnglish: string;
 }
 
-export interface QuarterInfo {
+export interface QuarterFinancials {
   quarter: number;
   startDate: string;
   endDate: string;
@@ -269,7 +269,7 @@ export function calculateTax(input: TaxInput): TaxResult {
  * UK tax year: 6 Apr – 5 Apr
  * Q1: Apr–Jun, Q2: Jul–Sep, Q3: Oct–Dec, Q4: Jan–Mar
  */
-export function getQuarterDates(taxYear: string): QuarterInfo[] {
+export function getQuarterDates(taxYear: string): QuarterFinancials[] {
   const startYear = parseInt(taxYear.split('/')[0], 10);
 
   return [

@@ -103,6 +103,15 @@ export interface Subscription {
   createdAt: string;
 }
 
+export interface MTDObligation {
+  periodKey: string;
+  start: string;
+  end: string;
+  due: string;
+  status: 'Open' | 'Fulfilled';
+  received?: string;
+}
+
 export interface MTDSubmission {
   id: string;
   userId: string;

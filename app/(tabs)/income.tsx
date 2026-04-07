@@ -108,7 +108,7 @@ export default function IncomeScreen() {
     [income?.byMonth]
   );
   const months = useMemo(() => getLastNMonths(rawByMonth, 6), [rawByMonth]);
-  const maxMonthValue = Math.max(...months.map((m) => Math.max(m.income, m.expenses)), 1);
+  const maxMonthValue = useMemo(() => Math.max(...months.map((m) => Math.max(m.income, m.expenses)), 1), [months]);
 
   // YoY growth — computed from real data, hidden if insufficient
   const yoyPercent = useMemo(() => computeYoYGrowth(rawByMonth), [rawByMonth]);
@@ -118,7 +118,7 @@ export default function IncomeScreen() {
   const sourceCount = sources.length;
   const currentMonthLabel = getCurrentMonthLabel();
 
-  const filteredSources = sources.filter((src) => {
+  const filteredSources = useMemo(() => sources.filter((src) => {
     if (search) {
       const q = search.toLowerCase();
       if (!src.name.toLowerCase().includes(q)) return false;
@@ -137,7 +137,7 @@ export default function IncomeScreen() {
       return src.amount > 0;
     }
     return true;
-  });
+  }), [sources, search, activeFilter, rawByMonth, currentMonthLabel]);
 
   const onRefresh = useCallback(() => {
     refetch();
