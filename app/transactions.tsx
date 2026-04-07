@@ -1,9 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
+  FlatList,
   RefreshControl,
   Pressable,
   Modal,
@@ -74,6 +75,64 @@ function getCategoryLabel(category: TransactionCategory | undefined): string {
       return 'Uncategorised';
   }
 }
+
+interface TransactionCardProps {
+  tx: Transaction;
+  onPress: (tx: Transaction) => void;
+  renderConfidenceBadge: (tx: Transaction) => React.ReactNode;
+  colors: { text: string; textSecondary: string };
+}
+
+const TransactionCard = React.memo(function TransactionCard({
+  tx,
+  onPress,
+  renderConfidenceBadge,
+  colors,
+}: TransactionCardProps) {
+  const isIncome = tx.isIncome;
+  const confidence = tx.aiConfidence ?? 0;
+  const isLowConfidence = confidence < 0.5 && !tx.userOverride;
+
+  return (
+    <Pressable
+      onPress={() => onPress(tx)}
+      style={({ pressed }) => [pressed && styles.pressedCard]}
+    >
+      <Card
+        variant={isLowConfidence ? 'elevated' : 'glass'}
+        style={[
+          styles.txCard,
+          isLowConfidence && { borderColor: Colors.error + '30' },
+        ]}
+      >
+        <View style={styles.txRow}>
+          <View style={styles.txLeft}>
+            <Text
+              style={[styles.txMerchant, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {tx.merchantName || tx.description}
+            </Text>
+            <Text style={[styles.txDate, { color: colors.textSecondary }]}>
+              {formatDate(tx.transactionDate)}
+            </Text>
+          </View>
+          <View style={styles.txRight}>
+            <Text
+              style={[
+                styles.txAmount,
+                { color: isIncome ? Colors.success : colors.text },
+              ]}
+            >
+              {isIncome ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+            </Text>
+            {renderConfidenceBadge(tx)}
+          </View>
+        </View>
+      </Card>
+    </Pressable>
+  );
+});
 
 export default function TransactionsScreen() {
   const params = useLocalSearchParams<{ filter?: string }>();
@@ -286,22 +345,24 @@ export default function TransactionsScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />
-        }
-      >
-        {isLoading ? (
-          <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </>
-        ) : showEmptyUncategorised ? (
-          /* Empty state */
+      {isLoading ? (
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </ScrollView>
+      ) : showEmptyUncategorised ? (
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />
+          }
+        >
           <Animated.View style={[styles.emptyState, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <View style={[styles.emptyIcon, { backgroundColor: Colors.success + '15' }]}>
               <FontAwesome name="check-circle" size={40} color={Colors.success} />
@@ -311,65 +372,38 @@ export default function TransactionsScreen() {
               No transactions need review.
             </Text>
           </Animated.View>
-        ) : (
-          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-            {transactions.map((tx) => {
-              const isIncome = tx.isIncome;
-              const confidence = tx.aiConfidence ?? 0;
-              const isLowConfidence = confidence < 0.5 && !tx.userOverride;
-
-              return (
-                <Pressable
-                  key={tx.id}
-                  onPress={() => handleTransactionPress(tx)}
-                  style={({ pressed }) => [pressed && styles.pressedCard]}
-                >
-                  <Card
-                    variant={isLowConfidence ? 'elevated' : 'glass'}
-                    style={[
-                      styles.txCard,
-                      isLowConfidence && { borderColor: Colors.error + '30' },
-                    ]}
-                  >
-                    <View style={styles.txRow}>
-                      <View style={styles.txLeft}>
-                        <Text
-                          style={[styles.txMerchant, { color: colors.text }]}
-                          numberOfLines={1}
-                        >
-                          {tx.merchantName || tx.description}
-                        </Text>
-                        <Text style={[styles.txDate, { color: colors.textSecondary }]}>
-                          {formatDate(tx.transactionDate)}
-                        </Text>
-                      </View>
-                      <View style={styles.txRight}>
-                        <Text
-                          style={[
-                            styles.txAmount,
-                            { color: isIncome ? Colors.success : colors.text },
-                          ]}
-                        >
-                          {isIncome ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
-                        </Text>
-                        {renderConfidenceBadge(tx)}
-                      </View>
-                    </View>
-                  </Card>
-                </Pressable>
-              );
-            })}
-
-            {transactions.length === 0 && (
+        </ScrollView>
+      ) : (
+        <Animated.View style={[styles.flatListWrapper, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <FlatList
+            data={transactions}
+            keyExtractor={(tx) => tx.id}
+            renderItem={({ item }) => (
+              <TransactionCard
+                tx={item}
+                onPress={handleTransactionPress}
+                renderConfidenceBadge={renderConfidenceBadge}
+                colors={colors}
+              />
+            )}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />
+            }
+            ListEmptyComponent={
               <View style={styles.emptyState}>
                 <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                   No transactions found for this filter.
                 </Text>
               </View>
-            )}
-          </Animated.View>
-        )}
-      </ScrollView>
+            }
+          />
+        </Animated.View>
+      )}
 
       {/* Review Bottom Sheet Modal */}
       <Modal
@@ -549,6 +583,9 @@ export default function TransactionsScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  flatListWrapper: {
     flex: 1,
   },
   headerContainer: {

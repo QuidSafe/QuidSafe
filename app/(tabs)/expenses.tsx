@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
+  FlatList,
   Pressable,
   TextInput,
   RefreshControl,
@@ -97,6 +98,84 @@ function formatDate(dateStr: string): string {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${d.getDate()} ${months[d.getMonth()]}`;
 }
+
+type ExpenseItem = {
+  id: string;
+  amount: number;
+  description: string;
+  date: string;
+  hmrc_category?: string;
+};
+
+interface ExpenseRowProps {
+  item: ExpenseItem;
+  index: number;
+  totalCount: number;
+  onPress: (id: string) => void;
+  onDelete: (id: string, desc: string) => void;
+  colors: { text: string; textSecondary: string; border: string };
+}
+
+const ExpenseRow = React.memo(function ExpenseRow({
+  item: exp,
+  index,
+  totalCount,
+  onPress,
+  onDelete,
+  colors,
+}: ExpenseRowProps) {
+  const meta = getCategoryMeta(exp.hmrc_category);
+  return (
+    <Pressable
+      onPress={() => onPress(exp.id)}
+      style={({ pressed }) => [
+        styles.expenseRow,
+        index < totalCount - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
+        pressed && styles.pressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`View expense: ${exp.description}`}
+      accessibilityHint="Tap to view expense details"
+    >
+      <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
+        <FontAwesome name={meta.icon} size={16} color={meta.color} />
+      </View>
+      <View style={styles.expenseMiddle}>
+        <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
+          {exp.description}
+        </Text>
+        <View style={styles.expenseSubRow}>
+          {exp.hmrc_category ? (
+            <View style={[styles.hmrcBadge, { backgroundColor: meta.bg }]}>
+              <Text style={[styles.hmrcBadgeText, { color: meta.color }]}>
+                {HMRC_CATEGORY_LABELS[exp.hmrc_category] || exp.hmrc_category}
+              </Text>
+            </View>
+          ) : null}
+          <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
+            {formatDate(exp.date)}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.expenseRight}>
+        <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(exp.amount)}</Text>
+        <View style={styles.claimedBadge} accessibilityLabel="Status: Claimed">
+          <Text style={styles.claimedBadgeText}>Claimed</Text>
+        </View>
+      </View>
+      <Pressable
+        style={({ pressed: p }) => [styles.deleteButton, p && styles.pressed]}
+        onPress={(e) => { e.stopPropagation(); onDelete(exp.id, exp.description); }}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={`Delete expense: ${exp.description}`}
+        accessibilityHint="Tap to delete this expense"
+      >
+        <FontAwesome name="trash-o" size={16} color={Colors.error} />
+      </Pressable>
+    </Pressable>
+  );
+});
 
 export default function ExpensesScreen() {
   const { colors } = useTheme();
