@@ -121,8 +121,8 @@ QuidSafe is a UK-focused mobile-first app that connects to sole traders' bank ac
 
 | Plan | Price (exc. VAT) | What's Included |
 |------|-----------------|-----------------|
-| **Monthly** | £9.99/mo | Everything: AI categorisation, MTD submissions, unlimited banks, invoicing, expenses, tax calculator, reminders, plain English insights |
-| **Annual** | £89.99/yr (£7.50/mo) | Same — 25% saving for annual commitment |
+| **Monthly** | £7.99/mo | Everything: AI categorisation, MTD submissions, unlimited banks, invoicing, expenses, tax calculator, reminders, plain English insights |
+| **Annual** | £59.99/yr (£5.00/mo) | Same — 37% saving for annual commitment |
 
 No tiers. No feature gates. No upsells. Sole traders hate complexity.
 
@@ -170,16 +170,37 @@ quidsafe/
 │   │   └── settings.tsx                  # Settings (security, appearance, account)
 │   ├── billing/
 │   │   └── index.tsx                     # Stripe subscription paywall
-│   └── onboarding/
-│       └── index.tsx                     # 3-step onboarding flow
+│   ├── onboarding/
+│   │   └── index.tsx                     # 3-step onboarding flow
+│   ├── landing.tsx                       # Marketing landing page (13 sections)
+│   ├── status.tsx                        # System status dashboard
+│   ├── transactions.tsx                  # Transaction list + filters
+│   ├── invoices.tsx                      # Invoice management
+│   ├── invoice/[id].tsx                  # Invoice detail
+│   ├── expense/[id].tsx                  # Expense detail
+│   ├── mtd.tsx                           # Making Tax Digital submissions
+│   ├── self-assessment.tsx               # SA100 filing
+│   ├── tax-history.tsx                   # Historical tax data
+│   ├── terms.tsx                         # Terms of service
+│   └── privacy.tsx                       # Privacy policy
 │
 ├── components/ui/                        # Shared UI components
 │   ├── ActionCard.tsx                    # Action card with icon + chevron
 │   ├── Badge.tsx                         # Colored pill badges
-│   ├── Button.tsx                        # Primary/secondary buttons
-│   ├── Card.tsx                          # Base card component
+│   ├── BiometricGate.tsx                 # Biometric auth gate
+│   ├── Button.tsx                        # Primary/secondary/CTA buttons
+│   ├── Card.tsx                          # Base card (default/glass/elevated)
+│   ├── DateInput.tsx                     # Date picker input
+│   ├── DonutChart.tsx                    # Donut chart visualisation
+│   ├── EmptyState.tsx                    # Empty state with icon + CTA
+│   ├── ErrorBoundary.tsx                 # Error boundary wrapper
+│   ├── MiniChart.tsx                     # Sparkline chart component
+│   ├── OnboardingIllustrations.tsx       # Onboarding step illustrations
 │   ├── QuarterTimeline.tsx               # Q1-Q4 progress tracker
-│   └── Skeleton.tsx                      # Loading skeleton components
+│   ├── ReceiptCapture.tsx                # Receipt camera capture
+│   ├── SearchFilter.tsx                  # Search + filter bar
+│   ├── Skeleton.tsx                      # Loading skeleton components
+│   └── Toast.tsx                         # Toast notifications
 │
 ├── constants/
 │   ├── Colors.ts                         # Design system (navy, blue, gold, green)
@@ -188,23 +209,38 @@ quidsafe/
 ├── lib/
 │   ├── api.ts                            # API client (typed methods)
 │   ├── auth.ts                           # Clerk config + SecureStore token cache
+│   ├── biometrics.ts                     # Biometric auth helpers
 │   ├── db.ts                             # D1 database helpers
+│   ├── export.ts                         # Data export utilities
+│   ├── haptics.ts                        # Haptic feedback helpers
+│   ├── invoiceActions.ts                 # Invoice action handlers
+│   ├── invoicePdf.ts                     # Invoice PDF generation
+│   ├── notifications.ts                  # Push notification setup
+│   ├── offlineCache.ts                   # Offline data caching
 │   ├── tax-engine.ts                     # UK tax calculations (IT, NI Class 2 & 4)
+│   ├── ThemeContext.tsx                   # Dark/light theme context provider
 │   ├── types.ts                          # Shared TypeScript types
 │   └── hooks/
-│       └── useApi.ts                     # React Query hooks for all API endpoints
+│       ├── useApi.ts                     # React Query hooks for all API endpoints
+│       └── useApiWithToast.ts            # API hooks with toast feedback
 │
 ├── worker/                               # Cloudflare Worker API (Hono)
 │   ├── index.ts                          # API routes (dashboard, transactions, tax, billing, banking, MTD)
+│   ├── validation.ts                     # Request validation helpers
 │   ├── middleware/
-│   │   └── auth.ts                       # Clerk JWT verification middleware
+│   │   ├── auth.ts                       # Clerk JWT verification middleware
+│   │   └── rateLimit.ts                  # Rate limiting middleware
 │   ├── migrations/
 │   │   ├── 001_initial.sql               # Core tables (users, transactions, expenses)
-│   │   └── 002_full_schema.sql           # Full schema (invoices, bank_connections, mtd)
+│   │   ├── 002_full_schema.sql           # Full schema (invoices, bank_connections, mtd)
+│   │   ├── 003-008_*.sql                 # Notifications, tiers, rate limits, free tier removal
+│   │   └── seed.sql                      # Seed data for development
 │   ├── services/
 │   │   ├── anonymiser.ts                 # PII removal before AI processing
 │   │   ├── banking.ts                    # TrueLayer Open Banking integration
 │   │   ├── categoriser.ts                # Claude AI transaction categorisation
+│   │   ├── hmrc.ts                       # HMRC MTD API integration
+│   │   ├── notifications.ts              # Push notification service
 │   │   └── stripe.ts                     # Stripe checkout, portal, webhooks (raw fetch)
 │   └── utils/
 │       └── crypto.ts                     # AES-256-GCM encryption utilities
