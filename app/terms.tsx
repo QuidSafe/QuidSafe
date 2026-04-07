@@ -97,13 +97,12 @@ export default function TermsOfServiceScreen() {
 
         <Section title="5. Subscription Terms">
           <Paragraph>
-            QuidSafe offers a free tier with limited features and a Pro subscription plan with full access to all features.
+            QuidSafe offers a 14-day free trial followed by a Pro subscription plan with full access to all features.
           </Paragraph>
           <BulletList
             items={[
-              'Free tier: includes one bank account connection, basic tax calculator, manual expense entry, and dashboard overview',
-              'Pro plan: priced at £9.99 per month or £89.99 per year, includes unlimited bank accounts, AI auto-categorisation, MTD submissions, invoice tracking, data export, and priority support',
-              'Free trial: new users may be eligible for a free trial of the Pro plan. Trial terms will be displayed at signup.',
+              'Pro plan: priced at £7.99 per month or £59.99 per year, includes unlimited bank accounts, AI auto-categorisation, MTD submissions, invoice tracking, data export, and priority support',
+              'Free trial: all new users receive a 14-day free trial with full access to all Pro features. No credit card is required to start the trial.',
               'Billing: subscriptions are billed in advance on a recurring monthly or annual basis via Stripe',
               'Cancellation: you may cancel your subscription at any time via Settings. Your Pro features will remain active until the end of the current billing period. No refunds are given for partial periods.',
               'Price changes: we reserve the right to change pricing with 30 days advance notice. Existing subscribers will be notified before any price change takes effect.',

@@ -62,8 +62,8 @@ export async function createCheckoutSession(
   // Price IDs — set these in Stripe Dashboard and store in env vars
   // For now, use lookup_keys
   const priceParam = plan === 'annual'
-    ? { 'line_items[0][price_data][unit_amount]': '8999', 'line_items[0][price_data][recurring][interval]': 'year' }
-    : { 'line_items[0][price_data][unit_amount]': '999', 'line_items[0][price_data][recurring][interval]': 'month' };
+    ? { 'line_items[0][price_data][unit_amount]': '5999', 'line_items[0][price_data][recurring][interval]': 'year' }
+    : { 'line_items[0][price_data][unit_amount]': '799', 'line_items[0][price_data][recurring][interval]': 'month' };
 
   const params = new URLSearchParams({
     mode: 'subscription',
