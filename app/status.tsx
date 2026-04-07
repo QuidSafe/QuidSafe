@@ -1032,7 +1032,7 @@ const styles = StyleSheet.create({
 
   // Badge
   badge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
   },
@@ -1076,8 +1076,8 @@ const styles = StyleSheet.create({
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 4,
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
   categoryLabel: {
     fontFamily: 'Manrope_500Medium',
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   bankNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   bankName: {
     fontFamily: 'Manrope_600SemiBold',
