@@ -236,13 +236,13 @@ authed.post('/auth/signup', async (c) => {
     body.name ?? '',
   ]);
 
-  const user = await queryOne(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
+  const user = await queryOne(c.env.DB, 'SELECT id, email, name, subscription_tier, onboarding_completed, stripe_customer_id, grace_period_ends, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, created_at, updated_at FROM users WHERE id = ?', [userId]);
   return c.json({ user });
 });
 
 authed.post('/auth/session', async (c) => {
   const userId = c.get('userId');
-  const user = await queryOne(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
+  const user = await queryOne(c.env.DB, 'SELECT id, email, name, subscription_tier, onboarding_completed, stripe_customer_id, grace_period_ends, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, created_at, updated_at FROM users WHERE id = ?', [userId]);
 
   if (!user) {
     return c.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, 404);

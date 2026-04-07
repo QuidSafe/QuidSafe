@@ -146,7 +146,7 @@ export interface ActionItem {
   id: string;
   title: string;
   description: string;
-  type: 'warning' | 'info' | 'action';
+  type: 'warning' | 'info' | 'action' | 'urgent';
   actionRoute?: string;
   priority: number;
 }

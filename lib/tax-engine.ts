@@ -239,7 +239,7 @@ export function calculateTax(input: TaxInput): TaxResult {
     : quarter > 0 ? Math.max(1, 12 - (quarter - 1) * 3) : 12;
   const setAsideMonthly = totalTaxOwed > 0 ? round(totalTaxOwed / monthsRemaining) : 0;
 
-  const effectiveRate = netProfit > 0 ? round((totalTaxOwed / netProfit) * 100) / 1 : 0;
+  const effectiveRate = netProfit > 0 ? round((totalTaxOwed / netProfit) * 100) : 0;
 
   const partialResult: Omit<TaxResult, 'plainEnglish'> = {
     taxYear: config.year,
