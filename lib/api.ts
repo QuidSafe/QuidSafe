@@ -202,6 +202,7 @@ class ApiClient {
 
   updateSettings(data: {
     name?: string;
+    nino?: string;
     notifyTaxDeadlines?: boolean;
     notifyWeeklySummary?: boolean;
     notifyTransactionAlerts?: boolean;

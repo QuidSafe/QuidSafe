@@ -312,7 +312,6 @@ export default function ExpensesScreen() {
     setDescription('');
     setSelectedCategory('other');
     setExpTouched({});
-    setReceiptUri(null);
     setOpenedFromReceipt(false);
     setShowForm(false);
   };

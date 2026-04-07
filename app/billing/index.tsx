@@ -69,7 +69,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-function FAQItem({ question, answer, colors }: { question: string; answer: string; colors: { text: string; textSecondary: string; border: string; [key: string]: string } }) {
+function FAQItem({ question, answer, colors }: { question: string; answer: string; colors: { text: string; textSecondary: string; border: string } }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
