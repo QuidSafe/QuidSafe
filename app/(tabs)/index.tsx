@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
