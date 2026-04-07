@@ -164,7 +164,7 @@ export default function LearnScreen() {
     ]).start();
 
     // 4. Article cards — cascading stagger starting at 350ms, 100ms apart
-    cardAnims.forEach((anim, i) => {
+    cardAnims.forEach((anim: { fade: Animated.Value; slide: Animated.Value }, i: number) => {
       Animated.sequence([
         Animated.delay(350 + i * 100),
         fadeSlide(anim.fade, anim.slide, 380),
