@@ -116,6 +116,18 @@ export function useAddExpense() {
   });
 }
 
+export function useUpdateExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { amount?: number; description?: string; date?: string; hmrcCategory?: string } }) =>
+      api.updateExpense(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
 export function useRecurringExpenses() {
   return useQuery({
     queryKey: ['expenses', 'recurring'],

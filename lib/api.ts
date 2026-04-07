@@ -130,6 +130,10 @@ class ApiClient {
     return this.request<{ id: string; success: boolean }>('/expenses', { method: 'POST', body: JSON.stringify(data) });
   }
 
+  updateExpense(id: string, data: { amount?: number; description?: string; date?: string; hmrcCategory?: string }) {
+    return this.request<{ expense: Expense; success: boolean }>(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
   deleteExpense(id: string) {
     return this.request<{ deleted: boolean }>(`/expenses/${id}`, { method: 'DELETE' });
   }

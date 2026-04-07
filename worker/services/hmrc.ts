@@ -114,8 +114,6 @@ export async function getObligations(
   accessToken: string,
   nino: string,
 ): Promise<MtdObligation[]> {
-  const url = `${HMRC_API_BASE}/individuals/business/property/${nino}/period/obligations`;
-  // For self-employment, the endpoint is:
   const selfEmploymentUrl = `${HMRC_API_BASE}/individuals/self-assessment/income-tax/self-employments/${nino}/obligations`;
 
   const response = await fetch(selfEmploymentUrl, {

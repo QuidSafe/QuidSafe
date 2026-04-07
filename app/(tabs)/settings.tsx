@@ -353,6 +353,9 @@ export default function SettingsScreen() {
   const [profileExpanded, setProfileExpanded] = useState(false);
   const [editName, setEditName] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
+  const [nino, setNino] = useState('');
+  const [ninoSet, setNinoSet] = useState(false);
+  const [isSavingNino, setIsSavingNino] = useState(false);
 
   // Sync API settings to local state
   useEffect(() => {
@@ -363,6 +366,8 @@ export default function SettingsScreen() {
       if (typeof u.notify_transaction_alerts === 'number') setTaxPotCheck(u.notify_transaction_alerts === 1);
       if (typeof u.notify_mtd_ready === 'number') setMtdReady(u.notify_mtd_ready === 1);
       if (typeof u.name === 'string') setEditName(u.name);
+      if (typeof u.ninoSet === 'boolean') setNinoSet(u.ninoSet);
+      if (typeof u.ninoMasked === 'string') setNino(u.ninoMasked);
     }
   }, [settingsData]);
 
@@ -376,6 +381,18 @@ export default function SettingsScreen() {
     setIsSavingName(true);
     updateSettings.mutate({ name: trimmed }, {
       onSettled: () => setIsSavingName(false),
+    });
+  };
+
+  const handleSaveNino = () => {
+    const trimmed = nino.trim().toUpperCase();
+    if (!/^[A-Z]{2}\d{6}[A-Z]$/.test(trimmed)) {
+      Alert.alert('Invalid NINO', 'Please enter a valid National Insurance Number (e.g. QQ123456C)');
+      return;
+    }
+    setIsSavingNino(true);
+    updateSettings.mutate({ nino: trimmed }, {
+      onSettled: () => setIsSavingNino(false),
     });
   };
 
@@ -680,6 +697,39 @@ export default function SettingsScreen() {
                   accessibilityLabel="Save name"
                 >
                   {isSavingName ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  )}
+                </Pressable>
+              </View>
+              <Text style={[styles.rowTitle, { color: colors.text, marginBottom: 4, fontSize: 11, marginTop: 12 }]}>
+                National Insurance Number {ninoSet && <Text style={{ color: Colors.success, fontSize: 11 }}>(saved)</Text>}
+              </Text>
+              <View style={styles.nameInputRow}>
+                <TextInput
+                  style={[styles.nameInput, { color: colors.text, borderColor: colors.border }]}
+                  value={nino}
+                  onChangeText={setNino}
+                  placeholder="QQ123456C"
+                  placeholderTextColor={Colors.grey[400]}
+                  autoCapitalize="characters"
+                  maxLength={9}
+                  accessibilityLabel="National Insurance Number"
+                  accessibilityHint="Enter your NINO for HMRC submissions"
+                />
+                <Pressable
+                  onPress={handleSaveNino}
+                  disabled={isSavingNino || !nino.trim()}
+                  style={({ pressed }) => [
+                    styles.saveButton,
+                    pressed && styles.pressed,
+                    (!nino.trim() || isSavingNino) && styles.saveButtonDisabled,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Save NINO"
+                >
+                  {isSavingNino ? (
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <Text style={styles.saveButtonText}>Save</Text>

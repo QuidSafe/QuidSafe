@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import {
   useDashboard,
   useBankConnections,
@@ -70,9 +70,12 @@ function formatTimestamp(date: Date): string {
 
 function SectionTitle({ title, colors }: { title: string; colors: { text: string } }) {
   return (
-    <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">
-      {title}
-    </Text>
+    <View style={styles.sectionTitleRow}>
+      <View style={styles.goldDot} />
+      <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">
+        {title}
+      </Text>
+    </View>
   );
 }
 
@@ -354,6 +357,36 @@ export default function StatusScreen() {
 
   const subBadge = statusBadgeConfig(subStatus);
 
+  // ── Staggered entrance animations ──
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(16)).current;
+  // 8 sections: account, financial, banks, transactions, invoices, mtd, api, app
+  const sectionAnims = useRef(
+    Array.from({ length: 8 }, () => ({
+      fade: new Animated.Value(0),
+      slide: new Animated.Value(22),
+    })),
+  ).current;
+
+  useEffect(() => {
+    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, duration: number) =>
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration, useNativeDriver: true }),
+      ]);
+
+    // Header — immediate
+    fadeSlide(headerFade, headerSlide, 300).start();
+
+    // Sections — cascading stagger starting at 150ms, 100ms apart
+    sectionAnims.forEach((anim, i) => {
+      Animated.sequence([
+        Animated.delay(150 + i * 100),
+        fadeSlide(anim.fade, anim.slide, 380),
+      ]).start();
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const quarterBadgeConfig = (status: string) => {
     switch (status) {
       case 'submitted':
@@ -378,10 +411,10 @@ export default function StatusScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <Pressable
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.cardBorder, ...Shadows.soft }]}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
@@ -408,9 +441,10 @@ export default function StatusScreen() {
               )}
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Section 1 — Account Overview */}
+        <Animated.View style={{ opacity: sectionAnims[0].fade, transform: [{ translateY: sectionAnims[0].slide }] }}>
         <SectionTitle title="Account Overview" colors={colors} />
         <Card style={styles.cardPadding}>
           <StatRow label="Name" value={user?.fullName ?? '—'} colors={colors} />
@@ -466,8 +500,10 @@ export default function StatusScreen() {
             <FontAwesome name="chevron-right" size={10} color={Colors.secondary} />
           </Pressable>
         </Card>
+        </Animated.View>
 
         {/* Section 2 — Financial Summary */}
+        <Animated.View style={{ opacity: sectionAnims[1].fade, transform: [{ translateY: sectionAnims[1].slide }] }}>
         <SectionTitle title="Financial Summary" colors={colors} />
         <Card style={styles.cardPadding}>
           {dashboard.isLoading ? (
@@ -522,8 +558,10 @@ export default function StatusScreen() {
             </>
           )}
         </Card>
+        </Animated.View>
 
         {/* Section 3 — Bank Connections */}
+        <Animated.View style={{ opacity: sectionAnims[2].fade, transform: [{ translateY: sectionAnims[2].slide }] }}>
         <SectionTitle title="Bank Connections" colors={colors} />
         <Card style={styles.cardPadding}>
           {bankConnections.isLoading ? (
@@ -579,8 +617,10 @@ export default function StatusScreen() {
             })
           )}
         </Card>
+        </Animated.View>
 
         {/* Section 4 — Transaction Stats */}
+        <Animated.View style={{ opacity: sectionAnims[3].fade, transform: [{ translateY: sectionAnims[3].slide }] }}>
         <SectionTitle title="Transaction Stats" colors={colors} />
         <Card style={styles.cardPadding}>
           {transactions.isLoading ? (
@@ -659,8 +699,10 @@ export default function StatusScreen() {
             </>
           )}
         </Card>
+        </Animated.View>
 
         {/* Section 5 — Invoices Overview */}
+        <Animated.View style={{ opacity: sectionAnims[4].fade, transform: [{ translateY: sectionAnims[4].slide }] }}>
         <SectionTitle title="Invoices Overview" colors={colors} />
         <Card style={styles.cardPadding}>
           {invoices.isLoading ? (
@@ -735,8 +777,10 @@ export default function StatusScreen() {
             </>
           )}
         </Card>
+        </Animated.View>
 
         {/* Section 6 — HMRC MTD Status */}
+        <Animated.View style={{ opacity: sectionAnims[5].fade, transform: [{ translateY: sectionAnims[5].slide }] }}>
         <SectionTitle title="HMRC MTD Status" colors={colors} />
         <Card style={styles.cardPadding}>
           {mtd.isLoading ? (
@@ -797,8 +841,10 @@ export default function StatusScreen() {
             </>
           )}
         </Card>
+        </Animated.View>
 
         {/* Section 7 — API Health */}
+        <Animated.View style={{ opacity: sectionAnims[6].fade, transform: [{ translateY: sectionAnims[6].slide }] }}>
         <SectionTitle title="API Health" colors={colors} />
         <Card style={styles.cardPadding}>
           <View style={styles.statRow}>
@@ -853,8 +899,10 @@ export default function StatusScreen() {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <StatRow label="API URL" value={API_BASE} colors={colors} />
         </Card>
+        </Animated.View>
 
         {/* Section 8 — App Info */}
+        <Animated.View style={{ opacity: sectionAnims[7].fade, transform: [{ translateY: sectionAnims[7].slide }] }}>
         <SectionTitle title="App Info" colors={colors} />
         <Card style={styles.cardPadding}>
           <StatRow label="App version" value={appVersion} colors={colors} />
@@ -865,6 +913,7 @@ export default function StatusScreen() {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <StatRow label="Platform" value={platform} colors={colors} />
         </Card>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -892,6 +941,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -923,12 +973,23 @@ const styles = StyleSheet.create({
   },
 
   // Section titles
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+  },
+  goldDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.accent,
+  },
   sectionTitle: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 16,
     letterSpacing: -0.2,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
   },
 
   // Card padding

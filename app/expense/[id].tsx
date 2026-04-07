@@ -5,6 +5,8 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  TextInput,
+  Pressable,
   ActivityIndicator,
   Alert,
   Platform,
@@ -18,7 +20,7 @@ import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
-import { useExpenses, useDeleteExpense } from '@/lib/hooks/useApi';
+import { useExpenses, useDeleteExpense, useUpdateExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { hapticMedium } from '@/lib/haptics';
 import type { Expense } from '@/lib/types';
@@ -34,6 +36,20 @@ const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwe
   insurance: { icon: 'shield', bg: '#F0FDF4', color: Colors.success },
   default: { icon: 'file-text-o', bg: '#F1F5F9', color: Colors.grey[600] },
 };
+
+const HMRC_CATEGORIES = [
+  'office_costs',
+  'travel',
+  'clothing',
+  'staff',
+  'stock',
+  'financial',
+  'premises',
+  'legal',
+  'marketing',
+  'training',
+  'other',
+] as const;
 
 const HMRC_CATEGORY_LABELS: Record<string, string> = {
   office_costs: 'Office costs',
@@ -91,9 +107,15 @@ export default function ExpenseDetailScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAmount, setEditAmount] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const deleteMutation = useDeleteExpense();
+  const updateMutation = useUpdateExpense();
 
   // The API returns expenses with snake_case hmrc_category
   const expense = useMemo(() => {
@@ -137,9 +159,44 @@ export default function ExpenseDetailScreen() {
   }, [expense, deleteConfirm, deleteMutation, router]);
 
   const handleEdit = useCallback(() => {
-    // Navigate to expenses tab where editing is done
-    router.replace('/(tabs)/expenses');
-  }, [router]);
+    if (!expense) return;
+    const cat = expense.hmrc_category ?? expense.hmrcCategory ?? '';
+    setEditAmount(String(expense.amount));
+    setEditDescription(expense.description);
+    setEditDate(expense.date);
+    setEditCategory(cat);
+    setIsEditing(true);
+    setDeleteConfirm(false);
+  }, [expense]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!expense) return;
+    const amount = parseFloat(editAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    if (!editDescription.trim()) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(editDate)) return;
+
+    try {
+      await updateMutation.mutateAsync({
+        id: expense.id,
+        data: {
+          amount,
+          description: editDescription.trim(),
+          date: editDate,
+          hmrcCategory: editCategory || undefined,
+        },
+      });
+      hapticMedium();
+      setIsEditing(false);
+      refetch();
+    } catch {
+      // error handled by mutation
+    }
+  }, [expense, editAmount, editDescription, editDate, editCategory, updateMutation, refetch]);
 
   const onRefresh = useCallback(() => {
     refetch();
@@ -193,95 +250,196 @@ export default function ExpenseDetailScreen() {
           </Card>
         ) : (
           <>
-            {/* Category Icon & Description */}
-            <View style={styles.topSection}>
-              <View style={[styles.categoryIconLarge, { backgroundColor: categoryMeta.bg }]}>
-                <FontAwesome name={categoryMeta.icon} size={28} color={categoryMeta.color} />
-              </View>
-              <Text style={[styles.expenseDescription, { color: colors.text }]}>
-                {expense.description}
-              </Text>
-              {hmrcCategory ? (
-                <View style={[styles.categoryBadge, { backgroundColor: categoryMeta.bg }]}>
-                  <Text style={[styles.categoryBadgeText, { color: categoryMeta.color }]}>
-                    {HMRC_CATEGORY_LABELS[hmrcCategory] || hmrcCategory}
+            {isEditing ? (
+              <>
+                {/* Edit Mode */}
+                <Card style={styles.editCard}>
+                  <Text style={[styles.editSectionTitle, { color: colors.text }]}>Edit Expense</Text>
+
+                  <View style={styles.editField}>
+                    <Text style={[styles.editLabel, { color: colors.textSecondary }]}>Amount</Text>
+                    <TextInput
+                      style={[styles.editInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                      value={editAmount}
+                      onChangeText={setEditAmount}
+                      keyboardType="decimal-pad"
+                      placeholder="0.00"
+                      placeholderTextColor={Colors.grey[400]}
+                    />
+                  </View>
+
+                  <View style={styles.editField}>
+                    <Text style={[styles.editLabel, { color: colors.textSecondary }]}>Description</Text>
+                    <TextInput
+                      style={[styles.editInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                      value={editDescription}
+                      onChangeText={setEditDescription}
+                      placeholder="What was this expense for?"
+                      placeholderTextColor={Colors.grey[400]}
+                      maxLength={500}
+                    />
+                  </View>
+
+                  <View style={styles.editField}>
+                    <Text style={[styles.editLabel, { color: colors.textSecondary }]}>Date (YYYY-MM-DD)</Text>
+                    <TextInput
+                      style={[styles.editInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                      value={editDate}
+                      onChangeText={setEditDate}
+                      placeholder="2026-01-15"
+                      placeholderTextColor={Colors.grey[400]}
+                    />
+                  </View>
+
+                  <View style={styles.editField}>
+                    <Text style={[styles.editLabel, { color: colors.textSecondary }]}>HMRC Category</Text>
+                    <View style={styles.categoryPicker}>
+                      {HMRC_CATEGORIES.map((cat) => (
+                        <Pressable
+                          key={cat}
+                          style={[
+                            styles.categoryChip,
+                            { borderColor: colors.border },
+                            editCategory === cat && styles.categoryChipSelected,
+                          ]}
+                          onPress={() => setEditCategory(editCategory === cat ? '' : cat)}
+                        >
+                          <Text
+                            style={[
+                              styles.categoryChipText,
+                              { color: colors.textSecondary },
+                              editCategory === cat && styles.categoryChipTextSelected,
+                            ]}
+                          >
+                            {HMRC_CATEGORY_LABELS[cat]}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                </Card>
+
+                {/* Save / Cancel Buttons */}
+                <View style={styles.actionsSection}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.saveButton, updateMutation.isPending && styles.actionButtonDisabled]}
+                    onPress={handleSave}
+                    disabled={updateMutation.isPending}
+                    activeOpacity={0.8}
+                  >
+                    {updateMutation.isPending ? (
+                      <ActivityIndicator color={Colors.white} size="small" />
+                    ) : (
+                      <>
+                        <FontAwesome name="check" size={16} color={Colors.white} style={styles.actionIcon} />
+                        <Text style={styles.saveButtonText}>Save Changes</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={handleCancelEdit}
+                    activeOpacity={0.8}
+                  >
+                    <FontAwesome name="times" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                    <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                {/* Category Icon & Description */}
+                <View style={styles.topSection}>
+                  <View style={[styles.categoryIconLarge, { backgroundColor: categoryMeta.bg }]}>
+                    <FontAwesome name={categoryMeta.icon} size={28} color={categoryMeta.color} />
+                  </View>
+                  <Text style={[styles.expenseDescription, { color: colors.text }]}>
+                    {expense.description}
                   </Text>
+                  {hmrcCategory ? (
+                    <View style={[styles.categoryBadge, { backgroundColor: categoryMeta.bg }]}>
+                      <Text style={[styles.categoryBadgeText, { color: categoryMeta.color }]}>
+                        {HMRC_CATEGORY_LABELS[hmrcCategory] || hmrcCategory}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
-              ) : null}
-            </View>
 
-            {/* Amount Card */}
-            <Card variant="elevated" style={styles.amountCard}>
-              <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Amount</Text>
-              <Text style={[styles.amountValue, { color: Colors.success }]}>
-                {formatCurrency(expense.amount)}
-              </Text>
-            </Card>
-
-            {/* Details Card */}
-            <Card style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Date</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(expense.date)}</Text>
-              </View>
-              {hmrcCategory ? (
-                <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>HMRC Category</Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>
-                    {HMRC_CATEGORY_LABELS[hmrcCategory] || hmrcCategory}
+                {/* Amount Card */}
+                <Card variant="elevated" style={styles.amountCard}>
+                  <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Amount</Text>
+                  <Text style={[styles.amountValue, { color: Colors.success }]}>
+                    {formatCurrency(expense.amount)}
                   </Text>
+                </Card>
+
+                {/* Details Card */}
+                <Card style={styles.detailsCard}>
+                  <View style={styles.detailRow}>
+                    <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Date</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(expense.date)}</Text>
+                  </View>
+                  {hmrcCategory ? (
+                    <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>HMRC Category</Text>
+                      <Text style={[styles.detailValue, { color: colors.text }]}>
+                        {HMRC_CATEGORY_LABELS[hmrcCategory] || hmrcCategory}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {createdAt ? (
+                    <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Added</Text>
+                      <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(createdAt)}</Text>
+                    </View>
+                  ) : null}
+                </Card>
+
+                {/* Receipt Image */}
+                {receiptUrl ? (
+                  <Card style={styles.receiptCard}>
+                    <Text style={[styles.receiptLabel, { color: colors.textSecondary }]}>Receipt</Text>
+                    <Image
+                      source={{ uri: receiptUrl }}
+                      style={styles.receiptImage}
+                      resizeMode="contain"
+                      accessibilityLabel="Receipt image"
+                    />
+                  </Card>
+                ) : null}
+
+                {/* Action Buttons */}
+                <View style={styles.actionsSection}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={handleEdit}
+                    activeOpacity={0.8}
+                  >
+                    <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                    <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Expense</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton, deleteMutation.isPending && styles.actionButtonDisabled]}
+                    onPress={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    activeOpacity={0.8}
+                  >
+                    {deleteMutation.isPending ? (
+                      <ActivityIndicator color={Colors.error} size="small" />
+                    ) : (
+                      <>
+                        <FontAwesome name="trash-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                        <Text style={styles.deleteButtonText}>
+                          {deleteConfirm ? 'Tap again to confirm' : 'Delete Expense'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 </View>
-              ) : null}
-              {createdAt ? (
-                <View style={[styles.detailRow, styles.detailRowBorder, { borderTopColor: colors.border }]}>
-                  <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Added</Text>
-                  <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(createdAt)}</Text>
-                </View>
-              ) : null}
-            </Card>
-
-            {/* Receipt Image */}
-            {receiptUrl ? (
-              <Card style={styles.receiptCard}>
-                <Text style={[styles.receiptLabel, { color: colors.textSecondary }]}>Receipt</Text>
-                <Image
-                  source={{ uri: receiptUrl }}
-                  style={styles.receiptImage}
-                  resizeMode="contain"
-                  accessibilityLabel="Receipt image"
-                />
-              </Card>
-            ) : null}
-
-            {/* Action Buttons */}
-            <View style={styles.actionsSection}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.editButton]}
-                onPress={handleEdit}
-                activeOpacity={0.8}
-              >
-                <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
-                <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Expense</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton, deleteMutation.isPending && styles.actionButtonDisabled]}
-                onPress={handleDelete}
-                disabled={deleteMutation.isPending}
-                activeOpacity={0.8}
-              >
-                {deleteMutation.isPending ? (
-                  <ActivityIndicator color={Colors.error} size="small" />
-                ) : (
-                  <>
-                    <FontAwesome name="trash-o" size={16} color={Colors.error} style={styles.actionIcon} />
-                    <Text style={styles.deleteButtonText}>
-                      {deleteConfirm ? 'Tap again to confirm' : 'Delete Expense'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+              </>
+            )}
           </>
         )}
       </ScrollView>
@@ -432,6 +590,64 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 14,
     color: Colors.error,
+  },
+
+  // Edit mode
+  editCard: {
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+  },
+  editSectionTitle: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 20,
+    marginBottom: Spacing.xs,
+  },
+  editField: {
+    gap: 6,
+  },
+  editLabel: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  editInput: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 15,
+    borderWidth: 1,
+    borderRadius: BorderRadius.input,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+  },
+  categoryPicker: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  categoryChip: {
+    borderWidth: 1,
+    borderRadius: 9999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  categoryChipSelected: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
+  },
+  categoryChipText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+  categoryChipTextSelected: {
+    color: Colors.white,
+  },
+  saveButton: {
+    backgroundColor: Colors.accent,
+  },
+  saveButtonText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    color: Colors.white,
   },
 
   // Error state

@@ -47,11 +47,13 @@ import {
   createRecurringExpenseSchema,
   updateRecurringExpenseSchema,
   updateSettingsSchema,
+  updateExpenseSchema,
   updateTransactionCategorySchema,
   checkoutSchema,
   mtdCallbackSchema,
   mtdSubmitQuarterlySchema,
   registerDeviceSchema,
+  deleteDeviceSchema,
 } from './validation';
 
 export interface Env {
@@ -745,36 +747,6 @@ authed.get('/tax/calculation', async (c) => {
   return c.json(result);
 });
 
-authed.get('/tax/quarterly', async (c) => {
-  const userId = c.get('userId');
-  const { taxYear } = getCurrentQuarter();
-  const quarterDates = getQuarterDates(taxYear);
-
-  const breakdown = [];
-  for (const q of quarterDates) {
-    const income = await queryOne<{ total: number }>(
-      c.env.DB,
-      'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date BETWEEN ? AND ?',
-      [userId, q.startDate, q.endDate],
-    );
-    const expenses = await queryOne<{ total: number }>(
-      c.env.DB,
-      'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date BETWEEN ? AND ?',
-      [userId, q.startDate, q.endDate],
-    );
-
-    breakdown.push({
-      quarter: q.quarter,
-      from: q.startDate,
-      to: q.endDate,
-      income: income?.total ?? 0,
-      expenses: expenses?.total ?? 0,
-    });
-  }
-
-  return c.json({ taxYear, quarters: breakdown });
-});
-
 // ── Expenses ──────────────────────────────────────────────
 authed.get('/expenses', async (c) => {
   const userId = c.get('userId');
@@ -799,6 +771,43 @@ authed.post('/expenses', async (c) => {
   );
 
   return c.json({ id, success: true }, 201);
+});
+
+authed.put('/expenses/:id', async (c) => {
+  const userId = c.get('userId');
+  const expenseId = c.req.param('id');
+  const raw = await c.req.json();
+  const result = updateExpenseSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const body = result.data;
+
+  const updates: string[] = [];
+  const params: unknown[] = [];
+
+  if (body.amount !== undefined) { updates.push('amount = ?'); params.push(body.amount); }
+  if (body.description !== undefined) { updates.push('description = ?'); params.push(body.description); }
+  if (body.date !== undefined) { updates.push('date = ?'); params.push(body.date); }
+  if (body.hmrcCategory !== undefined) { updates.push('hmrc_category = ?'); params.push(body.hmrcCategory); }
+
+  if (updates.length === 0) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'No fields to update' } }, 400);
+  }
+
+  params.push(expenseId, userId);
+  await execute(
+    c.env.DB,
+    `UPDATE expenses SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+  );
+
+  const updated = await query(c.env.DB, 'SELECT * FROM expenses WHERE id = ? AND user_id = ?', [expenseId, userId]);
+  if (!updated.length) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Expense not found' } }, 404);
+  }
+
+  return c.json({ expense: updated[0], success: true });
 });
 
 authed.delete('/expenses/:id', async (c) => {
@@ -1031,6 +1040,18 @@ authed.post('/mtd/callback', async (c) => {
 authed.get('/mtd/obligations', async (c) => {
   const userId = c.get('userId');
 
+  // Look up and decrypt NINO
+  const userRow = await queryOne<{ nino_encrypted: string | null }>(
+    c.env.DB,
+    'SELECT nino_encrypted FROM users WHERE id = ?',
+    [userId],
+  );
+  if (!userRow?.nino_encrypted) {
+    return c.json({ error: { code: 'NINO_REQUIRED', message: 'Please add your National Insurance Number in Settings' } }, 400);
+  }
+  const { decrypt: decryptNino } = await import('./utils/crypto');
+  const nino = await decryptNino(userRow.nino_encrypted, c.env.ENCRYPTION_KEY);
+
   const hmrcConn = await queryOne<{ access_token_encrypted: string }>(
     c.env.DB,
     'SELECT access_token_encrypted FROM bank_connections WHERE user_id = ? AND provider = ? AND active = 1',
@@ -1043,7 +1064,7 @@ authed.get('/mtd/obligations', async (c) => {
 
   const { decrypt: decryptHmrc } = await import('./utils/crypto');
   const accessToken = await decryptHmrc(hmrcConn.access_token_encrypted, c.env.ENCRYPTION_KEY);
-  const obligations = await getObligations(accessToken, userId);
+  const obligations = await getObligations(accessToken, nino);
 
   const submissions = await query<{ quarter: number; status: string; hmrc_receipt_id: string | null }>(
     c.env.DB,
@@ -1062,6 +1083,18 @@ authed.post('/mtd/submit-quarterly', async (c) => {
     return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
   const { taxYear, quarter } = result.data;
+
+  // Look up and decrypt NINO
+  const userRow = await queryOne<{ nino_encrypted: string | null }>(
+    c.env.DB,
+    'SELECT nino_encrypted FROM users WHERE id = ?',
+    [userId],
+  );
+  if (!userRow?.nino_encrypted) {
+    return c.json({ error: { code: 'NINO_REQUIRED', message: 'Please add your National Insurance Number in Settings' } }, 400);
+  }
+  const { decrypt: decryptNino } = await import('./utils/crypto');
+  const nino = await decryptNino(userRow.nino_encrypted, c.env.ENCRYPTION_KEY);
 
   const existing = await queryOne<{ id: string; status: string }>(
     c.env.DB,
@@ -1113,7 +1146,7 @@ authed.post('/mtd/submit-quarterly', async (c) => {
   );
 
   try {
-    const response = await submitQuarterlyUpdate(accessToken, userId, payload);
+    const response = await submitQuarterlyUpdate(accessToken, nino, payload);
 
     await execute(c.env.DB,
       'UPDATE mtd_submissions SET status = ?, hmrc_receipt_id = ?, response_json = ?, submitted_at = datetime(\'now\') WHERE id = ?',
@@ -1153,8 +1186,18 @@ authed.get('/mtd/submission/:id', async (c) => {
 // ── Settings ──────────────────────────────────────────────
 authed.get('/settings', async (c) => {
   const userId = c.get('userId');
-  const user = await queryOne(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
-  return c.json({ user });
+  const user = await queryOne<Record<string, unknown>>(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
+
+  let ninoMasked: string | null = null;
+  let ninoSet = false;
+  if (user && typeof user.nino_encrypted === 'string') {
+    const { decrypt } = await import('./utils/crypto');
+    const nino = await decrypt(user.nino_encrypted, c.env.ENCRYPTION_KEY);
+    ninoMasked = nino.slice(0, 2) + '****' + nino.slice(7);
+    ninoSet = true;
+  }
+
+  return c.json({ user: { ...user, nino_encrypted: undefined, ninoMasked, ninoSet } });
 });
 
 authed.put('/settings', async (c) => {
@@ -1172,6 +1215,12 @@ authed.put('/settings', async (c) => {
   if (body.name !== undefined) {
     updates.push('name = ?');
     values.push(body.name);
+  }
+  if (body.nino !== undefined) {
+    const { encrypt } = await import('./utils/crypto');
+    const ninoEncrypted = await encrypt(body.nino, c.env.ENCRYPTION_KEY);
+    updates.push('nino_encrypted = ?');
+    values.push(ninoEncrypted);
   }
   if (body.notifyTaxDeadlines !== undefined) {
     updates.push('notify_tax_deadlines = ?');
@@ -1225,7 +1274,12 @@ authed.post('/devices', async (c) => {
 
 authed.delete('/devices', async (c) => {
   const userId = c.get('userId');
-  const { pushToken } = await c.req.json<{ pushToken: string }>();
+  const raw = await c.req.json();
+  const result = deleteDeviceSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+  const { pushToken } = result.data;
 
   await execute(c.env.DB, 'DELETE FROM user_devices WHERE user_id = ? AND push_token = ?', [userId, pushToken]);
   return c.json({ removed: true });

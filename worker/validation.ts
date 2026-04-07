@@ -38,6 +38,14 @@ export const updateInvoiceSchema = z.object({
   dueDate: isoDate.optional(),
 });
 
+// Update Expense
+export const updateExpenseSchema = z.object({
+  amount: positiveAmount.optional(),
+  description: safeString.optional(),
+  date: isoDate.optional(),
+  hmrcCategory: z.string().max(100).optional(),
+});
+
 // Recurring Expense
 export const createRecurringExpenseSchema = z.object({
   description: safeString,
@@ -58,6 +66,7 @@ export const updateRecurringExpenseSchema = z.object({
 // Settings
 export const updateSettingsSchema = z.object({
   name: z.string().max(200).optional(),
+  nino: z.string().regex(/^[A-Z]{2}\d{6}[A-Z]$/).optional(),
   notifyTaxDeadlines: z.boolean().optional(),
   notifyWeeklySummary: z.boolean().optional(),
   notifyTransactionAlerts: z.boolean().optional(),
@@ -90,6 +99,11 @@ export const mtdSubmitQuarterlySchema = z.object({
 export const registerDeviceSchema = z.object({
   pushToken: z.string().min(1, 'pushToken is required').max(500),
   platform: z.string().min(1, 'platform is required').max(50),
+});
+
+// Device push token deletion
+export const deleteDeviceSchema = z.object({
+  pushToken: z.string().min(1, 'pushToken is required').max(500),
 });
 
 // Notification preferences

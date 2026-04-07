@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,10 +10,11 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { Colors, Shadows, BorderRadius } from '@/constants/Colors';
+import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -125,6 +126,52 @@ export default function LearnScreen() {
   const [activeTag, setActiveTag] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // ── Staggered entrance animations ──
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(16)).current;
+  const searchFade = useRef(new Animated.Value(0)).current;
+  const searchSlide = useRef(new Animated.Value(14)).current;
+  const pillsFade = useRef(new Animated.Value(0)).current;
+  const pillsSlide = useRef(new Animated.Value(12)).current;
+  // Article cards — individual stagger (6 cards)
+  const cardAnims = useRef(
+    Array.from({ length: articles.length }, () => ({
+      fade: new Animated.Value(0),
+      slide: new Animated.Value(24),
+    })),
+  ).current;
+
+  useEffect(() => {
+    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, duration: number) =>
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 1, duration, useNativeDriver: true }),
+        Animated.timing(slide, { toValue: 0, duration, useNativeDriver: true }),
+      ]);
+
+    // 1. Header — immediate
+    fadeSlide(headerFade, headerSlide, 300).start();
+
+    // 2. Search bar — 120ms delay
+    Animated.sequence([
+      Animated.delay(120),
+      fadeSlide(searchFade, searchSlide, 320),
+    ]).start();
+
+    // 3. Filter pills — 220ms delay
+    Animated.sequence([
+      Animated.delay(220),
+      fadeSlide(pillsFade, pillsSlide, 300),
+    ]).start();
+
+    // 4. Article cards — cascading stagger starting at 350ms, 100ms apart
+    cardAnims.forEach((anim, i) => {
+      Animated.sequence([
+        Animated.delay(350 + i * 100),
+        fadeSlide(anim.fade, anim.slide, 380),
+      ]).start();
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const filteredArticles = articles.filter((article) => {
     const matchesTag =
       activeTag === 'All' || article.tag.toLowerCase() === activeTag.toLowerCase();
@@ -159,12 +206,21 @@ export default function LearnScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.heading, { color: colors.text }]} accessibilityRole="header">Learn</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
-        </Text>
+        {/* Header */}
+        <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
+          <View style={styles.headingRow}>
+            <View style={styles.goldAccentBar} />
+            <View>
+              <Text style={[styles.heading, { color: colors.text }]} accessibilityRole="header">Learn</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
 
         {/* Search bar */}
+        <Animated.View style={{ opacity: searchFade, transform: [{ translateY: searchSlide }] }}>
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <FontAwesome name="search" size={14} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
@@ -181,8 +237,10 @@ export default function LearnScreen() {
             </Pressable>
           )}
         </View>
+        </Animated.View>
 
         {/* Filter pills */}
+        <Animated.View style={{ opacity: pillsFade, transform: [{ translateY: pillsSlide }] }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -218,6 +276,7 @@ export default function LearnScreen() {
             );
           })}
         </ScrollView>
+        </Animated.View>
 
         {/* Articles */}
         {filteredArticles.length === 0 && (
