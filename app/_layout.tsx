@@ -25,6 +25,8 @@ import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
 import 'react-native-reanimated';
+// @ts-ignore — CSS import for web, ignored on native
+import '../public/global.css';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -121,6 +123,14 @@ export default function RootLayout() {
       <meta name="apple-mobile-web-app-title" content="QuidSafe" />
       <link rel="apple-touch-icon" href="/assets/images/icon.png" />
       <link rel="manifest" href="/manifest.json" />
+      {/* Preconnect to Google Fonts for faster loading */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      {/* Load Manrope + Playfair Display via CSS for reliable web rendering */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet"
+      />
     </Head>
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>

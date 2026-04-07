@@ -1,0 +1,107 @@
+/* QuidSafe — Global Web Styles
+ * Ensures expo-font names (Manrope_700Bold etc.) resolve to
+ * Google Fonts families on web via @font-face aliases.
+ * Also sets base styles for the HTML shell.
+ */
+
+/* ── Base ── */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0A0A0F;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling for all scroll containers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* ── Font-face aliases ──
+ * expo-font on web registers fonts with names like "Manrope_700Bold".
+ * Google Fonts CSS loads them as "Manrope" with font-weight.
+ * These @font-face rules alias the expo names to the Google Fonts families
+ * so React Native Web style objects resolve correctly.
+ */
+
+/* Manrope */
+@font-face {
+  font-family: 'Manrope_400Regular';
+  src: local('Manrope Regular'), local('Manrope');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_500Medium';
+  src: local('Manrope Medium'), local('Manrope');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_600SemiBold';
+  src: local('Manrope SemiBold'), local('Manrope');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_700Bold';
+  src: local('Manrope Bold'), local('Manrope');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_800ExtraBold';
+  src: local('Manrope ExtraBold'), local('Manrope');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Playfair Display */
+@font-face {
+  font-family: 'PlayfairDisplay_400Regular';
+  src: local('Playfair Display Regular'), local('Playfair Display');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PlayfairDisplay_700Bold';
+  src: local('Playfair Display Bold'), local('Playfair Display');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Selection styling ── */
+::selection {
+  background-color: rgba(202, 138, 4, 0.3);
+  color: #F8FAFC;
+}
+
+/* ── Focus visible for accessibility ── */
+:focus-visible {
+  outline: 2px solid #CA8A04;
+  outline-offset: 2px;
+}
+
+/* ── Disable tap highlight on mobile web ── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Input/button reset for web ── */
+input, button, textarea {
+  font-family: 'Manrope', sans-serif;
+}
