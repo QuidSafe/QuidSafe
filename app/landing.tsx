@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     width: '100%', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm,
   },
-  navLogo: { fontFamily: Fonts.playfair.bold, fontSize: 26, color: Colors.white },
+  navLogo: { fontFamily: Fonts.playfair.bold, fontSize: 28, color: Colors.white, letterSpacing: -0.5 },
   navLinks: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   navLink: { fontFamily: Fonts.manrope.medium, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
   navLoginBtn: {
@@ -986,16 +986,16 @@ const styles = StyleSheet.create({
   heroPhoneColumn: { alignItems: 'center', marginTop: 48 },
   heroPhoneColumnDesktop: { marginTop: 0, flexShrink: 0 },
   heroHeadline: {
-    fontFamily: Fonts.playfair.bold, fontSize: 38, color: Colors.white,
-    textAlign: 'center', lineHeight: 48,
+    fontFamily: Fonts.playfair.bold, fontSize: 42, color: Colors.white,
+    textAlign: 'center', lineHeight: 52, letterSpacing: -0.5,
   },
-  heroHeadlineDesktop: { fontSize: 56, lineHeight: 68, textAlign: 'left' },
+  heroHeadlineDesktop: { fontSize: 64, lineHeight: 76, textAlign: 'left', letterSpacing: -1 },
   heroHeadlineGold: { color: Colors.accent },
   heroSubtitle: {
-    fontFamily: Fonts.manrope.regular, fontSize: 17, color: 'rgba(255,255,255,0.65)',
-    textAlign: 'center', marginTop: Spacing.lg, lineHeight: 28, maxWidth: 520,
+    fontFamily: Fonts.manrope.regular, fontSize: 18, color: 'rgba(248,250,252,0.6)',
+    textAlign: 'center', marginTop: Spacing.lg, lineHeight: 30, maxWidth: 520,
   },
-  heroSubtitleDesktop: { fontSize: 19, lineHeight: 30, textAlign: 'left' },
+  heroSubtitleDesktop: { fontSize: 20, lineHeight: 32, textAlign: 'left' },
   heroCTAs: {
     flexDirection: 'column', alignItems: 'center', gap: Spacing.md,
     marginTop: Spacing.xl, width: '100%', maxWidth: 380,
@@ -1008,11 +1008,11 @@ const styles = StyleSheet.create({
 
   // CTAs
   ctaGold: {
-    backgroundColor: Colors.accent, paddingVertical: 16, paddingHorizontal: 32,
+    backgroundColor: Colors.accent, paddingVertical: 18, paddingHorizontal: 36,
     borderRadius: BorderRadius.button, alignItems: 'center', width: '100%',
     ...Shadows.large,
   },
-  ctaGoldText: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white },
+  ctaGoldText: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white, letterSpacing: 0.3 },
   ctaGhost: {
     paddingVertical: 16, paddingHorizontal: 32, borderRadius: BorderRadius.button,
     alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', width: '100%',
@@ -1032,22 +1032,23 @@ const styles = StyleSheet.create({
   trustBarDesktop: { gap: 56 },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   trustIcon: { fontSize: 20 },
-  trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+  trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
   trustSublabel: { fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
 
   // ── Section ──
-  section: { paddingVertical: 72, alignItems: 'center' },
+  section: { paddingVertical: 80, alignItems: 'center' },
   sectionInner: { width: '100%', paddingHorizontal: Spacing.lg, alignItems: 'center' },
   sectionTag: {
-    fontFamily: Fonts.manrope.bold, fontSize: 12, letterSpacing: 2.5, marginBottom: Spacing.sm,
+    fontFamily: Fonts.manrope.bold, fontSize: 11, letterSpacing: 3, marginBottom: Spacing.md,
+    textTransform: 'uppercase',
   },
   sectionTitle: {
-    fontFamily: Fonts.playfair.bold, fontSize: 30, textAlign: 'center',
-    marginBottom: Spacing.md, lineHeight: 40,
+    fontFamily: Fonts.playfair.bold, fontSize: 32, textAlign: 'center',
+    marginBottom: Spacing.lg, lineHeight: 42, letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontFamily: Fonts.manrope.regular, fontSize: 16, textAlign: 'center',
-    lineHeight: 26, maxWidth: 600, marginBottom: Spacing.xl,
+    fontFamily: Fonts.manrope.regular, fontSize: 17, textAlign: 'center',
+    lineHeight: 28, maxWidth: 600, marginBottom: Spacing.xl,
   },
 
   // ── Pain section ──
@@ -1059,7 +1060,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg, alignItems: 'center',
   },
   painStat: {
-    fontFamily: Fonts.playfair.bold, fontSize: 40, color: '#DC2626', marginBottom: Spacing.xs,
+    fontFamily: Fonts.playfair.bold, fontSize: 44, color: '#DC2626', marginBottom: Spacing.xs,
+    letterSpacing: -1,
   },
   painText: {
     fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.6)',
@@ -1086,8 +1088,8 @@ const styles = StyleSheet.create({
   },
   stepIcon: { fontSize: 32, marginBottom: Spacing.md },
   stepTitle: {
-    fontFamily: Fonts.manrope.bold, fontSize: 18, color: Colors.white,
-    marginBottom: Spacing.sm, textAlign: 'center',
+    fontFamily: Fonts.manrope.bold, fontSize: 19, color: Colors.white,
+    marginBottom: Spacing.sm, textAlign: 'center', letterSpacing: -0.2,
   },
   stepDesc: {
     fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.55)',
@@ -1110,7 +1112,8 @@ const styles = StyleSheet.create({
   },
   featureIcon: { fontSize: 22, color: Colors.white },
   featureTitle: {
-    fontFamily: Fonts.manrope.bold, fontSize: 17, color: Colors.white, marginBottom: Spacing.xs,
+    fontFamily: Fonts.manrope.bold, fontSize: 18, color: Colors.white, marginBottom: Spacing.sm,
+    letterSpacing: -0.2,
   },
   featureDesc: {
     fontFamily: Fonts.manrope.regular, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.55)',
@@ -1118,7 +1121,7 @@ const styles = StyleSheet.create({
 
   // ── Stats bar ──
   statsBar: {
-    backgroundColor: Colors.accent, paddingVertical: Spacing.xl, alignItems: 'center',
+    backgroundColor: Colors.accent, paddingVertical: Spacing.xxl, alignItems: 'center',
   },
   statsBarInner: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center',
@@ -1126,7 +1129,7 @@ const styles = StyleSheet.create({
   },
   statsBarDesktop: { justifyContent: 'space-around' },
   statItem: { alignItems: 'center', minWidth: 120 },
-  statValue: { fontFamily: Fonts.playfair.bold, fontSize: 28, color: Colors.white },
+  statValue: { fontFamily: Fonts.playfair.bold, fontSize: 32, color: Colors.white, letterSpacing: -0.5 },
   statLabel: { fontFamily: Fonts.manrope.medium, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   // ── Comparison ──
@@ -1198,7 +1201,7 @@ const styles = StyleSheet.create({
     gap: Spacing.lg, marginBottom: Spacing.lg,
   },
   priceOption: { alignItems: 'center' },
-  priceAmount: { fontFamily: Fonts.playfair.bold, fontSize: 36, color: Colors.white },
+  priceAmount: { fontFamily: Fonts.playfair.bold, fontSize: 42, color: Colors.white, letterSpacing: -1 },
   pricePeriod: { fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   priceOptionDivider: {
     width: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.1)',
@@ -1287,8 +1290,8 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -250 }, { translateY: -250 }],
   },
   finalCTATitle: {
-    fontFamily: Fonts.playfair.bold, fontSize: 34, color: Colors.white,
-    textAlign: 'center', marginBottom: Spacing.md, lineHeight: 44,
+    fontFamily: Fonts.playfair.bold, fontSize: 38, color: Colors.white,
+    textAlign: 'center', marginBottom: Spacing.md, lineHeight: 50, letterSpacing: -0.5,
   },
   finalCTASubtitle: {
     fontFamily: Fonts.manrope.regular, fontSize: 17, color: 'rgba(255,255,255,0.6)',
@@ -1310,7 +1313,7 @@ const styles = StyleSheet.create({
   },
   footerDesktop: { flexDirection: 'row', justifyContent: 'space-between' },
   footerBrand: {},
-  footerLogo: { fontFamily: Fonts.playfair.bold, fontSize: 22, color: Colors.white },
+  footerLogo: { fontFamily: Fonts.playfair.bold, fontSize: 24, color: Colors.white, letterSpacing: -0.3 },
   footerTagline: {
     fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4,
   },

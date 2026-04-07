@@ -163,8 +163,8 @@ const authed = new Hono<AuthedEnv>();
 authed.use('*', clerkAuth());
 
 // ─── Subscription Guard Middleware ───────────────────────
-// Blocks write-sensitive routes when subscription is 'free' and trial has ended
-// or when subscription is 'cancelled'. Returns 402 for paywall enforcement.
+// Blocks routes when trial has expired or subscription is cancelled.
+// Returns 402 for paywall enforcement.
 async function requireActiveSubscription(c: any, next: any) {
   const userId = c.get('userId');
   const user = await queryOne<{ subscription_tier: string; grace_period_ends: string | null }>(
@@ -184,8 +184,8 @@ async function requireActiveSubscription(c: any, next: any) {
     return next();
   }
 
-  // For free/cancelled users, check if they have an active trial
-  if (tier === 'free' || tier === 'cancelled') {
+  // For trialing/cancelled users, check if they have an active trial
+  if (tier === 'trialing' || tier === 'cancelled') {
     const sub = await queryOne<{ status: string; trial_ends_at: string | null }>(
       c.env.DB,
       'SELECT status, trial_ends_at FROM subscriptions WHERE user_id = ?',
@@ -370,7 +370,7 @@ authed.get('/dashboard', async (c) => {
   actions.sort((a, b) => a.priority - b.priority);
 
   return c.json({
-    user: { name: user?.name ?? '', subscriptionTier: user?.subscription_tier ?? 'free' },
+    user: { name: user?.name ?? '', subscriptionTier: user?.subscription_tier ?? 'trialing' },
     tax,
     income: { total: totalIncome, bySource },
     quarters: { current: { taxYear, quarter } },
@@ -589,21 +589,15 @@ authed.put('/transactions/:id/category', async (c) => {
 authed.get('/banking/connect', async (c) => {
   const userId = c.get('userId');
 
-  // Enforce multi-bank limits: 1 on free, 3 on pro
-  const user = await queryOne<{ subscription_tier: string }>(
-    c.env.DB,
-    'SELECT subscription_tier FROM users WHERE id = ?',
-    [userId],
-  );
+  // Enforce multi-bank limit: 3 accounts for all users
   const activeConns = await query(
     c.env.DB,
     'SELECT id FROM bank_connections WHERE user_id = ? AND active = 1',
     [userId],
   );
-  const limit = user?.subscription_tier === 'pro' ? 3 : 1;
-  if (activeConns.length >= limit) {
+  if (activeConns.length >= 3) {
     return c.json(
-      { error: { code: 'BANK_LIMIT_REACHED', message: `You can connect up to ${limit} bank${limit > 1 ? 's' : ''} on your current plan` } },
+      { error: { code: 'BANK_LIMIT_REACHED', message: 'You can connect up to 3 bank accounts' } },
       403,
     );
   }
@@ -1337,13 +1331,13 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     for (const user of expiredGrace.results) {
       await env.DB
         .prepare('UPDATE users SET subscription_tier = ?, grace_period_ends = NULL, updated_at = datetime(\'now\') WHERE id = ?')
-        .bind('free', user.id)
+        .bind('cancelled', user.id)
         .run();
       await env.DB
         .prepare('UPDATE subscriptions SET status = ? WHERE user_id = ?')
         .bind('cancelled', user.id)
         .run();
-      console.log(`[Cron] Grace period expired for user ${user.id} — downgraded to free`);
+      console.log(`[Cron] Grace period expired for user ${user.id} — subscription cancelled`);
     }
 
     if (expiredGrace.results.length > 0) {
@@ -1412,9 +1406,11 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     // Get all users with push tokens and notification preferences
     const usersWithDevices = await env.DB
       .prepare(`SELECT DISTINCT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
-                u.subscription_tier, u.created_at
-                FROM users u INNER JOIN user_devices d ON u.id = d.user_id WHERE d.active = 1`)
-      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string }>();
+                u.subscription_tier, u.created_at, s.status AS sub_status, s.trial_ends_at
+                FROM users u INNER JOIN user_devices d ON u.id = d.user_id
+                LEFT JOIN subscriptions s ON u.id = s.user_id
+                WHERE d.active = 1`)
+      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null }>();
 
     for (const user of usersWithDevices.results) {
       const tokens = await env.DB
@@ -1478,9 +1474,8 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
       }
 
       // Trial ending reminder (2 days before trial end)
-      if (user.subscription_tier === 'free') {
-        const createdAt = new Date(user.created_at);
-        const trialEnd = new Date(createdAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+      if (user.sub_status === 'trialing' && user.trial_ends_at) {
+        const trialEnd = new Date(user.trial_ends_at);
         const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (daysLeft === 2) {
           const template = trialEnding(daysLeft);

@@ -1,7 +1,7 @@
 // QuidSafe — Shared TypeScript Types
 
-export type SubscriptionTier = 'free' | 'pro';
-export type SubscriptionPlan = 'free' | 'pro_monthly' | 'pro_annual';
+export type SubscriptionTier = 'trialing' | 'pro' | 'past_due' | 'cancelled';
+export type SubscriptionPlan = 'pro_monthly' | 'pro_annual';
 export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trialing';
 
 export type TransactionCategory = 'income' | 'personal' | 'business_expense';

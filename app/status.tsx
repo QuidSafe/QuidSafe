@@ -316,7 +316,7 @@ export default function StatusScreen() {
 
   // Billing
   const billingData = billing.data;
-  const subTier = billingData?.plan === 'pro_monthly' || billingData?.plan === 'pro_annual' ? 'Pro' : 'Free';
+  const subTier = billingData?.plan === 'pro_monthly' || billingData?.plan === 'pro_annual' ? 'Pro' : 'Trial';
   const subStatus = billingData?.status ?? 'active';
   const trialEndsAt = billingData?.trialEndsAt;
   const trialDaysRemaining =
@@ -345,8 +345,10 @@ export default function StatusScreen() {
         return { color: Colors.error, bg: 'rgba(220,38,38,0.1)', label: 'Past Due' };
       case 'cancelled':
         return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Cancelled' };
+      case 'requires_setup':
+        return { color: Colors.accent, bg: 'rgba(202,138,4,0.1)', label: 'Not Started' };
       default:
-        return { color: Colors.grey[500], bg: Colors.grey[200], label: status };
+        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Unknown' };
     }
   };
 

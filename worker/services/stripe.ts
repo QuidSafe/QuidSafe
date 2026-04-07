@@ -123,7 +123,7 @@ export async function getSubscriptionStatus(
   }>(db, 'SELECT plan, status, trial_ends_at, current_period_end FROM subscriptions WHERE user_id = ?', [userId]);
 
   if (!sub) {
-    return { plan: 'free', status: 'none', trialEndsAt: null, currentPeriodEnd: null };
+    return { plan: 'none', status: 'requires_setup', trialEndsAt: null, currentPeriodEnd: null };
   }
 
   return {
@@ -222,8 +222,16 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
         [crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd],
       );
 
-      // Update user tier and clear grace period if subscription is back to active
-      const tier = status === 'active' || status === 'trialing' ? 'pro' : 'free';
+      // Update user tier based on Stripe subscription status
+      let tier: string;
+      if (status === 'active' || status === 'trialing') {
+        tier = 'pro';
+      } else if (status === 'past_due') {
+        tier = 'past_due';
+      } else {
+        tier = 'cancelled';
+        console.warn(`[Stripe] Unexpected subscription status '${status}' for user ${userId} — defaulting to cancelled`);
+      }
       await execute(db, 'UPDATE users SET subscription_tier = ?, grace_period_ends = CASE WHEN ? IN (\'active\', \'trialing\') THEN NULL ELSE grace_period_ends END, updated_at = datetime(\'now\') WHERE id = ?', [tier, status, userId]);
       break;
     }
