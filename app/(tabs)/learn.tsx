@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -11,11 +11,14 @@ import {
   Platform,
   UIManager,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
+import { useArticles } from '@/lib/hooks/useApi';
+import type { Article, ArticleCategory } from '@/lib/types';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -23,85 +26,14 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 type TagVariant = 'tag-n' | 'tag-ok' | 'tag-g';
 
-interface Article {
-  id: string;
-  tag: string;
-  tagVariant: TagVariant;
-  title: string;
-  description: string;
-  content: string;
-  readMin: number;
-  url?: string;
-}
-
-const articles: Article[] = [
-  {
-    id: '1',
-    tag: 'MTD',
-    tagVariant: 'tag-n',
-    title: 'What is Making Tax Digital?',
-    description: 'Quarterly updates instead of one January panic...',
-    content:
-      'Making Tax Digital (MTD) for Income Tax requires sole traders earning over £50,000 to keep digital records and submit quarterly updates to HMRC using compatible software. From April 2026, this threshold drops to £30,000. QuidSafe automatically tracks your income and expenses so you are MTD-ready from day one.',
-    readMin: 3,
-    url: 'https://www.gov.uk/guidance/find-software-thats-compatible-with-making-tax-digital-for-income-tax',
-  },
-  {
-    id: '2',
-    tag: 'TAX BASICS',
-    tagVariant: 'tag-ok',
-    title: 'How much tax do I actually owe?',
-    description: 'Personal allowance, basic rate, NI...',
-    content:
-      'As a sole trader you pay Income Tax on profits above the £12,570 Personal Allowance. The basic rate is 20% on earnings from £12,571 to £50,270, then 40% up to £125,140. You also pay Class 2 and Class 4 National Insurance. QuidSafe calculates your estimated liability in real time so there are no surprises.',
-    readMin: 4,
-    url: 'https://www.gov.uk/income-tax-rates',
-  },
-  {
-    id: '3',
-    tag: 'EXPENSES',
-    tagVariant: 'tag-ok',
-    title: 'What expenses can I claim?',
-    description: 'Fuel, phone, home office...',
-    content:
-      'You can claim allowable expenses that are wholly and exclusively for your business. Common claims include office supplies, travel costs, phone bills (business portion), professional subscriptions, and use-of-home. Keep receipts and records for at least five years in case HMRC enquires.',
-    readMin: 5,
-    url: 'https://www.gov.uk/expenses-if-youre-self-employed',
-  },
-  {
-    id: '4',
-    tag: 'SECURITY',
-    tagVariant: 'tag-g',
-    title: 'Is connecting my bank safe?',
-    description: 'FCA regulated, read-only, UK servers...',
-    content:
-      'QuidSafe uses TrueLayer, an FCA-authorised Open Banking provider. The connection is read-only, meaning no one can move money from your account. Your credentials are never shared with us, and all data is encrypted at rest using AES-256-GCM on UK-based servers.',
-    readMin: 2,
-    url: 'https://www.fca.org.uk/consumers/open-banking',
-  },
-  {
-    id: '5',
-    tag: 'DEADLINES',
-    tagVariant: 'tag-n',
-    title: 'Key dates you can\'t miss',
-    description: 'Quarterly submissions, payment deadlines...',
-    content:
-      'The Self Assessment tax return deadline is 31 January for online filing. Payments on account are due 31 January and 31 July. Under MTD, quarterly updates are due on the 5th of August, November, February, and May. Missing deadlines triggers automatic penalties starting at £100.',
-    readMin: 2,
-    url: 'https://www.gov.uk/self-assessment-tax-returns/deadlines',
-  },
-  {
-    id: '6',
-    tag: 'VAT',
-    tagVariant: 'tag-g',
-    title: 'When do I need to register for VAT?',
-    description: 'The £90k threshold, voluntary registration...',
-    content:
-      'You must register for VAT if your taxable turnover exceeds £90,000 in a rolling 12-month period, or you expect to exceed it in the next 30 days alone. Voluntary registration below the threshold can be worthwhile if most of your customers are VAT-registered businesses, as you can reclaim VAT on purchases.',
-    readMin: 3,
-    url: 'https://www.gov.uk/vat-registration/when-to-register',
-  },
-];
+const CATEGORY_TAG_MAP: Record<ArticleCategory, { tag: string; tagVariant: TagVariant }> = {
+  'mtd':             { tag: 'MTD',        tagVariant: 'tag-n' },
+  'getting-started': { tag: 'TAX BASICS', tagVariant: 'tag-ok' },
+  'expenses':        { tag: 'EXPENSES',   tagVariant: 'tag-ok' },
+  'bank-safety':     { tag: 'SECURITY',   tagVariant: 'tag-g' },
+  'deadlines':       { tag: 'DEADLINES',  tagVariant: 'tag-n' },
+  'vat':             { tag: 'VAT',        tagVariant: 'tag-g' },
+};
 
 const ALL_TAGS = ['All', 'MTD', 'Tax Basics', 'Expenses', 'Security', 'Deadlines', 'VAT'] as const;
 
@@ -125,6 +57,15 @@ export default function LearnScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { data, isLoading, isError } = useArticles();
+
+  const articles = useMemo(() => {
+    if (!data?.articles) return [];
+    return data.articles.map((a) => {
+      const mapping = CATEGORY_TAG_MAP[a.category] ?? { tag: a.category.toUpperCase(), tagVariant: 'tag-ok' as TagVariant };
+      return { ...a, ...mapping };
+    });
+  }, [data]);
 
   // ── Staggered entrance animations ──
   const headerFade = useRef(new Animated.Value(0)).current;
@@ -133,15 +74,18 @@ export default function LearnScreen() {
   const searchSlide = useRef(new Animated.Value(14)).current;
   const pillsFade = useRef(new Animated.Value(0)).current;
   const pillsSlide = useRef(new Animated.Value(12)).current;
-  // Article cards — individual stagger (6 cards)
+  // Article cards — dynamically sized
+  const MAX_CARD_ANIMS = 20;
   const cardAnims = useRef(
-    Array.from({ length: articles.length }, () => ({
+    Array.from({ length: MAX_CARD_ANIMS }, () => ({
       fade: new Animated.Value(0),
       slide: new Animated.Value(24),
     })),
   ).current;
 
   useEffect(() => {
+    if (isLoading || articles.length === 0) return;
+
     const fadeSlide = (fade: Animated.Value, slide: Animated.Value, duration: number) =>
       Animated.parallel([
         Animated.timing(fade, { toValue: 1, duration, useNativeDriver: true }),
@@ -164,23 +108,23 @@ export default function LearnScreen() {
     ]).start();
 
     // 4. Article cards — cascading stagger starting at 350ms, 100ms apart
-    cardAnims.forEach((anim: { fade: Animated.Value; slide: Animated.Value }, i: number) => {
+    cardAnims.slice(0, articles.length).forEach((anim: { fade: Animated.Value; slide: Animated.Value }, i: number) => {
       Animated.sequence([
         Animated.delay(350 + i * 100),
         fadeSlide(anim.fade, anim.slide, 380),
       ]).start();
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoading, articles.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredArticles = articles.filter((article) => {
     const matchesTag =
       activeTag === 'All' || article.tag.toLowerCase() === activeTag.toLowerCase();
-    const query = searchQuery.toLowerCase().trim();
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      !query ||
-      article.title.toLowerCase().includes(query) ||
-      article.tag.toLowerCase().includes(query) ||
-      article.description.toLowerCase().includes(query);
+      !q ||
+      article.title.toLowerCase().includes(q) ||
+      article.tag.toLowerCase().includes(q) ||
+      article.summary.toLowerCase().includes(q);
     return matchesTag && matchesSearch;
   });
 
@@ -278,8 +222,38 @@ export default function LearnScreen() {
         </ScrollView>
         </Animated.View>
 
+        {/* Loading state */}
+        {isLoading && (
+          <View style={styles.loadingState}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.skeletonCard,
+                  { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+                ]}
+              >
+                <View style={[styles.skeletonTag, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : Colors.grey[100] }]} />
+                <View style={[styles.skeletonTitle, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : Colors.grey[100] }]} />
+                <View style={[styles.skeletonDesc, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : Colors.grey[50] }]} />
+              </View>
+            ))}
+            <ActivityIndicator size="small" color={Colors.accent} style={{ marginTop: 8 }} />
+          </View>
+        )}
+
+        {/* Error state */}
+        {isError && !isLoading && (
+          <View style={styles.emptyState}>
+            <FontAwesome name="exclamation-triangle" size={24} color={Colors.error} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Couldn&apos;t load articles. Pull down to retry.
+            </Text>
+          </View>
+        )}
+
         {/* Articles */}
-        {filteredArticles.length === 0 && (
+        {!isLoading && !isError && filteredArticles.length === 0 && (
           <View style={styles.emptyState}>
             <FontAwesome name="search" size={24} color={colors.textSecondary} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
@@ -288,11 +262,11 @@ export default function LearnScreen() {
           </View>
         )}
 
-        {filteredArticles.map((article) => {
+        {!isLoading && filteredArticles.map((article) => {
           const variant = getTagColors(article.tagVariant, isDark);
           const isExpanded = expandedId === article.id;
           const articleIndex = articles.findIndex((a) => a.id === article.id);
-          const anim = cardAnims[articleIndex];
+          const anim = articleIndex < MAX_CARD_ANIMS ? cardAnims[articleIndex] : undefined;
           return (
             <Animated.View
               key={article.id}
@@ -311,7 +285,7 @@ export default function LearnScreen() {
                 pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`${article.tag}: ${article.title}. ${article.description} ${article.readMin} minute read`}
+              accessibilityLabel={`${article.tag}: ${article.title}. ${article.summary} ${article.read_time_min} minute read`}
               accessibilityHint={isExpanded ? 'Tap to collapse' : 'Tap to expand and read more'}
               accessibilityState={{ expanded: isExpanded }}
             >
@@ -327,35 +301,21 @@ export default function LearnScreen() {
               </View>
               <Text style={[styles.cardTitle, { color: colors.text }]}>{article.title}</Text>
               <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                {article.description}
+                {article.summary}
               </Text>
 
               {isExpanded && (
                 <View style={[styles.expandedContent, { borderTopColor: colors.border, backgroundColor: expandedContentBg }]}>
                   <Text style={[styles.contentText, { color: colors.text }]}>
-                    {article.content}
+                    {article.body}
                   </Text>
-                  {article.url && (
-                    <Pressable
-                      onPress={() => handleOpenUrl(article.url!)}
-                      style={[styles.readMoreButton, { borderColor: Colors.secondary }]}
-                      accessibilityRole="link"
-                      accessibilityLabel="Read more on HMRC"
-                      accessibilityHint="Opens the HMRC website in your browser"
-                    >
-                      <Text style={[styles.readMoreText, { color: Colors.secondary }]}>
-                        Read more on HMRC
-                      </Text>
-                      <FontAwesome name="external-link" size={11} color={Colors.secondary} />
-                    </Pressable>
-                  )}
                 </View>
               )}
 
               <View style={styles.meta}>
                 <FontAwesome name="clock-o" size={10.5} color={colors.textSecondary} />
                 <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                  {article.readMin} min read
+                  {article.read_time_min} min read
                 </Text>
               </View>
             </Pressable>
