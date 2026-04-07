@@ -10,6 +10,7 @@ import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_700Bold,
 } from '@expo-google-fonts/playfair-display';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -88,6 +89,8 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
     PlayfairDisplay_400Regular,
     PlayfairDisplay_700Bold,
+    // Load FontAwesome icon font — fixes squares-instead-of-icons on web
+    ...FontAwesome.font,
   });
 
   useEffect(() => {

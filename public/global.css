@@ -1,10 +1,27 @@
 /* QuidSafe — Global Web Styles
- * Ensures expo-font names (Manrope_700Bold etc.) resolve to
- * Google Fonts families on web via @font-face aliases.
- * Also sets base styles for the HTML shell.
+ *
+ * Font strategy:
+ *  1. Google Fonts CSS loads "Manrope" and "Playfair Display" for base HTML
+ *     elements (inputs, selects, etc.) and as a fast early paint.
+ *  2. expo-font's useFonts() loads the expo-named variants ("Manrope_700Bold"
+ *     etc.) with embedded font data — this is what React Native Web uses.
+ *     The app renders null until useFonts() resolves, so there's no FOUT.
+ *  3. FontAwesome CDN CSS is loaded as a fallback so icon glyphs render even
+ *     before expo-font finishes loading the FontAwesome.ttf from the bundle.
+ *
+ * NOTE: Do NOT add @font-face aliases using local() for expo font names —
+ * local() only resolves OS-installed fonts and will silently fail for CDN
+ * fonts, potentially leaving the browser with a broken font-family entry
+ * that blocks expo-font's dynamic @font-face injection.
  */
 
-/* ── Base ── */
+/* ── Web Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
+
+/* FontAwesome 4 CDN — fallback for tab bar icons before expo-font loads */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+
+/* ── Base Reset ── */
 html, body, #root {
   height: 100%;
   margin: 0;
@@ -15,12 +32,12 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fix for iOS Safari bottom safe area — prevent tab bar being hidden */
+/* iOS Safari bottom safe area — prevent tab bar being clipped */
 body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Smooth scrolling for all scroll containers */
+/* ── Scrollbars ── */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
@@ -29,132 +46,24 @@ body {
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 
-/* ── Google Fonts import (backup for when <Head> link doesn't work) ── */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
-
-/* ── Font-face aliases ──
- * expo-font on web registers fonts with names like "Manrope_700Bold".
- * Google Fonts CSS loads them as "Manrope" with font-weight.
- * These @font-face rules alias the expo names to the Google Fonts families
- * so React Native Web style objects resolve correctly.
- */
-
-/* Manrope */
-@font-face {
-  font-family: 'Manrope_400Regular';
-  src: local('Manrope Regular'), local('Manrope');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Manrope_500Medium';
-  src: local('Manrope Medium'), local('Manrope');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_600SemiBold';
-  src: local('Manrope SemiBold'), local('Manrope');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_700Bold';
-  src: local('Manrope Bold'), local('Manrope');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_800ExtraBold';
-  src: local('Manrope ExtraBold'), local('Manrope');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
+/* ── Base Typography ── */
+input, button, textarea, select {
+  font-family: 'Manrope', sans-serif;
 }
 
-/* Playfair Display */
-@font-face {
-  font-family: 'PlayfairDisplay_400Regular';
-  src: local('Playfair Display Regular'), local('Playfair Display');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'PlayfairDisplay_700Bold';
-  src: local('Playfair Display Bold'), local('Playfair Display');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ── Fallback: map expo font names to generic Manrope/Playfair ── */
-@font-face {
-  font-family: 'Manrope_400Regular';
-  src: local('Manrope');
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_500Medium';
-  src: local('Manrope');
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_600SemiBold';
-  src: local('Manrope');
-  font-weight: 600;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_700Bold';
-  src: local('Manrope');
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Manrope_800ExtraBold';
-  src: local('Manrope');
-  font-weight: 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'PlayfairDisplay_400Regular';
-  src: local('Playfair Display');
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'PlayfairDisplay_700Bold';
-  src: local('Playfair Display');
-  font-weight: 700;
-  font-display: swap;
-}
-
-/* ── Selection styling ── */
+/* ── Selection ── */
 ::selection {
   background-color: rgba(202, 138, 4, 0.3);
   color: #F8FAFC;
 }
 
-/* ── Focus visible for accessibility ── */
+/* ── Accessibility ── */
 :focus-visible {
   outline: 2px solid #CA8A04;
   outline-offset: 2px;
 }
 
-/* ── Disable tap highlight on mobile web ── */
+/* ── Mobile web tap highlight ── */
 * {
   -webkit-tap-highlight-color: transparent;
-}
-
-/* ── Input/button reset for web ── */
-input, button, textarea {
-  font-family: 'Manrope', sans-serif;
 }
