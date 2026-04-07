@@ -146,6 +146,8 @@ export default function RootLayout() {
                     <Stack.Screen name="self-assessment" options={{ headerShown: false }} />
                     <Stack.Screen name="privacy" options={{ headerShown: false }} />
                     <Stack.Screen name="terms" options={{ headerShown: false }} />
+                    <Stack.Screen name="about" options={{ headerShown: false }} />
+                    <Stack.Screen name="cookie-policy" options={{ headerShown: false }} />
                     <Stack.Screen name="tax-history" options={{ headerShown: false }} />
                     <Stack.Screen name="widget-preview" options={{ headerShown: false }} />
                     <Stack.Screen name="screenshots" options={{ headerShown: false }} />

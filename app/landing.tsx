@@ -904,15 +904,15 @@ export default function LandingScreen() {
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Company</Text>
-                <Link href="/landing" asChild><Pressable><Text style={styles.footerLink}>About</Text></Pressable></Link>
-                <Link href="/landing" asChild><Pressable><Text style={styles.footerLink}>Contact</Text></Pressable></Link>
+                <Link href="/about" asChild><Pressable><Text style={styles.footerLink}>About</Text></Pressable></Link>
+                <Link href="/about" asChild><Pressable><Text style={styles.footerLink}>Contact</Text></Pressable></Link>
                 <Link href="/learn" asChild><Pressable><Text style={styles.footerLink}>Blog</Text></Pressable></Link>
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Legal</Text>
                 <Link href="/privacy" asChild><Pressable><Text style={styles.footerLink}>Privacy Policy</Text></Pressable></Link>
                 <Link href="/terms" asChild><Pressable><Text style={styles.footerLink}>Terms of Service</Text></Pressable></Link>
-                <Link href="/privacy" asChild><Pressable><Text style={styles.footerLink}>Cookie Policy</Text></Pressable></Link>
+                <Link href="/cookie-policy" asChild><Pressable><Text style={styles.footerLink}>Cookie Policy</Text></Pressable></Link>
               </View>
             </View>
           </View>
