@@ -781,20 +781,6 @@ export default function SettingsScreen() {
           />
         </Card>
 
-        {/* APP */}
-        <SectionLabel label="APP" />
-        <Card style={styles.cardPadding}>
-          <SettingsRow
-            icon="th-large"
-            iconBg={Colors.accent}
-            title="Widget"
-            subtitle="Home screen widget preview"
-            right={<Chevron />}
-            isLast
-            onPress={() => router.push('/widget-preview')}
-          />
-        </Card>
-
         {/* ABOUT */}
         <SectionLabel label="ABOUT" />
         <Card style={styles.cardPadding}>

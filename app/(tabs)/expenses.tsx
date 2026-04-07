@@ -19,7 +19,6 @@ import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
 import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ReceiptCapture } from '@/components/ui/ReceiptCapture';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { useExpenses, useAddExpense, useDeleteExpense, useDashboard, useRecurringExpenses, useCreateRecurringExpense, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
@@ -191,7 +190,6 @@ export default function ExpensesScreen() {
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('other');
   const [expTouched, setExpTouched] = useState<Record<string, boolean>>({});
-  const [receiptUri, setReceiptUri] = useState<string | null>(null);
 
   // Recurring expenses state
   const { data: recurringData, refetch: refetchRecurring } = useRecurringExpenses();
@@ -718,11 +716,12 @@ export default function ExpensesScreen() {
                 );
               })}
             </ScrollView>
-            <ReceiptCapture
-              imageUri={receiptUri}
-              onImageSelected={(uri) => setReceiptUri(uri)}
-              onImageRemoved={() => setReceiptUri(null)}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, opacity: 0.5 }}>
+              <FontAwesome name="camera" size={14} color={colors.textSecondary} />
+              <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: colors.textSecondary }}>
+                Receipt scanning — coming soon
+              </Text>
+            </View>
             <Pressable
               style={({ pressed }) => [
                 styles.submitButton,

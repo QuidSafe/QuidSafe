@@ -14,9 +14,8 @@ coverage/
 # EAS
 .eas/
 
-# Supabase local
-supabase/.branches/
-supabase/.temp/
+# Local dev secrets
+.dev.vars
 
 # OS
 Thumbs.db
@@ -29,3 +28,7 @@ Thumbs.db
 ios/
 android/
 web-build/
+
+# Binary artifacts — never commit these
+*.pdf
+*.zip
