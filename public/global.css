@@ -15,6 +15,11 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fix for iOS Safari bottom safe area — prevent tab bar being hidden */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Smooth scrolling for all scroll containers */
 * {
   scrollbar-width: thin;
@@ -23,6 +28,9 @@ html, body, #root {
 *::-webkit-scrollbar { width: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* ── Google Fonts import (backup for when <Head> link doesn't work) ── */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
 
 /* ── Font-face aliases ──
  * expo-font on web registers fonts with names like "Manrope_700Bold".
@@ -38,6 +46,7 @@ html, body, #root {
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Manrope_500Medium';
@@ -81,6 +90,50 @@ html, body, #root {
   src: local('Playfair Display Bold'), local('Playfair Display');
   font-weight: 700;
   font-style: normal;
+  font-display: swap;
+}
+
+/* ── Fallback: map expo font names to generic Manrope/Playfair ── */
+@font-face {
+  font-family: 'Manrope_400Regular';
+  src: local('Manrope');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_500Medium';
+  src: local('Manrope');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_600SemiBold';
+  src: local('Manrope');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_700Bold';
+  src: local('Manrope');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope_800ExtraBold';
+  src: local('Manrope');
+  font-weight: 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PlayfairDisplay_400Regular';
+  src: local('Playfair Display');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PlayfairDisplay_700Bold';
+  src: local('Playfair Display');
+  font-weight: 700;
   font-display: swap;
 }
 
