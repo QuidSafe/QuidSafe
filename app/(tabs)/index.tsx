@@ -197,151 +197,199 @@ export default function DashboardScreen() {
           <DashboardSkeleton />
         ) : (income?.total ?? 0) === 0 && (!actions || actions.length === 0) ? (
           <>
-            {/* Welcome Hero Card */}
+            {/* ── WELCOME: Hero with dashboard preview ── */}
             <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }, { scale: heroScale }] }}>
               <LinearGradient
-                colors={['#0F172A', '#1E3A8A', '#0F172A']}
+                colors={['#0C1222', '#142044', '#1A2D6B', '#142044', '#0C1222']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={emptyStyles.heroCard}
+                style={ws.hero}
               >
-                {/* Decorative glows */}
-                <View style={emptyStyles.glowTopRight} />
-                <View style={emptyStyles.glowBottomLeft} />
-                <View style={emptyStyles.glowCenter} />
+                {/* Layered atmospheric glows */}
+                <View style={ws.glowGold} />
+                <View style={ws.glowBlue} />
+                <View style={ws.glowSoft} />
 
-                <View style={emptyStyles.heroContent}>
-                  <View style={emptyStyles.heroBadge}>
-                    <View style={emptyStyles.heroBadgeDot} />
-                    <Text style={emptyStyles.heroBadgeText}>GET STARTED</Text>
+                {/* Gold accent line — asymmetric top-left */}
+                <View style={ws.accentLine} />
+
+                {/* Oversized headline */}
+                <Text style={ws.heroEyebrow}>SOLE TRADER TAX</Text>
+                <Text style={ws.heroHeadline}>
+                  Know exactly{'\n'}what to set aside
+                </Text>
+
+                {/* Mocked dashboard preview — gives a taste of the real thing */}
+                <View style={ws.previewCard}>
+                  <View style={ws.previewHeader}>
+                    <View style={ws.previewDot} />
+                    <Text style={ws.previewLabel}>SET ASIDE FOR TAX</Text>
                   </View>
+                  <Text style={ws.previewAmount}>£0.00</Text>
+                  <View style={ws.previewRow}>
+                    <View style={ws.previewBox}>
+                      <Text style={ws.previewBoxLabel}>Income Tax</Text>
+                      <Text style={ws.previewBoxVal}>—</Text>
+                    </View>
+                    <View style={ws.previewBox}>
+                      <Text style={ws.previewBoxLabel}>NI (Class 4)</Text>
+                      <Text style={ws.previewBoxVal}>—</Text>
+                    </View>
+                    <View style={ws.previewBox}>
+                      <Text style={ws.previewBoxLabel}>Expenses</Text>
+                      <Text style={ws.previewBoxVal}>—</Text>
+                    </View>
+                  </View>
+                  {/* Blurred overlay hint */}
+                  <LinearGradient
+                    colors={['transparent', 'rgba(12,18,34,0.95)']}
+                    style={ws.previewFade}
+                  />
+                </View>
 
-                  <Text style={emptyStyles.heroTitle}>
-                    Your tax,{'\n'}sorted automatically
-                  </Text>
-                  <Text style={emptyStyles.heroSubtitle}>
-                    Connect your bank and we'll track every pound of income, calculate your tax, and tell you exactly what to set aside.
-                  </Text>
+                <Text style={ws.heroSub}>
+                  Connect your bank account and this dashboard fills itself — income tracked, tax calculated, nothing to configure.
+                </Text>
 
-                  <Pressable
-                    style={({ pressed }) => [emptyStyles.connectButton, pressed && emptyStyles.connectButtonPressed]}
-                    onPress={handleConnectBank}
-                    disabled={isConnecting}
-                    accessibilityRole="button"
-                    accessibilityLabel="Connect your bank account"
+                {/* Primary CTA */}
+                <Pressable
+                  style={({ pressed }) => [ws.cta, pressed && ws.ctaPressed]}
+                  onPress={handleConnectBank}
+                  disabled={isConnecting}
+                  accessibilityRole="button"
+                  accessibilityLabel="Connect your bank account"
+                >
+                  <LinearGradient
+                    colors={['#D4A017', '#CA8A04', '#A16207']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={ws.ctaGradient}
                   >
-                    <LinearGradient
-                      colors={['#CA8A04', '#A16207']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={emptyStyles.connectButtonGradient}
-                    >
-                      <FontAwesome name="university" size={15} color={Colors.white} />
-                      <Text style={emptyStyles.connectButtonText}>
-                        {isConnecting ? 'Connecting...' : 'Connect Your Bank'}
-                      </Text>
-                      <FontAwesome name="arrow-right" size={13} color="rgba(255,255,255,0.7)" />
-                    </LinearGradient>
-                  </Pressable>
+                    <FontAwesome name="university" size={16} color="#FFF" />
+                    <Text style={ws.ctaText}>
+                      {isConnecting ? 'Connecting...' : 'Connect Your Bank'}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
 
-                  <Text style={emptyStyles.heroFootnote}>
-                    256-bit encrypted  ·  Read-only access  ·  FCA regulated
-                  </Text>
+                {/* Trust chips */}
+                <View style={ws.trustRow}>
+                  {['256-bit encrypted', 'Read-only access', 'FCA regulated'].map((t) => (
+                    <View key={t} style={ws.trustChip}>
+                      <FontAwesome name="lock" size={9} color="rgba(202,138,4,0.6)" />
+                      <Text style={ws.trustText}>{t}</Text>
+                    </View>
+                  ))}
                 </View>
               </LinearGradient>
             </Animated.View>
 
-            {/* Feature Cards */}
+            {/* ── FEATURES: Left-bordered vertical stack ── */}
             <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
-              <Text style={[emptyStyles.sectionTitle, { color: colors.text }]}>
-                What QuidSafe does for you
-              </Text>
-
-              <View style={emptyStyles.featureGrid}>
+              <View style={ws.featuresWrap}>
                 {[
                   {
                     icon: 'swap-horizontal' as const,
                     title: 'Auto-track income',
-                    desc: 'Bank transactions imported and categorised automatically with AI.',
-                    color: Colors.secondary,
+                    desc: 'Transactions imported via Open Banking and categorised by AI — no manual entry.',
+                    accent: Colors.secondary,
                   },
                   {
                     icon: 'calculator' as const,
-                    title: 'Real-time tax calc',
-                    desc: 'Income Tax + NI Class 2 & 4 calculated as you earn.',
-                    color: Colors.accent,
+                    title: 'Real-time tax calculation',
+                    desc: 'Income Tax + NI Class 2 & 4, updated live as you earn. Personal allowance and thresholds built in.',
+                    accent: Colors.accent,
                   },
                   {
                     icon: 'wallet' as const,
-                    title: 'Set-aside guide',
-                    desc: "Know exactly how much to put away each month — no surprises.",
-                    color: Colors.success,
+                    title: 'Monthly set-aside amount',
+                    desc: 'Tells you exactly what to put away each month so January never surprises you.',
+                    accent: Colors.success,
                   },
                   {
                     icon: 'shield-checkmark' as const,
-                    title: 'MTD ready',
-                    desc: 'Quarterly updates formatted for Making Tax Digital from April 2026.',
-                    color: '#8B5CF6',
+                    title: 'Making Tax Digital ready',
+                    desc: 'Quarterly updates pre-formatted for HMRC. Deadlines tracked on your dashboard.',
+                    accent: '#8B5CF6',
                   },
-                ].map((feature) => (
-                  <View
-                    key={feature.title}
-                    style={[emptyStyles.featureCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
+                ].map((f, i) => (
+                  <Animated.View
+                    key={f.title}
+                    style={[
+                      ws.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.cardBorder,
+                        borderLeftColor: f.accent,
+                      },
+                    ]}
                   >
-                    <View style={[emptyStyles.featureIconWrap, { backgroundColor: feature.color + '15' }]}>
-                      <Ionicons name={feature.icon} size={20} color={feature.color} />
+                    <View style={[ws.featureIcon, { backgroundColor: f.accent + '14' }]}>
+                      <Ionicons name={f.icon} size={22} color={f.accent} />
                     </View>
-                    <Text style={[emptyStyles.featureTitle, { color: colors.text }]}>{feature.title}</Text>
-                    <Text style={[emptyStyles.featureDesc, { color: colors.textSecondary }]}>{feature.desc}</Text>
-                  </View>
+                    <View style={ws.featureBody}>
+                      <Text style={[ws.featureTitle, { color: colors.text }]}>{f.title}</Text>
+                      <Text style={[ws.featureDesc, { color: colors.textSecondary }]}>{f.desc}</Text>
+                    </View>
+                  </Animated.View>
                 ))}
               </View>
 
-              {/* How it works steps */}
-              <Text style={[emptyStyles.sectionTitle, { color: colors.text }]}>
-                Up and running in 2 minutes
-              </Text>
-
-              <View style={[emptyStyles.stepsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-                {[
-                  { step: '1', label: 'Connect your bank', detail: 'Secure Open Banking link — we never see your password', active: true },
-                  { step: '2', label: 'We categorise everything', detail: 'AI sorts income vs expenses automatically', active: false },
-                  { step: '3', label: 'See your tax in real time', detail: 'Dashboard shows exactly what to set aside', active: false },
-                ].map((item, i) => (
-                  <View key={item.step} style={[emptyStyles.stepRow, i < 2 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                    <View style={[
-                      emptyStyles.stepNumber,
-                      { backgroundColor: item.active ? Colors.accent : (isDark ? Colors.grey[700] : Colors.grey[200]) },
-                    ]}>
-                      <Text style={[
-                        emptyStyles.stepNumberText,
-                        { color: item.active ? Colors.white : colors.textSecondary },
-                      ]}>{item.step}</Text>
-                    </View>
-                    <View style={emptyStyles.stepContent}>
-                      <Text style={[emptyStyles.stepLabel, { color: colors.text }]}>{item.label}</Text>
-                      <Text style={[emptyStyles.stepDetail, { color: colors.textSecondary }]}>{item.detail}</Text>
-                    </View>
-                    {item.active && (
-                      <View style={emptyStyles.stepActiveIndicator}>
-                        <FontAwesome name="arrow-right" size={11} color={Colors.accent} />
+              {/* ── HOW IT WORKS: Numbered timeline ── */}
+              <View style={ws.timelineSection}>
+                <Text style={[ws.timelineHeading, { color: colors.text }]}>
+                  Two minutes to set up
+                </Text>
+                <View style={ws.timeline}>
+                  {[
+                    { n: '1', title: 'Link your bank', desc: 'Secure Open Banking — we never see your password.' },
+                    { n: '2', title: 'AI categorises everything', desc: 'Income, expenses, and sources — sorted automatically.' },
+                    { n: '3', title: 'Dashboard goes live', desc: 'Tax owed, set-aside amount, and quarterly deadlines — all in real time.' },
+                  ].map((step, i) => (
+                    <View key={step.n} style={ws.timelineStep}>
+                      {/* Vertical connector line */}
+                      {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? Colors.accent : colors.border }]} />}
+                      <View style={[
+                        ws.timelineNum,
+                        {
+                          backgroundColor: i === 0 ? Colors.accent : 'transparent',
+                          borderColor: i === 0 ? Colors.accent : colors.border,
+                        },
+                      ]}>
+                        <Text style={[ws.timelineNumText, { color: i === 0 ? '#FFF' : colors.textSecondary }]}>
+                          {step.n}
+                        </Text>
                       </View>
-                    )}
-                  </View>
-                ))}
+                      <View style={ws.timelineBody}>
+                        <Text style={[ws.timelineTitle, { color: i === 0 ? colors.text : colors.textSecondary }]}>
+                          {step.title}
+                        </Text>
+                        <Text style={[ws.timelineDesc, { color: colors.textSecondary }]}>{step.desc}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
               </View>
 
-              {/* Bottom CTA */}
+              {/* ── BOTTOM CTA ── */}
               <Pressable
-                style={({ pressed }) => [emptyStyles.bottomCta, pressed && emptyStyles.connectButtonPressed]}
+                style={({ pressed }) => [ws.bottomCta, { borderColor: colors.border }, pressed && ws.ctaPressed]}
                 onPress={handleConnectBank}
                 disabled={isConnecting}
                 accessibilityRole="button"
-                accessibilityLabel="Connect bank to get started"
               >
-                <FontAwesome name="university" size={14} color={Colors.accent} style={{ marginRight: 8 }} />
-                <Text style={emptyStyles.bottomCtaText}>Connect bank to get started</Text>
-                <FontAwesome name="chevron-right" size={11} color={Colors.accent} />
+                <View style={ws.bottomCtaInner}>
+                  <View style={ws.bottomCtaIconWrap}>
+                    <FontAwesome name="university" size={16} color={Colors.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[ws.bottomCtaTitle, { color: colors.text }]}>Ready to get started?</Text>
+                    <Text style={[ws.bottomCtaDesc, { color: colors.textSecondary }]}>
+                      Takes 2 minutes — connect your bank and let QuidSafe handle the rest.
+                    </Text>
+                  </View>
+                  <FontAwesome name="chevron-right" size={14} color={Colors.accent} />
+                </View>
               </Pressable>
             </Animated.View>
           </>
@@ -942,216 +990,316 @@ const styles = StyleSheet.create({
   },
 });
 
-/* ── Empty / Welcome State Styles ── */
-const emptyStyles = StyleSheet.create({
-  heroCard: {
+/* ── Welcome State Styles (ws) ── */
+const ws = StyleSheet.create({
+  // Hero card
+  hero: {
     borderRadius: BorderRadius.hero,
-    padding: Spacing.lg,
-    paddingVertical: 32,
+    padding: 28,
+    paddingTop: 32,
+    paddingBottom: 28,
     overflow: 'hidden',
     ...Shadows.large,
   },
-  glowTopRight: {
+  glowGold: {
     position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(202, 138, 4, 0.15)',
+    top: -80,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(202, 138, 4, 0.12)',
   },
-  glowBottomLeft: {
+  glowBlue: {
     position: 'absolute',
-    bottom: -40,
-    left: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(30, 58, 138, 0.2)',
-  },
-  glowCenter: {
-    position: 'absolute',
-    top: '40%',
-    left: '30%',
+    bottom: -60,
+    left: -50,
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(202, 138, 4, 0.04)',
+    backgroundColor: 'rgba(30, 58, 138, 0.18)',
   },
-  heroContent: {
-    alignItems: 'center',
+  glowSoft: {
+    position: 'absolute',
+    top: '50%' as any,
+    right: '10%' as any,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(202, 138, 4, 0.03)',
   },
-  heroBadge: {
+  accentLine: {
+    width: 40,
+    height: 3,
+    backgroundColor: Colors.accent,
+    borderRadius: 2,
+    marginBottom: 16,
+    opacity: 0.8,
+  },
+  heroEyebrow: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    color: 'rgba(202,138,4,0.65)',
+    letterSpacing: 2.5,
+    marginBottom: 10,
+  },
+  heroHeadline: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 34,
+    color: Colors.white,
+    lineHeight: 42,
+    letterSpacing: -0.8,
+    marginBottom: 20,
+  },
+
+  // Dashboard preview mock
+  previewCard: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 18,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  previewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.pill,
-    marginBottom: 20,
+    marginBottom: 6,
   },
-  heroBadgeDot: {
+  previewDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: Colors.accent,
   },
-  heroBadgeText: {
+  previewLabel: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 10.5,
-    color: Colors.accent,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
     letterSpacing: 1.5,
   },
-  heroTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 30,
-    color: Colors.white,
-    textAlign: 'center',
-    lineHeight: 38,
-    letterSpacing: -0.5,
-    marginBottom: 12,
+  previewAmount: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 32,
+    color: 'rgba(255,255,255,0.2)',
+    letterSpacing: -1,
+    marginBottom: 14,
   },
-  heroSubtitle: {
+  previewRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  previewBox: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  previewBoxLabel: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 8.5,
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  previewBoxVal: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.15)',
+  },
+  previewFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 50,
+  },
+
+  heroSub: {
     fontFamily: 'Manrope_400Regular',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center',
+    color: 'rgba(255,255,255,0.55)',
     lineHeight: 21,
-    maxWidth: 340,
     marginBottom: 24,
   },
-  connectButton: {
-    borderRadius: BorderRadius.button,
+
+  // CTA button
+  cta: {
+    borderRadius: 14,
     overflow: 'hidden',
     ...Shadows.medium,
+    marginBottom: 16,
   },
-  connectButtonPressed: {
+  ctaPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.97 }],
   },
-  connectButtonGradient: {
+  ctaGradient: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: BorderRadius.button,
-  },
-  connectButtonText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 15,
-    color: Colors.white,
-  },
-  heroFootnote: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
-    textAlign: 'center',
-    marginTop: 16,
-    letterSpacing: 0.2,
-  },
-
-  sectionTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 17,
-    letterSpacing: -0.2,
-    marginBottom: 12,
-    marginTop: 8,
-  },
-
-  featureGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  featureCard: {
-    flexBasis: '47%',
-    flexGrow: 1,
-    borderRadius: BorderRadius.card,
-    borderWidth: 1,
-    padding: 16,
-    ...Shadows.soft,
-  } as any,
-  featureIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+  },
+  ctaText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 16,
+    color: Colors.white,
+    letterSpacing: -0.2,
+  },
+
+  // Trust chips
+  trustRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  trustChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: BorderRadius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  trustText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.35)',
+  },
+
+  // Feature items — vertical stack with left accent border
+  featuresWrap: {
+    gap: 10,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderLeftWidth: 3,
+    padding: 16,
+    gap: 14,
+    ...Shadows.soft,
+  },
+  featureIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureBody: {
+    flex: 1,
+    paddingTop: 2,
   },
   featureTitle: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 13.5,
-    marginBottom: 4,
+    fontSize: 14,
+    letterSpacing: -0.1,
+    marginBottom: 3,
   },
   featureDesc: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 12.5,
+    lineHeight: 18,
   },
 
-  stepsCard: {
-    borderRadius: BorderRadius.card,
-    borderWidth: 1,
-    overflow: 'hidden',
-    ...Shadows.soft,
+  // Timeline section
+  timelineSection: {
+    marginTop: 8,
   },
-  stepRow: {
+  timelineHeading: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    fontSize: 20,
+    letterSpacing: -0.3,
+    marginBottom: 16,
+  },
+  timeline: {
+    gap: 0,
+  },
+  timelineStep: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+    alignItems: 'flex-start',
     gap: 14,
+    paddingBottom: 22,
   },
-  stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  timelineConnector: {
+    position: 'absolute',
+    left: 15,
+    top: 34,
+    width: 2,
+    height: 30,
+    borderRadius: 1,
+    opacity: 0.3,
+  },
+  timelineNum: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepNumberText: {
+  timelineNumText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
+    fontSize: 13,
   },
-  stepContent: {
+  timelineBody: {
     flex: 1,
+    paddingTop: 4,
   },
-  stepLabel: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 14,
+  timelineTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14.5,
+    letterSpacing: -0.1,
   },
-  stepDetail: {
+  timelineDesc: {
     fontFamily: 'Manrope_400Regular',
-    fontSize: 12,
+    fontSize: 12.5,
+    lineHeight: 18,
     marginTop: 2,
-    lineHeight: 17,
   },
-  stepActiveIndicator: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+
+  // Bottom CTA card
+  bottomCta: {
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    padding: 18,
+    ...Shadows.soft,
+  },
+  bottomCtaInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  bottomCtaIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: 'rgba(202, 138, 4, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  bottomCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.accent,
-    borderRadius: BorderRadius.card,
-    backgroundColor: 'rgba(202, 138, 4, 0.06)',
-    marginTop: 4,
+  bottomCtaTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14.5,
+    letterSpacing: -0.1,
   },
-  bottomCtaText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 14,
-    color: Colors.accent,
-    flex: 1,
+  bottomCtaDesc: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
   },
 });
