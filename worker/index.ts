@@ -117,16 +117,25 @@ async function categoriseAndSave(
   return results.length;
 }
 
-app.use('*', logger());
+app.use('*', logger((str) => {
+  console.log(str.replace(/([?&]code=)[^&\s]+/g, '$1[REDACTED]').replace(/([?&]state=)[^&\s]+/g, '$1[REDACTED]'));
+}));
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:8081', 'https://quidsafe.co.uk', 'https://app.quidsafe.co.uk'],
+    origin: ['http://localhost:8081', 'https://quidsafe.co.uk', 'https://app.quidsafe.co.uk', 'https://quidsafe.pages.dev'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
   }),
 );
+app.use('*', async (c, next) => {
+  await next();
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  c.header('Referrer-Policy', 'no-referrer');
+});
 app.use('*', rateLimit());
 
 // ─── Public Routes ────────────────────────────────────────
@@ -400,7 +409,11 @@ authed.get('/dashboard', async (c) => {
 // ── Quarterly Breakdown ──────────────────────────────────
 authed.get('/tax/quarters', async (c) => {
   const userId = c.get('userId');
-  const taxYear = c.req.query('taxYear') ?? getCurrentQuarter().taxYear;
+  const taxYearParam = c.req.query('taxYear');
+  if (taxYearParam && !/^\d{4}\/\d{2}$/.test(taxYearParam)) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid taxYear format' } }, 400);
+  }
+  const taxYear = taxYearParam ?? getCurrentQuarter().taxYear;
   const quarters = getQuarterDates(taxYear);
 
   const populated = await Promise.all(
@@ -454,8 +467,10 @@ authed.get('/tax/quarters', async (c) => {
 // ── Transactions ──────────────────────────────────────────
 authed.get('/transactions', async (c) => {
   const userId = c.get('userId');
-  const limit = parseInt(c.req.query('limit') ?? '50', 10);
-  const offset = parseInt(c.req.query('offset') ?? '0', 10);
+  const rawLimit = parseInt(c.req.query('limit') ?? '50', 10);
+  const rawOffset = parseInt(c.req.query('offset') ?? '0', 10);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 200) : 50;
+  const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
   const category = c.req.query('category');
 
   let sql = 'SELECT * FROM transactions WHERE user_id = ?';
@@ -624,16 +639,41 @@ authed.get('/banking/connect', async (c) => {
   }
 
   const config = getTrueLayerConfig(c.env);
-  const url = getConnectUrl(config, userId);
+
+  // Generate cryptographically random state and store with short TTL
+  const state = crypto.randomUUID();
+  await execute(
+    c.env.DB,
+    'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
+    [state, userId],
+  );
+
+  const url = getConnectUrl(config, state);
   return c.json({ url });
 });
 
 authed.get('/banking/callback', async (c) => {
   const userId = c.get('userId');
   const code = c.req.query('code');
+  const state = c.req.query('state');
   if (!code) {
     return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
   }
+
+  // Validate OAuth state to prevent CSRF
+  if (!state) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
+  }
+  const oauthState = await queryOne<{ user_id: string }>(
+    c.env.DB,
+    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+    [state],
+  );
+  if (!oauthState || oauthState.user_id !== userId) {
+    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
+  }
+  // Delete used state to prevent replay
+  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
 
   const config = getTrueLayerConfig(c.env);
   const tokens = await exchangeCode(code, config);
@@ -1027,7 +1067,15 @@ function getHmrcConfig(env: Env): HmrcConfig {
 authed.get('/mtd/auth', async (c) => {
   const config = getHmrcConfig(c.env);
   const userId = c.get('userId');
-  const state = btoa(JSON.stringify({ userId }));
+
+  // Generate cryptographically random state and store with short TTL
+  const state = crypto.randomUUID();
+  await execute(
+    c.env.DB,
+    'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
+    [state, userId],
+  );
+
   const url = getHmrcAuthUrl(config, state);
   return c.json({ url });
 });
@@ -1039,7 +1087,20 @@ authed.post('/mtd/callback', async (c) => {
   if (!result.success) {
     return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
-  const { code } = result.data;
+  const { code, state } = result.data;
+
+  // Validate OAuth state to prevent CSRF
+  const oauthState = await queryOne<{ user_id: string }>(
+    c.env.DB,
+    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+    [state],
+  );
+  if (!oauthState || oauthState.user_id !== userId) {
+    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
+  }
+  // Delete used state to prevent replay
+  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
   const config = getHmrcConfig(c.env);
 
   const tokens = await exchangeHmrcCode(code, config);
@@ -1180,11 +1241,12 @@ authed.post('/mtd/submit-quarterly', async (c) => {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[MTD] Submission failed:', err);
     await execute(c.env.DB,
       'UPDATE mtd_submissions SET status = ?, response_json = ? WHERE id = ?',
       ['rejected', JSON.stringify({ error: message }), submissionId],
     );
-    return c.json({ error: { code: 'SUBMISSION_FAILED', message } }, 500);
+    return c.json({ error: { code: 'SUBMISSION_FAILED', message: 'HMRC submission failed. Please try again.' } }, 500);
   }
 });
 

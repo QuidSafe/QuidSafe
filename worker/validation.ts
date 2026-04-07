@@ -87,6 +87,7 @@ export const checkoutSchema = z.object({
 // MTD callback
 export const mtdCallbackSchema = z.object({
   code: z.string().min(1, 'Code is required').max(2000),
+  state: z.string().min(1, 'State is required').max(200),
 });
 
 // MTD submit quarterly
@@ -98,7 +99,7 @@ export const mtdSubmitQuarterlySchema = z.object({
 // Device push token registration
 export const registerDeviceSchema = z.object({
   pushToken: z.string().min(1, 'pushToken is required').max(500),
-  platform: z.string().min(1, 'platform is required').max(50),
+  platform: z.enum(['ios', 'android', 'web']),
 });
 
 // Device push token deletion
