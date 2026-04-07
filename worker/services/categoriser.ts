@@ -108,11 +108,13 @@ interface CorrectionExample {
   category: string;
 }
 
+const SYSTEM_PROMPT = `UK sole trader tax categoriser. Classify each transaction as "income", "personal", or "business_expense". Set income_source_type for income (e.g. "gig_delivery","ecommerce","freelance_service"), null otherwise. Respond ONLY with JSON array: [{"id":"...","category":"...","confidence":0.0-1.0,"income_source_type":"...","reasoning":"brief"}]`;
+
 function buildPrompt(transactions: AnonymisedTx[], corrections?: CorrectionExample[]): string {
   const txList = transactions
     .map(
       (tx, i) =>
-        `${i + 1}. ID: ${tx.id} | Amount: £${tx.amount.toFixed(2)} | Merchant: "${tx.merchantType}" | Pattern: "${tx.pattern}" | Direction: ${tx.direction}`,
+        `${i + 1}. ${tx.id}|£${tx.amount.toFixed(2)}|${tx.merchantType}|${tx.pattern}|${tx.direction}`,
     )
     .join('\n');
 
@@ -120,27 +122,13 @@ function buildPrompt(transactions: AnonymisedTx[], corrections?: CorrectionExamp
   if (corrections && corrections.length > 0) {
     const examples = corrections
       .slice(0, 10)
-      .map((c) => `- "${anonymiseMerchant(c.merchantName)}" → ${c.category}`)
-      .join('\n');
-    fewShot = `\nThis user has previously corrected these merchants:\n${examples}\nUse these as guidance for similar transactions.\n`;
+      .map((c) => `${anonymiseMerchant(c.merchantName)}→${c.category}`)
+      .join(', ');
+    fewShot = `\nCorrections: ${examples}\n`;
   }
 
-  return `You are a UK tax categorisation assistant for sole traders.
-
-For each anonymised bank transaction below, classify it as:
-- "income" — money received for work/services/sales
-- "personal" — personal spending (groceries, rent, subscriptions, etc.)
-- "business_expense" — money spent to earn income (fuel, phone bill, equipment, tools, etc.)
-
-Also identify the income source type if applicable (e.g., "gig_delivery", "ecommerce", "freelance_service").
-${fewShot}
-Transactions:
-${txList}
-
-Respond ONLY with a JSON array:
-[
-  { "id": "...", "category": "income|personal|business_expense", "confidence": 0.0-1.0, "income_source_type": "string or null", "reasoning": "brief explanation" }
-]`;
+  return `${fewShot}
+${txList}`;
 }
 
 async function callClaude(
@@ -162,7 +150,9 @@ async function callClaude(
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 800,
+        temperature: 0,
+        system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }],
       }),
       signal: controller.signal,
