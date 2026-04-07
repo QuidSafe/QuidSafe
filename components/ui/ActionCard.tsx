@@ -2,7 +2,7 @@
 
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, BorderRadius, Shadows } from '@/constants/Colors';
+import { Colors, BorderRadius, Shadows, PressedState } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface ActionCardProps {
@@ -26,15 +26,7 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
   const { colors, isDark } = useTheme();
   const color = typeColors[type] ?? Colors.secondary;
 
-  const cardShadow = isDark
-    ? {
-        shadowColor: 'rgba(0,0,0,0.3)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 1,
-        shadowRadius: 3,
-        elevation: 2,
-      }
-    : Shadows.soft;
+  const cardShadow = isDark ? Shadows.darkSoft : Shadows.soft;
 
   return (
     <Pressable
@@ -47,7 +39,7 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
         styles.card,
         { backgroundColor: colors.surface, borderColor: colors.cardBorder },
         cardShadow,
-        pressed && styles.pressed,
+        pressed && PressedState,
       ]}
     >
       <View style={[styles.border, { backgroundColor: color }]} />
@@ -72,10 +64,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
   },
   border: {
     width: 3,

@@ -1,5 +1,5 @@
 import { StyleSheet, Pressable, Text, PressableProps, ViewStyle } from 'react-native';
-import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { Colors, BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
 import { hapticLight } from '@/lib/haptics';
 
@@ -37,7 +37,7 @@ export function Button({ title, variant = 'primary', size = 'md', style, accessi
         styles[variant],
         styles[size],
         variantBorderColor ? { borderColor: variantBorderColor } : undefined,
-        pressed && styles.pressed,
+        pressed && PressedState,
         style as ViewStyle,
       ]}
       {...props}
@@ -55,10 +55,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.soft,
-  },
-  pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.97 }],
   },
   primary: {
     backgroundColor: Colors.primary,

@@ -95,6 +95,47 @@ export const Shadows = {
     shadowRadius: 24,
     elevation: 6,
   },
+  // Centralized dark mode shadows — use instead of redefining inline
+  darkSoft: {
+    shadowColor: 'rgba(0,0,0,0.4)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  darkMedium: {
+    shadowColor: 'rgba(0,0,0,0.5)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  darkLarge: {
+    shadowColor: 'rgba(0,0,0,0.6)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 1,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+};
+
+/** Standard press state — use in Pressable style callback */
+export const PressedState = {
+  opacity: 0.9,
+  transform: [{ scale: 0.98 }] as const,
+};
+
+/** Semantic category background tints — use for icon containers and badges */
+export const CategoryTints = {
+  blue: { bg: '#EFF6FF', bgDark: 'rgba(30,58,138,0.15)', color: '#1E3A8A' },
+  green: { bg: '#F0FDF4', bgDark: 'rgba(22,163,74,0.15)', color: '#16A34A' },
+  gold: { bg: '#FEF9C3', bgDark: 'rgba(202,138,4,0.15)', color: '#A16207' },
+  purple: { bg: '#F5F3FF', bgDark: 'rgba(124,58,237,0.15)', color: '#7C3AED' },
+  orange: { bg: '#FFF7ED', bgDark: 'rgba(234,88,12,0.15)', color: '#EA580C' },
+  red: { bg: '#FEF2F2', bgDark: 'rgba(220,38,38,0.15)', color: '#DC2626' },
+  grey: { bg: '#F1F5F9', bgDark: 'rgba(148,163,184,0.12)', color: '#475569' },
+  pink: { bg: '#FDF2F8', bgDark: 'rgba(236,72,153,0.15)', color: '#EC4899' },
+  cyan: { bg: '#ECFEFF', bgDark: 'rgba(6,182,212,0.15)', color: '#06B6D4' },
 };
 
 export default Colors;
