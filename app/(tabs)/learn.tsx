@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  Linking,
   LayoutAnimation,
   Platform,
   UIManager,
@@ -139,10 +138,6 @@ export default function LearnScreen() {
   const handleTagPress = useCallback((tag: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveTag(tag);
-  }, []);
-
-  const handleOpenUrl = useCallback((url: string) => {
-    Linking.openURL(url);
   }, []);
 
   const expandedContentBg = isDark ? 'rgba(255,255,255,0.03)' : Colors.grey[50];
@@ -457,20 +452,30 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     lineHeight: 12.5 * 1.6,
   },
-  readMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderRadius: BorderRadius.pill,
+  loadingState: {
+    gap: 14,
   },
-  readMoreText: {
-    fontSize: 12,
-    fontFamily: 'Manrope_600SemiBold',
+  skeletonCard: {
+    borderRadius: BorderRadius.card,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    gap: 10,
+  },
+  skeletonTag: {
+    width: 60,
+    height: 18,
+    borderRadius: 9999,
+  },
+  skeletonTitle: {
+    width: '70%',
+    height: 16,
+    borderRadius: 4,
+  },
+  skeletonDesc: {
+    width: '90%',
+    height: 12,
+    borderRadius: 4,
   },
   meta: {
     flexDirection: 'row',
