@@ -134,6 +134,34 @@ export async function getSubscriptionStatus(
   };
 }
 
+// ─── Timing-safe comparison (Workers-compatible) ─────────
+
+function arrayBufferEqual(a: ArrayBuffer, b: ArrayBuffer): boolean {
+  const x = new Uint8Array(a), y = new Uint8Array(b);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  if (aBytes.byteLength !== bBytes.byteLength) return false;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    crypto.getRandomValues(new Uint8Array(32)),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const [macA, macB] = await Promise.all([
+    crypto.subtle.sign('HMAC', key, aBytes),
+    crypto.subtle.sign('HMAC', key, bBytes),
+  ]);
+  return arrayBufferEqual(macA, macB);
+}
+
 // ─── Webhook Handler ──────────────────────────────────────
 
 export async function verifyWebhookSignature(
@@ -166,7 +194,8 @@ export async function verifyWebhookSignature(
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return expected === v1Sig;
+  // Constant-time comparison to prevent timing attacks
+  return timingSafeEqual(expected, v1Sig);
 }
 
 interface StripeEvent {

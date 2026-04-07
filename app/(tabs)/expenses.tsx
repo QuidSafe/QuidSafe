@@ -497,60 +497,24 @@ export default function ExpensesScreen() {
             </View>
 
             <Card style={styles.listCard}>
-              {filteredExpenses.map((exp, index) => {
-                const meta = getCategoryMeta(exp.hmrc_category);
-                return (
-                  <Pressable
-                    key={exp.id}
-                    onPress={() => router.push(`/expense/${exp.id}`)}
-                    style={({ pressed }) => [
-                      styles.expenseRow,
-                      index < filteredExpenses.length - 1 && [styles.expenseRowBorder, { borderBottomColor: colors.border }],
-                      pressed && styles.pressed,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`View expense: ${exp.description}`}
-                    accessibilityHint="Tap to view expense details"
-                  >
-                    <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
-                      <FontAwesome name={meta.icon} size={16} color={meta.color} />
-                    </View>
-                    <View style={styles.expenseMiddle}>
-                      <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
-                        {exp.description}
-                      </Text>
-                      <View style={styles.expenseSubRow}>
-                        {exp.hmrc_category ? (
-                          <View style={[styles.hmrcBadge, { backgroundColor: meta.bg }]}>
-                            <Text style={[styles.hmrcBadgeText, { color: meta.color }]}>
-                              {HMRC_CATEGORY_LABELS[exp.hmrc_category] || exp.hmrc_category}
-                            </Text>
-                          </View>
-                        ) : null}
-                        <Text style={[styles.expenseSub, { color: colors.textSecondary }]} numberOfLines={1}>
-                          {formatDate(exp.date)}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.expenseRight}>
-                      <Text style={[styles.expenseAmount, { color: colors.text }]}>{formatCurrency(exp.amount)}</Text>
-                      <View style={styles.claimedBadge} accessibilityLabel="Status: Claimed">
-                        <Text style={styles.claimedBadgeText}>Claimed</Text>
-                      </View>
-                    </View>
-                    <Pressable
-                      style={({ pressed: p }) => [styles.deleteButton, p && styles.pressed]}
-                      onPress={(e) => { e.stopPropagation(); handleDelete(exp.id, exp.description); }}
-                      hitSlop={8}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Delete expense: ${exp.description}`}
-                      accessibilityHint="Tap to delete this expense"
-                    >
-                      <FontAwesome name="trash-o" size={16} color={Colors.error} />
-                    </Pressable>
-                  </Pressable>
-                );
-              })}
+              <FlatList
+                data={filteredExpenses}
+                keyExtractor={(tx) => tx.id}
+                renderItem={({ item, index }) => (
+                  <ExpenseRow
+                    item={item}
+                    index={index}
+                    totalCount={filteredExpenses.length}
+                    onPress={(id) => router.push(`/expense/${id}`)}
+                    onDelete={handleDelete}
+                    colors={colors}
+                  />
+                )}
+                initialNumToRender={15}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                scrollEnabled={false}
+              />
             </Card>
           </>
         ) : (

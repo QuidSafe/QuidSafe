@@ -41,6 +41,11 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   const payloadStr = new TextDecoder().decode(base64urlDecode(parts[1]));
   const payload = JSON.parse(payloadStr) as ClerkJWTPayload;
 
+  // Reject algorithm confusion attacks — only RS256 is valid for Clerk JWTs
+  if (header.alg !== 'RS256') {
+    throw new Error(`Unexpected JWT algorithm: ${header.alg}`);
+  }
+
   // Check expiration
   if (payload.exp < Date.now() / 1000) {
     throw new Error('Token expired');
@@ -50,6 +55,12 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   // pk_test_xxx or pk_live_xxx → decode the base64 part after pk_test_/pk_live_
   const keyPart = publishableKey.replace(/^pk_(test|live)_/, '');
   const clerkDomain = atob(keyPart).replace(/\$$/, '');
+
+  // Validate issuer matches our Clerk instance
+  const expectedIssuer = `https://${clerkDomain}`;
+  if (payload.iss !== expectedIssuer) {
+    throw new Error(`Invalid JWT issuer: ${payload.iss}`);
+  }
 
   // Fetch JWKS from Clerk
   const jwksUrl = `https://${clerkDomain}/.well-known/jwks.json`;
