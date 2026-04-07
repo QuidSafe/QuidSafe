@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   refreshButton: {
     width: 36,
@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   statLabel: {
     fontFamily: 'Manrope_500Medium',
@@ -1093,7 +1093,7 @@ const styles = StyleSheet.create({
   bankRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm + 2,
   },
   bankInfo: {
     flex: 1,
@@ -1127,12 +1127,12 @@ const styles = StyleSheet.create({
 
   // Invoices
   invoiceStatusRow: {
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   invoiceBadges: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: Spacing.sm + 4,
+    marginTop: Spacing.sm,
   },
   invoiceBadgeItem: {
     alignItems: 'center',
@@ -1146,7 +1146,7 @@ const styles = StyleSheet.create({
   // MTD quarters
   quarterGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
   },
   quarterItem: {
     flex: 1,

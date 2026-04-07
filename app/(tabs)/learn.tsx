@@ -291,9 +291,14 @@ export default function LearnScreen() {
         {filteredArticles.map((article) => {
           const variant = getTagColors(article.tagVariant, isDark);
           const isExpanded = expandedId === article.id;
+          const articleIndex = articles.findIndex((a) => a.id === article.id);
+          const anim = cardAnims[articleIndex];
           return (
-            <Pressable
+            <Animated.View
               key={article.id}
+              style={anim ? { opacity: anim.fade, transform: [{ translateY: anim.slide }] } : undefined}
+            >
+            <Pressable
               onPress={() => handleToggleExpand(article.id)}
               style={({ pressed }) => [
                 styles.card,
@@ -354,6 +359,7 @@ export default function LearnScreen() {
                 </Text>
               </View>
             </Pressable>
+            </Animated.View>
           );
         })}
       </ScrollView>
@@ -366,8 +372,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scroll: {
-    padding: 24,
+    padding: Spacing.lg,
     gap: 14,
+    paddingBottom: Spacing.xxl + Spacing.lg,
+  },
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm + 4,
+  },
+  goldAccentBar: {
+    width: 3,
+    height: 36,
+    borderRadius: 2,
+    backgroundColor: Colors.accent,
+    marginTop: 2,
   },
   heading: {
     fontSize: 24,
@@ -378,6 +397,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Manrope_400Regular',
     marginBottom: 4,
+    marginTop: 2,
   },
   searchContainer: {
     flexDirection: 'row',
