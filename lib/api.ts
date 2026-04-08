@@ -230,8 +230,8 @@ class ApiClient {
     return this.request<{ url: string }>('/mtd/auth');
   }
 
-  submitHmrcCallback(code: string) {
-    return this.request<{ connected: boolean }>('/mtd/callback', { method: 'POST', body: JSON.stringify({ code }) });
+  submitHmrcCallback(code: string, state: string) {
+    return this.request<{ connected: boolean }>('/mtd/callback', { method: 'POST', body: JSON.stringify({ code, state }) });
   }
 
   getMtdObligations() {

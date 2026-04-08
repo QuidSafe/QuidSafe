@@ -240,22 +240,7 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
       const periodEnd = obj.current_period_end ? new Date(obj.current_period_end * 1000).toISOString() : null;
       const trialEnd = obj.trial_end ? new Date(obj.trial_end * 1000).toISOString() : null;
 
-      // Upsert subscription
-      await execute(
-        db,
-        `INSERT INTO subscriptions (id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, trial_ends_at, current_period_start, current_period_end)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(user_id) DO UPDATE SET
-           stripe_subscription_id = excluded.stripe_subscription_id,
-           plan = excluded.plan,
-           status = excluded.status,
-           trial_ends_at = excluded.trial_ends_at,
-           current_period_start = excluded.current_period_start,
-           current_period_end = excluded.current_period_end`,
-        [crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd],
-      );
-
-      // Update user tier based on Stripe subscription status
+      // Batch upsert subscription + update user tier atomically
       let tier: string;
       if (status === 'active' || status === 'trialing') {
         tier = 'pro';
@@ -263,9 +248,23 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
         tier = 'past_due';
       } else {
         tier = 'cancelled';
-        console.warn(`[Stripe] Unexpected subscription status '${status}' for user ${userId} — defaulting to cancelled`);
       }
-      await execute(db, 'UPDATE users SET subscription_tier = ?, grace_period_ends = CASE WHEN ? IN (\'active\', \'trialing\') THEN NULL ELSE grace_period_ends END, updated_at = datetime(\'now\') WHERE id = ?', [tier, status, userId]);
+      await db.batch([
+        db.prepare(
+          `INSERT INTO subscriptions (id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, trial_ends_at, current_period_start, current_period_end)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(user_id) DO UPDATE SET
+             stripe_subscription_id = excluded.stripe_subscription_id,
+             plan = excluded.plan,
+             status = excluded.status,
+             trial_ends_at = excluded.trial_ends_at,
+             current_period_start = excluded.current_period_start,
+             current_period_end = excluded.current_period_end`
+        ).bind(crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd),
+        db.prepare(
+          'UPDATE users SET subscription_tier = ?, grace_period_ends = CASE WHEN ? IN (\'active\', \'trialing\') THEN NULL ELSE grace_period_ends END, updated_at = datetime(\'now\') WHERE id = ?'
+        ).bind(tier, status, userId),
+      ]);
       break;
     }
 
@@ -276,25 +275,20 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
 
     case 'invoice.payment_failed': {
       if (!userId) break;
-      // Set 7-day grace period instead of immediately revoking access
       const gracePeriodEnds = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await execute(
-        db,
-        'UPDATE subscriptions SET status = \'past_due\' WHERE user_id = ?',
-        [userId],
-      );
-      await execute(
-        db,
-        'UPDATE users SET subscription_tier = \'past_due\', grace_period_ends = ?, updated_at = datetime(\'now\') WHERE id = ?',
-        [gracePeriodEnds, userId],
-      );
+      await db.batch([
+        db.prepare('UPDATE subscriptions SET status = \'past_due\' WHERE user_id = ?').bind(userId),
+        db.prepare('UPDATE users SET subscription_tier = \'past_due\', grace_period_ends = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(gracePeriodEnds, userId),
+      ]);
       break;
     }
 
     case 'customer.subscription.deleted': {
       if (!userId) break;
-      await execute(db, 'UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = ?', [userId]);
-      await execute(db, 'UPDATE users SET subscription_tier = \'cancelled\', grace_period_ends = NULL, updated_at = datetime(\'now\') WHERE id = ?', [userId]);
+      await db.batch([
+        db.prepare('UPDATE subscriptions SET status = \'cancelled\' WHERE user_id = ?').bind(userId),
+        db.prepare('UPDATE users SET subscription_tier = \'cancelled\', grace_period_ends = NULL, updated_at = datetime(\'now\') WHERE id = ?').bind(userId),
+      ]);
       break;
     }
   }

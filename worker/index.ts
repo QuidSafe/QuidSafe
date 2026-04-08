@@ -575,7 +575,7 @@ authed.get('/transactions', async (c) => {
   const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
   const category = c.req.query('category');
 
-  let sql = 'SELECT * FROM transactions WHERE user_id = ?';
+  let sql = 'SELECT id, amount, description, merchant_name, ai_category, ai_confidence, is_income, is_expense_claimable, income_source, transaction_date, bank_connection_id, user_override, created_at FROM transactions WHERE user_id = ?';
   const params: unknown[] = [userId];
 
   if (category) {
@@ -677,7 +677,7 @@ authed.get('/transactions/uncategorised', async (c) => {
   const userId = c.get('userId');
   const transactions = await query(
     c.env.DB,
-    'SELECT * FROM transactions WHERE user_id = ? AND (ai_category IS NULL OR ai_confidence < 0.60) ORDER BY transaction_date DESC',
+    'SELECT id, amount, description, merchant_name, ai_category, ai_confidence, is_income, income_source, transaction_date, user_override FROM transactions WHERE user_id = ? AND (ai_category IS NULL OR ai_confidence < 0.60) ORDER BY transaction_date DESC',
     [userId],
   );
   return c.json({ transactions });
@@ -775,7 +775,7 @@ authed.post('/banking/sync/:id', async (c) => {
 
   const connection = await queryOne<BankConnectionRow>(
     c.env.DB,
-    'SELECT * FROM bank_connections WHERE id = ? AND user_id = ? AND active = 1',
+    'SELECT id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted, last_synced_at, active FROM bank_connections WHERE id = ? AND user_id = ? AND active = 1',
     [connId, userId],
   );
 
@@ -813,17 +813,19 @@ authed.get('/tax/calculation', async (c) => {
   const userId = c.get('userId');
   const { taxYear, quarter } = getCurrentQuarter();
 
-  const incomeResult = await queryOne<{ total: number }>(
-    c.env.DB,
-    'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ?',
-    [userId, `${taxYear.split('/')[0]}-04-06`],
-  );
-
-  const expenseResult = await queryOne<{ total: number }>(
-    c.env.DB,
-    'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ?',
-    [userId, `${taxYear.split('/')[0]}-04-06`],
-  );
+  const startDate = `${taxYear.split('/')[0]}-04-06`;
+  const [incomeResult, expenseResult] = await Promise.all([
+    queryOne<{ total: number }>(
+      c.env.DB,
+      'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= ?',
+      [userId, startDate],
+    ),
+    queryOne<{ total: number }>(
+      c.env.DB,
+      'SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM transactions WHERE user_id = ? AND ai_category = \'business_expense\' AND transaction_date >= ?',
+      [userId, startDate],
+    ),
+  ]);
 
   const result = calculateTax({
     totalIncome: incomeResult?.total ?? 0,
@@ -838,7 +840,7 @@ authed.get('/tax/calculation', async (c) => {
 // ── Expenses ──────────────────────────────────────────────
 authed.get('/expenses', async (c) => {
   const userId = c.get('userId');
-  const expenses = await query(c.env.DB, 'SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC', [userId]);
+  const expenses = await query(c.env.DB, 'SELECT id, amount, description, hmrc_category, date, receipt_url, created_at FROM expenses WHERE user_id = ? ORDER BY date DESC', [userId]);
   return c.json({ expenses });
 });
 
@@ -909,7 +911,7 @@ authed.get('/expenses/recurring', async (c) => {
   const userId = c.get('userId');
   const recurringExpenses = await query(
     c.env.DB,
-    'SELECT * FROM recurring_expenses WHERE user_id = ? AND active = 1 ORDER BY next_due_date ASC',
+    'SELECT id, amount, description, hmrc_category, frequency, next_due_date, active, created_at FROM recurring_expenses WHERE user_id = ? AND active = 1 ORDER BY next_due_date ASC',
     [userId],
   );
   return c.json({ recurringExpenses });
@@ -982,7 +984,7 @@ authed.delete('/expenses/recurring/:id', async (c) => {
 authed.get('/invoices', async (c) => {
   const userId = c.get('userId');
   const status = c.req.query('status');
-  let sql = 'SELECT * FROM invoices WHERE user_id = ?';
+  let sql = 'SELECT id, client_name, description, amount, due_date, status, paid_at, created_at FROM invoices WHERE user_id = ?';
   const params: unknown[] = [userId];
   if (status) { sql += ' AND status = ?'; params.push(status); }
   sql += ' ORDER BY created_at DESC';
@@ -1298,7 +1300,7 @@ authed.get('/mtd/submission/:id', async (c) => {
 // ── Settings ──────────────────────────────────────────────
 authed.get('/settings', async (c) => {
   const userId = c.get('userId');
-  const user = await queryOne<Record<string, unknown>>(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
+  const user = await queryOne<Record<string, unknown>>(c.env.DB, 'SELECT id, name, email, business_type, subscription_tier, trial_ends_at, nino_encrypted, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready, created_at FROM users WHERE id = ?', [userId]);
 
   let ninoMasked: string | null = null;
   let ninoSet = false;
@@ -1421,7 +1423,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
 
   // Get all active bank connections
   const connections = await env.DB
-    .prepare('SELECT * FROM bank_connections WHERE active = 1')
+    .prepare('SELECT id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted, last_synced_at, active FROM bank_connections WHERE active = 1')
     .all<BankConnectionRow>();
 
   let successCount = 0;
@@ -1563,94 +1565,108 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     console.error('[Cron] Recurring expenses auto-log failed:', recurringErr);
   }
 
-  // ── Notification checks ──────────────────────────────────
+  // ── Notification checks (pre-aggregated — no per-user queries) ──
   try {
     const now = new Date();
     const { taxYear } = getCurrentQuarter(now);
     const deadlines = getUKTaxDeadlines(taxYear);
 
-    // Get all users with push tokens and notification preferences
-    const usersWithDevices = await env.DB
-      .prepare(`SELECT DISTINCT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
-                u.subscription_tier, u.created_at, s.status AS sub_status, s.trial_ends_at
-                FROM users u INNER JOIN user_devices d ON u.id = d.user_id
-                LEFT JOIN subscriptions s ON u.id = s.user_id
-                WHERE d.active = 1`)
-      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null }>();
+    // Single query: users + their push tokens + subscription info
+    const usersWithTokens = await env.DB
+      .prepare(`SELECT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
+                u.subscription_tier, u.created_at, s.status AS sub_status, s.trial_ends_at,
+                d.push_token
+                FROM users u
+                INNER JOIN user_devices d ON u.id = d.user_id AND d.active = 1
+                LEFT JOIN subscriptions s ON u.id = s.user_id`)
+      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null; push_token: string }>();
 
-    for (const user of usersWithDevices.results) {
-      const tokens = await env.DB
-        .prepare('SELECT push_token FROM user_devices WHERE user_id = ? AND active = 1')
-        .bind(user.id)
-        .all<{ push_token: string }>();
+    // Group tokens by user in memory (avoids per-user token query)
+    const userTokenMap = new Map<string, { tokens: string[]; user: typeof usersWithTokens.results[0] }>();
+    for (const row of usersWithTokens.results) {
+      const entry = userTokenMap.get(row.id);
+      if (entry) {
+        entry.tokens.push(row.push_token);
+      } else {
+        userTokenMap.set(row.id, { tokens: [row.push_token], user: row });
+      }
+    }
 
-      const pushTokens = tokens.results.map((t) => t.push_token);
-      if (pushTokens.length === 0) continue;
+    // Pre-aggregate: weekly income for all users in one query
+    const weeklyIncomeAll = now.getDay() === 1
+      ? await env.DB.prepare(
+          'SELECT user_id, COALESCE(SUM(amount), 0) as total, COUNT(DISTINCT income_source) as sources FROM transactions WHERE is_income = 1 AND transaction_date >= date(\'now\', \'-7 days\') GROUP BY user_id'
+        ).all<{ user_id: string; total: number; sources: number }>()
+      : { results: [] as { user_id: string; total: number; sources: number }[] };
+    const weeklyIncomeMap = new Map(weeklyIncomeAll.results.map((r) => [r.user_id, r]));
 
-      // Tax deadline reminders (14 days and 3 days before)
+    // Pre-aggregate: quarterly income for deadline reminders (all users)
+    const needsDeadlineIncome = deadlines.some((d) => {
+      const daysUntil = Math.ceil((new Date(d.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil === 14 && d.quarter;
+    });
+    const quarterlyIncomeAll = needsDeadlineIncome
+      ? await env.DB.prepare(
+          'SELECT user_id, COALESCE(SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END), 0) as income FROM transactions WHERE transaction_date >= date(\'now\', \'-90 days\') GROUP BY user_id'
+        ).all<{ user_id: string; income: number }>()
+      : { results: [] as { user_id: string; income: number }[] };
+    const quarterlyIncomeMap = new Map(quarterlyIncomeAll.results.map((r) => [r.user_id, r]));
+
+    // Pre-aggregate: expiring bank connections (all users)
+    const expiringBanksAll = await env.DB
+      .prepare('SELECT user_id, bank_name, consent_expires_at FROM bank_connections WHERE active = 1 AND consent_expires_at IS NOT NULL')
+      .all<{ user_id: string; bank_name: string; consent_expires_at: string }>();
+    const expiringBanksMap = new Map<string, typeof expiringBanksAll.results>();
+    for (const bank of expiringBanksAll.results) {
+      const existing = expiringBanksMap.get(bank.user_id) || [];
+      existing.push(bank);
+      expiringBanksMap.set(bank.user_id, existing);
+    }
+
+    // Process each user using pre-aggregated data (zero additional D1 queries)
+    for (const [userId, { tokens: pushTokens, user }] of userTokenMap) {
+      // Tax deadline reminders
       if (user.notify_tax_deadlines) {
         for (const deadline of deadlines) {
-          const deadlineDate = new Date(deadline.date);
-          const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
+          const daysUntil = Math.ceil((new Date(deadline.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           if (daysUntil === 14 && deadline.quarter) {
-            const taxResult = await env.DB
-              .prepare('SELECT COALESCE(SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END), 0) as income FROM transactions WHERE user_id = ? AND transaction_date >= date(\'now\', \'-90 days\')')
-              .bind(user.id)
-              .first<{ income: number }>();
-            const estimated = formatCurrency(taxResult?.income ? taxResult.income * 0.25 : 0);
-            const template = deadlineReminder14Days(deadline.quarter, deadline.date, estimated);
-            await sendPushNotifications(buildPushMessages(pushTokens, template));
+            const income = quarterlyIncomeMap.get(userId)?.income ?? 0;
+            const estimated = formatCurrency(income * 0.25);
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineReminder14Days(deadline.quarter, deadline.date, estimated)));
           }
-
           if (daysUntil === 3 && deadline.quarter) {
-            const template = deadlineUrgent3Days(deadline.quarter, deadline.date);
-            await sendPushNotifications(buildPushMessages(pushTokens, template));
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineUrgent3Days(deadline.quarter, deadline.date)));
           }
         }
       }
 
-      // Weekly income summary (Monday only — day 1)
+      // Weekly income summary (Monday only)
       if (user.notify_weekly_summary && now.getDay() === 1) {
-        const weeklyIncome = await env.DB
-          .prepare('SELECT COALESCE(SUM(amount), 0) as total, COUNT(DISTINCT income_source) as sources FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= date(\'now\', \'-7 days\')')
-          .bind(user.id)
-          .first<{ total: number; sources: number }>();
-
-        if (weeklyIncome && weeklyIncome.total > 0) {
-          const taxToSetAside = formatCurrency(weeklyIncome.total * 0.25);
-          const template = weeklySummary(formatCurrency(weeklyIncome.total), weeklyIncome.sources, taxToSetAside);
-          await sendPushNotifications(buildPushMessages(pushTokens, template));
+        const wi = weeklyIncomeMap.get(userId);
+        if (wi && wi.total > 0) {
+          await sendPushNotifications(buildPushMessages(pushTokens, weeklySummary(formatCurrency(wi.total), wi.sources, formatCurrency(wi.total * 0.25))));
         }
       }
 
-      // Bank re-auth warnings (7 days before consent expiry)
-      const expiringBanks = await env.DB
-        .prepare('SELECT bank_name, consent_expires_at FROM bank_connections WHERE user_id = ? AND active = 1 AND consent_expires_at IS NOT NULL')
-        .bind(user.id)
-        .all<{ bank_name: string; consent_expires_at: string }>();
-
-      for (const bank of expiringBanks.results) {
-        const expiryDate = new Date(bank.consent_expires_at);
-        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      // Bank re-auth warnings
+      const banks = expiringBanksMap.get(userId) || [];
+      for (const bank of banks) {
+        const daysUntilExpiry = Math.ceil((new Date(bank.consent_expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (daysUntilExpiry === 7) {
-          const template = bankReauthNeeded(bank.bank_name || 'your bank', daysUntilExpiry);
-          await sendPushNotifications(buildPushMessages(pushTokens, template));
+          await sendPushNotifications(buildPushMessages(pushTokens, bankReauthNeeded(bank.bank_name || 'your bank', daysUntilExpiry)));
         }
       }
 
-      // Trial ending reminder (2 days before trial end)
+      // Trial ending reminder
       if (user.sub_status === 'trialing' && user.trial_ends_at) {
-        const trialEnd = new Date(user.trial_ends_at);
-        const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysLeft = Math.ceil((new Date(user.trial_ends_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (daysLeft === 2) {
-          const template = trialEnding(daysLeft);
-          await sendPushNotifications(buildPushMessages(pushTokens, template));
+          await sendPushNotifications(buildPushMessages(pushTokens, trialEnding(daysLeft)));
         }
       }
     }
 
-    console.log(`[Cron] Notification checks complete for ${usersWithDevices.results.length} users`);
+    console.log(`[Cron] Notification checks complete for ${userTokenMap.size} users`);
   } catch (notifErr) {
     console.error('[Cron] Notification checks failed:', notifErr);
   }

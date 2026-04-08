@@ -4,7 +4,6 @@ import {
   View,
   Text,
   ScrollView,
-  FlatList,
   Pressable,
   TextInput,
   RefreshControl,
@@ -500,24 +499,17 @@ export default function ExpensesScreen() {
             </View>
 
             <Card style={styles.listCard}>
-              <FlatList
-                data={filteredExpenses}
-                keyExtractor={(tx) => tx.id}
-                renderItem={({ item, index }) => (
-                  <ExpenseRow
-                    item={item}
-                    index={index}
-                    totalCount={filteredExpenses.length}
-                    onPress={(id) => router.push(`/expense/${id}`)}
-                    onDelete={handleDelete}
-                    colors={colors}
-                  />
-                )}
-                initialNumToRender={15}
-                maxToRenderPerBatch={10}
-                windowSize={5}
-                scrollEnabled={false}
-              />
+              {filteredExpenses.map((item, index) => (
+                <ExpenseRow
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  totalCount={filteredExpenses.length}
+                  onPress={(id) => router.push(`/expense/${id}`)}
+                  onDelete={handleDelete}
+                  colors={colors}
+                />
+              ))}
             </Card>
           </>
         ) : (
