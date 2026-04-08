@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowUp, ArrowDown, Landmark, Lightbulb, Check, ChevronRight, Clock, CheckCircle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { MiniChart } from '@/components/ui/MiniChart';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { TaxHeroCard } from '@/components/ui/TaxHeroCard';
+import { WelcomeState } from '@/components/ui/WelcomeState';
+import { IncomeBySource } from '@/components/ui/IncomeBySource';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
@@ -34,14 +35,14 @@ function calcYoYGrowth(byMonth?: { month: string; income: number }[]): number | 
 }
 
 const SOURCE_COLORS = [
-  Colors.secondary,   // Royal Blue
-  Colors.accent,      // Warm Gold
-  Colors.success,     // Green
-  '#8B5CF6',          // Purple
-  '#EC4899',          // Pink
-  '#06B6D4',          // Cyan
-  Colors.error,       // Red
-  '#F97316',          // Orange
+  '#0066FF',
+  '#0066FF',
+  '#00C853',
+  '#0066FF',
+  '#EC4899',
+  '#06B6D4',
+  '#FF3B30',
+  '#F97316',
 ];
 
 function getGreeting(): string {
@@ -55,7 +56,7 @@ export default function DashboardScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -76,11 +77,22 @@ export default function DashboardScreen() {
   const actions = data?.actions;
   const isWelcome = (income?.total ?? 0) === 0 && (!actions || actions.length === 0);
 
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isConnecting) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsConnecting(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isConnecting]);
+
   const handleConnectBank = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      const { url } = await api.getConnectUrl();
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
       await WebBrowser.openBrowserAsync(url);
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
@@ -114,15 +126,15 @@ export default function DashboardScreen() {
             {/* Health badge -- income growth indicator (YoY from byMonth data) */}
             {yoyGrowth !== null && (
               <View
-                style={[styles.healthBadge, { backgroundColor: yoyGrowth >= 0 ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)' }]}
+                style={[styles.healthBadge, { backgroundColor: yoyGrowth >= 0 ? 'rgba(0,200,83,0.1)' : 'rgba(255,59,48,0.1)' }]}
                 accessibilityLabel={`Income growth: ${yoyGrowth >= 0 ? 'plus' : 'minus'} ${Math.abs(yoyGrowth)} percent`}
               >
-                <FontAwesome
-                  name={yoyGrowth >= 0 ? 'arrow-up' : 'arrow-down'}
-                  size={11}
-                  color={yoyGrowth >= 0 ? Colors.success : Colors.error}
-                />
-                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? Colors.success : Colors.error }]}>
+                {yoyGrowth >= 0 ? (
+                  <ArrowUp size={11} color="#00C853" strokeWidth={1.5} />
+                ) : (
+                  <ArrowDown size={11} color="#FF3B30" strokeWidth={1.5} />
+                )}
+                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? '#00C853' : '#FF3B30' }]}>
                   {yoyGrowth >= 0 ? '+' : ''}{yoyGrowth}%
                 </Text>
               </View>
@@ -139,270 +151,12 @@ export default function DashboardScreen() {
         {isLoading ? (
           <DashboardSkeleton />
         ) : isWelcome ? (
-          <>
-            {/* ── WELCOME: Hero with dashboard preview ── */}
-            <View>
-              <LinearGradient
-                colors={['#0C1222', '#142044', '#1A2D6B', '#142044', '#0C1222']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={ws.hero}
-              >
-                {/* Layered atmospheric glows */}
-                <View style={ws.glowGold} />
-                <View style={ws.glowBlue} />
-                <View style={ws.glowSoft} />
-
-                {/* Gold accent line — asymmetric top-left */}
-                <View style={ws.accentLine} />
-
-                {/* Oversized headline */}
-                <Text style={ws.heroEyebrow}>SOLE TRADER TAX</Text>
-                <Text style={ws.heroHeadline}>
-                  Know exactly{'\n'}what to set aside
-                </Text>
-
-                {/* Mocked dashboard preview — staggered reveal */}
-                <View style={ws.previewCard}>
-                  <View style={ws.previewHeader}>
-                    <View style={ws.previewDot} />
-                    <Text style={ws.previewLabel}>SET ASIDE FOR TAX</Text>
-                  </View>
-                  <Text style={ws.previewAmount}>£0.00</Text>
-                  <View style={ws.previewRow}>
-                    <View style={ws.previewBox}>
-                      <Text style={ws.previewBoxLabel}>Income Tax</Text>
-                      <Text style={ws.previewBoxVal}>—</Text>
-                    </View>
-                    <View style={ws.previewBox}>
-                      <Text style={ws.previewBoxLabel}>NI (Class 4)</Text>
-                      <Text style={ws.previewBoxVal}>—</Text>
-                    </View>
-                    <View style={ws.previewBox}>
-                      <Text style={ws.previewBoxLabel}>Expenses</Text>
-                      <Text style={ws.previewBoxVal}>—</Text>
-                    </View>
-                  </View>
-                  <LinearGradient
-                    colors={['transparent', 'rgba(12,18,34,0.95)']}
-                    style={ws.previewFade}
-                  />
-                </View>
-
-                <Text style={ws.heroSub}>
-                  Connect your bank account and this dashboard fills itself — income tracked, tax calculated, nothing to configure.
-                </Text>
-
-                {/* Primary CTA — spring pop entrance */}
-                <View>
-                  <Pressable
-                    style={({ pressed }) => [ws.cta, pressed && ws.ctaPressed]}
-                    onPress={handleConnectBank}
-                    disabled={isConnecting}
-                    accessibilityRole="button"
-                    accessibilityLabel="Connect your bank account"
-                  >
-                    <LinearGradient
-                      colors={['#D4A017', '#CA8A04', '#A16207']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={ws.ctaGradient}
-                    >
-                      <FontAwesome name="university" size={16} color="#FFF" />
-                      <Text style={ws.ctaText}>
-                        {isConnecting ? 'Connecting...' : 'Connect Your Bank'}
-                      </Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
-
-                {/* Trust chips */}
-                <View style={ws.trustRow}>
-                  {['256-bit encrypted', 'Read-only access', 'Bank-grade security'].map((t) => (
-                    <View key={t} style={ws.trustChip}>
-                      <FontAwesome name="lock" size={9} color="rgba(202,138,4,0.6)" />
-                      <Text style={ws.trustText}>{t}</Text>
-                    </View>
-                  ))}
-                </View>
-              </LinearGradient>
-            </View>
-
-            {/* ── FEATURES: Cascading staggered cards ── */}
-            {([
-              {
-                icon: 'swap-horizontal' as const,
-                title: 'Auto-track income',
-                desc: 'Transactions imported via Open Banking and categorised by AI — no manual entry.',
-                accent: Colors.secondary,
-              },
-              {
-                icon: 'calculator' as const,
-                title: 'Real-time tax calculation',
-                desc: 'Income Tax + NI Class 2 & 4, updated live as you earn. Personal allowance and thresholds built in.',
-                accent: Colors.accent,
-              },
-              {
-                icon: 'wallet' as const,
-                title: 'Monthly set-aside amount',
-                desc: 'Tells you exactly what to put away each month so January never surprises you.',
-                accent: Colors.success,
-              },
-              {
-                icon: 'shield-checkmark' as const,
-                title: 'Making Tax Digital ready',
-                desc: 'Quarterly updates pre-formatted for HMRC. Deadlines tracked on your dashboard.',
-                accent: '#8B5CF6',
-              },
-            ] as const).map((f, i) => (
-              <View
-                key={f.title}
-              >
-                <View
-                  style={[
-                    ws.featureItem,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.cardBorder,
-                      borderLeftColor: f.accent,
-                    },
-                  ]}
-                >
-                  <View style={[ws.featureIcon, { backgroundColor: f.accent + '14' }]}>
-                    <Ionicons name={f.icon} size={22} color={f.accent} />
-                  </View>
-                  <View style={ws.featureBody}>
-                    <Text style={[ws.featureTitle, { color: colors.text }]}>{f.title}</Text>
-                    <Text style={[ws.featureDesc, { color: colors.textSecondary }]}>{f.desc}</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-
-            {/* ── HOW IT WORKS: Numbered timeline ── */}
-            <View>
-              <View style={ws.timelineSection}>
-                <Text style={[ws.timelineHeading, { color: colors.text }]}>
-                  Two minutes to set up
-                </Text>
-                <View style={ws.timeline}>
-                  {[
-                    { n: '1', title: 'Link your bank', desc: 'Secure Open Banking — we never see your password.' },
-                    { n: '2', title: 'AI categorises everything', desc: 'Income, expenses, and sources — sorted automatically.' },
-                    { n: '3', title: 'Dashboard goes live', desc: 'Tax owed, set-aside amount, and quarterly deadlines — all in real time.' },
-                  ].map((step, i) => (
-                    <View key={step.n} style={ws.timelineStep}>
-                      {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? Colors.accent : colors.border }]} />}
-                      <View style={[
-                        ws.timelineNum,
-                        {
-                          backgroundColor: i === 0 ? Colors.accent : 'transparent',
-                          borderColor: i === 0 ? Colors.accent : colors.border,
-                        },
-                      ]}>
-                        <Text style={[ws.timelineNumText, { color: i === 0 ? '#FFF' : colors.textSecondary }]}>
-                          {step.n}
-                        </Text>
-                      </View>
-                      <View style={ws.timelineBody}>
-                        <Text style={[ws.timelineTitle, { color: i === 0 ? colors.text : colors.textSecondary }]}>
-                          {step.title}
-                        </Text>
-                        <Text style={[ws.timelineDesc, { color: colors.textSecondary }]}>{step.desc}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </View>
-
-            {/* ── BOTTOM CTA ── */}
-            <View>
-              <Pressable
-                style={({ pressed }) => [ws.bottomCta, { borderColor: colors.border }, pressed && ws.ctaPressed]}
-                onPress={handleConnectBank}
-                disabled={isConnecting}
-                accessibilityRole="button"
-              >
-                <View style={ws.bottomCtaInner}>
-                  <View style={ws.bottomCtaIconWrap}>
-                    <FontAwesome name="university" size={16} color={Colors.accent} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[ws.bottomCtaTitle, { color: colors.text }]}>Ready to get started?</Text>
-                    <Text style={[ws.bottomCtaDesc, { color: colors.textSecondary }]}>
-                      Takes 2 minutes — connect your bank and let QuidSafe handle the rest.
-                    </Text>
-                  </View>
-                  <FontAwesome name="chevron-right" size={14} color={Colors.accent} />
-                </View>
-              </Pressable>
-            </View>
-          </>
+          <WelcomeState isConnecting={isConnecting} onConnectBank={handleConnectBank} />
         ) : (
           <>
             {/* Hero Tax Card */}
             <View>
-              <Pressable
-                accessible={true}
-                accessibilityRole="summary"
-                accessibilityLabel={`Tax summary. Set aside ${formatCurrency(tax?.totalTaxOwed ?? 0)} for tax based on ${formatCurrency(tax?.totalIncome ?? 0)} income this tax year`}
-                style={({ pressed }) => [pressed && styles.pressedCard]}
-              >
-                <LinearGradient
-                  colors={isDark ? ['#0F172A', '#0A0A0F'] : ['#0F172A', '#1E3A8A']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.heroCard}
-                >
-                  {/* Radial gold glow overlays */}
-                  <View style={styles.heroGlow} importantForAccessibility="no" accessibilityElementsHidden={true} />
-                  <View style={styles.heroGlowSecondary} importantForAccessibility="no" accessibilityElementsHidden={true} />
-
-                  {/* Label row with gold dot */}
-                  <View style={styles.heroLabelRow}>
-                    <View style={styles.heroLabelDot} importantForAccessibility="no" accessibilityElementsHidden={true} />
-                    <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
-                  </View>
-
-                  <Text style={styles.heroAmount}>
-                    {formatCurrency(tax?.totalTaxOwed ?? 0)}
-                  </Text>
-                  <Text style={styles.heroSubtext}>
-                    Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
-                  </Text>
-
-                  {/* 3 glassmorphic boxes */}
-                  <View style={styles.heroRow}>
-                    <View style={styles.heroBox} accessibilityLabel={`Income Tax: ${formatCurrency(tax?.incomeTax?.total ?? 0)}`}>
-                      <Text style={styles.heroBoxLabel}>Income Tax</Text>
-                      <Text style={styles.heroBoxValue}>
-                        {formatCurrency(tax?.incomeTax?.total ?? 0)}
-                      </Text>
-                    </View>
-                    <View style={styles.heroBox} accessibilityLabel={`National Insurance Class 4: ${formatCurrency(tax?.nationalInsurance?.total ?? 0)}`}>
-                      <Text style={styles.heroBoxLabel}>NI (Class 4)</Text>
-                      <Text style={styles.heroBoxValue}>
-                        {formatCurrency(tax?.nationalInsurance?.total ?? 0)}
-                      </Text>
-                    </View>
-                    <View style={styles.heroBox} accessibilityLabel={`Expenses: minus ${formatCurrency(tax?.totalExpenses ?? 0)}`}>
-                      <Text style={styles.heroBoxLabel}>Expenses</Text>
-                      <Text style={[styles.heroBoxValue, styles.heroBoxExpenses]}>
-                        -{formatCurrency(tax?.totalExpenses ?? 0)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Monthly set-aside -- gold highlight inside hero */}
-                  <View style={styles.heroSetAside} accessibilityLabel={`Set aside this month: ${formatCurrency(tax?.setAsideMonthly ?? 0)}`}>
-                    <Text style={styles.heroSetAsideLabel}>SET ASIDE THIS MONTH</Text>
-                    <Text style={styles.heroSetAsideAmount}>
-                      {formatCurrency(tax?.setAsideMonthly ?? 0)}
-                    </Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
+              <TaxHeroCard tax={tax} />
             </View>
 
             {/* Income Trend Chart */}
@@ -428,7 +182,7 @@ export default function DashboardScreen() {
                         {formatCurrency(periodTotal)} over {last6.length} months
                       </Text>
                     </View>
-                    <MiniChart data={chartData} color={Colors.success} height={72} />
+                    <MiniChart data={chartData} color="#00C853" height={72} />
                   </Card>
                 </View>
               );
@@ -444,16 +198,16 @@ export default function DashboardScreen() {
                   style={({ pressed }) => [
                     styles.insightBanner,
                     {
-                      backgroundColor: isDark ? 'rgba(202,138,4,0.08)' : Colors.gold[50],
-                      borderColor: 'rgba(202,138,4,0.12)',
+                      backgroundColor: 'rgba(0,102,255,0.08)',
+                      borderColor: 'rgba(0,102,255,0.12)',
                     },
                     pressed && styles.pressedCard,
                   ]}
                 >
                   <View style={styles.insightIcon}>
-                    <FontAwesome name="lightbulb-o" size={14} color={Colors.gold[700]} />
+                    <Lightbulb size={14} color="#0066FF" strokeWidth={1.5} />
                   </View>
-                  <Text style={[styles.insightText, { color: isDark ? Colors.gold[100] : Colors.gold[700] }]}>
+                  <Text style={[styles.insightText, { color: '#0066FF' }]}>
                     {tax.plainEnglish}
                   </Text>
                 </Pressable>
@@ -466,7 +220,7 @@ export default function DashboardScreen() {
                 accessibilityLabel={`Set aside this month ${formatCurrency(tax?.setAsideMonthly ?? 0)}. Effective tax rate ${tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}`}
                 style={({ pressed }) => [
                   styles.setAsideCard,
-                  { backgroundColor: isDark ? '#292524' : Colors.gold[50] },
+                  { backgroundColor: '#0A0A0A' },
                   pressed && styles.pressedCard,
                 ]}
               >
@@ -478,7 +232,7 @@ export default function DashboardScreen() {
                 </View>
                 <View style={styles.setAsideRight}>
                   <View style={styles.onTrackBadge} accessibilityLabel="Status: On track">
-                    <FontAwesome name="check" size={11} color={Colors.success} />
+                    <Check size={11} color="#00C853" strokeWidth={1.5} />
                     <Text style={styles.onTrackText}>On track</Text>
                   </View>
                 </View>
@@ -512,7 +266,7 @@ export default function DashboardScreen() {
                         type="action"
                         title="Connect your bank"
                         description="Link your bank account to automatically track income and expenses."
-                        icon="university"
+                        icon={Landmark}
                         onPress={handleConnectBank}
                       />
                     )}
@@ -520,14 +274,14 @@ export default function DashboardScreen() {
                       type="warning"
                       title={`Q${quarter} payment due`}
                       description="Submit your quarterly update to HMRC before the deadline."
-                      icon="clock-o"
+                      icon={Clock}
                       onPress={() => router.push('/mtd')}
                     />
                     <ActionCard
                       type="success"
                       title="Tax pot on track"
                       description="You're setting aside enough to cover your tax bill."
-                      icon="check-circle"
+                      icon={CheckCircle}
                       onPress={() => router.push('/(tabs)/settings')}
                     />
                   </>
@@ -547,9 +301,9 @@ export default function DashboardScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="View full tax history"
               >
-                <FontAwesome name="history" size={14} color={Colors.accent} style={{ marginRight: 8 }} />
+                <Clock size={14} color="#0066FF" strokeWidth={1.5} style={{ marginRight: 8 }} />
                 <Text style={[styles.taxHistoryText, { color: colors.text }]}>View Tax History</Text>
-                <FontAwesome name="chevron-right" size={11} color={colors.textSecondary} />
+                <ChevronRight size={11} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
 
               {/* Income by Source */}
@@ -559,31 +313,7 @@ export default function DashboardScreen() {
                     <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Income by Source</Text>
                   </View>
                   <Card>
-                    {income.bySource.map((src, index) => {
-                      const isLast = index === income.bySource.length - 1;
-                      return (
-                        <View
-                          key={src.name}
-                          style={[
-                            styles.sourceRow,
-                            !isLast && { borderBottomColor: colors.border, borderBottomWidth: 1 },
-                          ]}
-                          accessible
-                          accessibilityLabel={`${src.name}: ${formatCurrency(src.amount)}, ${src.percentage}% of income`}
-                        >
-                          <View style={styles.sourceLeft}>
-                            <View style={[styles.sourceDot, { backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} importantForAccessibility="no" accessibilityElementsHidden={true} />
-                            <Text style={[styles.sourceName, { color: colors.text }]}>{src.name}</Text>
-                          </View>
-                          <View style={styles.sourceRight}>
-                            <Text style={[styles.sourceAmount, { color: colors.text }]}>{formatCurrency(src.amount)}</Text>
-                            <View style={[styles.sourceBar, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>
-                              <View style={[styles.sourceBarFill, { width: `${src.percentage}%`, backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} />
-                            </View>
-                          </View>
-                        </View>
-                      );
-                    })}
+                    <IncomeBySource sources={income.bySource} sourceColors={SOURCE_COLORS} />
                   </Card>
                 </>
               )}
@@ -622,27 +352,27 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   greeting: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
   },
   name: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
     marginTop: 2,
     letterSpacing: -0.3,
   },
 
-  // Avatar circle (mockup style)
+  // Avatar circle
   avatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#0066FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -657,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   healthText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11.5,
   },
 
@@ -667,128 +397,7 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
 
-  // Hero Tax Card
-  heroCard: {
-    borderRadius: 22,
-    padding: Spacing.lg,
-    paddingBottom: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: 'rgba(0,0,0,0.5)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 28,
-    elevation: 8,
-  },
-  heroGlow: {
-    position: 'absolute',
-    top: -60,
-    right: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(202, 138, 4, 0.1)',
-  },
-  heroGlowSecondary: {
-    position: 'absolute',
-    bottom: -40,
-    left: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(30, 58, 138, 0.12)',
-  },
-  heroLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 5,
-  },
-  heroLabelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.accent,
-  },
-  heroLabel: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  heroAmount: {
-    fontFamily: Fonts.playfair.bold,
-    fontSize: 40,
-    color: Colors.white,
-    lineHeight: 42,
-    letterSpacing: -1,
-  },
-  heroSubtext: {
-    fontFamily: Fonts.manrope.medium,
-    fontSize: 11.5,
-    color: 'rgba(255,255,255,0.45)',
-    marginTop: Spacing.xs,
-  },
-
-  // 3 glassmorphic metric boxes
-  heroRow: {
-    flexDirection: 'row',
-    gap: 7,
-    marginTop: 16,
-  },
-  heroBox: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-  heroBoxLabel: {
-    fontFamily: Fonts.manrope.semiBold,
-    fontSize: 9.5,
-    color: 'rgba(255,255,255,0.5)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-  heroBoxValue: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 16,
-    color: Colors.white,
-  },
-  heroBoxExpenses: {
-    color: '#86EFAC',
-  },
-
-  // Monthly set-aside callout inside hero
-  heroSetAside: {
-    marginTop: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  heroSetAsideLabel: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 10.5,
-    color: Colors.accent,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  heroSetAsideAmount: {
-    fontFamily: Fonts.manrope.extraBold,
-    fontSize: 22,
-    color: Colors.accent,
-  },
-
-  // Insight banner (gold-themed to match mockup)
+  // Insight banner
   insightBanner: {
     borderRadius: BorderRadius.card,
     padding: 11,
@@ -806,7 +415,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   insightText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     lineHeight: 18,
     flex: 1,
@@ -818,20 +427,20 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: Colors.accent,
+    borderColor: '#0066FF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   setAsideLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 10.5,
-    color: Colors.gold[700],
+    color: '#0066FF',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   setAsideAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 26,
     marginTop: 2,
   },
@@ -842,15 +451,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+    backgroundColor: 'rgba(0,200,83,0.1)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: BorderRadius.pill,
   },
   onTrackText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
-    color: Colors.success,
+    color: '#00C853',
   },
 
   // Actions
@@ -866,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -876,56 +485,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chartTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
   chartSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
 
-  // Income sources
-  sourceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  sourceLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  sourceDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  sourceName: {
-    fontFamily: Fonts.manrope.medium,
-    fontSize: 14,
-  },
-  sourceRight: {
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  sourceAmount: {
-    fontFamily: Fonts.manrope.semiBold,
-    fontSize: 14,
-  },
-  sourceBar: {
-    width: 60,
-    height: 4,
-    borderRadius: 2,
-  },
-  sourceBarFill: {
-    height: 4,
-    backgroundColor: Colors.secondary,
-    borderRadius: 2,
-  },
   taxHistoryLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -936,329 +505,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
   },
   taxHistoryText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     flex: 1,
-  },
-});
-
-/* ── Welcome State Styles (ws) ── */
-const ws = StyleSheet.create({
-  // Hero card
-  hero: {
-    borderRadius: 22,
-    padding: 28,
-    paddingTop: 32,
-    paddingBottom: 28,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    shadowColor: 'rgba(0,0,0,0.5)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 28,
-    elevation: 8,
-  },
-  glowGold: {
-    position: 'absolute',
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
-  },
-  glowBlue: {
-    position: 'absolute',
-    bottom: -60,
-    left: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(30, 58, 138, 0.18)',
-  },
-  glowSoft: {
-    position: 'absolute',
-    top: '50%' as any,
-    right: '10%' as any,
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(202, 138, 4, 0.03)',
-  },
-  accentLine: {
-    width: 40,
-    height: 3,
-    backgroundColor: Colors.accent,
-    borderRadius: 2,
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  heroEyebrow: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 10,
-    color: 'rgba(202,138,4,0.65)',
-    letterSpacing: 2.5,
-    marginBottom: 10,
-  },
-  heroHeadline: {
-    fontFamily: Fonts.playfair.bold,
-    fontSize: 34,
-    color: Colors.white,
-    lineHeight: 42,
-    letterSpacing: -0.8,
-    marginBottom: 20,
-  },
-
-  // Dashboard preview mock
-  previewCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    padding: 18,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  previewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
-  },
-  previewDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.accent,
-  },
-  previewLabel: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 1.5,
-  },
-  previewAmount: {
-    fontFamily: Fonts.manrope.extraBold,
-    fontSize: 32,
-    color: 'rgba(255,255,255,0.2)',
-    letterSpacing: -1,
-    marginBottom: 14,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  previewBox: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-  },
-  previewBoxLabel: {
-    fontFamily: Fonts.manrope.semiBold,
-    fontSize: 8.5,
-    color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  previewBoxVal: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.15)',
-  },
-  previewFade: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 50,
-  },
-
-  heroSub: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.55)',
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-
-  // CTA button
-  cta: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: 'rgba(202,138,4,0.35)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 6,
-    marginBottom: 16,
-  },
-  ctaPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.97 }],
-  },
-  ctaGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-  },
-  ctaText: {
-    fontFamily: Fonts.manrope.extraBold,
-    fontSize: 16,
-    color: Colors.white,
-    letterSpacing: -0.2,
-  },
-
-  // Trust chips
-  trustRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  trustChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: BorderRadius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  trustText: {
-    fontFamily: Fonts.manrope.medium,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.35)',
-  },
-
-  // Feature items — vertical stack with left accent border
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: BorderRadius.card,
-    borderWidth: 1,
-    borderLeftWidth: 3,
-    padding: 16,
-    gap: 14,
-    ...Shadows.soft,
-  },
-  featureIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureBody: {
-    flex: 1,
-    paddingTop: 2,
-  },
-  featureTitle: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 14,
-    letterSpacing: -0.1,
-    marginBottom: 3,
-  },
-  featureDesc: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 12.5,
-    lineHeight: 18,
-  },
-
-  // Timeline section
-  timelineSection: {
-    marginTop: 8,
-  },
-  timelineHeading: {
-    fontFamily: Fonts.playfair.bold,
-    fontSize: 20,
-    letterSpacing: -0.3,
-    marginBottom: 16,
-  },
-  timeline: {
-    gap: 0,
-  },
-  timelineStep: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-    paddingBottom: 22,
-  },
-  timelineConnector: {
-    position: 'absolute',
-    left: 15,
-    top: 34,
-    width: 2,
-    height: 30,
-    borderRadius: 1,
-    opacity: 0.3,
-  },
-  timelineNum: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timelineNumText: {
-    fontFamily: Fonts.manrope.extraBold,
-    fontSize: 13,
-  },
-  timelineBody: {
-    flex: 1,
-    paddingTop: 4,
-  },
-  timelineTitle: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 14.5,
-    letterSpacing: -0.1,
-  },
-  timelineDesc: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 12.5,
-    lineHeight: 18,
-    marginTop: 2,
-  },
-
-  // Bottom CTA card
-  bottomCta: {
-    borderRadius: BorderRadius.card,
-    borderWidth: 1,
-    padding: 18,
-    ...Shadows.soft,
-  },
-  bottomCtaInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  bottomCtaIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(202, 138, 4, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomCtaTitle: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 14.5,
-    letterSpacing: -0.1,
-  },
-  bottomCtaDesc: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 2,
   },
 });

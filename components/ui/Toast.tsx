@@ -8,8 +8,8 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, Shadows } from '@/constants/Colors';
+import { Check, X, Info, AlertTriangle } from 'lucide-react-native';
+import { colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { hapticSuccess, hapticError } from '@/lib/haptics';
 
@@ -38,23 +38,24 @@ export function useToast() {
 const MAX_VISIBLE = 3;
 
 const TOAST_COLORS: Record<ToastType, string> = {
-  success: Colors.success,
-  error: Colors.error,
-  info: Colors.secondary,
-  warning: Colors.accent,
+  success: colors.success,
+  error: colors.error,
+  info: colors.accent,
+  warning: colors.warning,
 };
 
-const TOAST_ICONS: Record<ToastType, React.ComponentProps<typeof FontAwesome>['name']> = {
-  success: 'check',
-  error: 'times',
-  info: 'info-circle',
-  warning: 'exclamation-triangle',
+const TOAST_ICONS: Record<ToastType, React.FC<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  success: Check,
+  error: X,
+  info: Info,
+  warning: AlertTriangle,
 };
 
 function ToastIcon({ type }: { type: ToastType }) {
+  const IconComponent = TOAST_ICONS[type];
   return (
     <View style={styles.iconContainer}>
-      <FontAwesome name={TOAST_ICONS[type]} size={14} color="#FFF" />
+      <IconComponent size={14} color="#FFF" strokeWidth={1.5} />
     </View>
   );
 }
@@ -82,7 +83,6 @@ function ToastItem({
           transform: [{ translateY: item.translateY }],
           top: index * 60,
         },
-        Shadows.medium,
       ]}
     >
       <Pressable
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
   },
   toastText: {
     flex: 1,
-    color: Colors.white,
-    fontFamily: Fonts.manrope.semiBold,
+    color: colors.text,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     lineHeight: 20,
   },

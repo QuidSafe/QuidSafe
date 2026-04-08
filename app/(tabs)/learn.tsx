@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
+import { Search, XCircle, AlertTriangle, ChevronUp, ChevronDown, Clock } from 'lucide-react-native';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -37,23 +37,16 @@ const CATEGORY_TAG_MAP: Record<ArticleCategory, { tag: string; tagVariant: TagVa
 
 const ALL_TAGS = ['All', 'MTD', 'Tax Basics', 'Expenses', 'Security', 'Deadlines', 'VAT'] as const;
 
-function getTagColors(variant: TagVariant, isDark: boolean): { bg: string; color: string } {
-  if (isDark) {
-    switch (variant) {
-      case 'tag-n': return { bg: Colors.secondary + '30', color: '#93B5FF' };
-      case 'tag-ok': return { bg: Colors.success + '20', color: '#4ADE80' };
-      case 'tag-g': return { bg: Colors.accent + '25', color: Colors.gold[50] };
-    }
-  }
+function getTagColors(variant: TagVariant): { bg: string; color: string } {
   switch (variant) {
-    case 'tag-n': return { bg: Colors.secondary + '15', color: Colors.secondary };
-    case 'tag-ok': return { bg: Colors.success + '15', color: Colors.success };
-    case 'tag-g': return { bg: Colors.gold[50], color: Colors.gold[700] };
+    case 'tag-n': return { bg: 'rgba(0,102,255,0.12)', color: '#93B5FF' };
+    case 'tag-ok': return { bg: 'rgba(0,200,83,0.12)', color: '#4ADE80' };
+    case 'tag-g': return { bg: 'rgba(0,102,255,0.12)', color: '#0066FF' };
   }
 }
 
 export default function LearnScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -141,7 +134,7 @@ export default function LearnScreen() {
     setActiveTag(tag);
   }, []);
 
-  const expandedContentBg = isDark ? 'rgba(255,255,255,0.03)' : Colors.grey[50];
+  const expandedContentBg = 'rgba(255,255,255,0.03)';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -162,7 +155,7 @@ export default function LearnScreen() {
         {/* Search bar */}
         <Animated.View style={{ opacity: searchFade, transform: [{ translateY: searchSlide }] }}>
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <FontAwesome name="search" size={14} color={colors.textSecondary} style={styles.searchIcon} />
+          <Search size={14} color={colors.textSecondary} strokeWidth={1.5} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search articles..."
@@ -173,7 +166,7 @@ export default function LearnScreen() {
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Clear search">
-              <FontAwesome name="times-circle" size={14} color={colors.textSecondary} />
+              <XCircle size={14} color={colors.textSecondary} strokeWidth={1.5} />
             </Pressable>
           )}
         </View>
@@ -229,19 +222,19 @@ export default function LearnScreen() {
                   { backgroundColor: colors.surface, borderColor: colors.cardBorder },
                 ]}
               >
-                <View style={[styles.skeletonTag, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : Colors.grey[100] }]} />
-                <View style={[styles.skeletonTitle, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : Colors.grey[100] }]} />
-                <View style={[styles.skeletonDesc, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : Colors.grey[50] }]} />
+                <View style={[styles.skeletonTag, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
+                <View style={[styles.skeletonTitle, { backgroundColor: 'rgba(255,255,255,0.08)' }]} />
+                <View style={[styles.skeletonDesc, { backgroundColor: 'rgba(255,255,255,0.06)' }]} />
               </View>
             ))}
-            <ActivityIndicator size="small" color={Colors.accent} style={{ marginTop: 8 }} />
+            <ActivityIndicator size="small" color="#0066FF" style={{ marginTop: 8 }} />
           </View>
         )}
 
         {/* Error state */}
         {isError && !isLoading && (
           <View style={styles.emptyState}>
-            <FontAwesome name="exclamation-triangle" size={24} color={Colors.error} />
+            <AlertTriangle size={24} color="#FF3B30" strokeWidth={1.5} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               Couldn&apos;t load articles. Pull down to retry.
             </Text>
@@ -251,7 +244,7 @@ export default function LearnScreen() {
         {/* Articles */}
         {!isLoading && !isError && filteredArticles.length === 0 && (
           <View style={styles.emptyState}>
-            <FontAwesome name="search" size={24} color={colors.textSecondary} />
+            <Search size={24} color={colors.textSecondary} strokeWidth={1.5} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               No articles match your search.
             </Text>
@@ -259,7 +252,7 @@ export default function LearnScreen() {
         )}
 
         {!isLoading && filteredArticles.map((article) => {
-          const variant = getTagColors(article.tagVariant, isDark);
+          const variant = getTagColors(article.tagVariant);
           const isExpanded = expandedId === article.id;
           const articleIndex = articles.findIndex((a) => a.id === article.id);
           const anim = articleIndex < MAX_CARD_ANIMS ? cardAnims[articleIndex] : undefined;
@@ -289,11 +282,11 @@ export default function LearnScreen() {
                 <View style={[styles.tagPill, { backgroundColor: variant.bg }]}>
                   <Text style={[styles.tagText, { color: variant.color }]}>{article.tag}</Text>
                 </View>
-                <FontAwesome
-                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={10}
-                  color={colors.textSecondary}
-                />
+                {isExpanded ? (
+                  <ChevronUp size={10} color={colors.textSecondary} strokeWidth={1.5} />
+                ) : (
+                  <ChevronDown size={10} color={colors.textSecondary} strokeWidth={1.5} />
+                )}
               </View>
               <Text style={[styles.cardTitle, { color: colors.text }]}>{article.title}</Text>
               <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
@@ -309,7 +302,7 @@ export default function LearnScreen() {
               )}
 
               <View style={styles.meta}>
-                <FontAwesome name="clock-o" size={10.5} color={colors.textSecondary} />
+                <Clock size={10.5} color={colors.textSecondary} strokeWidth={1.5} />
                 <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                   {article.read_time_min} min read
                 </Text>
@@ -341,17 +334,17 @@ const styles = StyleSheet.create({
     width: 3,
     height: 36,
     borderRadius: 2,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
     marginTop: 2,
   },
   heading: {
     fontSize: 24,
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     lineHeight: 32,
   },
   subtitle: {
     fontSize: 12,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     marginBottom: 4,
     marginTop: 2,
   },
@@ -370,7 +363,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     padding: 0,
   },
   pillRow: {
@@ -386,7 +379,7 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontSize: 11.5,
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
   },
   emptyState: {
     alignItems: 'center',
@@ -395,7 +388,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
   },
   card: {
     borderRadius: BorderRadius.card,
@@ -423,18 +416,18 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 9.5,
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     letterSpacing: 0.05 * 9.5,
     textTransform: 'uppercase',
   },
   cardTitle: {
     fontSize: 13.5,
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 12,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     lineHeight: 12 * 1.45,
     marginBottom: 8,
   },
@@ -450,7 +443,7 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontSize: 12.5,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     lineHeight: 12.5 * 1.6,
   },
   loadingState: {
@@ -485,6 +478,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 10.5,
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
   },
 });

@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, TextInput, Text, Pressable, StyleSheet, Platform } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Search, XCircle, Calendar, X } from 'lucide-react-native';
+import { colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface SearchFilterProps {
   searchPlaceholder?: string;
@@ -12,20 +11,12 @@ interface SearchFilterProps {
   showDateFilter?: boolean;
 }
 
-/**
- * Reusable search bar + expandable date range filter.
- * - Debounced search (300ms)
- * - Date range with "From" / "To" inputs
- * - Web uses <input type="date">, native uses DD/MM/YYYY text input (same as DateInput.tsx)
- * - Glass-effect styling matching app theme
- */
 export function SearchFilter({
   searchPlaceholder = 'Search...',
   onSearchChange,
   onDateRangeChange,
   showDateFilter = true,
 }: SearchFilterProps) {
-  const { colors } = useTheme();
   const [searchText, setSearchText] = useState('');
   const [dateExpanded, setDateExpanded] = useState(false);
   const [fromDate, setFromDate] = useState('');
@@ -34,7 +25,6 @@ export function SearchFilter({
   const [toDisplay, setToDisplay] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced search
   const handleSearchChange = useCallback(
     (text: string) => {
       setSearchText(text);
@@ -46,7 +36,6 @@ export function SearchFilter({
     [onSearchChange],
   );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -72,7 +61,6 @@ export function SearchFilter({
     onDateRangeChange?.('', '');
   }, [onSearchChange, onDateRangeChange]);
 
-  // Native date input handler (DD/MM/YYYY -> YYYY-MM-DD)
   const handleNativeDateChange = useCallback(
     (text: string, setter: (v: string) => void, displaySetter: (v: string) => void) => {
       const digits = text.replace(/\D/g, '');
@@ -98,26 +86,18 @@ export function SearchFilter({
     [],
   );
 
-  // Notify parent when dates change
   useEffect(() => {
     onDateRangeChange?.(fromDate, toDate);
   }, [fromDate, toDate, onDateRangeChange]);
 
+  const filterActive = dateExpanded || fromDate || toDate;
+
   return (
     <View style={styles.wrapper}>
-      {/* Search bar */}
-      <View
-        style={[
-          styles.searchContainer,
-          {
-            backgroundColor: colors.surfaceGlass,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        <FontAwesome name="search" size={14} color={colors.textSecondary} style={styles.searchIcon} />
+      <View style={styles.searchContainer}>
+        <Search size={14} color={colors.textSecondary} strokeWidth={1.5} style={styles.searchIcon} />
         <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
+          style={styles.searchInput}
           placeholder={searchPlaceholder}
           placeholderTextColor={colors.textSecondary}
           value={searchText}
@@ -126,7 +106,7 @@ export function SearchFilter({
         />
         {searchText.length > 0 && (
           <Pressable onPress={clearSearch} hitSlop={8} accessibilityLabel="Clear search">
-            <FontAwesome name="times-circle" size={16} color={colors.textSecondary} />
+            <XCircle size={16} color={colors.textSecondary} strokeWidth={1.5} />
           </Pressable>
         )}
 
@@ -136,28 +116,22 @@ export function SearchFilter({
             style={[
               styles.filterChip,
               {
-                backgroundColor: dateExpanded || fromDate || toDate
-                  ? Colors.accent + '20'
-                  : colors.background,
-                borderColor: dateExpanded || fromDate || toDate
-                  ? Colors.accent
-                  : colors.border,
+                backgroundColor: filterActive ? colors.accentGlow : colors.background,
+                borderColor: filterActive ? colors.accent : colors.border,
               },
             ]}
             accessibilityLabel="Toggle date filter"
             accessibilityRole="button"
           >
-            <FontAwesome
-              name="calendar"
+            <Calendar
               size={12}
-              color={dateExpanded || fromDate || toDate ? Colors.accent : colors.textSecondary}
+              color={filterActive ? colors.accent : colors.textSecondary}
+              strokeWidth={1.5}
             />
             <Text
               style={[
                 styles.filterChipText,
-                {
-                  color: dateExpanded || fromDate || toDate ? Colors.accent : colors.textSecondary,
-                },
+                { color: filterActive ? colors.accent : colors.textSecondary },
               ]}
             >
               Filter
@@ -166,27 +140,13 @@ export function SearchFilter({
         )}
       </View>
 
-      {/* Expandable date range */}
       {dateExpanded && showDateFilter && (
-        <View
-          style={[
-            styles.dateRangeContainer,
-            {
-              backgroundColor: colors.surfaceGlass,
-              borderColor: colors.border,
-            },
-          ]}
-        >
+        <View style={styles.dateRangeContainer}>
           <View style={styles.dateRow}>
             <View style={styles.dateField}>
-              <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>From</Text>
+              <Text style={styles.dateLabel}>From</Text>
               {Platform.OS === 'web' ? (
-                <View
-                  style={[
-                    styles.dateInputWrapper,
-                    { backgroundColor: colors.background, borderColor: colors.border },
-                  ]}
-                >
+                <View style={styles.dateInputWrapper}>
                   <input
                     type="date"
                     value={fromDate}
@@ -196,7 +156,7 @@ export function SearchFilter({
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontFamily: 'Manrope, sans-serif',
+                      fontFamily: 'Source Sans 3, sans-serif',
                       fontSize: 13,
                       color: colors.text,
                       padding: 0,
@@ -205,10 +165,7 @@ export function SearchFilter({
                 </View>
               ) : (
                 <TextInput
-                  style={[
-                    styles.dateInput,
-                    { color: colors.text, backgroundColor: colors.background, borderColor: colors.border },
-                  ]}
+                  style={styles.dateInput}
                   placeholder="DD/MM/YYYY"
                   placeholderTextColor={colors.textSecondary}
                   value={fromDisplay}
@@ -219,14 +176,9 @@ export function SearchFilter({
               )}
             </View>
             <View style={styles.dateField}>
-              <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>To</Text>
+              <Text style={styles.dateLabel}>To</Text>
               {Platform.OS === 'web' ? (
-                <View
-                  style={[
-                    styles.dateInputWrapper,
-                    { backgroundColor: colors.background, borderColor: colors.border },
-                  ]}
-                >
+                <View style={styles.dateInputWrapper}>
                   <input
                     type="date"
                     value={toDate}
@@ -236,7 +188,7 @@ export function SearchFilter({
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontFamily: 'Manrope, sans-serif',
+                      fontFamily: 'Source Sans 3, sans-serif',
                       fontSize: 13,
                       color: colors.text,
                       padding: 0,
@@ -245,10 +197,7 @@ export function SearchFilter({
                 </View>
               ) : (
                 <TextInput
-                  style={[
-                    styles.dateInput,
-                    { color: colors.text, backgroundColor: colors.background, borderColor: colors.border },
-                  ]}
+                  style={styles.dateInput}
                   placeholder="DD/MM/YYYY"
                   placeholderTextColor={colors.textSecondary}
                   value={toDisplay}
@@ -262,10 +211,9 @@ export function SearchFilter({
         </View>
       )}
 
-      {/* Clear filters link */}
       {hasActiveFilters && (
         <Pressable onPress={clearAll} style={styles.clearLink} accessibilityLabel="Clear all filters">
-          <FontAwesome name="times" size={11} color={Colors.accent} />
+          <X size={11} color={colors.accent} strokeWidth={1.5} />
           <Text style={styles.clearLinkText}>Clear filters</Text>
         </Pressable>
       )}
@@ -277,13 +225,13 @@ const styles = StyleSheet.create({
   wrapper: {
     marginBottom: Spacing.md,
   },
-
-  // Search bar
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: BorderRadius.input,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
     paddingHorizontal: 12,
     height: 44,
     gap: 8,
@@ -293,12 +241,11 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     padding: 0,
+    color: colors.text,
   },
-
-  // Filter chip
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -310,14 +257,14 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   filterChipText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
-
-  // Date range
   dateRangeContainer: {
     borderRadius: BorderRadius.input,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
     padding: Spacing.sm,
     marginTop: Spacing.sm,
   },
@@ -329,28 +276,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
+    color: colors.textSecondary,
   },
   dateInputWrapper: {
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.input,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   dateInput: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     borderRadius: BorderRadius.input,
     paddingHorizontal: 10,
     paddingVertical: 8,
+    color: colors.text,
   },
-
-  // Clear link
   clearLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -359,8 +310,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   clearLinkText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
-    color: Colors.accent,
+    color: colors.accent,
   },
 });

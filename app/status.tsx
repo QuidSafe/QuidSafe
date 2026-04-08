@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
@@ -161,7 +161,7 @@ function Toggle({
 
   const trackBg = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [Colors.grey[300], Colors.success],
+    outputRange: ['#2A2A2A', Colors.success],
   });
 
   const knobTranslate = anim.interpolate({
@@ -342,17 +342,17 @@ export default function StatusScreen() {
   const statusBadgeConfig = (status: string) => {
     switch (status) {
       case 'active':
-        return { color: Colors.success, bg: 'rgba(22,163,74,0.1)', label: 'Active' };
+        return { color: Colors.success, bg: 'rgba(0,200,83,0.1)', label: 'Active' };
       case 'trialing':
         return { color: Colors.accent, bg: 'rgba(202,138,4,0.1)', label: 'Trialing' };
       case 'past_due':
         return { color: Colors.error, bg: 'rgba(220,38,38,0.1)', label: 'Past Due' };
       case 'cancelled':
-        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Cancelled' };
+        return { color: '#666666', bg: '#2A2A2A', label: 'Cancelled' };
       case 'requires_setup':
         return { color: Colors.accent, bg: 'rgba(202,138,4,0.1)', label: 'Not Started' };
       default:
-        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Unknown' };
+        return { color: '#666666', bg: '#2A2A2A', label: 'Unknown' };
     }
   };
 
@@ -392,13 +392,13 @@ export default function StatusScreen() {
     switch (status) {
       case 'submitted':
       case 'accepted':
-        return { color: Colors.success, bg: 'rgba(22,163,74,0.1)', label: 'Submitted' };
+        return { color: Colors.success, bg: 'rgba(0,200,83,0.1)', label: 'Submitted' };
       case 'rejected':
         return { color: Colors.error, bg: 'rgba(220,38,38,0.1)', label: 'Rejected' };
       case 'draft':
-        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Pending' };
+        return { color: '#666666', bg: '#2A2A2A', label: 'Pending' };
       default:
-        return { color: Colors.grey[500], bg: Colors.grey[200], label: 'Pending' };
+        return { color: '#666666', bg: '#2A2A2A', label: 'Pending' };
     }
   };
 
@@ -419,7 +419,7 @@ export default function StatusScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <FontAwesome name="chevron-left" size={16} color={colors.text} />
+            <ChevronLeft size={16} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <View style={styles.headerCenter}>
             <Text style={[styles.pageTitle, { color: colors.text }]}>System Status</Text>
@@ -438,7 +438,7 @@ export default function StatusScreen() {
               {isRefetching ? (
                 <ActivityIndicator size="small" color={Colors.secondary} />
               ) : (
-                <FontAwesome name="refresh" size={14} color={Colors.secondary} />
+                <RefreshCw size={14} color={Colors.secondary} strokeWidth={1.5} />
               )}
             </Pressable>
           </View>
@@ -498,7 +498,7 @@ export default function StatusScreen() {
             accessibilityLabel="Manage Plan"
           >
             <Text style={[styles.linkText, { color: Colors.secondary }]}>Manage Plan</Text>
-            <FontAwesome name="chevron-right" size={10} color={Colors.secondary} />
+            <ChevronRight size={10} color={Colors.secondary} strokeWidth={1.5} />
           </Pressable>
         </Card>
         </Animated.View>
@@ -587,8 +587,8 @@ export default function StatusScreen() {
                         </Text>
                         <StatusBadge
                           label={conn.active ? 'Active' : 'Inactive'}
-                          color={conn.active ? Colors.success : Colors.grey[500]}
-                          bg={conn.active ? 'rgba(22,163,74,0.1)' : Colors.grey[200]}
+                          color={conn.active ? Colors.success : '#666666'}
+                          bg={conn.active ? 'rgba(0,200,83,0.1)' : '#2A2A2A'}
                         />
                       </View>
                       <Text style={[styles.bankDetail, { color: colors.textSecondary }]}>
@@ -646,7 +646,7 @@ export default function StatusScreen() {
                 <ProgressBar
                   progress={categorisedPct}
                   color={Colors.success}
-                  bgColor={isDark ? Colors.grey[700] : Colors.grey[200]}
+                  bgColor="#1A1A1A"
                 />
               </View>
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -676,7 +676,7 @@ export default function StatusScreen() {
                   </Text>
                 </View>
                 <View style={styles.categoryRow}>
-                  <StatusDot color={Colors.grey[400]} />
+                  <StatusDot color={'#666666'} />
                   <Text style={[styles.categoryLabel, { color: colors.text }]}>Personal</Text>
                   <Text style={[styles.categoryValue, { color: colors.textSecondary }]}>
                     {personalCount} ({personalPct}%)
@@ -725,8 +725,8 @@ export default function StatusScreen() {
                     </Text>
                     <CountBadge
                       count={draftInvoices.length}
-                      color={Colors.grey[600]}
-                      bg={Colors.grey[200]}
+                      color={'#666666'}
+                      bg={'#2A2A2A'}
                     />
                   </View>
                   <View style={styles.invoiceBadgeItem}>
@@ -746,7 +746,7 @@ export default function StatusScreen() {
                     <CountBadge
                       count={paidInvoices.length}
                       color={Colors.success}
-                      bg="rgba(22,163,74,0.1)"
+                      bg="rgba(0,200,83,0.1)"
                     />
                   </View>
                   <View style={styles.invoiceBadgeItem}>
@@ -793,7 +793,7 @@ export default function StatusScreen() {
                   Connection status
                 </Text>
                 <View style={styles.rowEnd}>
-                  <StatusDot color={mtdConnected ? Colors.success : Colors.grey[400]} />
+                  <StatusDot color={mtdConnected ? Colors.success : '#666666'} />
                   <Text
                     style={[
                       styles.statValue,
@@ -950,12 +950,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 24,
     lineHeight: 32,
   },
   lastRefreshed: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginTop: 2,
   },
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   sectionTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -1007,11 +1007,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   statLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
   },
   statValue: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   rowEnd: {
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   badgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
   },
 
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   countBadgeText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 11,
   },
 
@@ -1081,12 +1081,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   categoryLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     flex: 1,
   },
   categoryValue: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
 
@@ -1106,11 +1106,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   bankName: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   bankDetail: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginLeft: 16,
   },
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   syncButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
     color: Colors.secondary,
   },
@@ -1140,7 +1140,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   invoiceBadgeLabel: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
   },
 
@@ -1158,7 +1158,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   quarterLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 14,
   },
 
@@ -1172,13 +1172,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   linkText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
   // Empty text
   emptyText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: Spacing.md,

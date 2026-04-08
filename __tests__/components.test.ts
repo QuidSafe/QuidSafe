@@ -94,44 +94,34 @@ describe('DateInput formatting logic', () => {
 // ─── Colors constants ───────────────────────────────────
 
 describe('Colors constants', () => {
-  it('has Trust Navy as primary (#0F172A)', () => {
-    expect(Colors.primary).toBe('#0F172A');
+  it('has Black as primary (#000000)', () => {
+    expect(Colors.primary).toBe('#000000');
   });
 
-  it('has Royal Blue as secondary (#1E3A8A)', () => {
-    expect(Colors.secondary).toBe('#1E3A8A');
+  it('has Electric Blue as secondary (#0066FF)', () => {
+    expect(Colors.secondary).toBe('#0066FF');
   });
 
-  it('has Warm Gold as accent (#CA8A04)', () => {
-    expect(Colors.accent).toBe('#CA8A04');
+  it('has Electric Blue as accent (#0066FF)', () => {
+    expect(Colors.accent).toBe('#0066FF');
   });
 
-  it('has Success Green (#16A34A)', () => {
-    expect(Colors.success).toBe('#16A34A');
+  it('has Success Green (#00C853)', () => {
+    expect(Colors.success).toBe('#00C853');
   });
 
-  it('has Error Red (#DC2626)', () => {
-    expect(Colors.error).toBe('#DC2626');
+  it('has Error Red (#FF3B30)', () => {
+    expect(Colors.error).toBe('#FF3B30');
   });
 
   it('has white (#FFFFFF)', () => {
     expect(Colors.white).toBe('#FFFFFF');
   });
 
-  it('has light and dark theme objects', () => {
-    expect(Colors.light).toBeDefined();
+  it('has dark theme object (dark-only mode)', () => {
     expect(Colors.dark).toBeDefined();
-    expect(Colors.light.text).toBe('#0F172A');
-    expect(Colors.dark.text).toBe('#F8FAFC');
-  });
-
-  it('has grey scale with expected keys', () => {
-    expect(Colors.grey[50]).toBe('#F8FAFC');
-    expect(Colors.grey[900]).toBe('#0F172A');
-  });
-
-  it('has gold scale', () => {
-    expect(Colors.gold[600]).toBe('#CA8A04');
+    expect(Colors.dark.text).toBe('#FFFFFF');
+    expect(Colors.dark.background).toBe('#000000');
   });
 });
 
@@ -152,30 +142,20 @@ describe('Spacing constants', () => {
 
 describe('BorderRadius constants', () => {
   it('has expected border radius values', () => {
-    expect(BorderRadius.card).toBe(16);
-    expect(BorderRadius.input).toBe(12);
-    expect(BorderRadius.pill).toBe(9999);
-    expect(BorderRadius.button).toBe(12);
-    expect(BorderRadius.hero).toBe(24);
+    expect(BorderRadius.card).toBe(12);
+    expect(BorderRadius.input).toBe(8);
+    expect(BorderRadius.pill).toBe(999);
+    expect(BorderRadius.button).toBe(8);
   });
 });
 
-// ─── Shadows constants ──────────────────────────────────
+// ─── Shadows removed from design system ─────────────────
 
-describe('Shadows constants', () => {
-  it('has soft, medium, and large shadow presets', () => {
+describe('Shadows constants (legacy compat)', () => {
+  it('exports zeroed-out shadow presets for backward compat', () => {
     expect(Shadows.soft).toBeDefined();
-    expect(Shadows.medium).toBeDefined();
-    expect(Shadows.large).toBeDefined();
-  });
-
-  it('soft shadow has expected properties', () => {
-    expect(Shadows.soft.shadowColor).toBe('#0F172A');
-    expect(Shadows.soft.elevation).toBe(2);
-  });
-
-  it('elevation increases with shadow intensity', () => {
-    expect(Shadows.soft.elevation).toBeLessThan(Shadows.medium.elevation);
-    expect(Shadows.medium.elevation).toBeLessThan(Shadows.large.elevation);
+    expect(Shadows.soft.elevation).toBe(0);
+    expect(Shadows.medium.elevation).toBe(0);
+    expect(Shadows.large.elevation).toBe(0);
   });
 });

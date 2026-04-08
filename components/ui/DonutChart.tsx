@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { Spacing } from '@/constants/Colors';
+import { colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface DonutSegment {
   label: string;
@@ -29,7 +28,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Marketing': '#EF4444',
   'Training': '#06B6D4',
   'Other': '#6B7280',
-  // Also map the snake_case keys used in the DB
   'office_costs': '#3B82F6',
   'travel': '#8B5CF6',
   'clothing': '#EC4899',
@@ -50,37 +48,28 @@ export function DonutChart({
   centerLabel,
   centerValue,
 }: DonutChartProps) {
-  const { colors } = useTheme();
-
   const total = segments.reduce((sum, s) => sum + s.value, 0);
   if (total === 0 || segments.length === 0) return null;
 
-  // Sort segments by value descending for visual clarity
   const sorted = [...segments].sort((a, b) => b.value - a.value);
 
   return (
     <View style={styles.container}>
-      {/* Center total display */}
       {(centerLabel || centerValue) && (
         <View style={styles.centerArea}>
           {centerValue && (
-            <Text style={[styles.centerValue, { color: colors.text }]}>
-              {centerValue}
-            </Text>
+            <Text style={styles.centerValue}>{centerValue}</Text>
           )}
           {centerLabel && (
-            <Text style={[styles.centerLabel, { color: colors.textSecondary }]}>
-              {centerLabel}
-            </Text>
+            <Text style={styles.centerLabel}>{centerLabel}</Text>
           )}
         </View>
       )}
 
-      {/* Horizontal stacked bar */}
-      <View style={[styles.barContainer, { backgroundColor: colors.border }]}>
+      <View style={styles.barContainer}>
         {sorted.map((segment, index) => {
           const percentage = (segment.value / total) * 100;
-          if (percentage < 0.5) return null; // skip tiny segments
+          if (percentage < 0.5) return null;
           return (
             <View
               key={`${segment.label}-${index}`}
@@ -98,28 +87,22 @@ export function DonutChart({
         })}
       </View>
 
-      {/* Legend */}
       <View style={styles.legend}>
         {sorted.map((segment, index) => {
           const percentage = ((segment.value / total) * 100).toFixed(1);
           return (
             <View key={`legend-${segment.label}-${index}`} style={styles.legendRow}>
               <View style={styles.legendLeft}>
-                <View
-                  style={[styles.legendDot, { backgroundColor: segment.color }]}
-                />
-                <Text
-                  style={[styles.legendLabel, { color: colors.text }]}
-                  numberOfLines={1}
-                >
+                <View style={[styles.legendDot, { backgroundColor: segment.color }]} />
+                <Text style={styles.legendLabel} numberOfLines={1}>
                   {segment.label}
                 </Text>
               </View>
               <View style={styles.legendRight}>
-                <Text style={[styles.legendAmount, { color: colors.text }]}>
+                <Text style={styles.legendAmount}>
                   {formatAmount(segment.value)}
                 </Text>
-                <Text style={[styles.legendPercent, { color: colors.textSecondary }]}>
+                <Text style={styles.legendPercent}>
                   {percentage}%
                 </Text>
               </View>
@@ -148,21 +131,24 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   centerValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 22,
+    color: colors.text,
   },
   centerLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 2,
+    color: colors.textSecondary,
   },
   barContainer: {
     flexDirection: 'row',
     height: 14,
     borderRadius: 7,
     overflow: 'hidden',
+    backgroundColor: colors.border,
   },
   barSegment: {
     height: '100%',
@@ -196,9 +182,10 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   legendLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     flex: 1,
+    color: colors.text,
   },
   legendRight: {
     flexDirection: 'row',
@@ -206,15 +193,17 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   legendAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 13,
     minWidth: 60,
     textAlign: 'right',
+    color: colors.text,
   },
   legendPercent: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     minWidth: 44,
     textAlign: 'right',
+    color: colors.textSecondary,
   },
 });

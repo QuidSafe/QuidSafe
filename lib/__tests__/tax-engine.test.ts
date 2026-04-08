@@ -43,7 +43,7 @@ describe('calculateTax', () => {
     expect(result.personalAllowance).toBe(12_570);
     expect(result.taxableIncome).toBe(0);
     expect(result.incomeTax.total).toBe(0);
-    // NI Class 2 kicks in since profit >= 6725
+    // NI Class 2 kicks in since profit >= 12570
     expect(result.nationalInsurance.class2).toBe(round(3.45 * 52));
     // NI Class 4: profit at lower limit, so zero
     expect(result.nationalInsurance.class4).toBe(0);
@@ -66,7 +66,7 @@ describe('calculateTax', () => {
     expect(result.incomeTax.higherRate).toBe(0);
     expect(result.incomeTax.additionalRate).toBe(0);
 
-    // NI Class 2: profit > 6725
+    // NI Class 2: profit > 12570
     expect(result.nationalInsurance.class2).toBe(round(3.45 * 52));
     // NI Class 4: (30000 - 12570) * 0.06
     expect(result.nationalInsurance.class4).toBe(round((30_000 - 12_570) * 0.06));
@@ -108,9 +108,9 @@ describe('calculateTax', () => {
     expect(result.personalAllowance).toBe(0);
     expect(result.taxableIncome).toBe(200_000);
 
-    // Basic band: 50270 - 12570 = 37700 (uses config PA for the band width)
-    const basicBand = 50_270 - 12_570;
-    const higherBand = 125_140 - 50_270;
+    // When PA is tapered to 0, basic band widens to full basicRateThreshold (50270)
+    const basicBand = 50_270; // basicRateThreshold - 0 (tapered PA)
+    const higherBand = 125_140 - 50_270; // 74870
     const additionalAmount = 200_000 - basicBand - higherBand;
 
     expect(result.incomeTax.basicRate).toBe(round(basicBand * 0.20));
@@ -142,12 +142,12 @@ describe('calculateTax', () => {
 // ─── NI Class 2 ──────────────────────────────────────────
 
 describe('calculateNIClass2', () => {
-  it('returns £0 when profit is below small profits threshold', () => {
-    expect(calculateNIClass2(6_724, config)).toBe(0);
+  it('returns £0 when profit is below small profits threshold (£12,570)', () => {
+    expect(calculateNIClass2(12_569, config)).toBe(0);
   });
 
   it('returns weekly rate * 52 when profit is at or above threshold', () => {
-    expect(calculateNIClass2(6_725, config)).toBe(round(3.45 * 52));
+    expect(calculateNIClass2(12_570, config)).toBe(round(3.45 * 52));
     expect(calculateNIClass2(50_000, config)).toBe(round(3.45 * 52));
   });
 });
@@ -286,10 +286,8 @@ describe('generatePlainEnglish (via calculateTax)', () => {
 
   it('mentions no tax owed when within personal allowance', () => {
     const result = calculateTax({ totalIncome: 10_000, totalExpenses: 0, taxYear: '2026/27' });
-    // The only tax is NI Class 2; but the plainEnglish checks totalTaxOwed
-    // Since NI Class 2 applies (10000 > 6725), totalTaxOwed > 0, so it won't say "No tax owed"
-    // It should still return a non-empty meaningful string
-    expect(result.plainEnglish.length).toBeGreaterThan(0);
+    // £10k is below PA (£12,570) and below NI Class 2 threshold (£12,570), so no tax
+    expect(result.plainEnglish).toContain('No tax owed');
   });
 
   it('mentions tapering for income over £100,000', () => {

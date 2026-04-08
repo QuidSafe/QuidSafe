@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Colors, Shadows } from '@/constants/Colors';
+import { colors, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 interface Props {
@@ -34,7 +34,7 @@ export class AppErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <View style={[styles.card, Shadows.medium]}>
+          <View style={styles.card}>
             <View style={styles.iconCircle}>
               <Text style={styles.iconText}>!</Text>
             </View>
@@ -67,14 +67,16 @@ export class AppErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   card: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: BorderRadius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 32,
     alignItems: 'center',
     maxWidth: 400,
@@ -84,55 +86,55 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   iconText: {
-    color: Colors.white,
+    color: colors.text,
     fontSize: 28,
     fontWeight: '700',
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     lineHeight: 32,
-    color: Colors.primary,
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.grey[500],
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 24,
   },
   errorDetail: {
-    backgroundColor: Colors.grey[50],
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: BorderRadius.input,
     padding: 12,
     marginBottom: 24,
     width: '100%',
   },
   errorText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     lineHeight: 16,
-    color: Colors.error,
+    color: colors.error,
   },
   button: {
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
+    backgroundColor: colors.accent,
+    borderRadius: BorderRadius.button,
     paddingHorizontal: 32,
     paddingVertical: 14,
   },
   buttonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     lineHeight: 24,
-    color: Colors.white,
+    color: colors.text,
   },
 });

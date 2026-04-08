@@ -3,9 +3,8 @@ import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator, Animat
 import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, Spacing, Shadows } from '@/constants/Colors';
+import { Mail, Lock, ArrowLeft } from 'lucide-react-native';
+import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -93,26 +92,14 @@ export default function SignupScreen() {
   };
 
   return (
-    <View style={s.root}>
-      <LinearGradient
-        colors={['#080C18', '#0C1222', '#142044', '#0C1222', '#080C18']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Atmospheric glows */}
-      <View style={s.glowGold} />
-      <View style={s.glowBlue} />
-
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       <SafeAreaView style={s.safe}>
         {/* Header */}
         <Animated.View style={[s.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
-          <Text style={s.title} accessibilityRole="header">
+          <Text style={[s.title, { color: colors.text }]} accessibilityRole="header">
             {pendingVerification ? 'Check your email' : 'Create your account'}
           </Text>
-          <View style={s.accentBar} />
-          <Text style={s.subtitle}>
+          <Text style={[s.subtitle, { color: colors.textSecondary }]}>
             {pendingVerification
               ? `We sent a code to ${email}`
               : 'Start tracking your tax in minutes'}
@@ -125,14 +112,15 @@ export default function SignupScreen() {
             <>
               <View style={[
                 s.inputWrap,
+                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
                 emailFocused && s.inputFocused,
                 emailTouched && emailError ? s.inputError : null,
               ]}>
-                <FontAwesome name="envelope-o" size={15} color="rgba(255,255,255,0.35)" style={{ marginRight: 12 }} />
+                <Mail size={15} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
-                  style={s.input}
+                  style={[s.input, { color: colors.text }]}
                   placeholder="Email address"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor={Colors.muted}
                   value={email}
                   onChangeText={setEmail}
                   onFocus={() => setEmailFocused(true)}
@@ -164,25 +152,22 @@ export default function SignupScreen() {
                 {loading ? (
                   <ActivityIndicator color={Colors.white} />
                 ) : (
-                  <LinearGradient
-                    colors={['#D4A017', '#CA8A04', '#A16207']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={s.ctaGradient}
-                  >
-                    <Text style={s.ctaText}>Send Verification Code</Text>
-                  </LinearGradient>
+                  <Text style={s.ctaText}>Send Verification Code</Text>
                 )}
               </Pressable>
             </>
           ) : (
             <>
-              <View style={[s.inputWrap, codeFocused && s.inputFocused]}>
-                <FontAwesome name="lock" size={16} color="rgba(255,255,255,0.35)" style={{ marginRight: 12 }} />
+              <View style={[
+                s.inputWrap,
+                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
+                codeFocused && s.inputFocused,
+              ]}>
+                <Lock size={16} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
-                  style={s.input}
+                  style={[s.input, { color: colors.text }]}
                   placeholder="Enter 6-digit code"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor={Colors.muted}
                   value={code}
                   onChangeText={setCode}
                   onFocus={() => setCodeFocused(true)}
@@ -203,14 +188,7 @@ export default function SignupScreen() {
                 {loading ? (
                   <ActivityIndicator color={Colors.white} />
                 ) : (
-                  <LinearGradient
-                    colors={['#D4A017', '#CA8A04', '#A16207']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={s.ctaGradient}
-                  >
-                    <Text style={s.ctaText}>Verify & Continue</Text>
-                  </LinearGradient>
+                  <Text style={s.ctaText}>Verify & Continue</Text>
                 )}
               </Pressable>
             </>
@@ -227,10 +205,10 @@ export default function SignupScreen() {
             accessibilityLabel="Back to login"
             style={({ pressed }) => [pressed && s.pressed]}
           >
-            <Text style={s.backLink}>
-              <FontAwesome name="arrow-left" size={12} color={Colors.accent} />{' '}
-              Back to login
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <ArrowLeft size={12} color={Colors.electricBlue} strokeWidth={1.5} />
+              <Text style={s.backLink}>Back to login</Text>
+            </View>
           </Pressable>
         </Animated.View>
       </SafeAreaView>
@@ -241,32 +219,11 @@ export default function SignupScreen() {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#080C18',
   },
   safe: {
     flex: 1,
     paddingHorizontal: Spacing.lg + 4,
     justifyContent: 'center',
-  },
-
-  // Atmospheric glows
-  glowGold: {
-    position: 'absolute',
-    top: '15%',
-    right: -60,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(202, 138, 4, 0.08)',
-  },
-  glowBlue: {
-    position: 'absolute',
-    bottom: '20%',
-    left: -80,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: 'rgba(30, 58, 138, 0.12)',
   },
 
   // Header
@@ -275,25 +232,16 @@ const s = StyleSheet.create({
     marginBottom: 36,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
-    fontSize: 32,
-    color: Colors.white,
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: 28,
     textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  accentBar: {
-    width: 40,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: Colors.accent,
-    marginTop: 14,
-    marginBottom: 14,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
-    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
+    marginTop: 8,
     letterSpacing: 0.2,
   },
 
@@ -305,57 +253,49 @@ const s = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 8,
+    borderWidth: 1,
     paddingHorizontal: Spacing.md,
     paddingVertical: 15,
   },
   inputFocused: {
-    borderColor: 'rgba(202, 138, 4, 0.4)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: Colors.electricBlue,
   },
   inputError: {
-    borderColor: 'rgba(220, 38, 38, 0.5)',
+    borderColor: Colors.error,
   },
   input: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 16,
-    color: Colors.white,
     padding: 0,
   },
 
   // CTA
   ctaBtn: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    ...Shadows.medium,
-  },
-  ctaGradient: {
+    backgroundColor: Colors.electricBlue,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
   },
   ctaText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
-    letterSpacing: -0.2,
   },
   ctaBtnDisabled: {
     opacity: 0.5,
   },
 
   error: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     color: Colors.error,
     textAlign: 'center',
   },
   fieldError: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
     marginTop: -8,
@@ -371,8 +311,8 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   backLink: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
-    color: Colors.accent,
+    color: Colors.electricBlue,
   },
 });

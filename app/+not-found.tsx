@@ -23,19 +23,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: Spacing.lg,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#000000',
   },
   title: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 20,
-    color: Colors.light.text,
+    color: '#FFFFFF',
   },
   link: {
     marginTop: Spacing.md,
     paddingVertical: Spacing.md,
   },
   linkText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     color: Colors.primary,
   },

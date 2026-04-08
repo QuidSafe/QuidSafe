@@ -11,11 +11,12 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -56,7 +57,7 @@ function Toggle({
 
   const trackBg = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [Colors.grey[300], Colors.success],
+    outputRange: ['#2A2A2A', Colors.success],
   });
 
   const knobTranslate = anim.interpolate({
@@ -96,17 +97,17 @@ const toggleStyles = StyleSheet.create({
 
 // --------------- Icon Box ---------------
 function IconBox({
-  name,
+  icon,
   bg,
   color = Colors.white,
 }: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
+  icon: React.ReactNode;
   bg: string;
   color?: string;
 }) {
   return (
     <View style={[styles.iconBox, { backgroundColor: bg }]}>
-      <FontAwesome name={name} size={15} color={color} />
+      {icon}
     </View>
   );
 }
@@ -132,7 +133,7 @@ const SettingsRow = memo(function SettingsRow({
   accessibilityLabel,
   accessibilityHint,
 }: {
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  icon: React.ReactNode;
   iconBg: string;
   title: string;
   subtitle?: string;
@@ -145,7 +146,7 @@ const SettingsRow = memo(function SettingsRow({
   const { colors } = useTheme();
   const content = (
     <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
-      <IconBox name={icon} bg={iconBg} />
+      <IconBox icon={icon} bg={iconBg} />
       <View style={styles.rowText}>
         <Text style={[styles.rowTitle, { color: colors.text }]}>{title}</Text>
         {subtitle ? <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text> : null}
@@ -172,7 +173,7 @@ const SettingsRow = memo(function SettingsRow({
 
 // --------------- Chevron ---------------
 function Chevron() {
-  return <FontAwesome name="chevron-right" size={12} color={Colors.grey[400]} />;
+  return <ChevronRight size={12} color="#666666" strokeWidth={1.5} />;
 }
 
 // --------------- Section Label ---------------
@@ -188,7 +189,7 @@ const ThemeOption = memo(function ThemeOption({
   active,
   onPress,
 }: {
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  icon: string;
   label: string;
   active: boolean;
   onPress: () => void;
@@ -198,13 +199,12 @@ const ThemeOption = memo(function ThemeOption({
     <Pressable onPress={onPress} style={styles.themeOption} accessibilityRole="button" accessibilityLabel={`Theme: ${label}`} accessibilityState={{ selected: active }}>
       <View style={styles.themeLeft}>
         <IconBox
-          name={icon}
-          bg={active ? Colors.secondary : Colors.grey[200]}
-          color={active ? Colors.white : Colors.grey[500]}
+          icon={<Moon size={15} color={active ? Colors.white : '#666666'} strokeWidth={1.5} />}
+          bg={active ? Colors.secondary : '#2A2A2A'}
         />
         <Text style={[styles.rowTitle, { marginLeft: 10, color: colors.text }]}>{label}</Text>
       </View>
-      {active && <FontAwesome name="check" size={14} color={Colors.success} />}
+      {active && <Check size={14} color={Colors.success} strokeWidth={1.5} />}
     </Pressable>
   );
 });
@@ -258,7 +258,7 @@ const BankConnectionRow = memo(function BankConnectionRow({
 
   return (
     <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
-      <IconBox name="bank" bg={Colors.secondary} />
+      <IconBox icon={<Landmark size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.secondary} />
       <View style={styles.rowText}>
         <Text style={[styles.rowTitle, { color: colors.text }]}>{connection.bankName}</Text>
         <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>Synced: {lastSynced}</Text>
@@ -297,7 +297,7 @@ const BankConnectionRow = memo(function BankConnectionRow({
 
 // --------------- Main Screen ---------------
 export default function SettingsScreen() {
-  const { colors, mode, setMode } = useTheme();
+  const { colors } = useTheme();
   const { user } = useUser();
   const { signOut } = useAuth();
   const router = useRouter();
@@ -450,11 +450,23 @@ export default function SettingsScreen() {
   };
 
   const [isAddingBank, setIsAddingBank] = useState(false);
+
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isAddingBank) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsAddingBank(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isAddingBank]);
+
   const handleAddBank = async () => {
     if (isAddingBank) return;
     setIsAddingBank(true);
     try {
-      const { url } = await api.getConnectUrl();
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
       await WebBrowser.openBrowserAsync(url);
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
@@ -500,7 +512,7 @@ export default function SettingsScreen() {
         <SectionLabel label="SECURITY" />
         <Card style={styles.cardPadding}>
           <SettingsRow
-            icon="shield"
+            icon={<Shield size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="Data encryption"
             subtitle="AES-256 · Bank-grade"
@@ -508,7 +520,7 @@ export default function SettingsScreen() {
           />
           {biometricAvailable ? (
             <SettingsRow
-              icon="lock"
+              icon={<Lock size={15} color={Colors.white} strokeWidth={1.5} />}
               iconBg={Colors.secondary}
               title="Biometric lock"
               subtitle={biometricType}
@@ -518,14 +530,14 @@ export default function SettingsScreen() {
             />
           ) : (
             <SettingsRow
-              icon="lock"
+              icon={<Lock size={15} color={Colors.white} strokeWidth={1.5} />}
               iconBg={Colors.secondary}
               title="Biometric lock"
               subtitle="Not available on this device"
             />
           )}
           <SettingsRow
-            icon="eye"
+            icon={<Eye size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="AI anonymisation"
             subtitle="Names & numbers stripped"
@@ -538,24 +550,10 @@ export default function SettingsScreen() {
         <SectionLabel label="APPEARANCE" />
         <Card style={styles.cardPadding}>
           <ThemeOption
-            icon="sun-o"
-            label="Light"
-            active={mode === 'light'}
-            onPress={() => setMode('light')}
-          />
-          <View style={[styles.rowBorderOnly, { backgroundColor: colors.border }]} />
-          <ThemeOption
             icon="moon-o"
             label="Dark"
-            active={mode === 'dark'}
-            onPress={() => setMode('dark')}
-          />
-          <View style={[styles.rowBorderOnly, { backgroundColor: colors.border }]} />
-          <ThemeOption
-            icon="desktop"
-            label="Auto"
-            active={mode === 'auto'}
-            onPress={() => setMode('auto')}
+            active={true}
+            onPress={() => {}}
           />
         </Card>
 
@@ -563,7 +561,7 @@ export default function SettingsScreen() {
         <SectionLabel label="NOTIFICATIONS" />
         <Card style={styles.cardPadding}>
           <SettingsRow
-            icon="bell"
+            icon={<Bell size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.accent}
             title="Tax deadline reminders"
             right={<Toggle value={taxReminders} onValueChange={(v) => { setTaxReminders(v); handleToggle('notifyTaxDeadlines', v); }} />}
@@ -571,7 +569,7 @@ export default function SettingsScreen() {
             accessibilityHint="Toggle tax deadline reminders on or off"
           />
           <SettingsRow
-            icon="bar-chart"
+            icon={<Zap size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="Weekly income summary"
             right={<Toggle value={weeklySum} onValueChange={(v) => { setWeeklySum(v); handleToggle('notifyWeeklySummary', v); }} />}
@@ -579,7 +577,7 @@ export default function SettingsScreen() {
             accessibilityHint="Toggle weekly income summary notifications on or off"
           />
           <SettingsRow
-            icon="gbp"
+            icon={<PoundSterling size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.success}
             title="Tax pot check (monthly)"
             right={<Toggle value={taxPotCheck} onValueChange={(v) => { setTaxPotCheck(v); handleToggle('notifyTransactionAlerts', v); }} />}
@@ -587,7 +585,7 @@ export default function SettingsScreen() {
             accessibilityHint="Toggle monthly tax pot check notifications on or off"
           />
           <SettingsRow
-            icon="file-text-o"
+            icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="MTD submission ready"
             right={<Toggle value={mtdReady} onValueChange={(v) => { setMtdReady(v); handleToggle('notifyMtdReady', v); }} />}
@@ -642,7 +640,7 @@ export default function SettingsScreen() {
               <ActivityIndicator size="small" color={Colors.secondary} />
             ) : (
               <>
-                <FontAwesome name="plus" size={12} color={Colors.secondary} />
+                <Plus size={12} color={Colors.secondary} strokeWidth={1.5} />
                 <Text style={styles.addBankText}>Add Bank</Text>
               </>
             )}
@@ -653,16 +651,14 @@ export default function SettingsScreen() {
         <SectionLabel label="ACCOUNT" />
         <Card style={styles.cardPadding}>
           <SettingsRow
-            icon="user"
+            icon={<User size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="Profile & account"
             subtitle={userEmail}
             right={
-              <FontAwesome
-                name={profileExpanded ? 'chevron-down' : 'chevron-right'}
-                size={12}
-                color={Colors.grey[400]}
-              />
+              profileExpanded
+                ? <ChevronDown size={12} color="#666666" strokeWidth={1.5} />
+                : <ChevronRight size={12} color="#666666" strokeWidth={1.5} />
             }
             onPress={() => setProfileExpanded((prev) => !prev)}
           />
@@ -680,7 +676,7 @@ export default function SettingsScreen() {
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Your name"
-                  placeholderTextColor={Colors.grey[400]}
+                  placeholderTextColor={'#666666'}
                   autoCapitalize="words"
                   accessibilityLabel="Your name"
                   accessibilityHint="Enter your display name"
@@ -712,7 +708,7 @@ export default function SettingsScreen() {
                   value={nino}
                   onChangeText={setNino}
                   placeholder="QQ123456C"
-                  placeholderTextColor={Colors.grey[400]}
+                  placeholderTextColor={'#666666'}
                   autoCapitalize="characters"
                   maxLength={9}
                   accessibilityLabel="National Insurance Number"
@@ -739,7 +735,7 @@ export default function SettingsScreen() {
             </View>
           )}
           <SettingsRow
-            icon="credit-card"
+            icon={<CreditCard size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.accent}
             title="Manage Plan"
             subtitle="View or change your subscription"
@@ -747,7 +743,7 @@ export default function SettingsScreen() {
             onPress={() => router.push('/billing')}
           />
           <SettingsRow
-            icon="history"
+            icon={<Clock size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.accent}
             title="Tax History"
             subtitle="Multi-year tax overview"
@@ -755,7 +751,7 @@ export default function SettingsScreen() {
             onPress={() => router.push('/tax-history')}
           />
           <SettingsRow
-            icon="file-text-o"
+            icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="HMRC MTD"
             subtitle="Making Tax Digital submissions"
@@ -763,7 +759,7 @@ export default function SettingsScreen() {
             onPress={() => router.push('/mtd')}
           />
           <SettingsRow
-            icon="list-alt"
+            icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.accent}
             title="Self Assessment"
             subtitle="SA103 annual tax summary"
@@ -771,7 +767,7 @@ export default function SettingsScreen() {
             onPress={() => router.push('/self-assessment')}
           />
           <SettingsRow
-            icon="download"
+            icon={<Download size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.success}
             title="Export data"
             subtitle="Download CSV or PDF"
@@ -785,7 +781,7 @@ export default function SettingsScreen() {
         <SectionLabel label="ABOUT" />
         <Card style={styles.cardPadding}>
           <SettingsRow
-            icon="dashboard"
+            icon={<Globe size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.secondary}
             title="System Status"
             subtitle="Monitoring & diagnostics"
@@ -793,21 +789,21 @@ export default function SettingsScreen() {
             onPress={() => router.push('/status')}
           />
           <SettingsRow
-            icon="info-circle"
-            iconBg={Colors.grey[400]}
+            icon={<Info size={15} color={Colors.white} strokeWidth={1.5} />}
+            iconBg="#666666"
             title="App version"
             subtitle={Constants.expoConfig?.version ?? '0.1.0'}
           />
           <SettingsRow
-            icon="file-o"
-            iconBg={Colors.grey[400]}
+            icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />}
+            iconBg="#666666"
             title="Terms of Service"
             right={<Chevron />}
             onPress={() => router.push('/terms')}
           />
           <SettingsRow
-            icon="shield"
-            iconBg={Colors.grey[400]}
+            icon={<Shield size={15} color={Colors.white} strokeWidth={1.5} />}
+            iconBg="#666666"
             title="Privacy Policy"
             right={<Chevron />}
             isLast
@@ -856,7 +852,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Transactions"
                 >
-                  <IconBox name="exchange" bg={Colors.secondary} />
+                  <IconBox icon={<RefreshCw size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.secondary} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Transactions</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -866,7 +862,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Expenses"
                 >
-                  <IconBox name="shopping-cart" bg={Colors.error} />
+                  <IconBox icon={<CreditCard size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.error} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Expenses</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -876,7 +872,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Invoices"
                 >
-                  <IconBox name="file-text-o" bg={Colors.accent} />
+                  <IconBox icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.accent} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Invoices</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -886,7 +882,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Tax Summary"
                 >
-                  <IconBox name="calculator" bg={Colors.success} />
+                  <IconBox icon={<PoundSterling size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.success} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Tax Summary</Text>
                 </Pressable>
               </View>
@@ -918,12 +914,12 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl + Spacing.lg,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 28,
     marginBottom: Spacing.xs,
   },
   sectionLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -958,22 +954,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12.5,
   },
   rowSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     marginTop: 1,
   },
   activeBadge: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: 'rgba(0,200,83,0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
   },
   activeBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
     color: Colors.success,
   },
@@ -989,14 +985,14 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     borderWidth: 1.5,
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
     borderRadius: BorderRadius.button,
     paddingVertical: Spacing.md,
     alignItems: 'center',
     marginTop: Spacing.lg,
   },
   signOutText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   deleteButton: {
@@ -1004,7 +1000,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   deleteText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
   },
@@ -1012,15 +1008,15 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   comingSoonBadge: {
-    backgroundColor: Colors.grey[200],
+    backgroundColor: '#2A2A2A',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
   },
   comingSoonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
-    color: Colors.grey[500],
+    color: '#666666',
   },
   profileExpandedSection: {
     paddingLeft: 40,
@@ -1033,7 +1029,7 @@ const styles = StyleSheet.create({
   },
   nameInput: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     borderWidth: 1,
     borderRadius: 8,
@@ -1050,7 +1046,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     color: Colors.white,
   },
@@ -1067,7 +1063,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.secondary,
   },
   syncText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
     color: Colors.secondary,
   },
@@ -1079,7 +1075,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   disconnectText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
     color: Colors.error,
   },
@@ -1094,11 +1090,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: Colors.grey[200],
+    borderTopColor: '#2A2A2A',
     marginTop: 4,
   },
   addBankText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12.5,
     color: Colors.secondary,
   },
@@ -1116,13 +1112,13 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 20,
     textAlign: 'center',
     marginBottom: 4,
   },
   modalSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     textAlign: 'center',
     marginBottom: Spacing.md,
@@ -1136,7 +1132,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   modalOptionText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     marginLeft: 10,
   },
@@ -1148,11 +1144,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   modalCancelText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   pushStatusCaption: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     marginLeft: Spacing.xs,
     marginTop: 2,

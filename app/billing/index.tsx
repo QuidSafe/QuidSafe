@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Pressable, ScrollView, RefreshControl, Linking, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft, ChevronUp, ChevronDown, Check, CheckCircle, Shield, Lock } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
@@ -83,7 +82,7 @@ function FAQItem({ question, answer, colors }: { question: string; answer: strin
     >
       <View style={styles.faqHeader}>
         <Text style={[styles.faqQuestion, { color: colors.text }]}>{question}</Text>
-        <FontAwesome name={expanded ? 'chevron-up' : 'chevron-down'} size={12} color={colors.textSecondary} />
+        {expanded ? <ChevronUp size={12} color={colors.textSecondary} strokeWidth={1.5} /> : <ChevronDown size={12} color={colors.textSecondary} strokeWidth={1.5} />}
       </View>
       {expanded && (
         <Text style={[styles.faqAnswer, { color: colors.textSecondary }]}>{answer}</Text>
@@ -143,14 +142,14 @@ export default function BillingScreen() {
         >
           <View style={styles.webWrap}>
           <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
-            <FontAwesome name="arrow-left" size={16} color={colors.text} />
+            <ArrowLeft size={16} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Your Plan</Text>
 
           <Card>
             <View style={styles.activeRow}>
               <View style={styles.activeBadge}>
-                <FontAwesome name="check-circle" size={16} color={Colors.success} />
+                <CheckCircle size={16} color={Colors.success} strokeWidth={1.5} />
                 <Text style={styles.activeBadgeText}>
                   {status?.status === 'trialing' ? 'Free Trial' : 'Pro'}
                 </Text>
@@ -198,7 +197,7 @@ export default function BillingScreen() {
       >
         <View style={styles.webWrap}>
         <Pressable onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surface }]} accessibilityRole="button" accessibilityLabel="Go back">
-          <FontAwesome name="arrow-left" size={16} color={colors.text} />
+          <ArrowLeft size={16} color={colors.text} strokeWidth={1.5} />
         </Pressable>
 
         <View style={styles.header}>
@@ -263,7 +262,7 @@ export default function BillingScreen() {
           {PRO_FEATURES.map((f, i) => (
             <View key={i} style={styles.featureRow}>
               <View style={styles.featureIcon}>
-                <FontAwesome name="check" size={12} color={Colors.success} />
+                <Check size={12} color={Colors.success} strokeWidth={1.5} />
               </View>
               <Text style={[styles.featureText, { color: colors.text }]}>{f.text}</Text>
             </View>
@@ -287,7 +286,7 @@ export default function BillingScreen() {
                   <Text style={[
                     styles.comparisonName,
                     { color: comp.highlight ? Colors.accent : colors.text },
-                    comp.highlight && { fontFamily: Fonts.manrope.bold },
+                    comp.highlight && { fontFamily: Fonts.sourceSans.semiBold },
                   ]}>
                     {comp.name}
                   </Text>
@@ -296,12 +295,12 @@ export default function BillingScreen() {
                   <Text style={[
                     styles.comparisonPrice,
                     { color: comp.highlight ? Colors.accent : colors.textSecondary },
-                    comp.highlight && { fontFamily: Fonts.manrope.bold },
+                    comp.highlight && { fontFamily: Fonts.sourceSans.semiBold },
                   ]}>
                     {comp.price}
                   </Text>
                   {comp.highlight && (
-                    <FontAwesome name="check" size={12} color={Colors.success} style={{ marginLeft: 6 }} />
+                    <Check size={12} color={Colors.success} strokeWidth={1.5} style={{ marginLeft: 6 }} />
                   )}
                 </View>
               </View>
@@ -321,14 +320,9 @@ export default function BillingScreen() {
           {checkoutMutation.isPending ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <LinearGradient
-              colors={['#D4A017', '#CA8A04', '#A16207']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.ctaGradient}
-            >
+            <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
               <Text style={styles.ctaText}>Start 14-day free trial</Text>
-            </LinearGradient>
+            </View>
           )}
         </Pressable>
 
@@ -339,7 +333,7 @@ export default function BillingScreen() {
 
         {/* Security badge */}
         <View style={[styles.securityBadge, { borderColor: colors.border }]}>
-          <FontAwesome name="lock" size={14} color={Colors.success} />
+          <Lock size={14} color={Colors.success} strokeWidth={1.5} />
           <Text style={[styles.securityBadgeText, { color: colors.textSecondary }]}>
             256-bit encrypted checkout
           </Text>
@@ -350,7 +344,7 @@ export default function BillingScreen() {
         </Text>
 
         <View style={[styles.guaranteeBadge, { borderColor: colors.border }]}>
-          <FontAwesome name="shield" size={14} color={Colors.success} />
+          <Shield size={14} color={Colors.success} strokeWidth={1.5} />
           <Text style={[styles.guaranteeText, { color: colors.textSecondary }]}>
             14-day money-back guarantee  ·  Cancel anytime  ·  Secure checkout
           </Text>
@@ -398,75 +392,75 @@ const styles = StyleSheet.create({
   },
   backButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', ...Shadows.soft },
   header: { marginTop: Spacing.sm },
-  title: { fontFamily: Fonts.playfair.bold, fontSize: 28 },
-  subtitle: { fontFamily: Fonts.manrope.regular, fontSize: 15, marginTop: Spacing.xs, lineHeight: 22 },
+  title: { fontFamily: Fonts.lexend.semiBold, fontSize: 28 },
+  subtitle: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, marginTop: Spacing.xs, lineHeight: 22 },
 
   plans: { flexDirection: 'row', gap: Spacing.sm },
   planCard: { flex: 1, borderRadius: BorderRadius.card, padding: Spacing.md, borderWidth: 2, ...Shadows.soft },
   badgeContainer: { position: 'absolute', top: -10, right: 12, backgroundColor: Colors.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: BorderRadius.pill, ...Shadows.soft },
-  badgeText: { fontFamily: Fonts.manrope.bold, fontSize: 9, color: Colors.white, letterSpacing: 0.8 },
+  badgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 9, color: Colors.white, letterSpacing: 0.8 },
   radioRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioSelected: { borderColor: Colors.accent },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.accent },
-  planCardName: { fontFamily: Fonts.manrope.semiBold, fontSize: 15 },
+  planCardName: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 15 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: Spacing.sm },
-  currency: { fontFamily: Fonts.manrope.bold, fontSize: 16 },
-  price: { fontFamily: Fonts.manrope.extraBold, fontSize: 28 },
-  interval: { fontFamily: Fonts.manrope.regular, fontSize: 13, marginLeft: 2 },
+  currency: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16 },
+  price: { fontFamily: Fonts.mono.semiBold, fontSize: 28 },
+  interval: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, marginLeft: 2 },
   strikethroughRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.xs },
-  strikethroughPrice: { fontFamily: Fonts.manrope.medium, fontSize: 13, textDecorationLine: 'line-through' },
-  equivalentPrice: { fontFamily: Fonts.manrope.bold, fontSize: 13 },
-  planDesc: { fontFamily: Fonts.manrope.regular, fontSize: 12, marginTop: Spacing.xs },
+  strikethroughPrice: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, textDecorationLine: 'line-through' },
+  equivalentPrice: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13 },
+  planDesc: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, marginTop: Spacing.xs },
 
-  featuresTitle: { fontFamily: Fonts.manrope.semiBold, fontSize: 16, marginBottom: Spacing.md },
+  featuresTitle: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, marginBottom: Spacing.md },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },
   featureIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.success + '15', alignItems: 'center', justifyContent: 'center' },
-  featureText: { fontFamily: Fonts.manrope.medium, fontSize: 14, flex: 1 },
+  featureText: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, flex: 1 },
 
   comparisonGrid: {},
   comparisonRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.sm + 2 },
   comparisonRowHighlight: { backgroundColor: Colors.accent + '10', marginHorizontal: -Spacing.md, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.input },
   comparisonNameCol: { flex: 1 },
-  comparisonName: { fontFamily: Fonts.manrope.medium, fontSize: 14 },
+  comparisonName: { fontFamily: Fonts.sourceSans.regular, fontSize: 14 },
   comparisonPriceCol: { flexDirection: 'row', alignItems: 'center' },
-  comparisonPrice: { fontFamily: Fonts.manrope.medium, fontSize: 14 },
+  comparisonPrice: { fontFamily: Fonts.sourceSans.regular, fontSize: 14 },
 
   ctaButton: { borderRadius: BorderRadius.button, overflow: 'hidden' as const, ...Shadows.large },
   ctaGradient: { alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
-  ctaText: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white },
+  ctaText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: Colors.white },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
 
-  noCommitmentText: { fontFamily: Fonts.manrope.medium, fontSize: 13, textAlign: 'center' },
+  noCommitmentText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, textAlign: 'center' },
 
   securityBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, justifyContent: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.pill, borderWidth: 1 },
-  securityBadgeText: { fontFamily: Fonts.manrope.medium, fontSize: 12 },
+  securityBadgeText: { fontFamily: Fonts.sourceSans.regular, fontSize: 12 },
 
-  trialNote: { fontFamily: Fonts.manrope.regular, fontSize: 12, textAlign: 'center' },
+  trialNote: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, textAlign: 'center' },
   guaranteeBadge: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.pill, borderWidth: 1, justifyContent: 'center' },
-  guaranteeText: { fontFamily: Fonts.manrope.medium, fontSize: 11, textAlign: 'center', flex: 1 },
+  guaranteeText: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, textAlign: 'center', flex: 1 },
 
   bankStripSection: { alignItems: 'center', gap: Spacing.sm },
-  bankStripLabel: { fontFamily: Fonts.manrope.medium, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
+  bankStripLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
   bankStrip: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.xs },
   bankPill: { paddingHorizontal: Spacing.sm + 2, paddingVertical: Spacing.xs + 1, borderRadius: BorderRadius.pill, borderWidth: 1 },
-  bankPillText: { fontFamily: Fonts.manrope.medium, fontSize: 11 },
+  bankPillText: { fontFamily: Fonts.sourceSans.regular, fontSize: 11 },
 
   faqSection: { gap: 0, marginTop: Spacing.sm },
-  faqTitle: { fontFamily: Fonts.playfair.bold, fontSize: 20, marginBottom: Spacing.md },
+  faqTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 20, marginBottom: Spacing.md },
   faqItem: { borderBottomWidth: 1, paddingVertical: Spacing.md },
   faqHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  faqQuestion: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, flex: 1, marginRight: Spacing.sm },
-  faqAnswer: { fontFamily: Fonts.manrope.regular, fontSize: 13, marginTop: Spacing.sm, lineHeight: 20 },
+  faqQuestion: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, flex: 1, marginRight: Spacing.sm },
+  faqAnswer: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, marginTop: Spacing.sm, lineHeight: 20 },
 
-  restoreNote: { fontFamily: Fonts.manrope.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.sm },
+  restoreNote: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, textAlign: 'center', marginTop: Spacing.sm },
 
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.success + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: BorderRadius.pill },
-  activeBadgeText: { fontFamily: Fonts.manrope.semiBold, fontSize: 13, color: Colors.success },
-  planName: { fontFamily: Fonts.manrope.medium, fontSize: 14 },
-  trialText: { fontFamily: Fonts.manrope.regular, fontSize: 13, color: Colors.accent, marginTop: Spacing.sm },
-  periodText: { fontFamily: Fonts.manrope.regular, fontSize: 13, marginTop: Spacing.xs },
+  activeBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: Colors.success },
+  planName: { fontFamily: Fonts.sourceSans.regular, fontSize: 14 },
+  trialText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: Colors.accent, marginTop: Spacing.sm },
+  periodText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, marginTop: Spacing.xs },
   manageButton: { paddingVertical: 14, borderRadius: BorderRadius.button, alignItems: 'center', borderWidth: 1 },
-  manageText: { fontFamily: Fonts.manrope.semiBold, fontSize: 15 },
+  manageText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 15 },
 });

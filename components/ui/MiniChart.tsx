@@ -1,6 +1,5 @@
 import { StyleSheet, View, Text } from 'react-native';
-import { useTheme } from '@/lib/ThemeContext';
-import { Colors } from '@/constants/Colors';
+import { colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 interface MiniChartDataPoint {
@@ -14,9 +13,7 @@ interface MiniChartProps {
   height?: number;
 }
 
-export function MiniChart({ data, color = Colors.success, height = 80 }: MiniChartProps) {
-  const { colors } = useTheme();
-
+export function MiniChart({ data, color = colors.success, height = 80 }: MiniChartProps) {
   if (!data || data.length === 0) return null;
 
   const maxValue = Math.max(...data.map((d) => d.value), 1);
@@ -26,7 +23,6 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
 
   return (
     <View style={styles.container}>
-      {/* Tooltip label above last bar */}
       <View style={styles.tooltipRow}>
         <View style={{ flex: 1 }} />
         <View style={[styles.tooltip, { backgroundColor: color }]}>
@@ -36,22 +32,16 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
         </View>
       </View>
 
-      {/* Chart area */}
       <View style={[styles.chartArea, { height }]}>
-        {/* Average dashed line */}
         <View
           style={[
             styles.avgLine,
-            {
-              bottom: avgHeight,
-              borderColor: colors.textSecondary,
-            },
+            { bottom: avgHeight, borderColor: colors.textSecondary },
           ]}
         >
           <Text style={[styles.avgLabel, { color: colors.textSecondary }]}>avg</Text>
         </View>
 
-        {/* Bars */}
         <View style={styles.barsContainer}>
           {data.map((point, index) => {
             const barHeight = (point.value / maxValue) * height;
@@ -60,7 +50,6 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
             return (
               <View key={`${point.label}-${index}`} style={styles.barColumn}>
                 <View style={[styles.barWrapper, { height }]}>
-                  {/* Opacity gradient layers for the bar */}
                   <View
                     style={[
                       styles.barBase,
@@ -71,7 +60,6 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
                       },
                     ]}
                   />
-                  {/* Lighter bottom portion for gradient effect */}
                   <View
                     style={[
                       styles.barGradientOverlay,
@@ -89,7 +77,6 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
         </View>
       </View>
 
-      {/* Month labels */}
       <View style={styles.labelsRow}>
         {data.map((point, index) => (
           <View key={`label-${point.label}-${index}`} style={styles.labelColumn}>
@@ -100,8 +87,8 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
                   color: index === data.length - 1 ? colors.text : colors.textSecondary,
                   fontFamily:
                     index === data.length - 1
-                      ? Fonts.manrope.bold
-                      : Fonts.manrope.regular,
+                      ? Fonts.sourceSans.semiBold
+                      : Fonts.sourceSans.regular,
                 },
               ]}
             >
@@ -114,7 +101,6 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
   );
 }
 
-/** Format a number into compact form, e.g. 1200 -> "1.2k", 450 -> "450" */
 function formatCompact(value: number): string {
   if (value >= 1000) {
     const k = value / 1000;
@@ -142,9 +128,9 @@ const styles = StyleSheet.create({
     marginRight: BAR_WIDTH / 2,
   },
   tooltipText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 10,
-    color: Colors.white,
+    color: colors.text,
   },
   chartArea: {
     position: 'relative',
@@ -162,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   avgLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 8,
     position: 'absolute',
     right: 0,

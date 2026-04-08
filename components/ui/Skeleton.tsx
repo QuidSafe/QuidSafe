@@ -1,11 +1,8 @@
-// Skeleton loading component — Shimmer animation pattern
-// Gradient sweep from left to right, 1.5s loop, content-aware layouts
+// Skeleton loading component — Animated opacity pulse pattern
 
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, View, ViewStyle, LayoutChangeEvent } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
-import { useTheme } from '@/lib/ThemeContext';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
+import { colors, Spacing, BorderRadius } from '@/constants/Colors';
 
 interface SkeletonProps {
   width?: number | `${number}%`;
@@ -17,66 +14,41 @@ interface SkeletonProps {
 const SHIMMER_DURATION = 1500;
 
 export function Skeleton({ width = '100%', height = 20, borderRadius = 6, style }: SkeletonProps) {
-  const { isDark } = useTheme();
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-  const [layoutWidth, setLayoutWidth] = useState(0);
-
-  const baseColor = isDark ? '#1E293B' : '#E2E8F0';
-  const shimmerColor = isDark ? '#334155' : '#F1F5F9';
+  const opacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const animation = Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: SHIMMER_DURATION,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
+      Animated.sequence([
+        Animated.timing(opacityAnim, {
+          toValue: 0.5,
+          duration: SHIMMER_DURATION / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: SHIMMER_DURATION / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
     );
     animation.start();
     return () => animation.stop();
-  }, [shimmerAnim]);
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    setLayoutWidth(e.nativeEvent.layout.width);
-  };
-
-  // Sweep the shimmer band fully across the element: start off-screen left, end off-screen right
-  const effectiveWidth = layoutWidth || 200;
-  const translateX = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-effectiveWidth, effectiveWidth],
-  });
+  }, [opacityAnim]);
 
   return (
-    <View
-      onLayout={onLayout}
+    <Animated.View
       style={[
-        { width, height, borderRadius, backgroundColor: baseColor, overflow: 'hidden' },
+        { width, height, borderRadius, backgroundColor: colors.surface, overflow: 'hidden', opacity: opacityAnim },
         style,
       ]}
-    >
-      <Animated.View
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          width: effectiveWidth,
-          transform: [{ translateX }],
-        }}
-      >
-        <LinearGradient
-          colors={[baseColor, shimmerColor, baseColor]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-      </Animated.View>
-    </View>
+    />
   );
 }
 
 /** Generic card skeleton with internal lines */
 export function CardSkeleton({ style }: { style?: ViewStyle }) {
-  const { colors } = useTheme();
   return (
     <View style={[skeletonStyles.card, { backgroundColor: colors.surface }, style]}>
       <Skeleton width="40%" height={12} />
@@ -93,24 +65,14 @@ export function SkeletonCard() {
 
 /** Dashboard skeleton — mimics hero card, metric boxes, and action cards */
 export function DashboardSkeleton() {
-  const { colors, isDark } = useTheme();
   return (
     <View style={skeletonStyles.dashboardContainer}>
       {/* Hero card shape */}
-      <View
-        style={[
-          skeletonStyles.heroCard,
-          { backgroundColor: isDark ? '#1E293B' : '#0F172A' },
-        ]}
-      >
-        {/* Label row */}
+      <View style={[skeletonStyles.heroCard, { backgroundColor: colors.surface }]}>
         <Skeleton width={120} height={10} borderRadius={4} style={{ opacity: 0.4 }} />
-        {/* Big amount */}
         <Skeleton width="55%" height={36} borderRadius={6} style={{ marginTop: 10, opacity: 0.3 }} />
-        {/* Subtext */}
         <Skeleton width="70%" height={12} borderRadius={4} style={{ marginTop: 10, opacity: 0.25 }} />
 
-        {/* 3 glassmorphic metric boxes */}
         <View style={skeletonStyles.heroMetricRow}>
           {[1, 2, 3].map((i) => (
             <View key={i} style={skeletonStyles.heroMetricBox}>
@@ -120,7 +82,6 @@ export function DashboardSkeleton() {
           ))}
         </View>
 
-        {/* Set aside bar */}
         <View style={skeletonStyles.heroSetAsideBar}>
           <Skeleton width={100} height={10} borderRadius={4} style={{ opacity: 0.3 }} />
           <Skeleton width={80} height={22} borderRadius={4} style={{ opacity: 0.3 }} />
@@ -136,10 +97,8 @@ export function DashboardSkeleton() {
         <Skeleton width={70} height={28} borderRadius={14} />
       </View>
 
-      {/* Section heading placeholder */}
       <Skeleton width={140} height={16} style={{ marginTop: Spacing.md }} />
 
-      {/* Action card skeletons */}
       {[1, 2, 3].map((i) => (
         <View key={i} style={[skeletonStyles.actionCard, { backgroundColor: colors.surface }]}>
           <Skeleton width={36} height={36} borderRadius={10} />
@@ -155,7 +114,6 @@ export function DashboardSkeleton() {
 
 /** Transaction list skeleton — 5 rows mimicking transaction items */
 export function TransactionListSkeleton({ rows = 5 }: { rows?: number }) {
-  const { colors } = useTheme();
   return (
     <View style={[skeletonStyles.transactionList, { backgroundColor: colors.surface }]}>
       {Array.from({ length: rows }).map((_, i) => (
@@ -166,14 +124,11 @@ export function TransactionListSkeleton({ rows = 5 }: { rows?: number }) {
             i < rows - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
           ]}
         >
-          {/* Circle avatar */}
           <Skeleton width={38} height={38} borderRadius={19} />
-          {/* Two text lines */}
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Skeleton width="55%" height={14} />
             <Skeleton width="35%" height={11} style={{ marginTop: 6 }} />
           </View>
-          {/* Amount */}
           <Skeleton width={60} height={14} />
         </View>
       ))}
@@ -183,10 +138,8 @@ export function TransactionListSkeleton({ rows = 5 }: { rows?: number }) {
 
 /** Income screen skeleton — summary card, chart area, source list */
 export function IncomeSkeleton() {
-  const { colors } = useTheme();
   return (
     <View style={skeletonStyles.dashboardContainer}>
-      {/* Summary card */}
       <View style={[skeletonStyles.card, { backgroundColor: colors.surface }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
@@ -198,7 +151,6 @@ export function IncomeSkeleton() {
             <Skeleton width={100} height={24} style={{ marginTop: 6 }} />
           </View>
         </View>
-        {/* Chart bars */}
         <View style={skeletonStyles.chartBarsRow}>
           {[40, 65, 30, 80, 55, 45].map((h, i) => (
             <View key={i} style={skeletonStyles.chartBarCol}>
@@ -209,11 +161,9 @@ export function IncomeSkeleton() {
         </View>
       </View>
 
-      {/* Section heading + search */}
       <Skeleton width={80} height={16} style={{ marginTop: Spacing.sm }} />
       <Skeleton width="100%" height={44} borderRadius={BorderRadius.input} style={{ marginTop: Spacing.sm }} />
 
-      {/* Source list */}
       <TransactionListSkeleton rows={3} />
     </View>
   );
@@ -221,10 +171,8 @@ export function IncomeSkeleton() {
 
 /** Expenses screen skeleton — metric cards, buttons, expense list */
 export function ExpensesSkeleton() {
-  const { colors } = useTheme();
   return (
     <View style={skeletonStyles.dashboardContainer}>
-      {/* Metric cards row */}
       <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
         <View style={[skeletonStyles.card, { backgroundColor: colors.surface, flex: 1 }]}>
           <Skeleton width={80} height={10} />
@@ -236,17 +184,14 @@ export function ExpensesSkeleton() {
         </View>
       </View>
 
-      {/* Full-width metric card */}
       <View style={[skeletonStyles.card, { backgroundColor: colors.surface }]}>
         <Skeleton width={80} height={10} />
         <Skeleton width={100} height={22} style={{ marginTop: 8 }} />
       </View>
 
-      {/* Button placeholders */}
       <Skeleton width="100%" height={48} borderRadius={BorderRadius.button} />
       <Skeleton width="100%" height={48} borderRadius={BorderRadius.button} />
 
-      {/* Expense list */}
       <Skeleton width={130} height={16} style={{ marginTop: Spacing.sm }} />
       <TransactionListSkeleton rows={4} />
     </View>
@@ -262,7 +207,7 @@ const skeletonStyles = StyleSheet.create({
     padding: Spacing.lg,
   },
   heroCard: {
-    borderRadius: BorderRadius.hero,
+    borderRadius: BorderRadius.card,
     padding: Spacing.lg,
     paddingBottom: 20,
   },
@@ -285,7 +230,7 @@ const skeletonStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(202, 138, 4, 0.08)',
+    backgroundColor: colors.accentGlow,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,

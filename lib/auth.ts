@@ -4,9 +4,9 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-if (!publishableKey) {
-  throw new Error('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is required — set it in .env or EAS secrets');
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+if (!publishableKey && typeof window !== 'undefined') {
+  console.warn('EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is not set — Clerk auth will not work');
 }
 
 const tokenCache =

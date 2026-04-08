@@ -19,8 +19,11 @@ import {
   buildPushMessages,
   getUKTaxDeadlines,
   deadlineReminder14Days,
+  deadlineReminder7Days,
   deadlineUrgent3Days,
+  deadlineUrgent1Day,
   weeklySummary,
+  mtdSubmissionReady,
   bankReauthNeeded,
   trialEnding,
 } from './services/notifications';
@@ -132,7 +135,8 @@ app.use(
       if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
         return origin;
       }
-      return origin; // return origin as-is; Hono CORS will block if not in allow list
+      // Block unknown origins — returning empty string omits Access-Control-Allow-Origin header
+      return '';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -201,8 +205,28 @@ app.get('/articles/:id', async (c) => {
 app.get('/banking/callback', async (c) => {
   const code = c.req.query('code');
   const state = c.req.query('state');
-  if (!code) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
+  const oauthError = c.req.query('error');
+
+  // Handle OAuth denial / error from provider
+  if (oauthError || !code) {
+    let isNative = false;
+    if (state) {
+      // Validate state against DB before using it — prevents CSRF bypass on error path
+      const validState = await queryOne<{ user_id: string }>(
+        c.env.DB,
+        'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+        [state],
+      );
+      if (validState) {
+        isNative = state.endsWith('_native');
+        await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+      }
+    }
+    if (isNative) {
+      return c.redirect('quidsafe://banking/callback?error=denied');
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankError=denied`);
   }
   if (!state) {
     return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
@@ -218,54 +242,147 @@ app.get('/banking/callback', async (c) => {
     return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
   }
   const userId = oauthState.user_id;
-  // Delete used state to prevent replay
-  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
-
-  const config = getTrueLayerConfig(c.env);
-  const tokens = await exchangeCode(code, config);
-  const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
-  const bankName = await detectBankName(tokens.access_token, config);
-
-  const connectionId = crypto.randomUUID();
-  await execute(
-    c.env.DB,
-    'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
-    [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
-  );
-
-  const connection: BankConnectionRow = {
-    id: connectionId,
-    user_id: userId,
-    bank_name: bankName,
-    access_token_encrypted: encrypted.accessTokenEncrypted,
-    refresh_token_encrypted: encrypted.refreshTokenEncrypted,
-    last_synced_at: null,
-    active: 1,
-  };
+  const isNative = state.endsWith('_native');
 
   try {
-    const result = await syncTransactions(c.env.DB, connection, config);
-    if (result.synced > 0) {
-      try {
-        const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string }>(
-          c.env.DB,
-          'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL',
-          [userId],
-        );
-        if (uncategorised.length > 0) {
-          await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+    const config = getTrueLayerConfig(c.env);
+    const tokens = await exchangeCode(code, config);
+    const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
+    const bankName = await detectBankName(tokens.access_token, config);
+
+    const connectionId = crypto.randomUUID();
+    await execute(
+      c.env.DB,
+      'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
+      [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+    );
+
+    // Delete state only after successful exchange and storage
+    await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
+    const connection: BankConnectionRow = {
+      id: connectionId,
+      user_id: userId,
+      bank_name: bankName,
+      access_token_encrypted: encrypted.accessTokenEncrypted,
+      refresh_token_encrypted: encrypted.refreshTokenEncrypted,
+      last_synced_at: null,
+      active: 1,
+    };
+
+    try {
+      const result = await syncTransactions(c.env.DB, connection, config);
+      if (result.synced > 0) {
+        try {
+          const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string }>(
+            c.env.DB,
+            'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL',
+            [userId],
+          );
+          if (uncategorised.length > 0) {
+            await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+          }
+        } catch (catErr) {
+          console.error('Auto-categorisation after connect failed:', catErr);
         }
-      } catch (catErr) {
-        console.error('Auto-categorisation after connect failed:', catErr);
+      }
+      if (isNative) {
+        return c.redirect('quidsafe://banking/callback?success=true');
+      }
+      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
+    } catch (err) {
+      console.error('Initial sync failed:', err);
+      if (isNative) {
+        return c.redirect('quidsafe://banking/callback?success=true&syncError=true');
+      }
+      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
+    }
+  } catch (err) {
+    console.error('Banking token exchange failed:', err);
+    // State is NOT deleted — allows retry within the 10-minute TTL
+    if (isNative) {
+      return c.redirect('quidsafe://banking/callback?error=exchange_failed');
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankError=exchange_failed`);
+  }
+});
+
+// ─── Public HMRC OAuth Callback ──────────────────────────
+// HMRC redirects here — no JWT available, uses oauth_state for user identification
+app.get('/mtd/callback', async (c) => {
+  const code = c.req.query('code');
+  const state = c.req.query('state');
+  const oauthError = c.req.query('error');
+
+  // Handle OAuth denial / error from provider
+  if (oauthError || !code) {
+    let isNative = false;
+    if (state) {
+      // Validate state against DB before using it — prevents CSRF bypass on error path
+      const validState = await queryOne<{ user_id: string }>(
+        c.env.DB,
+        'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+        [state],
+      );
+      if (validState) {
+        isNative = state.endsWith('_native');
+        await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
       }
     }
-    // Redirect to the app after successful connection
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?error=denied');
+    }
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
-    return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
+    return c.redirect(`${appUrl}/mtd?hmrcError=denied`);
+  }
+  if (!state) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
+  }
+
+  // Validate OAuth state to identify user and prevent CSRF
+  const oauthState = await queryOne<{ user_id: string }>(
+    c.env.DB,
+    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+    [state],
+  );
+  if (!oauthState) {
+    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
+  }
+  const userId = oauthState.user_id;
+  const isNative = state.endsWith('_native');
+
+  try {
+    const config = getHmrcConfig(c.env);
+    const tokens = await exchangeHmrcCode(code, config);
+    const encrypted = await encryptTokens(
+      { access_token: tokens.accessToken, refresh_token: tokens.refreshToken, expires_in: tokens.expiresIn, token_type: 'bearer' },
+      c.env.ENCRYPTION_KEY,
+    );
+
+    await execute(c.env.DB,
+      'INSERT INTO bank_connections (id, user_id, provider, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?, ?)',
+      [crypto.randomUUID(), userId, 'hmrc', 'HMRC', encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+    );
+
+    // Delete state only after successful exchange and storage
+    await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?success=true');
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/mtd?hmrcConnected=true`);
   } catch (err) {
-    console.error('Initial sync failed:', err);
+    console.error('HMRC token exchange failed:', err);
+    // State is NOT deleted — allows retry within the 10-minute TTL
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?error=exchange_failed');
+    }
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
-    return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
+    return c.redirect(`${appUrl}/mtd?hmrcError=exchange_failed`);
   }
 });
 
@@ -741,9 +858,12 @@ authed.get('/banking/connect', async (c) => {
   }
 
   const config = getTrueLayerConfig(c.env);
+  const platform = c.req.query('platform'); // 'native' for mobile apps
 
   // Generate cryptographically random state and store with short TTL
-  const state = crypto.randomUUID();
+  // Encode platform in state so the callback knows where to redirect
+  const stateId = crypto.randomUUID();
+  const state = platform === 'native' ? `${stateId}_native` : stateId;
   await execute(
     c.env.DB,
     'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
@@ -1100,9 +1220,12 @@ function getHmrcConfig(env: Env): HmrcConfig {
 authed.get('/mtd/auth', async (c) => {
   const config = getHmrcConfig(c.env);
   const userId = c.get('userId');
+  const platform = c.req.query('platform'); // 'native' for mobile apps
 
   // Generate cryptographically random state and store with short TTL
-  const state = crypto.randomUUID();
+  // Encode platform in state so the callback knows where to redirect
+  const stateId = crypto.randomUUID();
+  const state = platform === 'native' ? `${stateId}_native` : stateId;
   await execute(
     c.env.DB,
     'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
@@ -1375,7 +1498,7 @@ authed.post('/devices', async (c) => {
   }
   const { pushToken, platform } = result.data;
 
-  // Remove any existing entry for this token, then insert
+  // Remove any existing entry for this token (any user) to prevent token squatting on device handover
   await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ?', [pushToken]);
   await execute(
     c.env.DB,
@@ -1453,7 +1576,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             .prepare('UPDATE bank_connections SET active = 0 WHERE id = ?')
             .bind(connection.id)
             .run();
-          console.log(`[Cron] Connection ${connection.id} expired — deactivated`);
+          console.log('[Cron] Connection expired — deactivated');
           failCount++;
           continue;
         }
@@ -1461,7 +1584,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
       }
 
       const result = await syncTransactions(env.DB, connection, config);
-      console.log(`[Cron] Synced ${result.synced} txns for connection ${connection.id} (${result.skipped} skipped)`);
+      console.log(`[Cron] Synced ${result.synced} txns (${result.skipped} skipped)`);
 
       // Auto-categorise newly synced transactions
       if (result.synced > 0) {
@@ -1472,16 +1595,16 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             .all<{ id: string; amount: number; description: string; merchant_name: string | null }>();
           if (uncatTxns.results.length > 0) {
             const catCount = await categoriseAndSave(env.DB, uncatTxns.results, connection.user_id, env.ANTHROPIC_API_KEY);
-            console.log(`[Cron] Auto-categorised ${catCount} txns for user ${connection.user_id}`);
+            console.log(`[Cron] Auto-categorised ${catCount} txns`);
           }
         } catch (catErr) {
-          console.error(`[Cron] Auto-categorisation failed for ${connection.user_id}:`, catErr);
+          console.error('[Cron] Auto-categorisation failed:', catErr);
         }
       }
 
       successCount++;
     } catch (err) {
-      console.error(`[Cron] Sync failed for connection ${connection.id}:`, err);
+      console.error('[Cron] Sync failed:', err);
       failCount++;
     }
   }
@@ -1505,7 +1628,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
         .prepare('UPDATE subscriptions SET status = ? WHERE user_id = ?')
         .bind('cancelled', user.id)
         .run();
-      console.log(`[Cron] Grace period expired for user ${user.id} — subscription cancelled`);
+      console.log('[Cron] Grace period expired — subscription cancelled');
     }
 
     if (expiredGrace.results.length > 0) {
@@ -1573,13 +1696,13 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
 
     // Single query: users + their push tokens + subscription info
     const usersWithTokens = await env.DB
-      .prepare(`SELECT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
+      .prepare(`SELECT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts, u.notify_mtd_ready,
                 u.subscription_tier, u.created_at, s.status AS sub_status, s.trial_ends_at,
                 d.push_token
                 FROM users u
                 INNER JOIN user_devices d ON u.id = d.user_id AND d.active = 1
                 LEFT JOIN subscriptions s ON u.id = s.user_id`)
-      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null; push_token: string }>();
+      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; notify_mtd_ready: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null; push_token: string }>();
 
     // Group tokens by user in memory (avoids per-user token query)
     const userTokenMap = new Map<string, { tokens: string[]; user: typeof usersWithTokens.results[0] }>();
@@ -1603,7 +1726,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     // Pre-aggregate: quarterly income for deadline reminders (all users)
     const needsDeadlineIncome = deadlines.some((d) => {
       const daysUntil = Math.ceil((new Date(d.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntil === 14 && d.quarter;
+      return (daysUntil === 14 || daysUntil === 7) && d.quarter;
     });
     const quarterlyIncomeAll = needsDeadlineIncome
       ? await env.DB.prepare(
@@ -1634,8 +1757,36 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             const estimated = formatCurrency(income * 0.25);
             await sendPushNotifications(buildPushMessages(pushTokens, deadlineReminder14Days(deadline.quarter, deadline.date, estimated)));
           }
+          if (daysUntil === 7 && deadline.quarter) {
+            const income = quarterlyIncomeMap.get(userId)?.income ?? 0;
+            const estimated = formatCurrency(income * 0.25);
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineReminder7Days(deadline.quarter, deadline.date, estimated)));
+          }
           if (daysUntil === 3 && deadline.quarter) {
             await sendPushNotifications(buildPushMessages(pushTokens, deadlineUrgent3Days(deadline.quarter, deadline.date)));
+          }
+          if (daysUntil === 1 && deadline.quarter) {
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineUrgent1Day(deadline.quarter, deadline.date)));
+          }
+        }
+      }
+
+      // MTD submission ready — quarter ended and user hasn't submitted yet
+      if (user.notify_mtd_ready) {
+        for (const deadline of deadlines) {
+          if (!deadline.quarter) continue;
+          const daysUntil = Math.ceil((new Date(deadline.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          // Notify when quarter ended (deadline is 7-14 days away) and no submission exists
+          if (daysUntil >= 7 && daysUntil <= 14) {
+            const submission = await queryOne<{ id: string }>(
+              env.DB,
+              "SELECT id FROM mtd_submissions WHERE user_id = ? AND quarter = ? AND tax_year = ? AND status IN ('submitted', 'accepted')",
+              [userId, deadline.quarter, taxYear],
+            );
+            if (!submission) {
+              await sendPushNotifications(buildPushMessages(pushTokens, mtdSubmissionReady(deadline.quarter)));
+              break; // Only one MTD reminder per cron run
+            }
           }
         }
       }

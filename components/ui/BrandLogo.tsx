@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors } from '@/constants/Colors';
+import { Shield } from 'lucide-react-native';
+import { colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 interface BrandLogoProps {
@@ -15,7 +15,7 @@ export function BrandLogo({ size = 36, showText = true, textSize = 24 }: BrandLo
   return (
     <View style={styles.container}>
       <View style={[styles.shieldWrap, { width: size, height: size }]}>
-        <FontAwesome name="shield" size={size} color={Colors.primary} />
+        <Shield size={size} color={colors.accent} strokeWidth={1.5} />
         <Text
           style={[
             styles.pound,
@@ -46,14 +46,14 @@ const styles = StyleSheet.create({
   pound: {
     position: 'absolute',
     textAlign: 'center',
-    fontFamily: Fonts.manrope.bold,
-    color: Colors.accent,
+    fontFamily: Fonts.lexend.semiBold,
+    color: colors.text,
     top: 0,
     left: 0,
   },
   wordmark: {
-    fontFamily: Fonts.playfair.bold,
-    color: Colors.white,
+    fontFamily: Fonts.lexend.semiBold,
+    color: colors.text,
     letterSpacing: -0.5,
   },
 });

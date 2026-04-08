@@ -7,24 +7,20 @@ import {
   RefreshControl,
   TextInput,
   Pressable,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, Wallet } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { DateInput } from '@/components/ui/DateInput';
+import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
-import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
+import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
+import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
-import { hapticSuccess } from '@/lib/haptics';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
 
@@ -35,14 +31,14 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'this_month', label: 'This month' },
 ];
 
-const SOURCE_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string }> = {
-  'Uber / Deliveroo': { icon: 'car', bg: '#DBEAFE', dot: Colors.secondary },
-  'Cleaning clients': { icon: 'paint-brush', bg: '#D1FAE5', dot: Colors.success },
-  'Freelance dev': { icon: 'laptop', bg: '#FEF3C7', dot: Colors.accent },
-  'Consulting': { icon: 'briefcase', bg: '#F3E8FF', dot: '#7C3AED' },
+const SOURCE_ICONS: Record<string, { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string }> = {
+  'Uber / Deliveroo': { IconComponent: Car, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
+  'Cleaning clients': { IconComponent: Paintbrush, bg: 'rgba(0,200,83,0.12)', dot: '#00C853' },
+  'Freelance dev': { IconComponent: Laptop, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
+  'Consulting': { IconComponent: Briefcase, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
 };
 
-const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string } = { icon: 'gbp', bg: Colors.grey[100], dot: Colors.grey[400] };
+const DEFAULT_ICON: { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string } = { IconComponent: PoundSterling, bg: '#2A2A2A', dot: '#666666' };
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -83,18 +79,9 @@ export default function IncomeScreen() {
   const router = useRouter();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   useQuarterlyBreakdown();
-  const createInvoiceMutation = useCreateInvoice();
-
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
-
-  // Invoice form state
-  const [invoiceClientName, setInvoiceClientName] = useState('');
-  const [invoiceAmount, setInvoiceAmount] = useState('');
-  const [invoiceDescription, setInvoiceDescription] = useState('');
-  const [invoiceDueDate, setInvoiceDueDate] = useState('');
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
@@ -144,73 +131,6 @@ export default function IncomeScreen() {
     refetch();
   }, [refetch]);
 
-  const resetInvoiceForm = useCallback(() => {
-    setInvoiceClientName('');
-    setInvoiceAmount('');
-    setInvoiceDescription('');
-    setInvoiceDueDate('');
-    setTouched({});
-  }, []);
-
-  const handleCreateInvoice = useCallback(() => {
-    const amount = parseFloat(invoiceAmount);
-    if (!invoiceClientName.trim() || isNaN(amount) || amount <= 0 || !invoiceDescription.trim() || !invoiceDueDate.trim()) {
-      return;
-    }
-    createInvoiceMutation.mutate(
-      {
-        clientName: invoiceClientName.trim(),
-        amount,
-        description: invoiceDescription.trim(),
-        dueDate: invoiceDueDate.trim(),
-      },
-      {
-        onSuccess: () => {
-          hapticSuccess();
-          resetInvoiceForm();
-          setInvoiceModalVisible(false);
-        },
-      }
-    );
-  }, [invoiceClientName, invoiceAmount, invoiceDescription, invoiceDueDate, createInvoiceMutation, resetInvoiceForm]);
-
-  const markTouched = useCallback((field: string) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-  }, []);
-
-  // Validation logic
-  const parsedAmount = parseFloat(invoiceAmount);
-  const errors = useMemo(() => {
-    const e: Record<string, string> = {};
-    if (invoiceClientName.trim().length < 2) {
-      e.clientName = 'Client name must be at least 2 characters';
-    }
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      e.amount = 'Amount must be greater than 0';
-    }
-    if (invoiceDescription.trim().length < 3) {
-      e.description = 'Description must be at least 3 characters';
-    }
-    if (!invoiceDueDate.trim()) {
-      e.dueDate = 'Due date is required';
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const due = new Date(invoiceDueDate);
-      if (isNaN(due.getTime())) {
-        e.dueDate = 'Please enter a valid date';
-      } else if (due < today) {
-        e.dueDate = 'Due date must be today or in the future';
-      }
-    }
-    return e;
-  }, [invoiceClientName, parsedAmount, invoiceDescription, invoiceDueDate]);
-
-  const isFormValid = Object.keys(errors).length === 0;
-
-  // Today in YYYY-MM-DD for minDate
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
@@ -231,7 +151,7 @@ export default function IncomeScreen() {
           <IncomeSkeleton />
         ) : grossIncome === 0 && sources.length === 0 ? (
           <EmptyState
-            icon="wallet-outline"
+            icon={Wallet}
             title="No income recorded yet"
             subtitle="Connect your bank account or create your first invoice to start tracking income."
             actionLabel="Create Invoice"
@@ -249,12 +169,12 @@ export default function IncomeScreen() {
                   <Text style={[styles.grossAmount, { color: colors.text }]}>{formatCurrency(grossIncome)}</Text>
                   {yoyPercent !== null && (
                     <View style={styles.yoyRow}>
-                      <FontAwesome
-                        name={yoyPercent >= 0 ? 'arrow-up' : 'arrow-down'}
-                        size={10}
-                        color={yoyPercent >= 0 ? Colors.success : Colors.error}
-                      />
-                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? Colors.success : Colors.error }]}>
+                      {yoyPercent >= 0 ? (
+                        <ArrowUp size={10} color="#00C853" strokeWidth={1.5} />
+                      ) : (
+                        <ArrowDown size={10} color="#FF3B30" strokeWidth={1.5} />
+                      )}
+                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? '#00C853' : '#FF3B30' }]}>
                         {yoyPercent >= 0 ? '+' : ''}{yoyPercent}% vs last year
                       </Text>
                     </View>
@@ -302,11 +222,11 @@ export default function IncomeScreen() {
               {/* Legend */}
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.secondary }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#0066FF' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Income</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Expenses</Text>
                 </View>
               </View>
@@ -324,10 +244,10 @@ export default function IncomeScreen() {
 
             {/* Search input */}
             <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <FontAwesome
-                name="search"
+              <Search
                 size={14}
                 color={colors.textSecondary}
+                strokeWidth={1.5}
                 style={styles.searchIcon}
               />
               <TextInput
@@ -398,10 +318,10 @@ export default function IncomeScreen() {
                           { backgroundColor: iconInfo.bg },
                         ]}
                       >
-                        <FontAwesome
-                          name={iconInfo.icon}
+                        <iconInfo.IconComponent
                           size={16}
-                          color={Colors.primary}
+                          color="#0066FF"
+                          strokeWidth={1.5}
                         />
                       </View>
 
@@ -443,9 +363,9 @@ export default function IncomeScreen() {
               accessibilityLabel="View all invoices"
               accessibilityHint="Tap to see your complete invoice list"
             >
-              <FontAwesome name="file-text-o" size={16} color={Colors.accent} style={{ marginRight: 10 }} />
+              <FileText size={16} color="#0066FF" strokeWidth={1.5} style={{ marginRight: 10 }} />
               <Text style={[styles.viewInvoicesText, { color: colors.text }]}>View All Invoices</Text>
-              <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} />
+              <ChevronRight size={12} color={colors.textSecondary} strokeWidth={1.5} />
             </Pressable>
           </>
         )}
@@ -461,130 +381,16 @@ export default function IncomeScreen() {
           accessibilityLabel="Create new invoice"
           accessibilityHint="Tap to open the create invoice form"
         >
-          <FontAwesome name="plus" size={20} color={Colors.white} />
+          <Plus size={20} color={Colors.white} strokeWidth={1.5} />
         </Pressable>
       )}
 
       {/* Create Invoice Modal */}
-      <Modal
+      <CreateInvoiceModal
         visible={invoiceModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setInvoiceModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHandle} />
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Create Invoice</Text>
-              <Pressable
-                onPress={() => {
-                  resetInvoiceForm();
-                  setInvoiceModalVisible(false);
-                }}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Close invoice form"
-              >
-                <FontAwesome name="times" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-
-            {/* Client Name */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Client name</Text>
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.clientName && errors.clientName ? Colors.error : colors.border }]}
-              placeholder="e.g. Acme Ltd"
-              placeholderTextColor={colors.textSecondary}
-              value={invoiceClientName}
-              onChangeText={setInvoiceClientName}
-              onBlur={() => markTouched('clientName')}
-              accessibilityLabel="Client name"
-              accessibilityHint="Enter the client or company name for this invoice"
-            />
-            {touched.clientName && errors.clientName ? (
-              <Text style={styles.fieldError}>{errors.clientName}</Text>
-            ) : null}
-
-            {/* Amount */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount</Text>
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.amount && errors.amount ? Colors.error : colors.border }]}
-              placeholder="0.00"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="decimal-pad"
-              value={invoiceAmount}
-              onChangeText={setInvoiceAmount}
-              onBlur={() => markTouched('amount')}
-              accessibilityLabel="Invoice amount"
-              accessibilityHint="Enter the invoice amount in pounds"
-            />
-            {touched.amount && errors.amount ? (
-              <Text style={styles.fieldError}>{errors.amount}</Text>
-            ) : null}
-
-            {/* Description */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Description</Text>
-            <TextInput
-              style={[styles.modalInput, styles.modalInputMultiline, { color: colors.text, backgroundColor: colors.background, borderColor: touched.description && errors.description ? Colors.error : colors.border }]}
-              placeholder="What is this invoice for?"
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={3}
-              value={invoiceDescription}
-              onChangeText={setInvoiceDescription}
-              onBlur={() => markTouched('description')}
-              accessibilityLabel="Invoice description"
-              accessibilityHint="Describe what this invoice is for"
-            />
-            {touched.description && errors.description ? (
-              <Text style={styles.fieldError}>{errors.description}</Text>
-            ) : null}
-
-            {/* Due Date */}
-            <DateInput
-              label="Due date"
-              value={invoiceDueDate}
-              onChange={(date) => {
-                setInvoiceDueDate(date);
-                markTouched('dueDate');
-              }}
-              minDate={todayStr}
-              error={touched.dueDate ? errors.dueDate : undefined}
-            />
-
-            {/* Submit button */}
-            <Pressable
-              style={[
-                styles.submitButton,
-                (!isFormValid || createInvoiceMutation.isPending) && styles.submitButtonDisabled,
-              ]}
-              onPress={handleCreateInvoice}
-              disabled={!isFormValid || createInvoiceMutation.isPending}
-             
-              accessibilityRole="button"
-              accessibilityLabel="Create invoice"
-              accessibilityHint="Tap to create a new invoice"
-              accessibilityState={{ disabled: !isFormValid || createInvoiceMutation.isPending }}
-            >
-              {createInvoiceMutation.isPending ? (
-                <ActivityIndicator color={Colors.white} size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>Create Invoice</Text>
-              )}
-            </Pressable>
-
-            {createInvoiceMutation.isError && (
-              <Text style={styles.errorText}>
-                Failed to create invoice. Please try again.
-              </Text>
-            )}
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setInvoiceModalVisible(false)}
+        onSuccess={() => setInvoiceModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -610,7 +416,7 @@ const styles = StyleSheet.create({
 
   // Heading
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     marginBottom: Spacing.md,
   },
@@ -632,14 +438,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   summaryLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   grossAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 30,
     marginBottom: 4,
   },
@@ -649,17 +455,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   yoyText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
   netAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 24,
-    color: Colors.success,
+    color: '#00C853',
     marginBottom: 4,
   },
   afterExpenses: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -683,16 +489,16 @@ const styles = StyleSheet.create({
   },
   barIncome: {
     width: 8,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#0066FF',
     borderRadius: 4,
   },
   barExpense: {
     width: 8,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     borderRadius: 4,
   },
   chartLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 9,
     marginTop: 4,
   },
@@ -715,7 +521,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -727,17 +533,17 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
   },
   sourceBadge: {
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#2A2A2A',
     borderRadius: BorderRadius.pill,
     paddingHorizontal: 10,
     paddingVertical: 2,
   },
   sourceBadgeText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -756,7 +562,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     padding: 0,
   },
@@ -771,18 +577,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: Colors.grey[200],
+    borderColor: '#2A2A2A',
   },
   filterPillActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   filterPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
-    color: Colors.grey[600],
+    color: '#666666',
   },
   filterPillTextActive: {
     color: Colors.white,
@@ -819,30 +625,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sourceName: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourceSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
   },
   sourceAmounts: {
     alignItems: 'flex-end',
   },
   sourceAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourcePercent: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
   // Empty state
   emptyText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
@@ -856,92 +662,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.large,
-  },
-
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl + Spacing.lg,
-  },
-  modalHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.grey[300],
-    alignSelf: 'center',
-    marginBottom: Spacing.md,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  modalTitle: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 18,
-  },
-  fieldLabel: {
-    fontFamily: Fonts.manrope.medium,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: Spacing.sm,
-  },
-  modalInput: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 14,
-    borderWidth: 1,
-    borderRadius: BorderRadius.input,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: Spacing.xs,
-  },
-  modalInputMultiline: {
-    minHeight: 72,
-    textAlignVertical: 'top',
-  },
-  submitButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: BorderRadius.button,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Spacing.md,
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    fontFamily: Fonts.manrope.bold,
-    fontSize: 15,
-    color: Colors.white,
-  },
-  fieldError: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 12,
-    color: Colors.error,
-    marginBottom: Spacing.xs,
-    marginTop: -2,
-  },
-  errorText: {
-    fontFamily: Fonts.manrope.regular,
-    fontSize: 13,
-    color: Colors.error,
-    textAlign: 'center',
-    marginTop: Spacing.sm,
   },
 
   // View Invoices button
@@ -955,7 +679,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   viewInvoicesText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     flex: 1,
   },

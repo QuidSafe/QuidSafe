@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft, Info, Calendar, Download, Clipboard, Check, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
@@ -99,16 +99,16 @@ function BoxBadge({ box }: { box: string }) {
 
 const badgeStyles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.grey[200],
+    backgroundColor: '#2A2A2A',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
     alignSelf: 'flex-start',
   },
   text: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10,
-    color: Colors.grey[600],
+    color: '#666666',
   },
 });
 
@@ -122,7 +122,7 @@ function InfoTooltip({ boxNumber, visible, onToggle }: { boxNumber: string; visi
         accessibilityRole="button"
         accessibilityLabel={`Info about SA103 Box ${boxNumber}`}
       >
-        <FontAwesome name="info-circle" size={14} color={Colors.grey[400]} />
+        <Info size={14} color={'#666666'} strokeWidth={1.5} />
       </Pressable>
       {visible && (
         <View style={[tooltipStyles.bubble, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -148,7 +148,7 @@ const tooltipStyles = StyleSheet.create({
     elevation: 10,
   },
   text: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -214,12 +214,12 @@ const rowStyles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     flex: 1,
   },
   amount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 14,
   },
 });
@@ -258,15 +258,15 @@ const taxLineStyles = StyleSheet.create({
     paddingVertical: 6,
   },
   label: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
   },
   amount: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
   },
   bold: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 13.5,
   },
 });
@@ -289,11 +289,11 @@ const expenseStyles = StyleSheet.create({
     paddingLeft: 20,
   },
   label: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11.5,
   },
   amount: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11.5,
   },
 });
@@ -304,7 +304,7 @@ function DeadlineRow({ label, date, daysLeft }: { label: string; date: Date; day
   return (
     <View style={deadlineStyles.row}>
       <View style={deadlineStyles.left}>
-        <FontAwesome name="calendar" size={13} color={Colors.grey[400]} />
+        <Calendar size={13} color={'#666666'} strokeWidth={1.5} />
         <View>
           <Text style={[deadlineStyles.label, { color: colors.text }]}>{label}</Text>
           <Text style={[deadlineStyles.date, { color: colors.textSecondary }]}>{formatDeadline(date)}</Text>
@@ -332,11 +332,11 @@ const deadlineStyles = StyleSheet.create({
     gap: 10,
   },
   label: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12.5,
   },
   date: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginTop: 1,
   },
@@ -346,7 +346,7 @@ const deadlineStyles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   badgeText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 11,
   },
 });
@@ -469,7 +469,7 @@ export default function SelfAssessmentScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <FontAwesome name="chevron-left" size={14} color={colors.text} />
+          <ChevronLeft size={14} color={colors.text} strokeWidth={1.5} />
           <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
         </Pressable>
 
@@ -609,7 +609,7 @@ export default function SelfAssessmentScreen() {
             accessibilityRole="button"
             accessibilityLabel="Download SA103 summary as CSV"
           >
-            <FontAwesome name="download" size={14} color={Colors.white} />
+            <Download size={14} color={Colors.white} strokeWidth={1.5} />
             <Text style={styles.exportButtonText}>Download SA103 Summary (CSV)</Text>
           </Pressable>
 
@@ -620,7 +620,7 @@ export default function SelfAssessmentScreen() {
             accessibilityRole="button"
             accessibilityLabel="Copy SA103 summary to clipboard"
           >
-            <FontAwesome name={isCopied ? 'check' : 'clipboard'} size={14} color={isCopied ? Colors.success : colors.text} />
+            {isCopied ? <Check size={14} color={Colors.success} strokeWidth={1.5} /> : <Clipboard size={14} color={colors.text} strokeWidth={1.5} />}
             <Text style={[styles.copyButtonText, { color: colors.text }]}>
               {isCopied ? 'Copied!' : 'Copy to clipboard'}
             </Text>
@@ -637,7 +637,7 @@ export default function SelfAssessmentScreen() {
 
         {/* Disclaimer */}
         <View style={styles.disclaimerContainer}>
-          <FontAwesome name="exclamation-triangle" size={12} color={Colors.warning} />
+          <AlertTriangle size={12} color={Colors.warning} strokeWidth={1.5} />
           <Text style={[styles.disclaimerText, { color: colors.textSecondary }]}>
             This summary is for guidance only. Always check figures against your HMRC Self Assessment
             tax return. QuidSafe is not a substitute for professional tax advice.
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   backButton: {
@@ -675,20 +675,20 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     marginBottom: Spacing.sm,
   },
   sectionLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   subSectionLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   noteText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     fontStyle: 'italic',
     marginTop: 2,
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   exportButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 13,
     color: Colors.white,
   },
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   copyButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   pressed: {
@@ -760,7 +760,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xs,
   },
   disclaimerText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     lineHeight: 16,
     flex: 1,

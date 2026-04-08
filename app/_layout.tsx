@@ -1,26 +1,22 @@
 import { useFonts } from 'expo-font';
+import { Lexend_600SemiBold } from '@expo-google-fonts/lexend';
 import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-} from '@expo-google-fonts/manrope';
-import {
-  PlayfairDisplay_400Regular,
-  PlayfairDisplay_700Bold,
-} from '@expo-google-fonts/playfair-display';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+  SourceSans3_400Regular,
+  SourceSans3_600SemiBold,
+} from '@expo-google-fonts/source-sans-3';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
-import { ToastProvider } from '@/components/ui/Toast';
+import { ToastProvider, useToast } from '@/components/ui/Toast';
 import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
@@ -44,8 +40,7 @@ const queryClient = new QueryClient({
 });
 
 function ThemedStatusBar() {
-  const { isDark } = useTheme();
-  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+  return <StatusBar style="light" />;
 }
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
@@ -53,6 +48,8 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const pushTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -77,20 +74,46 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
     });
   }, [isLoaded, isSignedIn]);
 
+  // Handle OAuth deep link callbacks (native only)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      const parsed = Linking.parse(event.url);
+      if (parsed.hostname === 'banking' && parsed.path === 'callback') {
+        WebBrowser.dismissBrowser();
+        queryClient.invalidateQueries({ queryKey: ['banking'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        if (parsed.queryParams?.error) {
+          toast.show('Bank connection failed. Please try again.', 'error');
+        } else if (parsed.queryParams?.syncError) {
+          toast.show('Bank connected, but initial sync had an issue. It will retry automatically.', 'warning');
+        } else {
+          toast.show('Bank account connected successfully', 'success');
+        }
+      } else if (parsed.hostname === 'hmrc' && parsed.path === 'callback') {
+        WebBrowser.dismissBrowser();
+        queryClient.invalidateQueries({ queryKey: ['mtd'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        if (parsed.queryParams?.error) {
+          toast.show('Could not connect to HMRC. Please try again.', 'error');
+        } else {
+          toast.show('HMRC connected successfully', 'success');
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [queryClient, toast]);
+
   return <>{children}</>;
 }
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    Manrope_400Regular,
-    Manrope_500Medium,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-    Manrope_800ExtraBold,
-    PlayfairDisplay_400Regular,
-    PlayfairDisplay_700Bold,
-    // Load FontAwesome icon font — fixes squares-instead-of-icons on web
-    ...FontAwesome.font,
+    Lexend_600SemiBold,
+    SourceSans3_400Regular,
+    SourceSans3_600SemiBold,
   });
 
   useEffect(() => {
@@ -116,7 +139,7 @@ export default function RootLayout() {
       <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, TrueLayer, sole trader accounting" />
       <meta name="author" content="QuidSafe Ltd" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      <meta name="theme-color" content="#0F172A" />
+      <meta name="theme-color" content="#000000" />
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       <link rel="canonical" href="https://quidsafe.pages.dev" />
 
@@ -144,7 +167,7 @@ export default function RootLayout() {
       <meta name="apple-mobile-web-app-title" content="QuidSafe" />
       <meta name="application-name" content="QuidSafe" />
       <meta name="mobile-web-app-capable" content="yes" />
-      <meta name="msapplication-TileColor" content="#0F172A" />
+      <meta name="msapplication-TileColor" content="#000000" />
       <link rel="apple-touch-icon" href="/assets/images/icon.png" />
       <link rel="manifest" href="/manifest.json" />
 
@@ -240,10 +263,11 @@ export default function RootLayout() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&display=swap"
         rel="stylesheet"
       />
     </Head>
+    {publishableKey ? (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
@@ -281,6 +305,7 @@ export default function RootLayout() {
         </QueryClientProvider>
       </ClerkLoaded>
     </ClerkProvider>
+    ) : null}
     </>
   );
 }

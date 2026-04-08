@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors } from '@/constants/Colors';
+import { PoundSterling, Check, Pencil, Lock, CheckCircle } from 'lucide-react-native';
+import { colors } from '@/constants/Colors';
 
 const SIZE = 200;
 
@@ -15,7 +15,6 @@ export function WelcomeIllustration() {
   const orbit3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance: spring scale
     Animated.spring(scaleAnim, {
       toValue: 1,
       tension: 60,
@@ -23,7 +22,6 @@ export function WelcomeIllustration() {
       useNativeDriver: true,
     }).start();
 
-    // Continuous orbit/pulse for floating circles
     const loopAnim = (anim: Animated.Value, duration: number) =>
       Animated.loop(
         Animated.timing(anim, {
@@ -38,7 +36,6 @@ export function WelcomeIllustration() {
     loopAnim(orbit3, 3500);
   }, [scaleAnim, orbit1, orbit2, orbit3]);
 
-  // Orbit positions using sin/cos via interpolation
   const makeOrbit = (anim: Animated.Value, radius: number, offsetDeg: number) => {
     const translateX = anim.interpolate({
       inputRange: [0, 0.25, 0.5, 0.75, 1],
@@ -73,7 +70,6 @@ export function WelcomeIllustration() {
 
   return (
     <View style={s.container}>
-      {/* Floating circles */}
       <Animated.View
         style={[
           s.floatingCircle,
@@ -96,13 +92,11 @@ export function WelcomeIllustration() {
         ]}
       />
 
-      {/* Shield */}
       <Animated.View style={[s.shield, { transform: [{ scale: scaleAnim }] }]}>
         <View style={s.shieldTop} />
         <View style={s.shieldBottom} />
-        {/* Pound icon */}
         <View style={s.shieldIconWrap}>
-          <FontAwesome name="gbp" size={36} color={Colors.accent} />
+          <PoundSterling size={36} color={colors.accent} strokeWidth={1.5} />
         </View>
       </Animated.View>
     </View>
@@ -118,7 +112,6 @@ export function BusinessIllustration() {
   const penFloat = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance: slide up + fade
     Animated.parallel([
       Animated.spring(slideY, {
         toValue: 0,
@@ -133,7 +126,6 @@ export function BusinessIllustration() {
       }),
     ]).start();
 
-    // Pen floats up and down
     Animated.loop(
       Animated.sequence([
         Animated.timing(penFloat, {
@@ -158,28 +150,20 @@ export function BusinessIllustration() {
           { transform: [{ translateY: slideY }], opacity: fadeIn },
         ]}
       >
-        {/* Clipboard clip */}
         <View style={s.clipboardClip} />
-
-        {/* Document body */}
         <View style={s.clipboard}>
-          {/* Text lines */}
           <View style={[s.textLine, { width: '80%' }]} />
           <View style={[s.textLine, { width: '60%' }]} />
           <View style={[s.textLine, { width: '70%' }]} />
           <View style={[s.textLine, { width: '50%' }]} />
-
-          {/* Checkmark */}
           <View style={s.checkCircle}>
-            <FontAwesome name="check" size={18} color={Colors.white} />
+            <Check size={18} color={colors.text} strokeWidth={1.5} />
           </View>
         </View>
-
-        {/* Floating pen */}
         <Animated.View
           style={[s.penWrap, { transform: [{ translateY: penFloat }] }]}
         >
-          <FontAwesome name="pencil" size={22} color={Colors.accent} />
+          <Pencil size={22} color={colors.accent} strokeWidth={1.5} />
         </Animated.View>
       </Animated.View>
     </View>
@@ -194,7 +178,6 @@ export function BankIllustration() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
-    // Entrance
     Animated.spring(scaleAnim, {
       toValue: 1,
       tension: 50,
@@ -202,7 +185,6 @@ export function BankIllustration() {
       useNativeDriver: true,
     }).start();
 
-    // Pulse on connection line
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -224,37 +206,27 @@ export function BankIllustration() {
       <Animated.View
         style={[s.bankScene, { transform: [{ scale: scaleAnim }] }]}
       >
-        {/* Bank building */}
         <View style={s.bankBuilding}>
-          {/* Triangle roof via border trick */}
           <View style={s.bankRoof} />
-          {/* Building body */}
           <View style={s.bankBody}>
-            {/* Columns */}
             <View style={s.bankColumn} />
             <View style={s.bankColumn} />
             <View style={s.bankColumn} />
           </View>
-          {/* Base */}
           <View style={s.bankBase} />
         </View>
 
-        {/* Connection line */}
         <View style={s.connectionArea}>
           <Animated.View style={[s.connectionLine, { opacity: pulseAnim }]} />
-          <Animated.View
-            style={[s.connectionLineLower, { opacity: pulseAnim }]}
-          />
-          {/* Lock icon */}
+          <Animated.View style={[s.connectionLineLower, { opacity: pulseAnim }]} />
           <View style={s.lockCircle}>
-            <FontAwesome name="lock" size={14} color={Colors.white} />
+            <Lock size={14} color={colors.text} strokeWidth={1.5} />
           </View>
         </View>
 
-        {/* Phone shape */}
         <View style={s.phone}>
           <View style={s.phoneScreen}>
-            <FontAwesome name="check-circle" size={18} color={Colors.success} />
+            <CheckCircle size={18} color={colors.success} strokeWidth={1.5} />
           </View>
           <View style={s.phoneButton} />
         </View>
@@ -286,7 +258,7 @@ const s = StyleSheet.create({
     top: 0,
     width: 90,
     height: 60,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.accent,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
@@ -300,7 +272,7 @@ const s = StyleSheet.create({
     borderTopWidth: 60,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: Colors.secondary,
+    borderTopColor: colors.accent,
   },
   shieldIconWrap: {
     zIndex: 1,
@@ -313,19 +285,19 @@ const s = StyleSheet.create({
   floatingCircle1: {
     width: 14,
     height: 14,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     opacity: 0.8,
   },
   floatingCircle2: {
     width: 10,
     height: 10,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.accent,
     opacity: 0.6,
   },
   floatingCircle3: {
     width: 12,
     height: 12,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     opacity: 0.5,
   },
 
@@ -337,7 +309,7 @@ const s = StyleSheet.create({
   clipboard: {
     width: 110,
     height: 140,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     paddingTop: 24,
@@ -350,13 +322,13 @@ const s = StyleSheet.create({
     alignSelf: 'center',
     width: 40,
     height: 16,
-    backgroundColor: Colors.grey[500],
+    backgroundColor: colors.textMuted,
     borderRadius: 4,
     zIndex: 2,
   },
   textLine: {
     height: 6,
-    backgroundColor: Colors.grey[600],
+    backgroundColor: colors.textMuted,
     borderRadius: 3,
     marginBottom: 10,
   },
@@ -368,7 +340,7 @@ const s = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -379,7 +351,7 @@ const s = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.accent + '20',
+    backgroundColor: colors.accentGlow,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -403,12 +375,12 @@ const s = StyleSheet.create({
     borderBottomWidth: 28,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: Colors.secondary,
+    borderBottomColor: colors.accent,
   },
   bankBody: {
     width: 68,
     height: 50,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.accent,
     flexDirection: 'row',
     alignItems: 'stretch',
     justifyContent: 'space-evenly',
@@ -417,13 +389,13 @@ const s = StyleSheet.create({
   },
   bankColumn: {
     width: 8,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.background,
     borderRadius: 2,
   },
   bankBase: {
     width: 76,
     height: 8,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.accent,
     borderBottomLeftRadius: 3,
     borderBottomRightRadius: 3,
   },
@@ -438,7 +410,7 @@ const s = StyleSheet.create({
     top: 18,
     width: 40,
     height: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   connectionLineLower: {
@@ -446,14 +418,14 @@ const s = StyleSheet.create({
     top: 38,
     width: 40,
     height: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   lockCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -461,10 +433,10 @@ const s = StyleSheet.create({
   phone: {
     width: 48,
     height: 80,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.background,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: Colors.grey[600],
+    borderColor: colors.textMuted,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,
@@ -472,7 +444,7 @@ const s = StyleSheet.create({
   phoneScreen: {
     flex: 1,
     width: '100%',
-    backgroundColor: Colors.grey[800],
+    backgroundColor: colors.surface,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -481,7 +453,7 @@ const s = StyleSheet.create({
     width: 16,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.grey[600],
+    backgroundColor: colors.textMuted,
     marginTop: 4,
     marginBottom: 2,
   },

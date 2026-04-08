@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { View, Text, Pressable, Image, Modal, StyleSheet, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { FontAwesome } from '@expo/vector-icons';
-import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Camera, ImageIcon, XCircle } from 'lucide-react-native';
+import { colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface ReceiptCaptureProps {
   imageUri: string | null;
@@ -13,7 +12,6 @@ interface ReceiptCaptureProps {
 }
 
 export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: ReceiptCaptureProps) {
-  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
   const pickFromCamera = async () => {
@@ -53,7 +51,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
   if (imageUri) {
     return (
       <View style={styles.previewContainer}>
-        <Text style={[styles.label, { color: colors.text }]}>Receipt</Text>
+        <Text style={styles.label}>Receipt</Text>
         <View style={styles.previewWrapper}>
           <Image source={{ uri: imageUri }} style={styles.preview} />
           <Pressable
@@ -62,7 +60,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
             accessibilityRole="button"
             accessibilityLabel="Remove receipt photo"
           >
-            <FontAwesome name="times-circle" size={24} color={Colors.error} />
+            <XCircle size={24} color={colors.error} strokeWidth={1.5} />
           </Pressable>
         </View>
       </View>
@@ -71,11 +69,10 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>Receipt</Text>
+      <Text style={styles.label}>Receipt</Text>
       <Pressable
         style={({ pressed }) => [
           styles.addButton,
-          { backgroundColor: colors.background, borderColor: colors.border },
           pressed && styles.pressed,
         ]}
         onPress={() => {
@@ -89,31 +86,30 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
         accessibilityLabel="Add receipt photo"
         accessibilityHint="Tap to take a photo or choose from your library"
       >
-        <FontAwesome name="camera" size={20} color={colors.textSecondary} />
-        <Text style={[styles.addButtonText, { color: colors.textSecondary }]}>Add Receipt</Text>
+        <Camera size={20} color={colors.textSecondary} strokeWidth={1.5} />
+        <Text style={styles.addButtonText}>Add Receipt</Text>
       </Pressable>
 
       <Modal visible={showPicker} animationType="fade" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setShowPicker(false)}>
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Add Receipt</Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Receipt</Text>
 
             <Pressable
               style={({ pressed }) => [
                 styles.optionCard,
-                { backgroundColor: colors.background, borderColor: colors.border },
                 pressed && styles.pressed,
               ]}
               onPress={pickFromCamera}
               accessibilityRole="button"
               accessibilityLabel="Take photo"
             >
-              <View style={[styles.optionIcon, { backgroundColor: '#EFF6FF' }]}>
-                <FontAwesome name="camera" size={20} color={Colors.secondary} />
+              <View style={[styles.optionIcon, { backgroundColor: colors.accentGlow }]}>
+                <Camera size={20} color={colors.accent} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
-                <Text style={[styles.optionTitle, { color: colors.text }]}>Take Photo</Text>
-                <Text style={[styles.optionSub, { color: colors.textSecondary }]}>
+                <Text style={styles.optionTitle}>Take Photo</Text>
+                <Text style={styles.optionSub}>
                   Use your camera to capture the receipt
                 </Text>
               </View>
@@ -122,19 +118,18 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
             <Pressable
               style={({ pressed }) => [
                 styles.optionCard,
-                { backgroundColor: colors.background, borderColor: colors.border },
                 pressed && styles.pressed,
               ]}
               onPress={pickFromLibrary}
               accessibilityRole="button"
               accessibilityLabel="Choose from library"
             >
-              <View style={[styles.optionIcon, { backgroundColor: '#F0FDF4' }]}>
-                <FontAwesome name="image" size={20} color={Colors.success} />
+              <View style={[styles.optionIcon, { backgroundColor: 'rgba(0,200,83,0.15)' }]}>
+                <ImageIcon size={20} color={colors.success} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
-                <Text style={[styles.optionTitle, { color: colors.text }]}>Choose from Library</Text>
-                <Text style={[styles.optionSub, { color: colors.textSecondary }]}>
+                <Text style={styles.optionTitle}>Choose from Library</Text>
+                <Text style={styles.optionSub}>
                   Select an existing photo from your device
                 </Text>
               </View>
@@ -146,7 +141,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
               accessibilityRole="button"
               accessibilityLabel="Cancel"
             >
-              <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
+              <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -163,9 +158,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   label: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
+    color: colors.text,
   },
   addButton: {
     flexDirection: 'row',
@@ -176,10 +172,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.input,
     borderWidth: 1.5,
     borderStyle: 'dashed',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
   },
   addButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    color: colors.textSecondary,
   },
   pressed: {
     opacity: 0.85,
@@ -197,7 +196,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.text,
     borderRadius: 12,
   },
 
@@ -215,11 +214,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
     padding: Spacing.lg,
     gap: Spacing.md,
+    backgroundColor: colors.surface,
   },
   modalTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 18,
     textAlign: 'center',
+    color: colors.text,
   },
   optionCard: {
     flexDirection: 'row',
@@ -227,6 +228,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: BorderRadius.input,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     gap: Spacing.md,
   },
   optionIcon: {
@@ -240,20 +243,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
+    color: colors.text,
   },
   optionSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
+    color: colors.textSecondary,
   },
   cancelButton: {
     alignItems: 'center',
     paddingVertical: 12,
   },
   cancelText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
+    color: colors.textSecondary,
   },
 });

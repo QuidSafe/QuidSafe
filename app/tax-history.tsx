@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
@@ -46,7 +46,7 @@ function formatPercentChange(current: number, prior: number): { value: string; i
 }
 
 export default function TaxHistoryScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const router = useRouter();
   const currentTaxYear = getCurrentTaxYear();
   const [selectedYear, setSelectedYear] = useState(currentTaxYear);
@@ -125,7 +125,7 @@ export default function TaxHistoryScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <FontAwesome name="chevron-left" size={18} color={colors.text} />
+            <ChevronLeft size={18} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Tax History</Text>
           <View style={{ width: 18 }} />
@@ -314,8 +314,8 @@ export default function TaxHistoryScreen() {
                       style={[
                         styles.statusBadge,
                         status === 'submitted'
-                          ? { backgroundColor: 'rgba(22,163,74,0.1)' }
-                          : { backgroundColor: isDark ? 'rgba(202,138,4,0.12)' : Colors.gold[50] },
+                          ? { backgroundColor: 'rgba(0,200,83,0.12)' }
+                          : { backgroundColor: 'rgba(0,102,255,0.12)' },
                       ]}
                     >
                       <Text
@@ -397,7 +397,7 @@ export default function TaxHistoryScreen() {
                   </Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>
                     {priorYear}
                   </Text>
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
   },
 
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.accent,
   },
   pillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   pillTextActive: {
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   summaryHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     marginBottom: Spacing.md,
   },
@@ -487,14 +487,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   summaryLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   summaryValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 20,
   },
   effectiveRateRow: {
@@ -506,13 +506,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   effectiveRateLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   effectiveRateValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 18,
   },
 
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   comparisonHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     marginBottom: Spacing.md,
   },
@@ -539,25 +539,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   comparisonLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   comparisonValues: {
     alignItems: 'flex-end',
   },
   comparisonAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
   comparisonPct: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
 
   // Section heading
   sectionHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     letterSpacing: -0.2,
     marginBottom: Spacing.sm,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   quarterTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
   },
   statusBadge: {
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   statusText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
   quarterDates: {
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   quarterDateText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
   quarterMetrics: {
@@ -606,14 +606,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quarterMetricLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 2,
   },
   quarterMetricValue: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 
@@ -645,11 +645,11 @@ const styles = StyleSheet.create({
   },
   barPrior: {
     width: 14,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     borderRadius: 4,
   },
   chartLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginTop: 6,
   },
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 });

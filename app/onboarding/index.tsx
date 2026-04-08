@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,17 +10,18 @@ import {
   TextInput,
   Alert,
   Platform,
+  BackHandler,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Clock, Wand2, PoundSterling, Lock, ArrowLeft, ArrowRight, EyeOff, Shield, Calendar, Check, Info, CheckCircle, Landmark } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import {
   WelcomeIllustration,
   BusinessIllustration,
@@ -73,7 +74,7 @@ function StepWelcome() {
     >
       {/* Set up in 2 minutes badge */}
       <View style={[styles.setupTimeBadge, { backgroundColor: Colors.accent + '15', borderColor: Colors.accent + '30' }]}>
-        <FontAwesome name="clock-o" size={12} color={Colors.accent} style={{ marginRight: Spacing.xs }} />
+        <Clock size={12} color={Colors.accent} strokeWidth={1.5} style={{ marginRight: Spacing.xs }} />
         <Text style={[styles.setupTimeBadgeText, { color: Colors.accent }]}>Set up in 2 minutes</Text>
       </View>
 
@@ -94,7 +95,7 @@ function StepWelcome() {
       <View style={styles.featureList}>
         <View style={styles.featureRow}>
           <View style={[styles.featureIcon, { backgroundColor: Colors.secondary + '18' }]}>
-            <FontAwesome name="magic" size={16} color={Colors.secondary} />
+            <Wand2 size={16} color={Colors.secondary} strokeWidth={1.5} />
           </View>
           <View style={styles.featureTextWrap}>
             <Text style={[styles.featureTitle, { color: colors.text }]}>AI-powered categorisation</Text>
@@ -105,7 +106,7 @@ function StepWelcome() {
         </View>
         <View style={styles.featureRow}>
           <View style={[styles.featureIcon, { backgroundColor: Colors.accent + '18' }]}>
-            <FontAwesome name="gbp" size={16} color={Colors.accent} />
+            <PoundSterling size={16} color={Colors.accent} strokeWidth={1.5} />
           </View>
           <View style={styles.featureTextWrap}>
             <Text style={[styles.featureTitle, { color: colors.text }]}>Know what to set aside</Text>
@@ -116,7 +117,7 @@ function StepWelcome() {
         </View>
         <View style={styles.featureRow}>
           <View style={[styles.featureIcon, { backgroundColor: Colors.success + '18' }]}>
-            <FontAwesome name="lock" size={16} color={Colors.success} />
+            <Lock size={16} color={Colors.success} strokeWidth={1.5} />
           </View>
           <View style={styles.featureTextWrap}>
             <Text style={[styles.featureTitle, { color: colors.text }]}>Bank-grade security</Text>
@@ -194,12 +195,7 @@ function StepBusinessInfo({
             { backgroundColor: Colors.secondary + '0A', borderColor: Colors.secondary + '20' },
           ]}
         >
-          <FontAwesome
-            name="calendar"
-            size={16}
-            color={Colors.secondary}
-            style={{ marginRight: Spacing.sm }}
-          />
+          <Calendar size={16} color={Colors.secondary} strokeWidth={1.5} style={{ marginRight: Spacing.sm }} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.infoBoxTitle, { color: colors.text }]}>
               6 April 2025 {'\u2013'} 5 April 2026
@@ -224,7 +220,7 @@ function StepBusinessInfo({
           ]}
         >
           {disclaimerChecked && (
-            <FontAwesome name="check" size={12} color={Colors.white} />
+            <Check size={12} color={Colors.white} strokeWidth={1.5} />
           )}
         </View>
         <Text style={[styles.checkboxLabel, { color: colors.textSecondary }]}>
@@ -242,14 +238,25 @@ function StepConnectBank() {
   const { colors } = useTheme();
   const [connecting, setConnecting] = useState(false);
 
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !connecting) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setConnecting(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [connecting]);
+
   const handleConnectBank = async () => {
     try {
       setConnecting(true);
-      const { url } = await api.getConnectUrl();
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
       if (Platform.OS === 'web') {
         window.open(url, '_blank');
       } else {
-        await Linking.openURL(url);
+        await WebBrowser.openBrowserAsync(url);
       }
     } catch (_err) {
       Alert.alert('Connection failed', 'Could not connect to your bank. Please try again.');
@@ -280,12 +287,12 @@ function StepConnectBank() {
       {/* Trust badges */}
       <View style={styles.trustBadges}>
         {[
-          { icon: 'eye-slash' as const, text: 'Read-only access' },
-          { icon: 'shield' as const, text: 'AES-256 encrypted' },
-          { icon: 'server' as const, text: 'UK servers' },
+          { Icon: EyeOff, text: 'Read-only access' },
+          { Icon: Shield, text: 'AES-256 encrypted' },
+          { Icon: Shield, text: 'UK servers' },
         ].map((badge) => (
           <View key={badge.text} style={[styles.trustBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <FontAwesome name={badge.icon} size={14} color={Colors.success} style={{ marginRight: Spacing.xs }} />
+            <badge.Icon size={14} color={Colors.success} strokeWidth={1.5} style={{ marginRight: Spacing.xs }} />
             <Text style={[styles.trustBadgeText, { color: colors.textSecondary }]}>{badge.text}</Text>
           </View>
         ))}
@@ -309,22 +316,17 @@ function StepConnectBank() {
         onPress={handleConnectBank}
         disabled={connecting}
       >
-        <LinearGradient
-          colors={['#D4A017', '#CA8A04', '#A16207']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.ctaGradient}
-        >
-          <FontAwesome name="bank" size={16} color={Colors.white} style={{ marginRight: Spacing.sm }} />
+        <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
+          <Landmark size={16} color={Colors.white} strokeWidth={1.5} style={{ marginRight: Spacing.sm }} />
           <Text style={styles.ctaButtonText}>
             {connecting ? 'Connecting...' : 'Connect Bank'}
           </Text>
-        </LinearGradient>
+        </View>
       </Pressable>
 
       {/* Info note */}
       <View style={[styles.infoNote, { borderColor: Colors.secondary + '20', backgroundColor: Colors.secondary + '08' }]}>
-        <FontAwesome name="info-circle" size={14} color={Colors.secondary} style={{ marginRight: Spacing.sm, marginTop: 2 }} />
+        <Info size={14} color={Colors.secondary} strokeWidth={1.5} style={{ marginRight: Spacing.sm, marginTop: 2 }} />
         <Text style={[styles.infoNoteText, { color: colors.textSecondary }]}>
           We use Open Banking — we can see transactions but never move money, see your PIN, or access your login details.
         </Text>
@@ -332,7 +334,7 @@ function StepConnectBank() {
 
       {/* HMRC Recognised badge */}
       <View style={[styles.hmrcBadge, { backgroundColor: Colors.success + '10', borderColor: Colors.success + '25' }]}>
-        <FontAwesome name="check-circle" size={14} color={Colors.success} style={{ marginRight: Spacing.xs }} />
+        <CheckCircle size={14} color={Colors.success} strokeWidth={1.5} style={{ marginRight: Spacing.xs }} />
         <Text style={[styles.hmrcBadgeText, { color: Colors.success }]}>HMRC Recognised for MTD</Text>
       </View>
     </ScrollView>
@@ -392,7 +394,7 @@ export default function OnboardingScreen() {
       <View style={styles.topBar}>
         {step > 0 ? (
           <Pressable onPress={handleBack} style={styles.backButton}>
-            <FontAwesome name="arrow-left" size={18} color={colors.text} />
+            <ArrowLeft size={18} color={colors.text} strokeWidth={1.5} />
           </Pressable>
         ) : (
           <View style={styles.backButtonPlaceholder} />
@@ -428,15 +430,10 @@ export default function OnboardingScreen() {
             style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}
             onPress={handleNext}
           >
-            <LinearGradient
-              colors={['#D4A017', '#CA8A04', '#A16207']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.ctaGradient}
-            >
+            <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
               <Text style={styles.ctaButtonText}>Get Started</Text>
-              <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
-            </LinearGradient>
+              <ArrowRight size={14} color={Colors.white} strokeWidth={1.5} style={{ marginLeft: Spacing.sm }} />
+            </View>
           </Pressable>
         )}
 
@@ -450,15 +447,10 @@ export default function OnboardingScreen() {
             onPress={handleNext}
             disabled={!canContinueStep2}
           >
-            <LinearGradient
-              colors={['#D4A017', '#CA8A04', '#A16207']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.ctaGradient}
-            >
+            <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
               <Text style={styles.ctaButtonText}>Continue</Text>
-              <FontAwesome name="arrow-right" size={14} color={Colors.white} style={{ marginLeft: Spacing.sm }} />
-            </LinearGradient>
+              <ArrowRight size={14} color={Colors.white} strokeWidth={1.5} style={{ marginLeft: Spacing.sm }} />
+            </View>
           </Pressable>
         )}
 
@@ -585,7 +577,7 @@ const styles = StyleSheet.create({
     ...Shadows.soft,
   },
   poundText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -642,13 +634,13 @@ const styles = StyleSheet.create({
 
   /* Typography */
   heading: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -677,12 +669,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     marginBottom: 2,
   },
   featureDesc: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -703,7 +695,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   label: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     marginBottom: Spacing.sm,
   },
@@ -715,7 +707,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textInput: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     padding: 0,
   },
@@ -727,12 +719,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   infoBoxTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   infoBoxSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -759,7 +751,7 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -781,7 +773,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs + 2,
   },
   trustBadgeText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
   },
 
@@ -797,7 +789,7 @@ const styles = StyleSheet.create({
   },
   infoNoteText: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -813,7 +805,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   setupTimeBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
 
@@ -824,7 +816,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   bankStripLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginBottom: Spacing.sm,
   },
@@ -841,7 +833,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   bankPillText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -856,7 +848,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   hmrcBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
 
@@ -877,14 +869,14 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   ctaButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
 
   /* Skip text */
   skipText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     paddingVertical: Spacing.sm,
     textDecorationLine: 'underline',

@@ -9,11 +9,13 @@ import {
   Alert,
   Animated,
   ActivityIndicator,
+  Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Landmark, CheckCircle, Check, X, ArrowDown, ArrowUp, PoundSterling, Link, Send, Scale } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
@@ -43,7 +45,7 @@ function getStatusColor(status: QuarterStatus): string {
     case 'due':
       return Colors.accent;
     case 'upcoming':
-      return Colors.grey[400];
+      return '#666666';
     case 'overdue':
       return Colors.error;
   }
@@ -77,7 +79,7 @@ function deriveQuarterStatus(
 // ─── Main Screen ──────────────────────────────────────────
 
 export default function MTDScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const obligations = useMtdObligations();
   const quarters = useQuarterlyBreakdown();
   const submitMutation = useSubmitQuarterly();
@@ -155,13 +157,23 @@ export default function MTDScreen() {
     }
   }, [successReceipt, successScale, successOpacity]);
 
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isConnectingHmrc) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsConnectingHmrc(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isConnectingHmrc]);
+
   const handleConnectHmrc = async () => {
     if (isConnectingHmrc) return;
     setIsConnectingHmrc(true);
     try {
-      const { url } = await api.getHmrcAuthUrl();
+      const { url } = await api.getHmrcAuthUrl(Platform.OS !== 'web' ? 'native' : undefined);
       await WebBrowser.openBrowserAsync(url);
-      obligations.refetch();
     } catch {
       Alert.alert('Connection Error', 'Could not connect to HMRC. Please try again.');
     } finally {
@@ -259,10 +271,10 @@ export default function MTDScreen() {
                   <View
                     style={[
                       styles.connectIconCircle,
-                      { backgroundColor: isDark ? 'rgba(30,58,138,0.2)' : 'rgba(30,58,138,0.08)' },
+                      { backgroundColor: 'rgba(0,102,255,0.2)' },
                     ]}
                   >
-                    <FontAwesome name="bank" size={28} color={Colors.secondary} />
+                    <Landmark size={28} color={Colors.secondary} strokeWidth={1.5} />
                   </View>
                 </View>
                 <Text style={[styles.connectTitle, { color: colors.text }]}>
@@ -281,7 +293,7 @@ export default function MTDScreen() {
                     'Never miss a filing deadline',
                   ].map((benefit) => (
                     <View key={benefit} style={styles.benefitRow}>
-                      <FontAwesome name="check-circle" size={14} color={Colors.success} />
+                      <CheckCircle size={14} color={Colors.success} strokeWidth={1.5} />
                       <Text style={[styles.benefitText, { color: colors.textSecondary }]}>
                         {benefit}
                       </Text>
@@ -302,7 +314,7 @@ export default function MTDScreen() {
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <>
-                      <FontAwesome name="link" size={16} color={Colors.white} />
+                      <Link size={16} color={Colors.white} strokeWidth={1.5} />
                       <Text style={styles.connectButtonText}>Connect to HMRC</Text>
                     </>
                   )}
@@ -340,17 +352,11 @@ export default function MTDScreen() {
                             styles.quarterCard,
                             {
                               backgroundColor: isActive
-                                ? isDark
-                                  ? 'rgba(30,58,138,0.15)'
-                                  : 'rgba(30,58,138,0.06)'
-                                : isDark
-                                  ? 'rgba(255,255,255,0.04)'
-                                  : 'rgba(0,0,0,0.02)',
+                                ? 'rgba(0,102,255,0.15)'
+                                : 'rgba(255,255,255,0.04)',
                               borderColor: isActive
                                 ? Colors.secondary
-                                : isDark
-                                  ? 'rgba(255,255,255,0.08)'
-                                  : 'rgba(0,0,0,0.06)',
+                                : 'rgba(255,255,255,0.08)',
                               borderWidth: isActive ? 2 : 1,
                             },
                           ]}
@@ -360,7 +366,7 @@ export default function MTDScreen() {
                               styles.quarterLabel,
                               {
                                 color: isActive ? Colors.secondary : colors.text,
-                                fontFamily: isActive ? Fonts.manrope.bold : Fonts.manrope.semiBold,
+                                fontFamily: isActive ? Fonts.sourceSans.semiBold : Fonts.sourceSans.semiBold,
                               },
                             ]}
                           >
@@ -396,15 +402,13 @@ export default function MTDScreen() {
                                   backgroundColor:
                                     qs.status === 'submitted'
                                       ? Colors.success
-                                      : isDark
-                                        ? Colors.grey[700]
-                                        : Colors.grey[300],
+                                      : '#2A2A2A',
                                 },
                               ]}
                             />
                             {qs.status === 'submitted' && (
                               <View style={styles.connectorCheck}>
-                                <FontAwesome name="check" size={8} color={Colors.white} />
+                                <Check size={8} color={Colors.white} strokeWidth={2} />
                               </View>
                             )}
                           </View>
@@ -431,10 +435,10 @@ export default function MTDScreen() {
                     <View
                       style={[
                         styles.successIconCircle,
-                        { backgroundColor: 'rgba(22,163,74,0.12)' },
+                        { backgroundColor: 'rgba(0,200,83,0.12)' },
                       ]}
                     >
-                      <FontAwesome name="check-circle" size={40} color={Colors.success} />
+                      <CheckCircle size={40} color={Colors.success} strokeWidth={1.5} />
                     </View>
                     <Text style={[styles.successTitle, { color: colors.text }]}>
                       Submission Accepted
@@ -446,9 +450,7 @@ export default function MTDScreen() {
                       style={[
                         styles.receiptBox,
                         {
-                          backgroundColor: isDark
-                            ? 'rgba(255,255,255,0.04)'
-                            : 'rgba(0,0,0,0.03)',
+                          backgroundColor: 'rgba(255,255,255,0.04)',
                         },
                       ]}
                     >
@@ -462,7 +464,7 @@ export default function MTDScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.dismissButton,
-                        { backgroundColor: isDark ? Colors.grey[800] : Colors.grey[100] },
+                        { backgroundColor: '#0A0A0A' },
                         pressed && styles.buttonPressed,
                       ]}
                       onPress={() => {
@@ -519,10 +521,10 @@ export default function MTDScreen() {
                           <View
                             style={[
                               styles.detailIcon,
-                              { backgroundColor: 'rgba(22,163,74,0.1)' },
+                              { backgroundColor: 'rgba(0,200,83,0.1)' },
                             ]}
                           >
-                            <FontAwesome name="arrow-down" size={12} color={Colors.success} />
+                            <ArrowDown size={12} color={Colors.success} strokeWidth={1.5} />
                           </View>
                           <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
                             Income
@@ -540,10 +542,10 @@ export default function MTDScreen() {
                           <View
                             style={[
                               styles.detailIcon,
-                              { backgroundColor: 'rgba(220,38,38,0.1)' },
+                              { backgroundColor: 'rgba(255,59,48,0.1)' },
                             ]}
                           >
-                            <FontAwesome name="arrow-up" size={12} color={Colors.error} />
+                            <ArrowUp size={12} color={Colors.error} strokeWidth={1.5} />
                           </View>
                           <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
                             Expenses
@@ -561,10 +563,10 @@ export default function MTDScreen() {
                           <View
                             style={[
                               styles.detailIcon,
-                              { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
+                              { backgroundColor: 'rgba(255,255,255,0.06)' },
                             ]}
                           >
-                            <FontAwesome name="balance-scale" size={11} color={colors.text} />
+                            <Scale size={11} color={colors.text} strokeWidth={1.5} />
                           </View>
                           <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
                             Net Profit
@@ -585,10 +587,10 @@ export default function MTDScreen() {
                           <View
                             style={[
                               styles.detailIcon,
-                              { backgroundColor: 'rgba(202,138,4,0.1)' },
+                              { backgroundColor: 'rgba(0,102,255,0.1)' },
                             ]}
                           >
-                            <FontAwesome name="gbp" size={12} color={Colors.accent} />
+                            <PoundSterling size={12} color={Colors.accent} strokeWidth={1.5} />
                           </View>
                           <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
                             Tax Liability
@@ -617,7 +619,7 @@ export default function MTDScreen() {
                           <ActivityIndicator size="small" color={Colors.white} />
                         ) : (
                           <>
-                            <FontAwesome name="send" size={14} color={Colors.white} />
+                            <Send size={14} color={Colors.white} strokeWidth={1.5} />
                             <Text style={styles.submitButtonText}>Submit to HMRC</Text>
                           </>
                         )}
@@ -649,16 +651,15 @@ export default function MTDScreen() {
                                   styles.historyIcon,
                                   {
                                     backgroundColor: isAccepted
-                                      ? 'rgba(22,163,74,0.1)'
-                                      : 'rgba(220,38,38,0.1)',
+                                      ? 'rgba(0,200,83,0.1)'
+                                      : 'rgba(255,59,48,0.1)',
                                   },
                                 ]}
                               >
-                                <FontAwesome
-                                  name={isAccepted ? 'check' : 'times'}
-                                  size={12}
-                                  color={isAccepted ? Colors.success : Colors.error}
-                                />
+                                {isAccepted
+                                  ? <Check size={12} color={Colors.success} strokeWidth={2} />
+                                  : <X size={12} color={Colors.error} strokeWidth={2} />
+                                }
                               </View>
                               <View>
                                 <Text style={[styles.historyQuarter, { color: colors.text }]}>
@@ -681,8 +682,8 @@ export default function MTDScreen() {
                                 styles.historyBadge,
                                 {
                                   backgroundColor: isAccepted
-                                    ? 'rgba(22,163,74,0.1)'
-                                    : 'rgba(220,38,38,0.1)',
+                                    ? 'rgba(0,200,83,0.1)'
+                                    : 'rgba(255,59,48,0.1)',
                                 },
                               ]}
                             >
@@ -735,13 +736,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 24,
     lineHeight: 32,
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
 
@@ -765,7 +766,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(22,163,74,0.1)',
+    backgroundColor: 'rgba(0,200,83,0.1)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: BorderRadius.pill,
@@ -777,7 +778,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   connectedText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     color: Colors.success,
   },
@@ -798,14 +799,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   connectTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 20,
     lineHeight: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   connectDescription: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
@@ -824,7 +825,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   benefitText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     lineHeight: 18,
     flex: 1,
@@ -841,7 +842,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   connectButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -854,7 +855,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -886,7 +887,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   quarterDates: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 8.5,
     textAlign: 'center',
     lineHeight: 12,
@@ -906,7 +907,7 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   statusText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 9,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -917,7 +918,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   statusTextSmall: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
 
@@ -966,11 +967,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   detailLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   detailValue: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
   },
   detailDivider: {
@@ -990,7 +991,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   submitButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -1019,13 +1020,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   successTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 22,
     textAlign: 'center',
     marginBottom: 4,
   },
   successSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: Spacing.lg,
@@ -1039,14 +1040,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   receiptLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
   },
   receiptId: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
     letterSpacing: 0.5,
   },
@@ -1056,7 +1057,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.button,
   },
   dismissButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 
@@ -1080,11 +1081,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   historyQuarter: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   historyReceipt: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginTop: 1,
   },
@@ -1094,7 +1095,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   historyBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
   historyDivider: {
