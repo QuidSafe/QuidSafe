@@ -117,3 +117,9 @@ Use these agents for specialised tasks:
 ## Live URLs
 - **API**: https://quidsafe-api.nathanlufc.workers.dev
 - **Web**: https://quidsafe.pages.dev
+
+## Pre-deploy gate
+Always run /pre-deploy before npm run worker:deploy:production.
+Changes to worker/middleware/auth.ts, worker/utils/crypto.ts, worker/services/stripe.ts, or worker/services/banking.ts → invoke worker-security-reviewer agent first.
+Changes to lib/tax-engine.ts → invoke hmrc-tax-specialist agent and run /tax-audit.
+New D1 migrations → invoke d1-reviewer agent and run /migrate.
