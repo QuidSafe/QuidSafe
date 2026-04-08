@@ -60,8 +60,10 @@ export async function createCheckoutSession(
     await execute(db, 'UPDATE users SET stripe_customer_id = ?, updated_at = datetime(\'now\') WHERE id = ?', [customerId, userId]);
   }
 
-  // Price IDs — set these in Stripe Dashboard and store in env vars
-  // For now, use lookup_keys
+  if (!customerId) {
+    throw new Error('Cannot create checkout: no Stripe customer ID and no email on file');
+  }
+
   const priceParam = plan === 'annual'
     ? { 'line_items[0][price_data][unit_amount]': '5999', 'line_items[0][price_data][recurring][interval]': 'year' }
     : { 'line_items[0][price_data][unit_amount]': '799', 'line_items[0][price_data][recurring][interval]': 'month' };

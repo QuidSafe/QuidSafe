@@ -200,15 +200,8 @@ function ToastContainer({
   toasts: ToastItem[];
   onDismiss: (id: string) => void;
 }) {
-  // Safe area insets may not be available if SafeAreaProvider is missing;
-  // fall back to a sensible default on web.
-  let topInset = 0;
-  try {
-    const insets = useSafeAreaInsets();
-    topInset = insets.top;
-  } catch {
-    topInset = Platform.OS === 'web' ? 16 : 44;
-  }
+  const insets = useSafeAreaInsets();
+  const topInset = insets.top || (Platform.OS === 'web' ? 16 : 44);
 
   if (toasts.length === 0) return null;
 

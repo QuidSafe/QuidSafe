@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context, type Next } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { clerkAuth } from './middleware/auth';
@@ -107,11 +107,12 @@ async function categoriseAndSave(
     corrections.map((c) => ({ merchantName: c.merchant_name, category: c.corrected_category })),
   );
 
-  for (const result of results) {
-    await execute(
-      db,
-      'UPDATE transactions SET ai_category = ?, ai_confidence = ?, ai_reasoning = ?, is_income = ?, is_expense_claimable = ?, income_source = ? WHERE id = ? AND user_id = ?',
-      [result.category, result.confidence, result.reasoning, result.category === 'income' ? 1 : 0, result.category === 'business_expense' ? 1 : 0, result.incomeSourceType, result.id, userId],
+  if (results.length > 0) {
+    await db.batch(
+      results.map((r) =>
+        db.prepare('UPDATE transactions SET ai_category = ?, ai_confidence = ?, ai_reasoning = ?, is_income = ?, is_expense_claimable = ?, income_source = ? WHERE id = ? AND user_id = ?')
+          .bind(r.category, r.confidence, r.reasoning, r.category === 'income' ? 1 : 0, r.category === 'business_expense' ? 1 : 0, r.incomeSourceType, r.id, userId)
+      )
     );
   }
 
@@ -130,7 +131,7 @@ app.use(
       if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
         return origin;
       }
-      return allowed[0]; // fallback
+      return origin; // return origin as-is; Hono CORS will block if not in allow list
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -170,7 +171,12 @@ app.post('/webhooks/stripe', async (c) => {
     return c.json({ error: 'Invalid signature' }, 400);
   }
 
-  const event = JSON.parse(body);
+  let event;
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
   await handleWebhookEvent(event, c.env.DB);
   return c.json({ received: true });
 });
@@ -197,7 +203,7 @@ authed.use('*', clerkAuth());
 // ─── Subscription Guard Middleware ───────────────────────
 // Blocks routes when trial has expired or subscription is cancelled.
 // Returns 402 for paywall enforcement.
-async function requireActiveSubscription(c: any, next: any) {
+async function requireActiveSubscription(c: Context<AuthedEnv>, next: Next) {
   const userId = c.get('userId');
   const user = await queryOne<{ subscription_tier: string; grace_period_ends: string | null }>(
     c.env.DB,
@@ -1349,7 +1355,7 @@ authed.put('/settings', async (c) => {
     await execute(c.env.DB, `UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
   }
 
-  const user = await queryOne(c.env.DB, 'SELECT * FROM users WHERE id = ?', [userId]);
+  const user = await queryOne(c.env.DB, 'SELECT id, name, email, business_type, subscription_tier, trial_ends_at, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready FROM users WHERE id = ?', [userId]);
   return c.json({ user });
 });
 

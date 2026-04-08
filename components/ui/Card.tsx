@@ -52,7 +52,7 @@ export function Card({ children, variant = 'default', style, onPress, accessibil
   return (
     <View
       style={[styles.card, variantStyles[variant], style]}
-      accessibilityRole="summary"
+      accessibilityRole="none"
       accessibilityLabel={accessibilityLabel}
       {...props}
     >

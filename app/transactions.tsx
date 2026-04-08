@@ -232,7 +232,7 @@ export default function TransactionsScreen() {
     } finally {
       setIsAutoCategorising(false);
     }
-  }, [transactionsQuery, uncategorisedQuery]);
+  }, [transactionsQuery, uncategorisedQuery, toast]);
 
   const renderConfidenceBadge = useCallback(
     (tx: Transaction) => {
