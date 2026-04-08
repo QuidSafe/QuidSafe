@@ -94,24 +94,24 @@ describe('DateInput formatting logic', () => {
 // ─── Colors constants ───────────────────────────────────
 
 describe('Colors constants', () => {
-  it('has Trust Navy as primary (#0F172A)', () => {
-    expect(Colors.primary).toBe('#0F172A');
+  it('has Black as primary (#000000)', () => {
+    expect(Colors.primary).toBe('#000000');
   });
 
-  it('has Royal Blue as secondary (#1E3A8A)', () => {
-    expect(Colors.secondary).toBe('#1E3A8A');
+  it('has Electric Blue as secondary (#0066FF)', () => {
+    expect(Colors.secondary).toBe('#0066FF');
   });
 
-  it('has Warm Gold as accent (#CA8A04)', () => {
-    expect(Colors.accent).toBe('#CA8A04');
+  it('has Electric Blue as accent (#0066FF)', () => {
+    expect(Colors.accent).toBe('#0066FF');
   });
 
-  it('has Success Green (#16A34A)', () => {
-    expect(Colors.success).toBe('#16A34A');
+  it('has Success Green (#00C853)', () => {
+    expect(Colors.success).toBe('#00C853');
   });
 
-  it('has Error Red (#DC2626)', () => {
-    expect(Colors.error).toBe('#DC2626');
+  it('has Error Red (#FF3B30)', () => {
+    expect(Colors.error).toBe('#FF3B30');
   });
 
   it('has white (#FFFFFF)', () => {
@@ -142,10 +142,10 @@ describe('Spacing constants', () => {
 
 describe('BorderRadius constants', () => {
   it('has expected border radius values', () => {
-    expect(BorderRadius.card).toBe(16);
-    expect(BorderRadius.input).toBe(12);
+    expect(BorderRadius.card).toBe(12);
+    expect(BorderRadius.input).toBe(8);
     expect(BorderRadius.pill).toBe(9999);
-    expect(BorderRadius.button).toBe(12);
+    expect(BorderRadius.button).toBe(8);
     expect(BorderRadius.hero).toBe(24);
   });
 });
@@ -160,7 +160,7 @@ describe('Shadows constants', () => {
   });
 
   it('soft shadow has expected properties', () => {
-    expect(Shadows.soft.shadowColor).toBe('#0F172A');
+    expect(Shadows.soft.shadowColor).toBe('#000000');
     expect(Shadows.soft.elevation).toBe(2);
   });
 
