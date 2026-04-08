@@ -100,8 +100,8 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
                   color: index === data.length - 1 ? colors.text : colors.textSecondary,
                   fontFamily:
                     index === data.length - 1
-                      ? Fonts.manrope.bold
-                      : Fonts.manrope.regular,
+                      ? Fonts.sourceSans.semiBold
+                      : Fonts.sourceSans.regular,
                 },
               ]}
             >
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     marginRight: BAR_WIDTH / 2,
   },
   tooltipText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 10,
     color: Colors.white,
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   avgLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 8,
     position: 'absolute',
     right: 0,

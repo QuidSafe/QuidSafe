@@ -12,17 +12,9 @@ export const Fonts = {
     regular: 'SourceSans3_400Regular',
     semiBold: 'SourceSans3_600SemiBold',
   },
-  // Legacy fonts (still loaded, used across existing screens)
-  manrope: {
-    regular: 'Manrope_400Regular',
-    medium: 'Manrope_500Medium',
-    semiBold: 'Manrope_600SemiBold',
-    bold: 'Manrope_700Bold',
-    extraBold: 'Manrope_800ExtraBold',
-  },
-  playfair: {
-    regular: 'PlayfairDisplay_400Regular',
-    bold: 'PlayfairDisplay_700Bold',
+  mono: {
+    regular: 'JetBrainsMono_400Regular',
+    semiBold: 'JetBrainsMono_600SemiBold',
   },
 };
 

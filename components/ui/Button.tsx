@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   text: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
   },
 });

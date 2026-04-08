@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, View, ViewProps, Pressable } from 'react-native';
 import { BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface CardProps extends ViewProps {
   children: React.ReactNode;
@@ -11,30 +10,29 @@ interface CardProps extends ViewProps {
 }
 
 export function Card({ children, variant = 'default', style, onPress, accessibilityLabel, ...props }: CardProps) {
-  const { colors, isDark } = useTheme();
 
   const variantStyle = useMemo(() => {
     switch (variant) {
       case 'glass':
         return {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.surfaceGlass,
-          borderColor: isDark ? 'rgba(255,255,255,0.08)' : colors.cardBorder,
-          ...(isDark ? Shadows.darkSoft : Shadows.soft),
+          backgroundColor: 'rgba(255,255,255,0.04)',
+          borderColor: 'rgba(255,255,255,0.08)',
+          ...Shadows.darkSoft,
         };
       case 'elevated':
         return {
-          backgroundColor: isDark ? '#1A1A24' : colors.surface,
-          borderColor: isDark ? 'rgba(255,255,255,0.09)' : colors.cardBorder,
-          ...(isDark ? Shadows.darkMedium : Shadows.medium),
+          backgroundColor: '#0A0A0A',
+          borderColor: 'rgba(255,255,255,0.09)',
+          ...Shadows.darkMedium,
         };
       default:
         return {
-          backgroundColor: isDark ? '#17171F' : colors.surface,
-          borderColor: isDark ? 'rgba(255,255,255,0.07)' : colors.cardBorder,
-          ...(isDark ? Shadows.darkSoft : Shadows.soft),
+          backgroundColor: '#0A0A0A',
+          borderColor: '#2A2A2A',
+          ...Shadows.darkSoft,
         };
     }
-  }, [variant, isDark, colors.surface, colors.surfaceGlass, colors.cardBorder]);
+  }, [variant]);
 
   if (variant === 'elevated' && onPress) {
     return (

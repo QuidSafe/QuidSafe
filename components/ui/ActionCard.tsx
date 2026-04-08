@@ -1,7 +1,7 @@
 // Action item card — tappable with left colour border + icon
 
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronRight } from 'lucide-react-native';
 import { Colors, BorderRadius, Shadows, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -10,7 +10,7 @@ interface ActionCardProps {
   title: string;
   description: string;
   type: 'warning' | 'info' | 'action' | 'success' | 'error' | 'urgent';
-  icon?: React.ComponentProps<typeof FontAwesome>['name'];
+  icon?: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
   onPress?: () => void;
 }
 
@@ -23,11 +23,9 @@ const typeColors: Record<string, string> = {
   urgent: Colors.error,
 };
 
-export function ActionCard({ title, description, type, icon, onPress }: ActionCardProps) {
-  const { colors, isDark } = useTheme();
+export function ActionCard({ title, description, type, icon: Icon, onPress }: ActionCardProps) {
+  const { colors } = useTheme();
   const color = typeColors[type] ?? Colors.secondary;
-
-  const cardShadow = isDark ? Shadows.darkSoft : Shadows.soft;
 
   return (
     <Pressable
@@ -39,21 +37,21 @@ export function ActionCard({ title, description, type, icon, onPress }: ActionCa
       style={({ pressed }) => [
         styles.card,
         { backgroundColor: colors.surface, borderColor: colors.cardBorder },
-        cardShadow,
+        Shadows.darkSoft,
         pressed && PressedState,
       ]}
     >
       <View style={[styles.border, { backgroundColor: color }]} />
-      {icon && (
+      {Icon && (
         <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
-          <FontAwesome name={icon} size={12} color={color} />
+          <Icon size={12} color={color} strokeWidth={1.5} />
         </View>
       )}
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>
       </View>
-      <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} style={styles.chevron} />
+      <ChevronRight size={12} color={colors.textSecondary} strokeWidth={1.5} style={styles.chevron} />
     </Pressable>
   );
 }
@@ -84,11 +82,11 @@ const styles = StyleSheet.create({
     paddingLeft: 11,
   },
   title: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
   },
   description: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },

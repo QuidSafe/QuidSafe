@@ -1,36 +1,34 @@
 import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Home, PoundSterling, CreditCard, BookOpen, Settings } from 'lucide-react-native';
 import { Colors, Spacing, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { BrandLogo } from '@/components/ui/BrandLogo';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface NavItem {
   name: string;
   route: string;
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  icon: React.FC<{ size?: number; color?: string; strokeWidth?: number }>;
   segment: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { name: 'Home', route: '/(tabs)', icon: 'home', segment: 'index' },
-  { name: 'Income', route: '/(tabs)/income', icon: 'gbp', segment: 'income' },
-  { name: 'Expenses', route: '/(tabs)/expenses', icon: 'credit-card', segment: 'expenses' },
-  { name: 'Learn', route: '/(tabs)/learn', icon: 'book', segment: 'learn' },
-  { name: 'Settings', route: '/(tabs)/settings', icon: 'cog', segment: 'settings' },
+  { name: 'Home', route: '/(tabs)', icon: Home, segment: 'index' },
+  { name: 'Income', route: '/(tabs)/income', icon: PoundSterling, segment: 'income' },
+  { name: 'Expenses', route: '/(tabs)/expenses', icon: CreditCard, segment: 'expenses' },
+  { name: 'Learn', route: '/(tabs)/learn', icon: BookOpen, segment: 'learn' },
+  { name: 'Settings', route: '/(tabs)/settings', icon: Settings, segment: 'settings' },
 ];
 
 export function SidebarNav() {
   const router = useRouter();
   const segments = useSegments();
-  const { colors, isDark } = useTheme();
 
   const allSegments = segments as string[];
   const activeSegment = allSegments[1] || 'index';
 
   return (
-    <View style={[styles.sidebar, { backgroundColor: isDark ? '#0D0D14' : '#FAFBFC', borderRightColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }]}>
+    <View style={[styles.sidebar, { backgroundColor: '#0D0D14', borderRightColor: 'rgba(255,255,255,0.06)' }]}>
       <Pressable
         onPress={() => router.push('/(tabs)')}
         style={styles.logoWrap}
@@ -43,6 +41,7 @@ export function SidebarNav() {
       <View style={styles.navItems}>
         {NAV_ITEMS.map((item) => {
           const isActive = activeSegment === item.segment;
+          const IconComponent = item.icon;
           return (
             <Pressable
               key={item.name}
@@ -50,7 +49,7 @@ export function SidebarNav() {
               style={({ pressed }) => [
                 styles.navItem,
                 isActive && styles.navItemActive,
-                isActive && { backgroundColor: isDark ? 'rgba(202,138,4,0.08)' : 'rgba(202,138,4,0.06)' },
+                isActive && { backgroundColor: 'rgba(0,102,255,0.08)' },
                 pressed && PressedState,
               ]}
               accessibilityRole="tab"
@@ -58,15 +57,15 @@ export function SidebarNav() {
               accessibilityLabel={item.name}
             >
               {isActive && <View style={styles.activeBar} />}
-              <FontAwesome
-                name={item.icon}
+              <IconComponent
                 size={18}
-                color={isActive ? Colors.accent : isDark ? 'rgba(255,255,255,0.4)' : Colors.grey[400]}
+                color={isActive ? Colors.accent : 'rgba(255,255,255,0.4)'}
+                strokeWidth={1.5}
               />
               <Text
                 style={[
                   styles.navLabel,
-                  { color: isActive ? (isDark ? Colors.white : Colors.primary) : (isDark ? 'rgba(255,255,255,0.5)' : Colors.grey[500]) },
+                  { color: isActive ? Colors.white : 'rgba(255,255,255,0.5)' },
                   isActive && styles.navLabelActive,
                 ]}
               >
@@ -78,7 +77,7 @@ export function SidebarNav() {
       </View>
 
       <View style={styles.sidebarFooter}>
-        <Text style={[styles.footerText, { color: isDark ? 'rgba(255,255,255,0.25)' : Colors.grey[400] }]}>
+        <Text style={[styles.footerText, { color: 'rgba(255,255,255,0.25)' }]}>
           QuidSafe v1.0
         </Text>
       </View>
@@ -129,11 +128,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   navLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   navLabelActive: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
   },
   sidebarFooter: {
     paddingHorizontal: Spacing.lg,
@@ -142,7 +141,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.04)',
   },
   footerText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 });

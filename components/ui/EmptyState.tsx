@@ -1,11 +1,10 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface EmptyStateProps {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
+  icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
   title: string;
   subtitle: string;
   actionLabel?: string;
@@ -15,7 +14,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon,
+  icon: Icon,
   title,
   subtitle,
   actionLabel,
@@ -28,7 +27,7 @@ export function EmptyState({
     <View style={styles.container} accessible accessibilityRole="alert" accessibilityLabel={`${title}. ${subtitle}`}>
       {/* Circular icon container with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: tintColor + '1A' }]}>
-        <Ionicons name={icon} size={64} color={tintColor} />
+        <Icon size={64} color={tintColor} strokeWidth={1.5} />
       </View>
 
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -66,13 +65,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     maxWidth: 280,
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   actionButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },

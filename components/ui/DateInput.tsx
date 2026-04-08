@@ -79,7 +79,7 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
               border: 'none',
               outline: 'none',
               background: 'transparent',
-              fontFamily: 'Manrope, sans-serif',
+              fontFamily: 'Source Sans 3, sans-serif',
               fontSize: 14,
               color: colors.text,
               padding: 0,
@@ -119,7 +119,7 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
 
 const styles = StyleSheet.create({
   label: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.lexend.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   input: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   errorText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,

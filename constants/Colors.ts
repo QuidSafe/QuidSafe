@@ -19,44 +19,12 @@ export const Colors = {
   error: '#FF3B30',
   info: '#0066FF',
 
-  // Legacy aliases (used across existing screens — migrate gradually)
+  // Legacy aliases (referenced across screens)
   primary: '#000000',
   secondary: '#0066FF',
   accent: '#0066FF',
 
-  gold: {
-    50: '#FEF9C3',
-    100: '#FEF3C7',
-    600: '#CA8A04',
-    700: '#A16207',
-  },
-  grey: {
-    50: '#F8FAFC',
-    100: '#F1F5F9',
-    200: '#E2E8F0',
-    300: '#CBD5E1',
-    400: '#94A3B8',
-    500: '#64748B',
-    600: '#475569',
-    700: '#334155',
-    800: '#1E293B',
-    900: '#0F172A',
-  },
-
-  // Theme-aware palettes
-  light: {
-    text: '#000000',
-    textSecondary: '#666666',
-    background: '#FFFFFF',
-    surface: '#F5F5F5',
-    tint: '#0066FF',
-    tabIconDefault: '#A0A0A0',
-    tabIconSelected: '#0066FF',
-    border: '#E5E5E5',
-    surfaceGlass: 'rgba(255,255,255,0.95)',
-    shadowColor: 'rgba(0,0,0,0.08)',
-    cardBorder: '#E5E5E5',
-  },
+  // Dark-only theme palette
   dark: {
     text: '#FFFFFF',
     textSecondary: '#A0A0A0',
@@ -140,17 +108,13 @@ export const PressedState = {
   transform: [{ scale: 0.98 }] as const,
 };
 
-/** Semantic category background tints — use for icon containers and badges */
+/** Semantic category background tints — dark-only, use for icon containers and badges */
 export const CategoryTints = {
-  blue: { bg: '#EFF6FF', bgDark: 'rgba(0,102,255,0.15)', color: '#0066FF' },
-  green: { bg: '#F0FDF4', bgDark: 'rgba(0,200,83,0.15)', color: '#00C853' },
-  gold: { bg: '#FEF9C3', bgDark: 'rgba(202,138,4,0.15)', color: '#A16207' },
-  purple: { bg: '#F5F3FF', bgDark: 'rgba(124,58,237,0.15)', color: '#7C3AED' },
-  orange: { bg: '#FFF7ED', bgDark: 'rgba(255,149,0,0.15)', color: '#FF9500' },
-  red: { bg: '#FEF2F2', bgDark: 'rgba(255,59,48,0.15)', color: '#FF3B30' },
-  grey: { bg: '#F1F5F9', bgDark: 'rgba(160,160,160,0.12)', color: '#666666' },
-  pink: { bg: '#FDF2F8', bgDark: 'rgba(236,72,153,0.15)', color: '#EC4899' },
-  cyan: { bg: '#ECFEFF', bgDark: 'rgba(6,182,212,0.15)', color: '#06B6D4' },
+  blue: { bg: 'rgba(0,102,255,0.15)', color: '#0066FF' },
+  green: { bg: 'rgba(0,200,83,0.15)', color: '#00C853' },
+  orange: { bg: 'rgba(255,149,0,0.15)', color: '#FF9500' },
+  red: { bg: 'rgba(255,59,48,0.15)', color: '#FF3B30' },
+  grey: { bg: 'rgba(160,160,160,0.12)', color: '#666666' },
 };
 
 export default Colors;

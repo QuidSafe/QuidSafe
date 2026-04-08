@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, AppState, Animated, Platform } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { Lock } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -79,7 +79,7 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <View style={styles.content}>
             <View style={styles.iconCircle}>
-              <FontAwesome name="lock" size={40} color={Colors.accent} />
+              <Lock size={40} color={Colors.accent} strokeWidth={1.5} />
             </View>
             <Text style={styles.brandText}>QuidSafe</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -91,7 +91,7 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
               accessibilityRole="button"
               accessibilityLabel="Tap to unlock"
             >
-              <FontAwesome name="lock" size={16} color={Colors.white} style={styles.unlockIcon} />
+              <Lock size={16} color={Colors.white} strokeWidth={1.5} style={styles.unlockIcon} />
               <Text style={styles.unlockText}>Tap to unlock</Text>
             </Pressable>
           </View>
@@ -104,7 +104,7 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
@@ -117,19 +117,19 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
+    backgroundColor: 'rgba(0,102,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   brandText: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 32,
     color: Colors.white,
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     marginBottom: 48,
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   unlockText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },

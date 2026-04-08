@@ -148,11 +148,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   centerValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 22,
   },
   centerLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   legendLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     flex: 1,
   },
@@ -206,13 +206,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   legendAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 13,
     minWidth: 60,
     textAlign: 'right',
   },
   legendPercent: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     minWidth: 44,
     textAlign: 'right',
