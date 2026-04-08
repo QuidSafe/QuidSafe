@@ -74,17 +74,28 @@ worker/                 # Cloudflare Worker API
 - **AI safety**: PII stripped by `worker/services/anonymiser.ts` before Claude API calls
 - **Stripe**: Uses raw `fetch()` — no Stripe SDK (Workers compatibility)
 - **Types**: Two tsconfigs — `tsconfig.json` (Expo) and `tsconfig.worker.json` (Worker)
-- **Fonts**: Manrope (body) + PlayfairDisplay (headings) loaded in `app/_layout.tsx`
+- **Fonts**: Lexend (headings, weight 600), Source Sans 3 (body, weight 400/600), JetBrains Mono (monetary amounts) loaded in `app/_layout.tsx`
+- **Icons**: Lucide (`lucide-react-native`) only, 1.5px stroke — no FontAwesome
+- **Theme**: Dark-only — no light mode. `ThemeContext` always returns dark
 
 ### Design System
 | Token | Value | Usage |
 |-------|-------|-------|
-| Trust Navy | `#0F172A` | Primary bg, text |
-| Royal Blue | `#1E3A8A` | Secondary, hero gradient |
-| Warm Gold | `#CA8A04` | Accent, CTAs, set-aside |
-| Success Green | `#16A34A` | Positive values |
-| Error Red | `#DC2626` | Errors |
-| Glass | `rgba(255,255,255,0.07)` | Glassmorphic cards |
+| Black | `#000000` | Primary bg |
+| Charcoal | `#0A0A0A` | Card bg, surfaces |
+| Dark Grey | `#1A1A1A` | Elevated surfaces |
+| Mid Grey | `#2A2A2A` | Borders, dividers |
+| Electric Blue | `#0066FF` | Accent, CTAs, links |
+| Blue Hover | `#0052CC` | Hover/press states |
+| Blue Glow | `rgba(0,102,255,0.15)` | Tinted backgrounds |
+| White | `#FFFFFF` | Primary text |
+| Light Grey | `#A0A0A0` | Secondary text |
+| Muted | `#666666` | Tertiary text |
+| Success | `#00C853` | Positive values |
+| Warning | `#FF9500` | Warnings |
+| Error | `#FF3B30` | Errors |
+
+Cards: bg `#0A0A0A`, border `1px solid #2A2A2A`, border-radius `12px`. Buttons/inputs: border-radius `8px`. No gradients — flat and clean.
 
 ## Rules
 
@@ -94,11 +105,13 @@ worker/                 # Cloudflare Worker API
 4. **SQLite types** — D1 has no ENUM, BOOLEAN, UUID, or JSONB. Use TEXT + CHECK, INTEGER, TEXT, TEXT.
 5. **Two tsconfigs** — Don't import Worker types into frontend code or vice versa.
 6. **Design system** — Follow `mockup.html` and `constants/Colors.ts` for all UI work.
-7. **Fonts** — Use `Manrope_*` for body and `PlayfairDisplay_*` for headings. Never use system fonts.
-8. **Platform checks** — Use `Platform.OS` for native-only features (e.g., SecureStore).
-9. **Responsive design** — Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
-10. **Not FCA regulated** — QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
-11. **Pricing** — £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
+7. **Fonts** — Use `Lexend_*` for headings, `SourceSans3_*` for body, `JetBrainsMono_*` for monetary amounts. Never use system fonts.
+8. **Icons** — Use `lucide-react-native` only. No FontAwesome. Always use `strokeWidth={1.5}`.
+9. **Dark only** — No light mode. No `isDark` conditionals. All colours come from the dark palette.
+10. **Platform checks** — Use `Platform.OS` for native-only features (e.g., SecureStore).
+11. **Responsive design** — Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
+12. **Not FCA regulated** — QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
+13. **Pricing** — £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
 
 ## Agents
 
