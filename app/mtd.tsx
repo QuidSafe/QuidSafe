@@ -9,6 +9,7 @@ import {
   Alert,
   Animated,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
@@ -159,9 +160,8 @@ export default function MTDScreen() {
     if (isConnectingHmrc) return;
     setIsConnectingHmrc(true);
     try {
-      const { url } = await api.getHmrcAuthUrl();
+      const { url } = await api.getHmrcAuthUrl(Platform.OS !== 'web' ? 'native' : undefined);
       await WebBrowser.openBrowserAsync(url);
-      obligations.refetch();
     } catch {
       Alert.alert('Connection Error', 'Could not connect to HMRC. Please try again.');
     } finally {

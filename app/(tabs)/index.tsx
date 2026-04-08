@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
@@ -78,7 +78,7 @@ export default function DashboardScreen() {
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      const { url } = await api.getConnectUrl();
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
       await WebBrowser.openBrowserAsync(url);
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');

@@ -100,8 +100,9 @@ class ApiClient {
   }
 
   // Banking
-  getConnectUrl() {
-    return this.request<{ url: string }>('/banking/connect');
+  getConnectUrl(platform?: string) {
+    const params = platform ? `?platform=${platform}` : '';
+    return this.request<{ url: string }>(`/banking/connect${params}`);
   }
 
   getConnections() {
@@ -226,8 +227,9 @@ class ApiClient {
   }
 
   // HMRC MTD
-  getHmrcAuthUrl() {
-    return this.request<{ url: string }>('/mtd/auth');
+  getHmrcAuthUrl(platform?: string) {
+    const params = platform ? `?platform=${platform}` : '';
+    return this.request<{ url: string }>(`/mtd/auth${params}`);
   }
 
   submitHmrcCallback(code: string, state: string) {

@@ -5,15 +5,18 @@ import {
   SourceSans3_600SemiBold,
 } from '@expo-google-fonts/source-sans-3';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { publishableKey, tokenCache } from '@/lib/auth';
 import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
-import { ToastProvider } from '@/components/ui/Toast';
+import { ToastProvider, useToast } from '@/components/ui/Toast';
 import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
@@ -45,6 +48,8 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const pushTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +73,36 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       if (token) pushTokenRef.current = token;
     });
   }, [isLoaded, isSignedIn]);
+
+  // Handle OAuth deep link callbacks (native only)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      const parsed = Linking.parse(event.url);
+      if (parsed.hostname === 'banking' && parsed.path === 'callback') {
+        WebBrowser.dismissBrowser();
+        queryClient.invalidateQueries({ queryKey: ['banking'] });
+        if (parsed.queryParams?.error) {
+          toast.show('Bank connection failed. Please try again.', 'error');
+        } else if (parsed.queryParams?.syncError) {
+          toast.show('Bank connected, but initial sync had an issue. It will retry automatically.', 'warning');
+        } else {
+          toast.show('Bank account connected successfully', 'success');
+        }
+      } else if (parsed.hostname === 'hmrc' && parsed.path === 'callback') {
+        WebBrowser.dismissBrowser();
+        queryClient.invalidateQueries({ queryKey: ['mtd'] });
+        if (parsed.queryParams?.error) {
+          toast.show('Could not connect to HMRC. Please try again.', 'error');
+        } else {
+          toast.show('HMRC connected successfully', 'success');
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [queryClient, toast]);
 
   return <>{children}</>;
 }

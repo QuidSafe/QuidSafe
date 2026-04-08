@@ -20,6 +20,7 @@ import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import {
   WelcomeIllustration,
   BusinessIllustration,
@@ -239,11 +240,11 @@ function StepConnectBank() {
   const handleConnectBank = async () => {
     try {
       setConnecting(true);
-      const { url } = await api.getConnectUrl();
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
       if (Platform.OS === 'web') {
         window.open(url, '_blank');
       } else {
-        await Linking.openURL(url);
+        await WebBrowser.openBrowserAsync(url);
       }
     } catch (_err) {
       Alert.alert('Connection failed', 'Could not connect to your bank. Please try again.');

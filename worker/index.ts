@@ -202,8 +202,20 @@ app.get('/articles/:id', async (c) => {
 app.get('/banking/callback', async (c) => {
   const code = c.req.query('code');
   const state = c.req.query('state');
-  if (!code) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
+  const oauthError = c.req.query('error');
+
+  // Handle OAuth denial / error from provider
+  if (oauthError || !code) {
+    if (state) {
+      // Clean up the state so it doesn't linger
+      await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+      const isNative = state.endsWith('_native');
+      if (isNative) {
+        return c.redirect('quidsafe://banking/callback?error=denied');
+      }
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankError=denied`);
   }
   if (!state) {
     return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
@@ -219,54 +231,138 @@ app.get('/banking/callback', async (c) => {
     return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
   }
   const userId = oauthState.user_id;
-  // Delete used state to prevent replay
-  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
-
-  const config = getTrueLayerConfig(c.env);
-  const tokens = await exchangeCode(code, config);
-  const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
-  const bankName = await detectBankName(tokens.access_token, config);
-
-  const connectionId = crypto.randomUUID();
-  await execute(
-    c.env.DB,
-    'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
-    [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
-  );
-
-  const connection: BankConnectionRow = {
-    id: connectionId,
-    user_id: userId,
-    bank_name: bankName,
-    access_token_encrypted: encrypted.accessTokenEncrypted,
-    refresh_token_encrypted: encrypted.refreshTokenEncrypted,
-    last_synced_at: null,
-    active: 1,
-  };
+  const isNative = state.endsWith('_native');
 
   try {
-    const result = await syncTransactions(c.env.DB, connection, config);
-    if (result.synced > 0) {
-      try {
-        const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string }>(
-          c.env.DB,
-          'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL',
-          [userId],
-        );
-        if (uncategorised.length > 0) {
-          await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+    const config = getTrueLayerConfig(c.env);
+    const tokens = await exchangeCode(code, config);
+    const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
+    const bankName = await detectBankName(tokens.access_token, config);
+
+    const connectionId = crypto.randomUUID();
+    await execute(
+      c.env.DB,
+      'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
+      [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+    );
+
+    // Delete state only after successful exchange and storage
+    await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
+    const connection: BankConnectionRow = {
+      id: connectionId,
+      user_id: userId,
+      bank_name: bankName,
+      access_token_encrypted: encrypted.accessTokenEncrypted,
+      refresh_token_encrypted: encrypted.refreshTokenEncrypted,
+      last_synced_at: null,
+      active: 1,
+    };
+
+    try {
+      const result = await syncTransactions(c.env.DB, connection, config);
+      if (result.synced > 0) {
+        try {
+          const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string }>(
+            c.env.DB,
+            'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL',
+            [userId],
+          );
+          if (uncategorised.length > 0) {
+            await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+          }
+        } catch (catErr) {
+          console.error('Auto-categorisation after connect failed:', catErr);
         }
-      } catch (catErr) {
-        console.error('Auto-categorisation after connect failed:', catErr);
+      }
+      if (isNative) {
+        return c.redirect('quidsafe://banking/callback?success=true');
+      }
+      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
+    } catch (err) {
+      console.error('Initial sync failed:', err);
+      if (isNative) {
+        return c.redirect('quidsafe://banking/callback?success=true&syncError=true');
+      }
+      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
+    }
+  } catch (err) {
+    console.error('Banking token exchange failed:', err);
+    // State is NOT deleted — allows retry within the 10-minute TTL
+    if (isNative) {
+      return c.redirect('quidsafe://banking/callback?error=exchange_failed');
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankError=exchange_failed`);
+  }
+});
+
+// ─── Public HMRC OAuth Callback ──────────────────────────
+// HMRC redirects here — no JWT available, uses oauth_state for user identification
+app.get('/mtd/callback', async (c) => {
+  const code = c.req.query('code');
+  const state = c.req.query('state');
+  const oauthError = c.req.query('error');
+
+  // Handle OAuth denial / error from provider
+  if (oauthError || !code) {
+    if (state) {
+      await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+      const isNative = state.endsWith('_native');
+      if (isNative) {
+        return c.redirect('quidsafe://hmrc/callback?error=denied');
       }
     }
-    // Redirect to the app after successful connection
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
-    return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
+    return c.redirect(`${appUrl}/mtd?hmrcError=denied`);
+  }
+  if (!state) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
+  }
+
+  // Validate OAuth state to identify user and prevent CSRF
+  const oauthState = await queryOne<{ user_id: string }>(
+    c.env.DB,
+    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+    [state],
+  );
+  if (!oauthState) {
+    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
+  }
+  const userId = oauthState.user_id;
+  const isNative = state.endsWith('_native');
+
+  try {
+    const config = getHmrcConfig(c.env);
+    const tokens = await exchangeHmrcCode(code, config);
+    const encrypted = await encryptTokens(
+      { access_token: tokens.accessToken, refresh_token: tokens.refreshToken, expires_in: tokens.expiresIn, token_type: 'bearer' },
+      c.env.ENCRYPTION_KEY,
+    );
+
+    await execute(c.env.DB,
+      'INSERT INTO bank_connections (id, user_id, provider, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?, ?)',
+      [crypto.randomUUID(), userId, 'hmrc', 'HMRC', encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+    );
+
+    // Delete state only after successful exchange and storage
+    await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?success=true');
+    }
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/mtd?hmrcConnected=true`);
   } catch (err) {
-    console.error('Initial sync failed:', err);
+    console.error('HMRC token exchange failed:', err);
+    // State is NOT deleted — allows retry within the 10-minute TTL
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?error=exchange_failed');
+    }
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
-    return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
+    return c.redirect(`${appUrl}/mtd?hmrcError=exchange_failed`);
   }
 });
 
@@ -742,9 +838,12 @@ authed.get('/banking/connect', async (c) => {
   }
 
   const config = getTrueLayerConfig(c.env);
+  const platform = c.req.query('platform'); // 'native' for mobile apps
 
   // Generate cryptographically random state and store with short TTL
-  const state = crypto.randomUUID();
+  // Encode platform in state so the callback knows where to redirect
+  const stateId = crypto.randomUUID();
+  const state = platform === 'native' ? `${stateId}_native` : stateId;
   await execute(
     c.env.DB,
     'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
@@ -1101,9 +1200,12 @@ function getHmrcConfig(env: Env): HmrcConfig {
 authed.get('/mtd/auth', async (c) => {
   const config = getHmrcConfig(c.env);
   const userId = c.get('userId');
+  const platform = c.req.query('platform'); // 'native' for mobile apps
 
   // Generate cryptographically random state and store with short TTL
-  const state = crypto.randomUUID();
+  // Encode platform in state so the callback knows where to redirect
+  const stateId = crypto.randomUUID();
+  const state = platform === 'native' ? `${stateId}_native` : stateId;
   await execute(
     c.env.DB,
     'INSERT INTO oauth_states (state, user_id, created_at) VALUES (?, ?, datetime(\'now\'))',
