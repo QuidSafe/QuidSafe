@@ -31,12 +31,30 @@ export function deadlineReminder14Days(quarter: number, deadline: string, estima
   };
 }
 
+export function deadlineReminder7Days(quarter: number, deadline: string, estimated: string): NotificationTemplate {
+  return {
+    type: 'deadline_reminder_7d',
+    title: `Q${quarter} submission due in 7 days`,
+    body: `Your Q${quarter} update is due on ${deadline}. Estimated tax: ${estimated}.`,
+    data: { screen: 'mtd', quarter: String(quarter) },
+  };
+}
+
 export function deadlineUrgent3Days(quarter: number, deadline: string): NotificationTemplate {
   return {
     type: 'deadline_urgent',
     title: `Q${quarter} payment due in 3 days`,
     body: `Q${quarter} payment due on ${deadline}. Don't get hit with a late penalty.`,
     data: { screen: 'tax', quarter: String(quarter) },
+  };
+}
+
+export function deadlineUrgent1Day(quarter: number, deadline: string): NotificationTemplate {
+  return {
+    type: 'deadline_urgent_1d',
+    title: `Q${quarter} submission due tomorrow`,
+    body: `Your Q${quarter} update to HMRC is due on ${deadline}. Submit now to avoid penalties.`,
+    data: { screen: 'mtd', quarter: String(quarter) },
   };
 }
 

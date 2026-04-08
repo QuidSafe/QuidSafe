@@ -19,8 +19,11 @@ import {
   buildPushMessages,
   getUKTaxDeadlines,
   deadlineReminder14Days,
+  deadlineReminder7Days,
   deadlineUrgent3Days,
+  deadlineUrgent1Day,
   weeklySummary,
+  mtdSubmissionReady,
   bankReauthNeeded,
   trialEnding,
 } from './services/notifications';
@@ -1693,13 +1696,13 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
 
     // Single query: users + their push tokens + subscription info
     const usersWithTokens = await env.DB
-      .prepare(`SELECT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts,
+      .prepare(`SELECT u.id, u.notify_tax_deadlines, u.notify_weekly_summary, u.notify_transaction_alerts, u.notify_mtd_ready,
                 u.subscription_tier, u.created_at, s.status AS sub_status, s.trial_ends_at,
                 d.push_token
                 FROM users u
                 INNER JOIN user_devices d ON u.id = d.user_id AND d.active = 1
                 LEFT JOIN subscriptions s ON u.id = s.user_id`)
-      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null; push_token: string }>();
+      .all<{ id: string; notify_tax_deadlines: number; notify_weekly_summary: number; notify_transaction_alerts: number; notify_mtd_ready: number; subscription_tier: string; created_at: string; sub_status: string | null; trial_ends_at: string | null; push_token: string }>();
 
     // Group tokens by user in memory (avoids per-user token query)
     const userTokenMap = new Map<string, { tokens: string[]; user: typeof usersWithTokens.results[0] }>();
@@ -1723,7 +1726,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     // Pre-aggregate: quarterly income for deadline reminders (all users)
     const needsDeadlineIncome = deadlines.some((d) => {
       const daysUntil = Math.ceil((new Date(d.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntil === 14 && d.quarter;
+      return (daysUntil === 14 || daysUntil === 7) && d.quarter;
     });
     const quarterlyIncomeAll = needsDeadlineIncome
       ? await env.DB.prepare(
@@ -1754,8 +1757,36 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             const estimated = formatCurrency(income * 0.25);
             await sendPushNotifications(buildPushMessages(pushTokens, deadlineReminder14Days(deadline.quarter, deadline.date, estimated)));
           }
+          if (daysUntil === 7 && deadline.quarter) {
+            const income = quarterlyIncomeMap.get(userId)?.income ?? 0;
+            const estimated = formatCurrency(income * 0.25);
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineReminder7Days(deadline.quarter, deadline.date, estimated)));
+          }
           if (daysUntil === 3 && deadline.quarter) {
             await sendPushNotifications(buildPushMessages(pushTokens, deadlineUrgent3Days(deadline.quarter, deadline.date)));
+          }
+          if (daysUntil === 1 && deadline.quarter) {
+            await sendPushNotifications(buildPushMessages(pushTokens, deadlineUrgent1Day(deadline.quarter, deadline.date)));
+          }
+        }
+      }
+
+      // MTD submission ready — quarter ended and user hasn't submitted yet
+      if (user.notify_mtd_ready) {
+        for (const deadline of deadlines) {
+          if (!deadline.quarter) continue;
+          const daysUntil = Math.ceil((new Date(deadline.date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          // Notify when quarter ended (deadline is 7-14 days away) and no submission exists
+          if (daysUntil >= 7 && daysUntil <= 14) {
+            const submission = await queryOne<{ id: string }>(
+              env.DB,
+              "SELECT id FROM mtd_submissions WHERE user_id = ? AND quarter = ? AND tax_year = ? AND status IN ('submitted', 'accepted')",
+              [userId, deadline.quarter, taxYear],
+            );
+            if (!submission) {
+              await sendPushNotifications(buildPushMessages(pushTokens, mtdSubmissionReady(deadline.quarter)));
+              break; // Only one MTD reminder per cron run
+            }
           }
         }
       }
