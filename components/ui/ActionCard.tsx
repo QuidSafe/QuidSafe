@@ -3,6 +3,7 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Shadows, PressedState } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface ActionCardProps {
@@ -83,11 +84,11 @@ const styles = StyleSheet.create({
     paddingLeft: 11,
   },
   title: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   description: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },

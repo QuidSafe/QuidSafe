@@ -1678,6 +1678,19 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   } catch (rlErr) {
     console.error('[Cron] Rate limit cleanup failed:', rlErr);
   }
+
+  // ── OAuth State Cleanup ─────────────────────────────────
+  try {
+    const oauthPurged = await env.DB
+      .prepare("DELETE FROM oauth_states WHERE created_at < datetime('now', '-1 hour')")
+      .run();
+    const oauthChanges = (oauthPurged.meta as { changes?: number }).changes ?? 0;
+    if (oauthChanges > 0) {
+      console.log(`[Cron] Purged ${oauthChanges} expired oauth state(s)`);
+    }
+  } catch (oauthErr) {
+    console.error('[Cron] OAuth state cleanup failed:', oauthErr);
+  }
 }
 
 export default {

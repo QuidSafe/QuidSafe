@@ -13,6 +13,7 @@ import { MiniChart } from '@/components/ui/MiniChart';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useDashboard } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -727,11 +728,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   greeting: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12.5,
   },
   name: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 28,
     marginTop: 2,
     letterSpacing: -0.3,
@@ -747,7 +748,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -762,7 +763,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   healthText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11.5,
   },
 
@@ -817,21 +818,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   heroLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 10,
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   heroAmount: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 40,
     color: Colors.white,
     lineHeight: 42,
     letterSpacing: -1,
   },
   heroSubtext: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11.5,
     color: 'rgba(255,255,255,0.45)',
     marginTop: Spacing.xs,
@@ -853,7 +854,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   heroBoxLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 9.5,
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
@@ -861,7 +862,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   heroBoxValue: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -881,14 +882,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   heroSetAsideLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 10.5,
     color: Colors.accent,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   heroSetAsideAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 22,
     color: Colors.accent,
   },
@@ -911,7 +912,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   insightText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12.5,
     lineHeight: 18,
     flex: 1,
@@ -929,14 +930,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   setAsideLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 10.5,
     color: Colors.gold[700],
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   setAsideAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 26,
     marginTop: 2,
   },
@@ -953,7 +954,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   onTrackText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
     color: Colors.success,
   },
@@ -971,7 +972,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -981,12 +982,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chartTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
   chartSubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -1010,7 +1011,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   sourceName: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 14,
   },
   sourceRight: {
@@ -1018,7 +1019,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sourceAmount: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   sourceBar: {
@@ -1041,7 +1042,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
   },
   taxHistoryText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
     flex: 1,
   },
@@ -1100,14 +1101,14 @@ const ws = StyleSheet.create({
     opacity: 0.8,
   },
   heroEyebrow: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 10,
     color: 'rgba(202,138,4,0.65)',
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   heroHeadline: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 34,
     color: Colors.white,
     lineHeight: 42,
@@ -1138,13 +1139,13 @@ const ws = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   previewLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 9,
     color: 'rgba(255,255,255,0.4)',
     letterSpacing: 1.5,
   },
   previewAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 32,
     color: 'rgba(255,255,255,0.2)',
     letterSpacing: -1,
@@ -1164,7 +1165,7 @@ const ws = StyleSheet.create({
     paddingHorizontal: 10,
   },
   previewBoxLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 8.5,
     color: 'rgba(255,255,255,0.3)',
     letterSpacing: 0.3,
@@ -1172,7 +1173,7 @@ const ws = StyleSheet.create({
     marginBottom: 2,
   },
   previewBoxVal: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     color: 'rgba(255,255,255,0.15)',
   },
@@ -1185,7 +1186,7 @@ const ws = StyleSheet.create({
   },
 
   heroSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     color: 'rgba(255,255,255,0.55)',
     lineHeight: 21,
@@ -1216,7 +1217,7 @@ const ws = StyleSheet.create({
     paddingHorizontal: 32,
   },
   ctaText: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 16,
     color: Colors.white,
     letterSpacing: -0.2,
@@ -1240,7 +1241,7 @@ const ws = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   trustText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 10,
     color: 'rgba(255,255,255,0.35)',
   },
@@ -1268,13 +1269,13 @@ const ws = StyleSheet.create({
     paddingTop: 2,
   },
   featureTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14,
     letterSpacing: -0.1,
     marginBottom: 3,
   },
   featureDesc: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -1284,7 +1285,7 @@ const ws = StyleSheet.create({
     marginTop: 8,
   },
   timelineHeading: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 20,
     letterSpacing: -0.3,
     marginBottom: 16,
@@ -1316,7 +1317,7 @@ const ws = StyleSheet.create({
     justifyContent: 'center',
   },
   timelineNumText: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 13,
   },
   timelineBody: {
@@ -1324,12 +1325,12 @@ const ws = StyleSheet.create({
     paddingTop: 4,
   },
   timelineTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14.5,
     letterSpacing: -0.1,
   },
   timelineDesc: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12.5,
     lineHeight: 18,
     marginTop: 2,
@@ -1356,12 +1357,12 @@ const ws = StyleSheet.create({
     justifyContent: 'center',
   },
   bottomCtaTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14.5,
     letterSpacing: -0.1,
   },
   bottomCtaDesc: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     lineHeight: 17,
     marginTop: 2,

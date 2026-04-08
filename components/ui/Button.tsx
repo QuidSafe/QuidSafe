@@ -1,5 +1,6 @@
 import { StyleSheet, Pressable, Text, PressableProps, ViewStyle } from 'react-native';
 import { Colors, BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { hapticLight } from '@/lib/haptics';
 
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   text: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
   },
 });

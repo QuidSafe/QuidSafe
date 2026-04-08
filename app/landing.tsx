@@ -11,75 +11,14 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
-
-// ─── BrandLogo ─────────────────────────────────────────
-// Programmatic shield + pound logo — no image dependency.
-// Renders a navy shield shape with a blue pound symbol, plus
-// the "QuidSafe" wordmark in PlayfairDisplay.
-function BrandLogo({
-  size = 36,
-  showText = true,
-  textSize = 24,
-}: {
-  size?: number;
-  showText?: boolean;
-  textSize?: number;
-}) {
-  const poundSize = size * 0.5;
-
-  return (
-    <View style={logoStyles.container}>
-      {/* Shield icon with overlaid pound sign */}
-      <View style={[logoStyles.shieldWrap, { width: size, height: size }]}>
-        <FontAwesome name="shield" size={size} color="#1E293B" />
-        <Text
-          style={[
-            logoStyles.pound,
-            { fontSize: poundSize, lineHeight: size, width: size, height: size },
-          ]}
-        >
-          {'\u00A3'}
-        </Text>
-      </View>
-      {showText && (
-        <Text style={[logoStyles.wordmark, { fontSize: textSize }]}>QuidSafe</Text>
-      )}
-    </View>
-  );
-}
-
-const logoStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  shieldWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  pound: {
-    position: 'absolute',
-    textAlign: 'center',
-    fontFamily: Fonts.manrope.bold,
-    color: '#3B82F6',
-    top: 0,
-    left: 0,
-  },
-  wordmark: {
-    fontFamily: Fonts.playfair.bold,
-    color: Colors.white,
-    letterSpacing: -0.5,
-  },
-});
 
 // ─── Section IDs for nav ───────────────────────────────
 const NAV_SECTIONS = ['Features', 'How it works', 'Pricing', 'FAQ'] as const;
@@ -265,7 +204,7 @@ const FAQS = [
 ];
 
 // ─── FAQ Item ────────────────────────────────────────────
-function FAQItem({ question, answer, index }: { question: string; answer: string; index: number }) {
+function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -529,7 +468,6 @@ const phoneMockupStyles = StyleSheet.create({
 // ─── Main Landing Page ───────────────────────────────────
 export default function LandingScreen() {
   const { width } = useWindowDimensions();
-  const router = useRouter();
   const colors = Colors.dark;
   const scrollRef = useRef<ScrollView>(null);
 
@@ -1069,7 +1007,7 @@ export default function LandingScreen() {
             </Text>
 
             {FAQS.map((faq, i) => (
-              <FAQItem key={faq.q} question={faq.q} answer={faq.a} index={i} />
+              <FAQItem key={faq.q} question={faq.q} answer={faq.a} />
             ))}
           </View>
         </View>
