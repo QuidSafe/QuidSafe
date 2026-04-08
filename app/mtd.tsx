@@ -10,6 +10,7 @@ import {
   Animated,
   ActivityIndicator,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
@@ -155,6 +156,17 @@ export default function MTDScreen() {
       successOpacity.setValue(0);
     }
   }, [successReceipt, successScale, successOpacity]);
+
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isConnectingHmrc) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsConnectingHmrc(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isConnectingHmrc]);
 
   const handleConnectHmrc = async () => {
     if (isConnectingHmrc) return;

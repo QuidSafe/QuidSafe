@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
@@ -449,6 +450,18 @@ export default function SettingsScreen() {
   };
 
   const [isAddingBank, setIsAddingBank] = useState(false);
+
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isAddingBank) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsAddingBank(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isAddingBank]);
+
   const handleAddBank = async () => {
     if (isAddingBank) return;
     setIsAddingBank(true);

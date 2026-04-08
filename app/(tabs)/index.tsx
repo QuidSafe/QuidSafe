@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
@@ -76,6 +76,17 @@ export default function DashboardScreen() {
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
   const isWelcome = (income?.total ?? 0) === 0 && (!actions || actions.length === 0);
+
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !isConnecting) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setIsConnecting(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [isConnecting]);
 
   const handleConnectBank = async () => {
     if (isConnecting) return;

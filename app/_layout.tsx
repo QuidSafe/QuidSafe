@@ -83,6 +83,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       if (parsed.hostname === 'banking' && parsed.path === 'callback') {
         WebBrowser.dismissBrowser();
         queryClient.invalidateQueries({ queryKey: ['banking'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         if (parsed.queryParams?.error) {
           toast.show('Bank connection failed. Please try again.', 'error');
         } else if (parsed.queryParams?.syncError) {
@@ -93,6 +94,7 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
       } else if (parsed.hostname === 'hmrc' && parsed.path === 'callback') {
         WebBrowser.dismissBrowser();
         queryClient.invalidateQueries({ queryKey: ['mtd'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         if (parsed.queryParams?.error) {
           toast.show('Could not connect to HMRC. Please try again.', 'error');
         } else {

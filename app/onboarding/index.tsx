@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Platform,
+  BackHandler,
   useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -236,6 +237,17 @@ function StepBusinessInfo({
 function StepConnectBank() {
   const { colors } = useTheme();
   const [connecting, setConnecting] = useState(false);
+
+  // Android: dismiss browser on hardware back press during OAuth flow
+  useEffect(() => {
+    if (Platform.OS !== 'android' || !connecting) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      WebBrowser.dismissBrowser();
+      setConnecting(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [connecting]);
 
   const handleConnectBank = async () => {
     try {
