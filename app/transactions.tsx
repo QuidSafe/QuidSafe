@@ -19,7 +19,7 @@ import { useLocalSearchParams } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';

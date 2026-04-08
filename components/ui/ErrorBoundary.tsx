@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Colors, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
@@ -49,13 +49,12 @@ export class AppErrorBoundary extends Component<Props, State> {
                 </Text>
               </View>
             )}
-            <TouchableOpacity
+            <Pressable
               style={styles.button}
               onPress={this.handleReset}
-              activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>Try Again</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       );

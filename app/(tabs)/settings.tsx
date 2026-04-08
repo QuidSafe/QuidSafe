@@ -8,7 +8,6 @@ import {
   Alert,
   Animated,
   TextInput,
-  Linking,
   ActivityIndicator,
   Modal,
   Platform,

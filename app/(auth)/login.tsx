@@ -134,26 +134,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Atmospheric glows
-  glowGold: {
-    position: 'absolute',
-    top: '15%',
-    right: -60,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(202, 138, 4, 0.08)',
-  },
-  glowBlue: {
-    position: 'absolute',
-    bottom: '20%',
-    left: -80,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: 'rgba(30, 58, 138, 0.12)',
-  },
-
   // Brand
   brandWrap: {
     alignItems: 'center',

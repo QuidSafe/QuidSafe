@@ -15,7 +15,7 @@ import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useMtdObligations, useSubmitQuarterly, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
@@ -94,7 +94,6 @@ export default function MTDScreen() {
     ? (() => {
         const now = new Date();
         const month = now.getMonth() + 1;
-        const day = now.getDate();
         // UK tax year quarters: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar
         if (month >= 4 && month <= 6) return 1;
         if (month >= 7 && month <= 9) return 2;
@@ -361,7 +360,7 @@ export default function MTDScreen() {
                               styles.quarterLabel,
                               {
                                 color: isActive ? Colors.secondary : colors.text,
-                                fontFamily: isActive ? 'Manrope_700Bold' : 'Manrope_600SemiBold',
+                                fontFamily: isActive ? Fonts.manrope.bold : Fonts.manrope.semiBold,
                               },
                             ]}
                           >

@@ -100,8 +100,8 @@ export function MiniChart({ data, color = Colors.success, height = 80 }: MiniCha
                   color: index === data.length - 1 ? colors.text : colors.textSecondary,
                   fontFamily:
                     index === data.length - 1
-                      ? 'Manrope_700Bold'
-                      : 'Manrope_400Regular',
+                      ? Fonts.manrope.bold
+                      : Fonts.manrope.regular,
                 },
               ]}
             >

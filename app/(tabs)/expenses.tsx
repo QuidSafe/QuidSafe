@@ -192,7 +192,7 @@ export default function ExpensesScreen() {
   const [expTouched, setExpTouched] = useState<Record<string, boolean>>({});
 
   // Recurring expenses state
-  const { data: recurringData, refetch: refetchRecurring } = useRecurringExpenses();
+  const { data: recurringData } = useRecurringExpenses();
   const createRecurring = useCreateRecurringExpense();
   const deleteRecurringExpense = useDeleteRecurringExpense();
   const [showRecurringForm, setShowRecurringForm] = useState(false);

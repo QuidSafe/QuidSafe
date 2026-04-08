@@ -7,8 +7,6 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  Alert,
-  Platform,
   RefreshControl,
   Image,
 } from 'react-native';

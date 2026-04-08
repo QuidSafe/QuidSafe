@@ -15,7 +15,7 @@ import { hapticSuccess, hapticError } from '@/lib/haptics';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-interface ToastItem {
+interface ToastEntry {
   id: string;
   message: string;
   type: ToastType;
@@ -64,7 +64,7 @@ function ToastItem({
   index,
   onDismiss,
 }: {
-  item: ToastItem;
+  item: ToastEntry;
   index: number;
   onDismiss: (id: string) => void;
 }) {
@@ -102,7 +102,7 @@ function ToastItem({
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const toastIdRef = useRef(0);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -144,7 +144,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       const opacity = new Animated.Value(0);
       const translateY = new Animated.Value(-20);
 
-      const newToast: ToastItem = { id, message, type, opacity, translateY };
+      const newToast: ToastEntry = { id, message, type, opacity, translateY };
 
       // Trigger haptic feedback based on toast type
       if (type === 'success') {
@@ -197,7 +197,7 @@ function ToastContainer({
   toasts,
   onDismiss,
 }: {
-  toasts: ToastItem[];
+  toasts: ToastEntry[];
   onDismiss: (id: string) => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -243,11 +243,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-  },
-  iconText: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '700',
   },
   toastText: {
     flex: 1,
