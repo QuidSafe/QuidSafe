@@ -244,6 +244,7 @@ export default function RootLayout() {
         rel="stylesheet"
       />
     </Head>
+    {publishableKey ? (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
@@ -281,6 +282,7 @@ export default function RootLayout() {
         </QueryClientProvider>
       </ClerkLoaded>
     </ClerkProvider>
+    ) : null}
     </>
   );
 }
