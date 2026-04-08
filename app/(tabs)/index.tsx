@@ -320,7 +320,7 @@ export default function DashboardScreen() {
 
                 {/* Trust chips */}
                 <View style={ws.trustRow}>
-                  {['256-bit encrypted', 'Read-only access', 'FCA regulated'].map((t) => (
+                  {['256-bit encrypted', 'Read-only access', 'Bank-grade security'].map((t) => (
                     <View key={t} style={ws.trustChip}>
                       <FontAwesome name="lock" size={9} color="rgba(202,138,4,0.6)" />
                       <Text style={ws.trustText}>{t}</Text>

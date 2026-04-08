@@ -29,7 +29,7 @@ type SectionId = (typeof NAV_SECTIONS)[number];
 const STATS = [
   { value: '5.4M', label: 'UK sole traders (ONS)' },
   { value: 'Apr 2026', label: 'MTD deadline for £50K+ income' },
-  { value: '£7.99', label: 'per month, everything included' },
+  { value: '£7.99', label: 'per month inc. VAT' },
   { value: '2 min', label: 'to connect and get started' },
 ];
 
@@ -89,7 +89,7 @@ const FEATURES: {
   {
     iconName: 'university',
     title: 'Open Banking Integration',
-    description: 'Connect your existing bank accounts. No new accounts needed. FCA regulated via TrueLayer.',
+    description: 'Connect your existing bank accounts. No new accounts needed. Via TrueLayer (FCA authorised).',
     gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.03)'],
     iconBg: 'rgba(148,163,184,0.15)',
     iconColor: '#94A3B8',
@@ -113,7 +113,7 @@ const FEATURES: {
 ];
 
 const TRUST_ITEMS: { iconName: React.ComponentProps<typeof FontAwesome>['name']; label: string; sublabel: string }[] = [
-  { iconName: 'shield', label: 'FCA Regulated', sublabel: 'Open Banking via TrueLayer' },
+  { iconName: 'shield', label: 'FCA-Regulated Banking', sublabel: 'Open Banking via TrueLayer' },
   { iconName: 'lock', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
   { iconName: 'check-circle', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
   { iconName: 'eye', label: 'Read-Only Access', sublabel: 'We can never move money' },
@@ -187,7 +187,7 @@ const FAQS = [
   },
   {
     q: 'How much does QuidSafe cost?',
-    a: 'QuidSafe is £7.99/month or £59.99/year (saving 37%). Every plan includes full access to all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. Start with a free 14-day trial, no credit card required.',
+    a: 'QuidSafe is £7.99/month or £79.99/year (save 17%) — all prices include VAT. Every plan includes full access to all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT on the subscription. Start with a free 14-day trial, no credit card required.',
   },
   {
     q: 'How is QuidSafe different from FreeAgent or QuickBooks?',
@@ -909,10 +909,10 @@ export default function LandingScreen() {
                 </View>
                 <View style={styles.priceOptionDivider} />
                 <View style={styles.priceOption}>
-                  <Text style={styles.priceAmount}>£59.99</Text>
+                  <Text style={styles.priceAmount}>£79.99</Text>
                   <Text style={styles.pricePeriod}>/year</Text>
                   <View style={styles.saveBadge}>
-                    <Text style={styles.saveBadgeText}>SAVE 37%</Text>
+                    <Text style={styles.saveBadgeText}>SAVE 17%</Text>
                   </View>
                 </View>
               </View>
@@ -931,7 +931,7 @@ export default function LandingScreen() {
                   <Text style={styles.ctaGoldText}>Start free trial</Text>
                 </Pressable>
               </Link>
-              <Text style={styles.pricingNoCard}>No credit card required</Text>
+              <Text style={styles.pricingNoCard}>No credit card required · All prices inc. VAT</Text>
 
               <View style={styles.priceAnchor}>
                 <Text style={styles.priceAnchorText}>

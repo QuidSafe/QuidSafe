@@ -4,7 +4,11 @@ This file provides guidance to Claude Code when working with the QuidSafe codeba
 
 ## Project Overview
 
-**QuidSafe** is a UK sole trader tax tracking app — iOS + Android + Web from one Expo codebase. It connects to bank accounts via Open Banking, auto-categorises transactions with AI, and tells users exactly how much to set aside for tax.
+**QuidSafe** is a UK sole trader tax tracking app — iOS + Android + Web from one Expo codebase. It connects to bank accounts via Open Banking (via TrueLayer, which is FCA-regulated as an AISP), auto-categorises transactions with AI, and tells users exactly how much to set aside for tax.
+
+**Important**: QuidSafe is NOT FCA regulated and does not need to be — it is a tax tracking tool, not a financial adviser or investment platform. It provides tax estimates, not financial advice. Open Banking connectivity is provided by TrueLayer Ltd (FCA authorised). Never claim QuidSafe itself is FCA regulated.
+
+**Pricing**: £7.99/month or £79.99/year (save 17%). Prices are shown inclusive of VAT. VAT-registered sole traders can reclaim VAT on their QuidSafe subscription as a business expense.
 
 ## Tech Stack
 
@@ -92,6 +96,9 @@ worker/                 # Cloudflare Worker API
 6. **Design system** — Follow `mockup.html` and `constants/Colors.ts` for all UI work.
 7. **Fonts** — Use `Manrope_*` for body and `PlayfairDisplay_*` for headings. Never use system fonts.
 8. **Platform checks** — Use `Platform.OS` for native-only features (e.g., SecureStore).
+9. **Responsive design** — Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
+10. **Not FCA regulated** — QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
+11. **Pricing** — £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
 
 ## Agents
 

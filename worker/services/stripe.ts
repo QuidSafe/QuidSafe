@@ -65,7 +65,7 @@ export async function createCheckoutSession(
   }
 
   const priceParam = plan === 'annual'
-    ? { 'line_items[0][price_data][unit_amount]': '5999', 'line_items[0][price_data][recurring][interval]': 'year' }
+    ? { 'line_items[0][price_data][unit_amount]': '7999', 'line_items[0][price_data][recurring][interval]': 'year' }
     : { 'line_items[0][price_data][unit_amount]': '799', 'line_items[0][price_data][recurring][interval]': 'month' };
 
   const params = new URLSearchParams({

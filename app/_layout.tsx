@@ -113,7 +113,7 @@ export default function RootLayout() {
       {/* ── Primary SEO ── */}
       <title>QuidSafe — Tax Tracking for UK Sole Traders | MTD Compliant</title>
       <meta name="description" content="QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly what to set aside for HMRC. Making Tax Digital compliant. Free 14-day trial. £7.99/month." />
-      <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, FCA regulated, TrueLayer, sole trader accounting" />
+      <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, TrueLayer, sole trader accounting" />
       <meta name="author" content="QuidSafe Ltd" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="theme-color" content="#0F172A" />
@@ -177,7 +177,7 @@ export default function RootLayout() {
           "bestRating": "5"
         },
         "featureList": [
-          "Open Banking integration via TrueLayer (FCA regulated)",
+          "Open Banking integration via TrueLayer (FCA authorised AISP)",
           "AI auto-categorisation of transactions",
           "Real-time Income Tax and National Insurance calculator",
           "Making Tax Digital (MTD) quarterly submissions to HMRC",
@@ -218,7 +218,7 @@ export default function RootLayout() {
           {
             "@type": "Question",
             "name": "How much does QuidSafe cost?",
-            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £59.99/year (saving 37%). Every plan includes all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. Start with a free 14-day trial, no credit card required." }
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £79.99/year (save 17%) — all prices include VAT. Every plan includes all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT. Start with a free 14-day trial, no credit card required." }
           },
           {
             "@type": "Question",

@@ -21,9 +21,9 @@ const PLANS = [
   {
     id: 'annual' as const,
     name: 'Annual',
-    price: '59.99',
+    price: '79.99',
     interval: '/year',
-    description: 'Save 37% — best value',
+    description: 'Save 17% — best value',
     badge: 'BEST VALUE',
   },
 ];
