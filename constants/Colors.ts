@@ -1,11 +1,29 @@
 // QuidSafe Design System Colors
-// Based on mockup.html — Trust Navy + Royal Blue + Warm Gold
+// New palette: Black + Electric Blue, flat and clean
 export const Colors = {
-  primary: '#0F172A',
-  secondary: '#1E3A8A',
-  accent: '#CA8A04',
+  // Primary palette
+  black: '#000000',
+  charcoal: '#0A0A0A',
+  darkGrey: '#1A1A1A',
+  midGrey: '#2A2A2A',
+  electricBlue: '#0066FF',
+  blueHover: '#0052CC',
+  blueGlow: 'rgba(0, 102, 255, 0.15)',
   white: '#FFFFFF',
-  black: '#1A1A2E',
+  lightGrey: '#A0A0A0',
+  muted: '#666666',
+
+  // Semantic colours
+  success: '#00C853',
+  warning: '#FF9500',
+  error: '#FF3B30',
+  info: '#0066FF',
+
+  // Legacy aliases (used across existing screens — migrate gradually)
+  primary: '#000000',
+  secondary: '#0066FF',
+  accent: '#0066FF',
+
   gold: {
     50: '#FEF9C3',
     100: '#FEF3C7',
@@ -24,35 +42,33 @@ export const Colors = {
     800: '#1E293B',
     900: '#0F172A',
   },
-  success: '#16A34A',
-  warning: '#CA8A04',
-  error: '#DC2626',
-  info: '#1E3A8A',
+
+  // Theme-aware palettes
   light: {
-    text: '#0F172A',
-    textSecondary: '#64748B',
-    background: '#F8FAFC',
-    surface: '#FFFFFF',
-    tint: '#0F172A',
-    tabIconDefault: '#94A3B8',
-    tabIconSelected: '#0F172A',
-    border: '#E2E8F0',
+    text: '#000000',
+    textSecondary: '#666666',
+    background: '#FFFFFF',
+    surface: '#F5F5F5',
+    tint: '#0066FF',
+    tabIconDefault: '#A0A0A0',
+    tabIconSelected: '#0066FF',
+    border: '#E5E5E5',
     surfaceGlass: 'rgba(255,255,255,0.95)',
-    shadowColor: '#0F172A',
-    cardBorder: 'rgba(226,232,240,0.8)',
+    shadowColor: 'rgba(0,0,0,0.08)',
+    cardBorder: '#E5E5E5',
   },
   dark: {
-    text: '#F8FAFC',
-    textSecondary: '#94A3B8',
-    background: '#0A0A0F',
-    surface: '#16161D',
-    tint: '#CA8A04',
-    tabIconDefault: '#475569',
-    tabIconSelected: '#CA8A04',
-    border: '#222233',
+    text: '#FFFFFF',
+    textSecondary: '#A0A0A0',
+    background: '#000000',
+    surface: '#0A0A0A',
+    tint: '#0066FF',
+    tabIconDefault: '#666666',
+    tabIconSelected: '#0066FF',
+    border: '#2A2A2A',
     surfaceGlass: 'rgba(255,255,255,0.05)',
     shadowColor: 'rgba(0,0,0,0.3)',
-    cardBorder: 'rgba(255,255,255,0.06)',
+    cardBorder: '#2A2A2A',
   },
 };
 
@@ -66,36 +82,35 @@ export const Spacing = {
 };
 
 export const BorderRadius = {
-  card: 16,
-  input: 12,
+  card: 12,
+  input: 8,
   pill: 9999,
-  button: 12,
+  button: 8,
   hero: 24,
 };
 
 export const Shadows = {
   soft: {
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 2,
   },
   medium: {
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 4,
   },
   large: {
-    shadowColor: '#0F172A',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 24,
     elevation: 6,
   },
-  // Centralized dark mode shadows — use instead of redefining inline
   darkSoft: {
     shadowColor: 'rgba(0,0,0,0.4)',
     shadowOffset: { width: 0, height: 2 },
@@ -127,13 +142,13 @@ export const PressedState = {
 
 /** Semantic category background tints — use for icon containers and badges */
 export const CategoryTints = {
-  blue: { bg: '#EFF6FF', bgDark: 'rgba(30,58,138,0.15)', color: '#1E3A8A' },
-  green: { bg: '#F0FDF4', bgDark: 'rgba(22,163,74,0.15)', color: '#16A34A' },
+  blue: { bg: '#EFF6FF', bgDark: 'rgba(0,102,255,0.15)', color: '#0066FF' },
+  green: { bg: '#F0FDF4', bgDark: 'rgba(0,200,83,0.15)', color: '#00C853' },
   gold: { bg: '#FEF9C3', bgDark: 'rgba(202,138,4,0.15)', color: '#A16207' },
   purple: { bg: '#F5F3FF', bgDark: 'rgba(124,58,237,0.15)', color: '#7C3AED' },
-  orange: { bg: '#FFF7ED', bgDark: 'rgba(234,88,12,0.15)', color: '#EA580C' },
-  red: { bg: '#FEF2F2', bgDark: 'rgba(220,38,38,0.15)', color: '#DC2626' },
-  grey: { bg: '#F1F5F9', bgDark: 'rgba(148,163,184,0.12)', color: '#475569' },
+  orange: { bg: '#FFF7ED', bgDark: 'rgba(255,149,0,0.15)', color: '#FF9500' },
+  red: { bg: '#FEF2F2', bgDark: 'rgba(255,59,48,0.15)', color: '#FF3B30' },
+  grey: { bg: '#F1F5F9', bgDark: 'rgba(160,160,160,0.12)', color: '#666666' },
   pink: { bg: '#FDF2F8', bgDark: 'rgba(236,72,153,0.15)', color: '#EC4899' },
   cyan: { bg: '#ECFEFF', bgDark: 'rgba(6,182,212,0.15)', color: '#06B6D4' },
 };

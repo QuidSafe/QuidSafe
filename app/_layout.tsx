@@ -10,6 +10,16 @@ import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_700Bold,
 } from '@expo-google-fonts/playfair-display';
+import {
+  Lexend_400Regular,
+  Lexend_500Medium,
+  Lexend_600SemiBold,
+  Lexend_700Bold,
+} from '@expo-google-fonts/lexend';
+import {
+  SourceSans3_400Regular,
+  SourceSans3_600SemiBold,
+} from '@expo-google-fonts/source-sans-3';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -89,6 +99,12 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
     PlayfairDisplay_400Regular,
     PlayfairDisplay_700Bold,
+    Lexend_400Regular,
+    Lexend_500Medium,
+    Lexend_600SemiBold,
+    Lexend_700Bold,
+    SourceSans3_400Regular,
+    SourceSans3_600SemiBold,
     // Load FontAwesome icon font — fixes squares-instead-of-icons on web
     ...FontAwesome.font,
   });
@@ -240,7 +256,7 @@ export default function RootLayout() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap"
         rel="stylesheet"
       />
     </Head>

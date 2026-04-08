@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 
-export type ThemeMode = 'light' | 'dark' | 'auto';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface ThemeColors {
   text: string;
@@ -26,7 +26,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  mode: 'dark',
+  mode: 'system',
   setMode: () => {},
   isDark: true,
   colors: Colors.dark,
@@ -34,10 +34,10 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>('dark');
+  const [mode, setMode] = useState<ThemeMode>('system');
 
   const isDark = useMemo(() => {
-    if (mode === 'auto') return systemScheme === 'dark';
+    if (mode === 'system') return systemScheme !== 'light';
     return mode === 'dark';
   }, [mode, systemScheme]);
 

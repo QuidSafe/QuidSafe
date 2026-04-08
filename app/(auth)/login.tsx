@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
 import { Link } from 'expo-router';
 import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -14,7 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
@@ -28,43 +27,43 @@ export default function LoginScreen() {
   }, [startSSOFlow]);
 
   return (
-    <View style={s.root}>
-      <LinearGradient
-        colors={['#080C18', '#0C1222', '#142044', '#0C1222', '#080C18']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-
-
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       <SafeAreaView style={s.safe}>
-        {/* ── Brand ── */}
-        <View style={s.brandWrap}>
-          <Text style={s.logo}>QuidSafe</Text>
-          <View style={s.accentBar} />
-          <Text style={s.tagline}>Your tax. Sorted. Safe.</Text>
+        {/* ── Shield icon with blue glow ── */}
+        <View style={s.iconWrap}>
+          <View style={[s.iconGlow, isDark && s.iconGlowDark]} />
+          <View style={[s.iconCircle, { backgroundColor: isDark ? Colors.charcoal : colors.surface, borderColor: colors.border }]}>
+            <FontAwesome name="shield" size={32} color={Colors.electricBlue} />
+          </View>
         </View>
 
-        {/* ── Content ── */}
+        {/* ── Brand ── */}
+        <View style={s.brandWrap}>
+          <Text style={[s.logo, { color: colors.text }]}>QuidSafe</Text>
+          <Text style={[s.tagline, { color: colors.textSecondary }]}>Your tax. Sorted. Safe.</Text>
+        </View>
+
+        {/* ── Value props ── */}
         <View style={s.content}>
-          {/* Value props */}
           <View style={s.propsRow}>
             {[
               { icon: 'bolt' as const, text: 'Auto-track income' },
               { icon: 'calculator' as const, text: 'Real-time tax' },
               { icon: 'shield' as const, text: 'MTD ready' },
             ].map((p) => (
-              <View key={p.text} style={s.propChip}>
-                <FontAwesome name={p.icon} size={11} color={Colors.accent} />
-                <Text style={s.propText}>{p.text}</Text>
+              <View key={p.text} style={[s.propChip, { backgroundColor: isDark ? Colors.charcoal : colors.surface, borderColor: colors.border }]}>
+                <FontAwesome name={p.icon} size={11} color={Colors.electricBlue} />
+                <Text style={[s.propText, { color: colors.textSecondary }]}>{p.text}</Text>
               </View>
             ))}
           </View>
 
           {/* Trust badge */}
-          <View style={s.trustBadge}>
-            <FontAwesome name="lock" size={10} color="rgba(202,138,4,0.6)" />
-            <Text style={s.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
+          <View style={[s.trustBadge, { backgroundColor: Colors.blueGlow, borderColor: isDark ? 'rgba(0,102,255,0.2)' : 'rgba(0,102,255,0.15)' }]}>
+            <FontAwesome name="lock" size={10} color={Colors.electricBlue} />
+            <Text style={[s.trustText, { color: isDark ? Colors.lightGrey : Colors.muted }]}>
+              Bank-grade encryption  ·  Read-only access  ·  HMRC compliant
+            </Text>
           </View>
         </View>
 
@@ -77,46 +76,41 @@ export default function LoginScreen() {
             accessibilityRole="button"
             accessibilityLabel="Continue with Google"
           >
-            <LinearGradient
-              colors={['#D4A017', '#CA8A04', '#A16207']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={s.googleGradient}
-            >
-              <FontAwesome name="google" size={18} color="#FFF" />
-              <Text style={s.googleText}>Continue with Google</Text>
-            </LinearGradient>
+            <FontAwesome name="google" size={18} color="#FFF" />
+            <Text style={s.googleText}>Continue with Google</Text>
           </Pressable>
 
           {/* Divider */}
           <View style={s.divider}>
-            <View style={s.dividerLine} />
-            <Text style={s.dividerText}>or</Text>
-            <View style={s.dividerLine} />
+            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[s.dividerText, { color: Colors.muted }]}>or</Text>
+            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           {/* Email */}
           <Link href="/(auth)/signup" asChild>
             <Pressable
-              style={({ pressed }) => [s.emailBtn, pressed && s.pressed]}
+              style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: isDark ? Colors.charcoal : colors.surface }, pressed && s.pressed]}
               accessibilityRole="button"
               accessibilityLabel="Continue with Email"
             >
-              <FontAwesome name="envelope-o" size={16} color={Colors.white} style={{ marginRight: 10 }} />
-              <Text style={s.emailText}>Continue with Email</Text>
+              <FontAwesome name="envelope-o" size={16} color={colors.text} style={{ marginRight: 10 }} />
+              <Text style={[s.emailText, { color: colors.text }]}>Continue with Email</Text>
             </Pressable>
           </Link>
         </View>
 
         {/* ── Footer ── */}
         <View style={s.footer}>
-          <Text style={s.footerText}>
+          <Text style={[s.footerText, { color: Colors.muted }]}>
             By continuing, you agree to our{' '}
             <Link href="/terms"><Text style={s.footerLink}>Terms of Service</Text></Link>
             {' '}and{' '}
             <Link href="/privacy"><Text style={s.footerLink}>Privacy Policy</Text></Link>
           </Text>
-          <Text style={s.footerSub}>Tax tracking for UK sole traders</Text>
+          <Text style={[s.footerSub, { color: isDark ? Colors.muted : Colors.lightGrey }]}>
+            Tax tracking for UK sole traders
+          </Text>
         </View>
       </SafeAreaView>
     </View>
@@ -126,7 +120,6 @@ export default function LoginScreen() {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#080C18',
   },
   safe: {
     flex: 1,
@@ -134,30 +127,46 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // Shield icon
+  iconWrap: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    position: 'relative',
+  },
+  iconGlow: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'transparent',
+  },
+  iconGlowDark: {
+    backgroundColor: Colors.blueGlow,
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   // Brand
   brandWrap: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 36,
   },
   logo: {
-    fontFamily: Fonts.playfair.bold,
-    fontSize: 48,
-    color: Colors.white,
-    letterSpacing: -1,
-  },
-  accentBar: {
-    width: 40,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: Colors.accent,
-    marginTop: 12,
-    marginBottom: 14,
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: 40,
+    letterSpacing: -0.5,
   },
   tagline: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.3,
+    marginTop: 8,
+    letterSpacing: 0.2,
   },
 
   // Value props
@@ -175,17 +184,14 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: BorderRadius.pill,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
   },
   propText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
   },
 
   // Trust
@@ -194,17 +200,14 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(202, 138, 4, 0.06)',
-    borderRadius: BorderRadius.pill,
+    borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: 'rgba(202, 138, 4, 0.12)',
   },
   trustText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
     letterSpacing: 0.2,
   },
 
@@ -214,24 +217,20 @@ const s = StyleSheet.create({
     marginBottom: 32,
   },
 
-  // Google button — gold gradient
+  // Google button — electric blue, flat
   googleBtn: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    ...Shadows.medium,
-  },
-  googleGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+    backgroundColor: Colors.electricBlue,
     paddingVertical: 16,
+    borderRadius: 8,
   },
   googleText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
-    letterSpacing: -0.2,
   },
 
   // Divider
@@ -243,29 +242,24 @@ const s = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   dividerText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.3)',
   },
 
-  // Email button — glass outline
+  // Email button — outlined
   emailBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 15,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    borderWidth: 1,
   },
   emailText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
-    color: Colors.white,
   },
 
   pressed: {
@@ -279,19 +273,17 @@ const s = StyleSheet.create({
     gap: 8,
   },
   footerText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     lineHeight: 18,
   },
   footerLink: {
-    color: Colors.accent,
+    color: Colors.electricBlue,
     textDecorationLine: 'underline',
   },
   footerSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
-    color: 'rgba(255,255,255,0.2)',
   },
 });

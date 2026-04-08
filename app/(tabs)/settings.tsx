@@ -553,9 +553,9 @@ export default function SettingsScreen() {
           <View style={[styles.rowBorderOnly, { backgroundColor: colors.border }]} />
           <ThemeOption
             icon="desktop"
-            label="Auto"
-            active={mode === 'auto'}
-            onPress={() => setMode('auto')}
+            label="System"
+            active={mode === 'system'}
+            onPress={() => setMode('system')}
           />
         </Card>
 
