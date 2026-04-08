@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, View, ViewProps, Pressable } from 'react-native';
-import { BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
+import { colors, BorderRadius, Spacing, PressedState } from '@/constants/Colors';
 
 interface CardProps extends ViewProps {
   children: React.ReactNode;
@@ -17,19 +17,16 @@ export function Card({ children, variant = 'default', style, onPress, accessibil
         return {
           backgroundColor: 'rgba(255,255,255,0.04)',
           borderColor: 'rgba(255,255,255,0.08)',
-          ...Shadows.darkSoft,
         };
       case 'elevated':
         return {
-          backgroundColor: '#0A0A0A',
+          backgroundColor: colors.surface,
           borderColor: 'rgba(255,255,255,0.09)',
-          ...Shadows.darkMedium,
         };
       default:
         return {
-          backgroundColor: '#0A0A0A',
-          borderColor: '#2A2A2A',
-          ...Shadows.darkSoft,
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
         };
     }
   }, [variant]);

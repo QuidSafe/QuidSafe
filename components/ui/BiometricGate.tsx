@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, AppState, Animated, Platform } from 'react-native';
 import { Lock } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
+import { colors, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { authenticate, isBiometricEnabled } from '@/lib/biometrics';
 
 export function BiometricGate({ children }: { children: React.ReactNode }) {
-  const { colors } = useTheme();
   const [locked, setLocked] = useState(false);
   const [checking, setChecking] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -36,12 +34,10 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
     setChecking(false);
   }, [fadeAnim, unlock]);
 
-  // On mount, check if biometric lock is enabled
   useEffect(() => {
     checkAndLock();
   }, [checkAndLock]);
 
-  // Listen for app state changes (background -> active)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (
@@ -63,7 +59,6 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
     };
   }, [fadeAnim, unlock]);
 
-  // Skip entirely on web
   if (Platform.OS === 'web') {
     return <>{children}</>;
   }
@@ -79,19 +74,17 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <View style={styles.content}>
             <View style={styles.iconCircle}>
-              <Lock size={40} color={Colors.accent} strokeWidth={1.5} />
+              <Lock size={40} color={colors.accent} strokeWidth={1.5} />
             </View>
             <Text style={styles.brandText}>QuidSafe</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Your finances are protected
-            </Text>
+            <Text style={styles.subtitle}>Your finances are protected</Text>
             <Pressable
               onPress={unlock}
               style={({ pressed }) => [styles.unlockButton, pressed && styles.unlockButtonPressed]}
               accessibilityRole="button"
               accessibilityLabel="Tap to unlock"
             >
-              <Lock size={16} color={Colors.white} strokeWidth={1.5} style={styles.unlockIcon} />
+              <Lock size={16} color={colors.text} strokeWidth={1.5} style={styles.unlockIcon} />
               <Text style={styles.unlockText}>Tap to unlock</Text>
             </Pressable>
           </View>
@@ -104,7 +97,7 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
@@ -117,29 +110,30 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(0,102,255,0.12)',
+    backgroundColor: colors.accentGlow,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   brandText: {
-    fontFamily: Fonts.lexend.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 32,
-    color: Colors.white,
+    color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
+    color: colors.textSecondary,
     marginBottom: 48,
   },
   unlockButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: BorderRadius.button,
   },
   unlockButtonPressed: {
     opacity: 0.85,
@@ -150,6 +144,6 @@ const styles = StyleSheet.create({
   unlockText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
-    color: Colors.white,
+    color: colors.text,
   },
 });

@@ -1,7 +1,6 @@
 import { StyleSheet, Pressable, Text, PressableProps, ViewStyle } from 'react-native';
-import { Colors, BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
+import { colors, BorderRadius, Spacing, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { hapticLight } from '@/lib/haptics';
 
 interface ButtonProps extends PressableProps {
@@ -13,8 +12,6 @@ interface ButtonProps extends PressableProps {
 }
 
 export function Button({ title, variant = 'primary', size = 'md', style, accessibilityLabel, accessibilityHint, onPress, ...props }: ButtonProps) {
-  const { colors } = useTheme();
-
   const handlePress = (e: Parameters<NonNullable<PressableProps['onPress']>>[0]) => {
     hapticLight();
     onPress?.(e);
@@ -22,10 +19,10 @@ export function Button({ title, variant = 'primary', size = 'md', style, accessi
 
   const variantTextColor =
     variant === 'primary' || variant === 'secondary' || variant === 'cta'
-      ? Colors.white
-      : colors.tint;
+      ? colors.text
+      : colors.accent;
 
-  const variantBorderColor = variant === 'outline' ? colors.tint : undefined;
+  const variantBorderColor = variant === 'outline' ? colors.accent : undefined;
 
   return (
     <Pressable
@@ -55,28 +52,22 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.button,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadows.soft,
   },
   primary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.background,
   },
   secondary: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.accent,
   },
   cta: {
-    backgroundColor: Colors.accent,
-    ...Shadows.medium,
+    backgroundColor: colors.accent,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   ghost: {
     backgroundColor: 'transparent',
-    shadowOpacity: 0,
-    elevation: 0,
   },
   sm: {
     paddingVertical: Spacing.sm,

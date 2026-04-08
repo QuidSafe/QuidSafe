@@ -1,7 +1,6 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface EmptyStateProps {
   icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
@@ -9,7 +8,6 @@ interface EmptyStateProps {
   subtitle: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Optional tint color for the icon and icon background. Defaults to Colors.accent. */
   tintColor?: string;
 }
 
@@ -19,19 +17,16 @@ export function EmptyState({
   subtitle,
   actionLabel,
   onAction,
-  tintColor = Colors.accent,
+  tintColor = colors.accent,
 }: EmptyStateProps) {
-  const { colors } = useTheme();
-
   return (
     <View style={styles.container} accessible accessibilityRole="alert" accessibilityLabel={`${title}. ${subtitle}`}>
-      {/* Circular icon container with tinted background */}
       <View style={[styles.iconCircle, { backgroundColor: tintColor + '1A' }]}>
         <Icon size={64} color={tintColor} strokeWidth={1.5} />
       </View>
 
-      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
 
       {actionLabel && onAction ? (
         <Pressable
@@ -65,10 +60,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontFamily: Fonts.lexend.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.sm,
+    color: colors.text,
   },
   subtitle: {
     fontFamily: Fonts.sourceSans.regular,
@@ -77,9 +73,10 @@ const styles = StyleSheet.create({
     maxWidth: 280,
     lineHeight: 20,
     marginBottom: Spacing.lg,
+    color: colors.textSecondary,
   },
   actionButton: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: BorderRadius.button,
@@ -91,6 +88,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
-    color: Colors.white,
+    color: colors.text,
   },
 });

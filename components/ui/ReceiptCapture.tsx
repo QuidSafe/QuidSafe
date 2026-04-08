@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { View, Text, Pressable, Image, Modal, StyleSheet, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, XCircle } from 'lucide-react-native';
-import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface ReceiptCaptureProps {
   imageUri: string | null;
@@ -13,7 +12,6 @@ interface ReceiptCaptureProps {
 }
 
 export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: ReceiptCaptureProps) {
-  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
 
   const pickFromCamera = async () => {
@@ -53,7 +51,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
   if (imageUri) {
     return (
       <View style={styles.previewContainer}>
-        <Text style={[styles.label, { color: colors.text }]}>Receipt</Text>
+        <Text style={styles.label}>Receipt</Text>
         <View style={styles.previewWrapper}>
           <Image source={{ uri: imageUri }} style={styles.preview} />
           <Pressable
@@ -62,7 +60,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
             accessibilityRole="button"
             accessibilityLabel="Remove receipt photo"
           >
-            <XCircle size={24} color={Colors.error} strokeWidth={1.5} />
+            <XCircle size={24} color={colors.error} strokeWidth={1.5} />
           </Pressable>
         </View>
       </View>
@@ -71,11 +69,10 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>Receipt</Text>
+      <Text style={styles.label}>Receipt</Text>
       <Pressable
         style={({ pressed }) => [
           styles.addButton,
-          { backgroundColor: colors.background, borderColor: colors.border },
           pressed && styles.pressed,
         ]}
         onPress={() => {
@@ -90,30 +87,29 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
         accessibilityHint="Tap to take a photo or choose from your library"
       >
         <Camera size={20} color={colors.textSecondary} strokeWidth={1.5} />
-        <Text style={[styles.addButtonText, { color: colors.textSecondary }]}>Add Receipt</Text>
+        <Text style={styles.addButtonText}>Add Receipt</Text>
       </Pressable>
 
       <Modal visible={showPicker} animationType="fade" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setShowPicker(false)}>
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Add Receipt</Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Receipt</Text>
 
             <Pressable
               style={({ pressed }) => [
                 styles.optionCard,
-                { backgroundColor: colors.background, borderColor: colors.border },
                 pressed && styles.pressed,
               ]}
               onPress={pickFromCamera}
               accessibilityRole="button"
               accessibilityLabel="Take photo"
             >
-              <View style={[styles.optionIcon, { backgroundColor: 'rgba(0,102,255,0.15)' }]}>
-                <Camera size={20} color={Colors.secondary} strokeWidth={1.5} />
+              <View style={[styles.optionIcon, { backgroundColor: colors.accentGlow }]}>
+                <Camera size={20} color={colors.accent} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
-                <Text style={[styles.optionTitle, { color: colors.text }]}>Take Photo</Text>
-                <Text style={[styles.optionSub, { color: colors.textSecondary }]}>
+                <Text style={styles.optionTitle}>Take Photo</Text>
+                <Text style={styles.optionSub}>
                   Use your camera to capture the receipt
                 </Text>
               </View>
@@ -122,7 +118,6 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
             <Pressable
               style={({ pressed }) => [
                 styles.optionCard,
-                { backgroundColor: colors.background, borderColor: colors.border },
                 pressed && styles.pressed,
               ]}
               onPress={pickFromLibrary}
@@ -130,11 +125,11 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
               accessibilityLabel="Choose from library"
             >
               <View style={[styles.optionIcon, { backgroundColor: 'rgba(0,200,83,0.15)' }]}>
-                <ImageIcon size={20} color={Colors.success} strokeWidth={1.5} />
+                <ImageIcon size={20} color={colors.success} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
-                <Text style={[styles.optionTitle, { color: colors.text }]}>Choose from Library</Text>
-                <Text style={[styles.optionSub, { color: colors.textSecondary }]}>
+                <Text style={styles.optionTitle}>Choose from Library</Text>
+                <Text style={styles.optionSub}>
                   Select an existing photo from your device
                 </Text>
               </View>
@@ -146,7 +141,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
               accessibilityRole="button"
               accessibilityLabel="Cancel"
             >
-              <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
+              <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -166,6 +161,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
+    color: colors.text,
   },
   addButton: {
     flexDirection: 'row',
@@ -176,10 +172,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.input,
     borderWidth: 1.5,
     borderStyle: 'dashed',
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
   },
   addButtonText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    color: colors.textSecondary,
   },
   pressed: {
     opacity: 0.85,
@@ -197,7 +196,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.text,
     borderRadius: 12,
   },
 
@@ -215,11 +214,13 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
     padding: Spacing.lg,
     gap: Spacing.md,
+    backgroundColor: colors.surface,
   },
   modalTitle: {
-    fontFamily: Fonts.lexend.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 18,
     textAlign: 'center',
+    color: colors.text,
   },
   optionCard: {
     flexDirection: 'row',
@@ -227,6 +228,8 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: BorderRadius.input,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     gap: Spacing.md,
   },
   optionIcon: {
@@ -242,11 +245,13 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
+    color: colors.text,
   },
   optionSub: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
+    color: colors.textSecondary,
   },
   cancelButton: {
     alignItems: 'center',
@@ -255,5 +260,6 @@ const styles = StyleSheet.create({
   cancelText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
+    color: colors.textSecondary,
   },
 });

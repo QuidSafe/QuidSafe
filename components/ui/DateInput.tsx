@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, Platform } from 'react-native';
-import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface DateInputProps {
   value: string;
@@ -12,17 +11,7 @@ interface DateInputProps {
   error?: string;
 }
 
-/**
- * Cross-platform date input.
- * - Web: renders <input type="date" /> for native browser date picker
- * - Native: renders TextInput with DD/MM/YYYY auto-formatting
- *
- * The value and onChange always use YYYY-MM-DD format (ISO) for consistency.
- */
 export function DateInput({ value, onChange, label, minDate, error }: DateInputProps) {
-  const { colors } = useTheme();
-
-  // Always call hooks before any conditional returns
   const [displayValue, setDisplayValue] = useState(() => {
     if (!value) return '';
     const parts = value.split('-');
@@ -57,16 +46,11 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
   if (Platform.OS === 'web') {
     return (
       <View>
-        {label && (
-          <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-        )}
+        {label && <Text style={styles.label}>{label}</Text>}
         <View
           style={[
             styles.inputWrapper,
-            {
-              backgroundColor: colors.background,
-              borderColor: error ? Colors.error : colors.border,
-            },
+            error && { borderColor: colors.error },
           ]}
         >
           <input
@@ -93,17 +77,11 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
 
   return (
     <View>
-      {label && (
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-      )}
+      {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={[
           styles.input,
-          {
-            color: colors.text,
-            backgroundColor: colors.background,
-            borderColor: error ? Colors.error : colors.border,
-          },
+          error && { borderColor: colors.error },
         ]}
         placeholder="DD/MM/YYYY"
         placeholderTextColor={colors.textSecondary}
@@ -119,15 +97,18 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
 
 const styles = StyleSheet.create({
   label: {
-    fontFamily: Fonts.lexend.medium,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
     marginTop: Spacing.sm,
+    color: colors.textSecondary,
   },
   inputWrapper: {
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: BorderRadius.input,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -137,15 +118,18 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSecondary,
     borderRadius: BorderRadius.input,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: Spacing.xs,
+    color: colors.text,
   },
   errorText: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: Colors.error,
+    color: colors.error,
     marginBottom: Spacing.xs,
   },
 });

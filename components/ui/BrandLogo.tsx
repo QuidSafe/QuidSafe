@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { Shield } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
+import { colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 interface BrandLogoProps {
@@ -15,7 +15,7 @@ export function BrandLogo({ size = 36, showText = true, textSize = 24 }: BrandLo
   return (
     <View style={styles.container}>
       <View style={[styles.shieldWrap, { width: size, height: size }]}>
-        <Shield size={size} color={Colors.electricBlue} strokeWidth={1.5} />
+        <Shield size={size} color={colors.accent} strokeWidth={1.5} />
         <Text
           style={[
             styles.pound,
@@ -47,13 +47,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     textAlign: 'center',
     fontFamily: Fonts.lexend.semiBold,
-    color: Colors.white,
+    color: colors.text,
     top: 0,
     left: 0,
   },
   wordmark: {
     fontFamily: Fonts.lexend.semiBold,
-    color: Colors.white,
+    color: colors.text,
     letterSpacing: -0.5,
   },
 });
