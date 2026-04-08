@@ -916,7 +916,7 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     gap: Spacing.sm,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
   },
   title: {
     fontFamily: Fonts.playfair.bold,

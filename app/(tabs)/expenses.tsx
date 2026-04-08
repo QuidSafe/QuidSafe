@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   scroll: {
     padding: Spacing.lg,
     gap: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
   },
   pressed: {
     opacity: 0.85,
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
   },
   modalHandle: {
     width: 36,

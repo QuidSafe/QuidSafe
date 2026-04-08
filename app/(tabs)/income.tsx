@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
   },
 
   // Heading
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.xxl + Spacing.lg,
   },
   modalHandle: {
     width: 36,
