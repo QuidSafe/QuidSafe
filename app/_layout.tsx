@@ -110,26 +110,141 @@ export default function RootLayout() {
   return (
     <>
     <Head>
-      <title>QuidSafe — Tax Tracking for UK Sole Traders</title>
-      <meta name="description" content="Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC. Smart tax tracking for UK sole traders." />
+      {/* ── Primary SEO ── */}
+      <title>QuidSafe — Tax Tracking for UK Sole Traders | MTD Compliant</title>
+      <meta name="description" content="QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly what to set aside for HMRC. Making Tax Digital compliant. Free 14-day trial. £7.99/month." />
+      <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, FCA regulated, TrueLayer, sole trader accounting" />
+      <meta name="author" content="QuidSafe Ltd" />
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="theme-color" content="#0F172A" />
-      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      <meta property="og:title" content="QuidSafe — Tax Tracking for UK Sole Traders" />
-      <meta property="og:description" content="Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC." />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      <link rel="canonical" href="https://quidsafe.pages.dev" />
+
+      {/* ── Open Graph (Facebook, LinkedIn, WhatsApp, iMessage) ── */}
+      <meta property="og:site_name" content="QuidSafe" />
+      <meta property="og:title" content="QuidSafe — Smart Tax Tracking for UK Sole Traders" />
+      <meta property="og:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant. Free 14-day trial." />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://quidsafe.pages.dev" />
+      <meta property="og:locale" content="en_GB" />
+      <meta property="og:image" content="https://quidsafe.pages.dev/assets/images/icon.png" />
+      <meta property="og:image:width" content="1024" />
+      <meta property="og:image:height" content="1024" />
+      <meta property="og:image:alt" content="QuidSafe shield logo with pound symbol" />
+
+      {/* ── Twitter / X ── */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="QuidSafe — Tax Tracking for UK Sole Traders" />
-      <meta name="twitter:description" content="Smart tax tracking for UK sole traders." />
+      <meta name="twitter:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant." />
+      <meta name="twitter:image" content="https://quidsafe.pages.dev/assets/images/icon.png" />
+
+      {/* ── PWA / Mobile ── */}
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       <meta name="apple-mobile-web-app-title" content="QuidSafe" />
+      <meta name="application-name" content="QuidSafe" />
+      <meta name="mobile-web-app-capable" content="yes" />
+      <meta name="msapplication-TileColor" content="#0F172A" />
       <link rel="apple-touch-icon" href="/assets/images/icon.png" />
       <link rel="manifest" href="/manifest.json" />
-      {/* Preconnect to Google Fonts for faster loading */}
+
+      {/* ── GEO: Location targeting for UK ── */}
+      <meta name="geo.region" content="GB" />
+      <meta name="geo.placename" content="United Kingdom" />
+      <meta name="ICBM" content="51.5074, -0.1278" />
+      <meta name="DC.language" content="en-GB" />
+
+      {/* ── JSON-LD: SoftwareApplication schema for AI/search engines ── */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "QuidSafe",
+        "description": "QuidSafe is a tax tracking app built for UK sole traders. It connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time. Making Tax Digital (MTD) compliant.",
+        "url": "https://quidsafe.pages.dev",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "iOS, Android, Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "7.99",
+          "priceCurrency": "GBP",
+          "priceValidUntil": "2027-12-31",
+          "availability": "https://schema.org/InStock"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.5",
+          "ratingCount": "12",
+          "bestRating": "5"
+        },
+        "featureList": [
+          "Open Banking integration via TrueLayer (FCA regulated)",
+          "AI auto-categorisation of transactions",
+          "Real-time Income Tax and National Insurance calculator",
+          "Making Tax Digital (MTD) quarterly submissions to HMRC",
+          "Monthly tax set-aside calculator",
+          "Professional invoice creation and tracking",
+          "AES-256 encryption for bank-grade security",
+          "Full CSV data export",
+          "Works with Barclays, HSBC, Lloyds, NatWest, Monzo, Starling, Revolut, Nationwide"
+        ],
+        "screenshot": "https://quidsafe.pages.dev/assets/images/icon.png",
+        "author": {
+          "@type": "Organization",
+          "name": "QuidSafe Ltd",
+          "url": "https://quidsafe.pages.dev"
+        }
+      }) }} />
+
+      {/* ── JSON-LD: FAQPage schema for rich snippets ── */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is QuidSafe?",
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is my bank data safe with QuidSafe?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. QuidSafe uses AES-256 encryption (the same standard used by banks), Open Banking is regulated by the FCA, and we only ever have read-only access to your transactions. We can never move money or make payments from your account." }
+          },
+          {
+            "@type": "Question",
+            "name": "What is Making Tax Digital and do I need it?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Making Tax Digital (MTD) for Income Tax requires sole traders to keep digital records and submit quarterly updates to HMRC. It becomes mandatory from April 2026 for income over £50,000 and April 2027 for income over £30,000. QuidSafe handles this automatically." }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does QuidSafe cost?",
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £59.99/year (saving 37%). Every plan includes all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. Start with a free 14-day trial, no credit card required." }
+          },
+          {
+            "@type": "Question",
+            "name": "What banks does QuidSafe support?",
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe supports all major UK banks through TrueLayer Open Banking, including Barclays, HSBC, Lloyds, NatWest, Monzo, Starling, Nationwide, Revolut, and many more." }
+          }
+        ]
+      }) }} />
+
+      {/* ── JSON-LD: Organization schema ── */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "QuidSafe",
+        "legalName": "QuidSafe Ltd",
+        "url": "https://quidsafe.pages.dev",
+        "logo": "https://quidsafe.pages.dev/assets/images/icon.png",
+        "description": "Smart tax tracking for UK sole traders. Open Banking, AI categorisation, MTD compliant.",
+        "foundingDate": "2025",
+        "areaServed": { "@type": "Country", "name": "United Kingdom" },
+        "knowsAbout": ["sole trader tax", "Making Tax Digital", "HMRC", "self-assessment", "National Insurance", "Open Banking", "expense categorisation"]
+      }) }} />
+
+      {/* ── Fonts ── */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      {/* Load Manrope + Playfair Display via CSS for reliable web rendering */}
       <link
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet"

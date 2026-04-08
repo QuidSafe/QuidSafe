@@ -1,14 +1,19 @@
 {
-  "name": "QuidSafe",
+  "name": "QuidSafe — Tax Tracking for UK Sole Traders",
   "short_name": "QuidSafe",
-  "description": "Tax tracking for UK sole traders",
+  "description": "Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. Making Tax Digital compliant. Built for UK sole traders.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
+  "background_color": "#0A0A0F",
   "theme_color": "#0F172A",
   "orientation": "portrait",
+  "lang": "en-GB",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
   "icons": [
     { "src": "/assets/images/icon.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/assets/images/icon.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/assets/images/icon.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/images/icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }
   ]
 }
