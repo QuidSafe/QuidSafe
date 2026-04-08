@@ -7,25 +7,20 @@ import {
   RefreshControl,
   TextInput,
   Pressable,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, X, Wallet } from 'lucide-react-native';
+import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, Wallet } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { DateInput } from '@/components/ui/DateInput';
+import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
-import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
+import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
-import { hapticSuccess } from '@/lib/haptics';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
 
@@ -84,18 +79,9 @@ export default function IncomeScreen() {
   const router = useRouter();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   useQuarterlyBreakdown();
-  const createInvoiceMutation = useCreateInvoice();
-
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
-
-  // Invoice form state
-  const [invoiceClientName, setInvoiceClientName] = useState('');
-  const [invoiceAmount, setInvoiceAmount] = useState('');
-  const [invoiceDescription, setInvoiceDescription] = useState('');
-  const [invoiceDueDate, setInvoiceDueDate] = useState('');
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
@@ -144,73 +130,6 @@ export default function IncomeScreen() {
   const onRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
-
-  const resetInvoiceForm = useCallback(() => {
-    setInvoiceClientName('');
-    setInvoiceAmount('');
-    setInvoiceDescription('');
-    setInvoiceDueDate('');
-    setTouched({});
-  }, []);
-
-  const handleCreateInvoice = useCallback(() => {
-    const amount = parseFloat(invoiceAmount);
-    if (!invoiceClientName.trim() || isNaN(amount) || amount <= 0 || !invoiceDescription.trim() || !invoiceDueDate.trim()) {
-      return;
-    }
-    createInvoiceMutation.mutate(
-      {
-        clientName: invoiceClientName.trim(),
-        amount,
-        description: invoiceDescription.trim(),
-        dueDate: invoiceDueDate.trim(),
-      },
-      {
-        onSuccess: () => {
-          hapticSuccess();
-          resetInvoiceForm();
-          setInvoiceModalVisible(false);
-        },
-      }
-    );
-  }, [invoiceClientName, invoiceAmount, invoiceDescription, invoiceDueDate, createInvoiceMutation, resetInvoiceForm]);
-
-  const markTouched = useCallback((field: string) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-  }, []);
-
-  // Validation logic
-  const parsedAmount = parseFloat(invoiceAmount);
-  const errors = useMemo(() => {
-    const e: Record<string, string> = {};
-    if (invoiceClientName.trim().length < 2) {
-      e.clientName = 'Client name must be at least 2 characters';
-    }
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      e.amount = 'Amount must be greater than 0';
-    }
-    if (invoiceDescription.trim().length < 3) {
-      e.description = 'Description must be at least 3 characters';
-    }
-    if (!invoiceDueDate.trim()) {
-      e.dueDate = 'Due date is required';
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const due = new Date(invoiceDueDate);
-      if (isNaN(due.getTime())) {
-        e.dueDate = 'Please enter a valid date';
-      } else if (due < today) {
-        e.dueDate = 'Due date must be today or in the future';
-      }
-    }
-    return e;
-  }, [invoiceClientName, parsedAmount, invoiceDescription, invoiceDueDate]);
-
-  const isFormValid = Object.keys(errors).length === 0;
-
-  // Today in YYYY-MM-DD for minDate
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -467,125 +386,11 @@ export default function IncomeScreen() {
       )}
 
       {/* Create Invoice Modal */}
-      <Modal
+      <CreateInvoiceModal
         visible={invoiceModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setInvoiceModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={styles.modalHandle} />
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Create Invoice</Text>
-              <Pressable
-                onPress={() => {
-                  resetInvoiceForm();
-                  setInvoiceModalVisible(false);
-                }}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Close invoice form"
-              >
-                <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
-              </Pressable>
-            </View>
-
-            {/* Client Name */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Client name</Text>
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.clientName && errors.clientName ? Colors.error : colors.border }]}
-              placeholder="e.g. Acme Ltd"
-              placeholderTextColor={colors.textSecondary}
-              value={invoiceClientName}
-              onChangeText={setInvoiceClientName}
-              onBlur={() => markTouched('clientName')}
-              accessibilityLabel="Client name"
-              accessibilityHint="Enter the client or company name for this invoice"
-            />
-            {touched.clientName && errors.clientName ? (
-              <Text style={styles.fieldError}>{errors.clientName}</Text>
-            ) : null}
-
-            {/* Amount */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount</Text>
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, backgroundColor: colors.background, borderColor: touched.amount && errors.amount ? Colors.error : colors.border }]}
-              placeholder="0.00"
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="decimal-pad"
-              value={invoiceAmount}
-              onChangeText={setInvoiceAmount}
-              onBlur={() => markTouched('amount')}
-              accessibilityLabel="Invoice amount"
-              accessibilityHint="Enter the invoice amount in pounds"
-            />
-            {touched.amount && errors.amount ? (
-              <Text style={styles.fieldError}>{errors.amount}</Text>
-            ) : null}
-
-            {/* Description */}
-            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Description</Text>
-            <TextInput
-              style={[styles.modalInput, styles.modalInputMultiline, { color: colors.text, backgroundColor: colors.background, borderColor: touched.description && errors.description ? Colors.error : colors.border }]}
-              placeholder="What is this invoice for?"
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              numberOfLines={3}
-              value={invoiceDescription}
-              onChangeText={setInvoiceDescription}
-              onBlur={() => markTouched('description')}
-              accessibilityLabel="Invoice description"
-              accessibilityHint="Describe what this invoice is for"
-            />
-            {touched.description && errors.description ? (
-              <Text style={styles.fieldError}>{errors.description}</Text>
-            ) : null}
-
-            {/* Due Date */}
-            <DateInput
-              label="Due date"
-              value={invoiceDueDate}
-              onChange={(date) => {
-                setInvoiceDueDate(date);
-                markTouched('dueDate');
-              }}
-              minDate={todayStr}
-              error={touched.dueDate ? errors.dueDate : undefined}
-            />
-
-            {/* Submit button */}
-            <Pressable
-              style={[
-                styles.submitButton,
-                (!isFormValid || createInvoiceMutation.isPending) && styles.submitButtonDisabled,
-              ]}
-              onPress={handleCreateInvoice}
-              disabled={!isFormValid || createInvoiceMutation.isPending}
-             
-              accessibilityRole="button"
-              accessibilityLabel="Create invoice"
-              accessibilityHint="Tap to create a new invoice"
-              accessibilityState={{ disabled: !isFormValid || createInvoiceMutation.isPending }}
-            >
-              {createInvoiceMutation.isPending ? (
-                <ActivityIndicator color={Colors.white} size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>Create Invoice</Text>
-              )}
-            </Pressable>
-
-            {createInvoiceMutation.isError && (
-              <Text style={styles.errorText}>
-                Failed to create invoice. Please try again.
-              </Text>
-            )}
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setInvoiceModalVisible(false)}
+        onSuccess={() => setInvoiceModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

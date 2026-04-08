@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DateInput } from '@/components/ui/DateInput';
+import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Skeleton, TransactionListSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
@@ -99,6 +100,7 @@ export default function InvoicesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
@@ -188,9 +190,8 @@ export default function InvoicesScreen() {
   }, []);
 
   const openCreateModal = useCallback(() => {
-    resetForm();
-    setModalVisible(true);
-  }, [resetForm]);
+    setShowCreateModal(true);
+  }, []);
 
   const openEditModal = useCallback((invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -471,7 +472,14 @@ export default function InvoicesScreen() {
         </Pressable>
       )}
 
-      {/* Create / Edit Invoice Modal */}
+      {/* Create Invoice Modal (shared component) */}
+      <CreateInvoiceModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => setShowCreateModal(false)}
+      />
+
+      {/* Edit Invoice Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
