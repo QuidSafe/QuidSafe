@@ -3,7 +3,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 interface QuarterTimelineProps {
   currentQuarter: number;
@@ -18,11 +17,9 @@ const QUARTERS = [
 ];
 
 export function QuarterTimeline({ currentQuarter, taxYear }: QuarterTimelineProps) {
-  const { colors, isDark } = useTheme();
-
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.textSecondary }]}>Tax Year {taxYear}</Text>
+      <Text style={[styles.title, { color: Colors.dark.textSecondary }]}>Tax Year {taxYear}</Text>
       <View style={styles.timeline}>
         {QUARTERS.map(({ q, label, months }) => {
           const isDone = q < currentQuarter;
@@ -34,20 +31,20 @@ export function QuarterTimeline({ currentQuarter, taxYear }: QuarterTimelineProp
                 style={[
                   styles.dot,
                   isDone && styles.dotDone,
-                  isCurrent && [styles.dotCurrent, { backgroundColor: colors.tint }],
-                  !isDone && !isCurrent && { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] },
+                  isCurrent && [styles.dotCurrent, { backgroundColor: Colors.dark.tint }],
+                  !isDone && !isCurrent && { backgroundColor: '#2A2A2A' },
                 ]}
               >
                 {isDone && <Text style={styles.check}>✓</Text>}
                 {isCurrent && <View style={styles.pulse} />}
               </View>
-              <Text style={[styles.label, { color: colors.textSecondary }, isCurrent && { color: colors.tint }]}>{label}</Text>
-              <Text style={[styles.months, { color: colors.textSecondary }]}>{months}</Text>
+              <Text style={[styles.label, { color: Colors.dark.textSecondary }, isCurrent && { color: Colors.dark.tint }]}>{label}</Text>
+              <Text style={[styles.months, { color: Colors.dark.textSecondary }]}>{months}</Text>
             </View>
           );
         })}
       </View>
-      <View style={[styles.line, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]} />
+      <View style={[styles.line, { backgroundColor: '#2A2A2A' }]} />
     </View>
   );
 }
@@ -57,7 +54,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   title: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: Spacing.md,
   },
@@ -94,14 +91,14 @@ const styles = StyleSheet.create({
   check: {
     color: Colors.white,
     fontSize: 14,
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
   },
   label: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 13,
   },
   months: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
     marginTop: 2,
   },

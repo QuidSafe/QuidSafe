@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Check, X, Info, AlertTriangle } from 'lucide-react-native';
 import { Colors, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { hapticSuccess, hapticError } from '@/lib/haptics';
@@ -44,17 +44,18 @@ const TOAST_COLORS: Record<ToastType, string> = {
   warning: Colors.accent,
 };
 
-const TOAST_ICONS: Record<ToastType, React.ComponentProps<typeof FontAwesome>['name']> = {
-  success: 'check',
-  error: 'times',
-  info: 'info-circle',
-  warning: 'exclamation-triangle',
+const TOAST_ICONS: Record<ToastType, React.FC<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  success: Check,
+  error: X,
+  info: Info,
+  warning: AlertTriangle,
 };
 
 function ToastIcon({ type }: { type: ToastType }) {
+  const IconComponent = TOAST_ICONS[type];
   return (
     <View style={styles.iconContainer}>
-      <FontAwesome name={TOAST_ICONS[type]} size={14} color="#FFF" />
+      <IconComponent size={14} color="#FFF" strokeWidth={1.5} />
     </View>
   );
 }
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
   toastText: {
     flex: 1,
     color: Colors.white,
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     lineHeight: 20,
   },

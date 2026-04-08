@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { PoundSterling, Check, Pencil, Lock, CheckCircle } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 
 const SIZE = 200;
@@ -102,7 +102,7 @@ export function WelcomeIllustration() {
         <View style={s.shieldBottom} />
         {/* Pound icon */}
         <View style={s.shieldIconWrap}>
-          <FontAwesome name="gbp" size={36} color={Colors.accent} />
+          <PoundSterling size={36} color={Colors.accent} strokeWidth={1.5} />
         </View>
       </Animated.View>
     </View>
@@ -171,7 +171,7 @@ export function BusinessIllustration() {
 
           {/* Checkmark */}
           <View style={s.checkCircle}>
-            <FontAwesome name="check" size={18} color={Colors.white} />
+            <Check size={18} color={Colors.white} strokeWidth={1.5} />
           </View>
         </View>
 
@@ -179,7 +179,7 @@ export function BusinessIllustration() {
         <Animated.View
           style={[s.penWrap, { transform: [{ translateY: penFloat }] }]}
         >
-          <FontAwesome name="pencil" size={22} color={Colors.accent} />
+          <Pencil size={22} color={Colors.accent} strokeWidth={1.5} />
         </Animated.View>
       </Animated.View>
     </View>
@@ -247,14 +247,14 @@ export function BankIllustration() {
           />
           {/* Lock icon */}
           <View style={s.lockCircle}>
-            <FontAwesome name="lock" size={14} color={Colors.white} />
+            <Lock size={14} color={Colors.white} strokeWidth={1.5} />
           </View>
         </View>
 
         {/* Phone shape */}
         <View style={s.phone}>
           <View style={s.phoneScreen}>
-            <FontAwesome name="check-circle" size={18} color={Colors.success} />
+            <CheckCircle size={18} color={Colors.success} strokeWidth={1.5} />
           </View>
           <View style={s.phoneButton} />
         </View>
@@ -350,13 +350,13 @@ const s = StyleSheet.create({
     alignSelf: 'center',
     width: 40,
     height: 16,
-    backgroundColor: Colors.grey[500],
+    backgroundColor: '#666666',
     borderRadius: 4,
     zIndex: 2,
   },
   textLine: {
     height: 6,
-    backgroundColor: Colors.grey[600],
+    backgroundColor: '#666666',
     borderRadius: 3,
     marginBottom: 10,
   },
@@ -464,7 +464,7 @@ const s = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: Colors.grey[600],
+    borderColor: '#666666',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,
@@ -472,7 +472,7 @@ const s = StyleSheet.create({
   phoneScreen: {
     flex: 1,
     width: '100%',
-    backgroundColor: Colors.grey[800],
+    backgroundColor: '#0A0A0A',
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -481,7 +481,7 @@ const s = StyleSheet.create({
     width: 16,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.grey[600],
+    backgroundColor: '#666666',
     marginTop: 4,
     marginBottom: 2,
   },

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable, Image, Modal, StyleSheet, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { FontAwesome } from '@expo/vector-icons';
+import { Camera, ImageIcon, XCircle } from 'lucide-react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -62,7 +62,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
             accessibilityRole="button"
             accessibilityLabel="Remove receipt photo"
           >
-            <FontAwesome name="times-circle" size={24} color={Colors.error} />
+            <XCircle size={24} color={Colors.error} strokeWidth={1.5} />
           </Pressable>
         </View>
       </View>
@@ -89,7 +89,7 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
         accessibilityLabel="Add receipt photo"
         accessibilityHint="Tap to take a photo or choose from your library"
       >
-        <FontAwesome name="camera" size={20} color={colors.textSecondary} />
+        <Camera size={20} color={colors.textSecondary} strokeWidth={1.5} />
         <Text style={[styles.addButtonText, { color: colors.textSecondary }]}>Add Receipt</Text>
       </Pressable>
 
@@ -108,8 +108,8 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
               accessibilityRole="button"
               accessibilityLabel="Take photo"
             >
-              <View style={[styles.optionIcon, { backgroundColor: '#EFF6FF' }]}>
-                <FontAwesome name="camera" size={20} color={Colors.secondary} />
+              <View style={[styles.optionIcon, { backgroundColor: 'rgba(0,102,255,0.15)' }]}>
+                <Camera size={20} color={Colors.secondary} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
                 <Text style={[styles.optionTitle, { color: colors.text }]}>Take Photo</Text>
@@ -129,8 +129,8 @@ export function ReceiptCapture({ imageUri, onImageSelected, onImageRemoved }: Re
               accessibilityRole="button"
               accessibilityLabel="Choose from library"
             >
-              <View style={[styles.optionIcon, { backgroundColor: '#F0FDF4' }]}>
-                <FontAwesome name="image" size={20} color={Colors.success} />
+              <View style={[styles.optionIcon, { backgroundColor: 'rgba(0,200,83,0.15)' }]}>
+                <ImageIcon size={20} color={Colors.success} strokeWidth={1.5} />
               </View>
               <View style={styles.optionText}>
                 <Text style={[styles.optionTitle, { color: colors.text }]}>Choose from Library</Text>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   label: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   addButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   pressed: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   modalTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 18,
     textAlign: 'center',
   },
@@ -240,11 +240,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
   },
   optionSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   cancelText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 });

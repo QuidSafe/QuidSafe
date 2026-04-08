@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, TextInput, Text, Pressable, StyleSheet, Platform } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Search, XCircle, Calendar, X } from 'lucide-react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -115,7 +115,7 @@ export function SearchFilter({
           },
         ]}
       >
-        <FontAwesome name="search" size={14} color={colors.textSecondary} style={styles.searchIcon} />
+        <Search size={14} color={colors.textSecondary} strokeWidth={1.5} style={styles.searchIcon} />
         <TextInput
           style={[styles.searchInput, { color: colors.text }]}
           placeholder={searchPlaceholder}
@@ -126,7 +126,7 @@ export function SearchFilter({
         />
         {searchText.length > 0 && (
           <Pressable onPress={clearSearch} hitSlop={8} accessibilityLabel="Clear search">
-            <FontAwesome name="times-circle" size={16} color={colors.textSecondary} />
+            <XCircle size={16} color={colors.textSecondary} strokeWidth={1.5} />
           </Pressable>
         )}
 
@@ -147,10 +147,10 @@ export function SearchFilter({
             accessibilityLabel="Toggle date filter"
             accessibilityRole="button"
           >
-            <FontAwesome
-              name="calendar"
+            <Calendar
               size={12}
               color={dateExpanded || fromDate || toDate ? Colors.accent : colors.textSecondary}
+              strokeWidth={1.5}
             />
             <Text
               style={[
@@ -196,7 +196,7 @@ export function SearchFilter({
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontFamily: 'Manrope, sans-serif',
+                      fontFamily: 'Source Sans 3, sans-serif',
                       fontSize: 13,
                       color: colors.text,
                       padding: 0,
@@ -236,7 +236,7 @@ export function SearchFilter({
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontFamily: 'Manrope, sans-serif',
+                      fontFamily: 'Source Sans 3, sans-serif',
                       fontSize: 13,
                       color: colors.text,
                       padding: 0,
@@ -265,7 +265,7 @@ export function SearchFilter({
       {/* Clear filters link */}
       {hasActiveFilters && (
         <Pressable onPress={clearAll} style={styles.clearLink} accessibilityLabel="Clear all filters">
-          <FontAwesome name="times" size={11} color={Colors.accent} />
+          <X size={11} color={Colors.accent} strokeWidth={1.5} />
           <Text style={styles.clearLinkText}>Clear filters</Text>
         </Pressable>
       )}
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     padding: 0,
   },
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   filterChipText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
 
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.lexend.medium,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   dateInput: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   clearLinkText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     color: Colors.accent,
   },
