@@ -144,28 +144,18 @@ describe('BorderRadius constants', () => {
   it('has expected border radius values', () => {
     expect(BorderRadius.card).toBe(12);
     expect(BorderRadius.input).toBe(8);
-    expect(BorderRadius.pill).toBe(9999);
+    expect(BorderRadius.pill).toBe(999);
     expect(BorderRadius.button).toBe(8);
-    expect(BorderRadius.hero).toBe(24);
   });
 });
 
-// ─── Shadows constants ──────────────────────────────────
+// ─── Shadows removed from design system ─────────────────
 
-describe('Shadows constants', () => {
-  it('has soft, medium, and large shadow presets', () => {
+describe('Shadows constants (legacy compat)', () => {
+  it('exports zeroed-out shadow presets for backward compat', () => {
     expect(Shadows.soft).toBeDefined();
-    expect(Shadows.medium).toBeDefined();
-    expect(Shadows.large).toBeDefined();
-  });
-
-  it('soft shadow has expected properties', () => {
-    expect(Shadows.soft.shadowColor).toBe('#000000');
-    expect(Shadows.soft.elevation).toBe(2);
-  });
-
-  it('elevation increases with shadow intensity', () => {
-    expect(Shadows.soft.elevation).toBeLessThan(Shadows.medium.elevation);
-    expect(Shadows.medium.elevation).toBeLessThan(Shadows.large.elevation);
+    expect(Shadows.soft.elevation).toBe(0);
+    expect(Shadows.medium.elevation).toBe(0);
+    expect(Shadows.large.elevation).toBe(0);
   });
 });

@@ -1,18 +1,9 @@
 import { useFonts } from 'expo-font';
-import {
-  Lexend_400Regular,
-  Lexend_500Medium,
-  Lexend_600SemiBold,
-  Lexend_700Bold,
-} from '@expo-google-fonts/lexend';
+import { Lexend_600SemiBold } from '@expo-google-fonts/lexend';
 import {
   SourceSans3_400Regular,
   SourceSans3_600SemiBold,
 } from '@expo-google-fonts/source-sans-3';
-import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_600SemiBold,
-} from '@expo-google-fonts/jetbrains-mono';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -83,14 +74,9 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    Lexend_400Regular,
-    Lexend_500Medium,
     Lexend_600SemiBold,
-    Lexend_700Bold,
     SourceSans3_400Regular,
     SourceSans3_600SemiBold,
-    JetBrainsMono_400Regular,
-    JetBrainsMono_600SemiBold,
   });
 
   useEffect(() => {
@@ -240,7 +226,7 @@ export default function RootLayout() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&display=swap"
         rel="stylesheet"
       />
     </Head>

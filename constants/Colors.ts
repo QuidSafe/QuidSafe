@@ -1,7 +1,7 @@
-// QuidSafe Design System Colors
-// New palette: Black + Electric Blue, flat and clean
+// QuidSafe Design System — Dark-only palette
+
+// ── Flat tokens ──────────────────────────────────────────
 export const Colors = {
-  // Primary palette
   black: '#000000',
   charcoal: '#0A0A0A',
   darkGrey: '#1A1A1A',
@@ -12,19 +12,15 @@ export const Colors = {
   white: '#FFFFFF',
   lightGrey: '#A0A0A0',
   muted: '#666666',
-
-  // Semantic colours
   success: '#00C853',
   warning: '#FF9500',
   error: '#FF3B30',
-  info: '#0066FF',
 
-  // Legacy aliases (referenced across screens)
+  // Legacy aliases — screens still reference these; remove when migrated
   primary: '#000000',
   secondary: '#0066FF',
   accent: '#0066FF',
-
-  // Dark-only theme palette
+  info: '#0066FF',
   dark: {
     text: '#FFFFFF',
     textSecondary: '#A0A0A0',
@@ -40,6 +36,32 @@ export const Colors = {
   },
 };
 
+// ── Semantic tokens (single dark theme) ──────────────────
+export const colors = {
+  background: '#000000',
+  surface: '#0A0A0A',
+  surfaceSecondary: '#1A1A1A',
+  border: '#2A2A2A',
+  text: '#FFFFFF',
+  textSecondary: '#A0A0A0',
+  textMuted: '#666666',
+  accent: '#0066FF',
+  accentPressed: '#0052CC',
+  accentGlow: 'rgba(0, 102, 255, 0.15)',
+  success: '#00C853',
+  warning: '#FF9500',
+  error: '#FF3B30',
+};
+
+// ── Layout tokens ────────────────────────────────────────
+export const BorderRadius = {
+  card: 12,
+  button: 8,
+  input: 8,
+  pill: 999,
+  hero: 24, // legacy — remove when screens migrate
+};
+
 export const Spacing = {
   xs: 4,
   sm: 8,
@@ -49,66 +71,57 @@ export const Spacing = {
   xxl: 48,
 };
 
-export const BorderRadius = {
-  card: 12,
-  input: 8,
-  pill: 9999,
-  button: 8,
-  hero: 24,
-};
-
+// ── Legacy compat — remove when screens migrate ─────────
 export const Shadows = {
   soft: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   medium: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   large: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 6,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   darkSoft: {
-    shadowColor: 'rgba(0,0,0,0.4)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   darkMedium: {
-    shadowColor: 'rgba(0,0,0,0.5)',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   darkLarge: {
-    shadowColor: 'rgba(0,0,0,0.6)',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 28,
-    elevation: 8,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 };
 
-/** Standard press state — use in Pressable style callback */
 export const PressedState = {
   opacity: 0.9,
   transform: [{ scale: 0.98 }] as const,
 };
 
-/** Semantic category background tints — dark-only, use for icon containers and badges */
 export const CategoryTints = {
   blue: { bg: 'rgba(0,102,255,0.15)', color: '#0066FF' },
   green: { bg: 'rgba(0,200,83,0.15)', color: '#00C853' },
