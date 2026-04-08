@@ -15,7 +15,7 @@ export function BrandLogo({ size = 36, showText = true, textSize = 24 }: BrandLo
   return (
     <View style={styles.container}>
       <View style={[styles.shieldWrap, { width: size, height: size }]}>
-        <FontAwesome name="shield" size={size} color={Colors.grey[800]} />
+        <FontAwesome name="shield" size={size} color={Colors.primary} />
         <Text
           style={[
             styles.pound,
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     textAlign: 'center',
     fontFamily: Fonts.manrope.bold,
-    color: '#3B82F6',
+    color: Colors.accent,
     top: 0,
     left: 0,
   },
