@@ -57,4 +57,5 @@ migrations_dir = "worker/migrations"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+# TODO: Replace with production Clerk publishable key (pk_live_...) from Clerk Dashboard > API Keys
+CLERK_PUBLISHABLE_KEY = "pk_live_REPLACE_WITH_PRODUCTION_KEY"

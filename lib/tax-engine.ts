@@ -37,6 +37,7 @@ export const TAX_YEARS: Record<string, TaxYearConfig> = {
     niClass4MainRate: 0.06,
     niClass4AdditionalRate: 0.02,
   },
+  // TODO: 2026/27 rates are PROVISIONAL — copied from 2025/26. Update when HMRC publishes official rates.
   '2026/27': {
     year: '2026/27',
     personalAllowance: 12_570,
@@ -137,13 +138,17 @@ export function calculatePersonalAllowance(income: number, config: TaxYearConfig
   return Math.max(0, config.personalAllowance - reduction);
 }
 
-export function calculateIncomeTax(taxableIncome: number, config: TaxYearConfig): IncomeTaxBreakdown {
+export function calculateIncomeTax(taxableIncome: number, config: TaxYearConfig, actualPersonalAllowance?: number): IncomeTaxBreakdown {
   if (taxableIncome <= 0) return { basicRate: 0, higherRate: 0, additionalRate: 0, total: 0 };
 
   let remaining = taxableIncome;
 
-  // Basic rate band
-  const basicBand = config.basicRateThreshold - config.personalAllowance;
+  // Basic rate band width = basicRateThreshold minus the ACTUAL (tapered) PA.
+  // When PA tapers for income over £100k, the income that loses its PA protection
+  // falls into the basic rate band — so the band widens from £37,700 up to £50,270.
+  // taxableIncome already has actualPA deducted, so the band must match.
+  const pa = actualPersonalAllowance ?? config.personalAllowance;
+  const basicBand = config.basicRateThreshold - pa;
   const basicAmount = Math.min(remaining, basicBand);
   const basicTax = round(basicAmount * config.basicRate);
   remaining -= basicAmount;
@@ -229,7 +234,7 @@ export function calculateTax(input: TaxInput): TaxResult {
   const personalAllowance = calculatePersonalAllowance(netProfit, config);
   const taxableIncome = Math.max(0, netProfit - personalAllowance);
 
-  const incomeTax = calculateIncomeTax(taxableIncome, config);
+  const incomeTax = calculateIncomeTax(taxableIncome, config, personalAllowance);
   const nationalInsurance = calculateNI(netProfit, config);
   const totalTaxOwed = round(incomeTax.total + nationalInsurance.total);
 
@@ -332,7 +337,7 @@ export function calculateIncomeTaxFromGross(grossIncome: number, taxYear: string
   const config = getConfig(taxYear);
   const pa = calculatePersonalAllowance(grossIncome, config);
   const taxableIncome = Math.max(0, grossIncome - pa);
-  return calculateIncomeTax(taxableIncome, config);
+  return calculateIncomeTax(taxableIncome, config, pa);
 }
 
 /**

@@ -132,7 +132,8 @@ app.use(
       if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
         return origin;
       }
-      return origin; // return origin as-is; Hono CORS will block if not in allow list
+      // Block unknown origins — returning empty string omits Access-Control-Allow-Origin header
+      return '';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
@@ -1375,8 +1376,8 @@ authed.post('/devices', async (c) => {
   }
   const { pushToken, platform } = result.data;
 
-  // Remove any existing entry for this token, then insert
-  await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ?', [pushToken]);
+  // Remove any existing entry for this token owned by this user, then insert
+  await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ? AND user_id = ?', [pushToken, userId]);
   await execute(
     c.env.DB,
     'INSERT INTO user_devices (user_id, push_token, platform) VALUES (?, ?, ?)',
@@ -1453,7 +1454,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             .prepare('UPDATE bank_connections SET active = 0 WHERE id = ?')
             .bind(connection.id)
             .run();
-          console.log(`[Cron] Connection ${connection.id} expired — deactivated`);
+          console.log('[Cron] Connection expired — deactivated');
           failCount++;
           continue;
         }
@@ -1461,7 +1462,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
       }
 
       const result = await syncTransactions(env.DB, connection, config);
-      console.log(`[Cron] Synced ${result.synced} txns for connection ${connection.id} (${result.skipped} skipped)`);
+      console.log(`[Cron] Synced ${result.synced} txns (${result.skipped} skipped)`);
 
       // Auto-categorise newly synced transactions
       if (result.synced > 0) {
@@ -1472,16 +1473,16 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
             .all<{ id: string; amount: number; description: string; merchant_name: string | null }>();
           if (uncatTxns.results.length > 0) {
             const catCount = await categoriseAndSave(env.DB, uncatTxns.results, connection.user_id, env.ANTHROPIC_API_KEY);
-            console.log(`[Cron] Auto-categorised ${catCount} txns for user ${connection.user_id}`);
+            console.log(`[Cron] Auto-categorised ${catCount} txns`);
           }
         } catch (catErr) {
-          console.error(`[Cron] Auto-categorisation failed for ${connection.user_id}:`, catErr);
+          console.error('[Cron] Auto-categorisation failed:', catErr);
         }
       }
 
       successCount++;
     } catch (err) {
-      console.error(`[Cron] Sync failed for connection ${connection.id}:`, err);
+      console.error('[Cron] Sync failed:', err);
       failCount++;
     }
   }
@@ -1505,7 +1506,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
         .prepare('UPDATE subscriptions SET status = ? WHERE user_id = ?')
         .bind('cancelled', user.id)
         .run();
-      console.log(`[Cron] Grace period expired for user ${user.id} — subscription cancelled`);
+      console.log('[Cron] Grace period expired — subscription cancelled');
     }
 
     if (expiredGrace.results.length > 0) {
