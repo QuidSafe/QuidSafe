@@ -14,6 +14,12 @@ export const Fonts = {
 };
 
 export const Typography = {
+  // Display headings (PlayfairDisplay)
+  h1Large: {
+    fontFamily: Fonts.playfair.bold,
+    fontSize: 48,
+    lineHeight: 56,
+  },
   h1: {
     fontFamily: Fonts.playfair.bold,
     fontSize: 32,
@@ -24,6 +30,14 @@ export const Typography = {
     fontSize: 24,
     lineHeight: 32,
   },
+  // Stat / big number display
+  stat: {
+    fontFamily: Fonts.playfair.bold,
+    fontSize: 40,
+    lineHeight: 44,
+  },
+
+  // UI headings and body (Manrope)
   h3: {
     fontFamily: Fonts.manrope.bold,
     fontSize: 20,
@@ -39,6 +53,11 @@ export const Typography = {
     fontSize: 16,
     lineHeight: 24,
   },
+  bodyLarge: {
+    fontFamily: Fonts.manrope.regular,
+    fontSize: 18,
+    lineHeight: 28,
+  },
   bodySmall: {
     fontFamily: Fonts.manrope.regular,
     fontSize: 14,
@@ -48,6 +67,13 @@ export const Typography = {
     fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     lineHeight: 16,
+  },
+  // Uppercase labels (SET ASIDE FOR TAX, etc.)
+  label: {
+    fontFamily: Fonts.manrope.bold,
+    fontSize: 10,
+    lineHeight: 14,
+    letterSpacing: 1.5,
   },
   button: {
     fontFamily: Fonts.manrope.semiBold,
