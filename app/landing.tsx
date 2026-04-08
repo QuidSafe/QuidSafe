@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Shield, Lock, Zap, BarChart3, FileText, Landmark, ChevronDown, Check, ArrowRight } from 'lucide-react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { BrandLogo } from '@/components/ui/BrandLogo';
@@ -55,7 +54,7 @@ const HOW_IT_WORKS = [
 ];
 
 const FEATURES: {
-  iconName: React.ComponentProps<typeof FontAwesome>['name'];
+  iconName: string;
   title: string;
   description: string;
   gradient: readonly [string, string];
@@ -63,61 +62,61 @@ const FEATURES: {
   iconColor: string;
 }[] = [
   {
-    iconName: 'magic',
+    iconName: 'zap',
     title: 'AI Categorisation',
     description: 'Every transaction auto-categorised by AI. No more "is this an allowable expense?" guessing.',
-    gradient: ['rgba(202,138,4,0.15)', 'rgba(202,138,4,0.05)'],
-    iconBg: 'rgba(202,138,4,0.2)',
-    iconColor: '#CA8A04',
+    gradient: ['rgba(0,102,255,0.15)', 'rgba(0,102,255,0.05)'],
+    iconBg: 'rgba(0,102,255,0.2)',
+    iconColor: '#0066FF',
   },
   {
-    iconName: 'calculator',
+    iconName: 'bar-chart',
     title: 'Tax Set-Aside Calculator',
     description: 'Know your Income Tax and National Insurance in real time — not as a surprise in January.',
-    gradient: ['rgba(22,163,74,0.15)', 'rgba(22,163,74,0.05)'],
-    iconBg: 'rgba(22,163,74,0.2)',
-    iconColor: '#16A34A',
+    gradient: ['rgba(0,200,83,0.15)', 'rgba(0,200,83,0.05)'],
+    iconBg: 'rgba(0,200,83,0.2)',
+    iconColor: '#00C853',
   },
   {
-    iconName: 'calendar-check-o',
+    iconName: 'file-text',
     title: 'MTD Quarterly Submissions',
     description: 'Submit to HMRC directly from the app. Making Tax Digital compliant from day one.',
-    gradient: ['rgba(30,58,138,0.2)', 'rgba(30,58,138,0.05)'],
-    iconBg: 'rgba(30,58,138,0.3)',
-    iconColor: '#3B82F6',
+    gradient: ['rgba(0,102,255,0.2)', 'rgba(0,102,255,0.05)'],
+    iconBg: 'rgba(0,102,255,0.3)',
+    iconColor: '#0066FF',
   },
   {
-    iconName: 'university',
+    iconName: 'landmark',
     title: 'Open Banking Integration',
     description: 'Connect your existing bank accounts. No new accounts needed. Via TrueLayer (FCA authorised).',
-    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.03)'],
-    iconBg: 'rgba(148,163,184,0.15)',
-    iconColor: '#94A3B8',
+    gradient: ['rgba(160,160,160,0.1)', 'rgba(160,160,160,0.03)'],
+    iconBg: 'rgba(160,160,160,0.15)',
+    iconColor: '#A0A0A0',
   },
   {
-    iconName: 'file-text-o',
+    iconName: 'file-text',
     title: 'Professional Invoices',
     description: 'Create, send, and track invoices. Know when you have been paid — all in one place.',
-    gradient: ['rgba(202,138,4,0.1)', 'rgba(30,58,138,0.05)'],
-    iconBg: 'rgba(202,138,4,0.15)',
-    iconColor: '#CA8A04',
+    gradient: ['rgba(0,102,255,0.1)', 'rgba(0,102,255,0.05)'],
+    iconBg: 'rgba(0,102,255,0.15)',
+    iconColor: '#0066FF',
   },
   {
-    iconName: 'download',
+    iconName: 'arrow-right',
     title: 'Full Data Export',
     description: 'Download everything as CSV anytime. Your data always belongs to you.',
-    gradient: ['rgba(148,163,184,0.1)', 'rgba(148,163,184,0.02)'],
-    iconBg: 'rgba(148,163,184,0.12)',
-    iconColor: '#94A3B8',
+    gradient: ['rgba(160,160,160,0.1)', 'rgba(160,160,160,0.02)'],
+    iconBg: 'rgba(160,160,160,0.12)',
+    iconColor: '#A0A0A0',
   },
 ];
 
-const TRUST_ITEMS: { iconName: React.ComponentProps<typeof FontAwesome>['name']; label: string; sublabel: string }[] = [
+const TRUST_ITEMS: { iconName: string; label: string; sublabel: string }[] = [
   { iconName: 'shield', label: 'FCA-Regulated Banking', sublabel: 'Open Banking via TrueLayer' },
   { iconName: 'lock', label: 'AES-256 Encryption', sublabel: 'Bank-grade security' },
-  { iconName: 'check-circle', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
-  { iconName: 'eye', label: 'Read-Only Access', sublabel: 'We can never move money' },
-  { iconName: 'building-o', label: 'HMRC Recognised', sublabel: 'Approved for MTD submissions' },
+  { iconName: 'check', label: 'HMRC Compliant', sublabel: 'Making Tax Digital ready' },
+  { iconName: 'shield', label: 'Read-Only Access', sublabel: 'We can never move money' },
+  { iconName: 'landmark', label: 'HMRC Recognised', sublabel: 'Approved for MTD submissions' },
 ];
 
 const SUPPORTED_BANKS = [
@@ -337,12 +336,7 @@ export default function LandingScreen() {
         scrollEventThrottle={16}
       >
         {/* ═══════════════ HERO ═══════════════ */}
-        <LinearGradient
-          colors={['#080C18', '#0F172A', '#162044', '#0F172A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.hero}
-        >
+        <View style={[styles.hero, {backgroundColor: '#000000'}]}>
 
           <SafeAreaView edges={['top']} style={styles.heroSafe}>
             {/* Hero-local nav (hidden once sticky header takes over) */}
@@ -412,22 +406,25 @@ export default function LandingScreen() {
 
             </View>
           </SafeAreaView>
-        </LinearGradient>
+        </View>
 
         {/* ═══════════════ TRUST BAR ═══════════════ */}
         <View style={styles.trustBar}>
           <View style={[styles.trustBarInner, { maxWidth: contentMaxWidth }, isDesktop && styles.trustBarDesktop]}>
-            {TRUST_ITEMS.map((item) => (
+            {TRUST_ITEMS.map((item) => {
+              const IconComponent = item.iconName === 'shield' ? Shield : item.iconName === 'lock' ? Lock : item.iconName === 'check' ? Check : Landmark;
+              return (
               <View key={item.label} style={styles.trustItem}>
                 <View style={styles.trustIconCircle}>
-                  <FontAwesome name={item.iconName} size={14} color={Colors.accent} />
+                  <IconComponent size={14} color={Colors.accent} strokeWidth={1.5} />
                 </View>
                 <View>
                   <Text style={styles.trustLabel}>{item.label}</Text>
                   <Text style={styles.trustSublabel}>{item.sublabel}</Text>
                 </View>
               </View>
-            ))}
+              );
+            })}
           </View>
           {/* Bank logo strip */}
           <View style={[styles.bankStrip, { maxWidth: contentMaxWidth }]}>
@@ -440,7 +437,7 @@ export default function LandingScreen() {
 
         {/* ═══════════════ HOW IT WORKS ═══════════════ */}
         <View
-          style={[styles.section, { backgroundColor: '#0B0F1A' }]}
+          style={[styles.section, { backgroundColor: '#000000' }]}
           onLayout={(e) => { sectionOffsets.current['How it works'] = e.nativeEvent.layout.y; }}
         >
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
@@ -484,27 +481,24 @@ export default function LandingScreen() {
             </Text>
 
             <View style={[styles.featuresGrid, isWide && styles.featuresGridDesktop]}>
-              {FEATURES.map((f) => (
+              {FEATURES.map((f) => {
+                const FeatureIcon = f.iconName === 'zap' ? Zap : f.iconName === 'bar-chart' ? BarChart3 : f.iconName === 'file-text' ? FileText : f.iconName === 'landmark' ? Landmark : ArrowRight;
+                return (
                 <View
                   key={f.title}
                   style={[
                     styles.featureCard,
-                    { width: isWide ? '30%' as any : isDesktop ? '46%' as any : '100%' as any },
+                    { width: isWide ? '30%' as any : isDesktop ? '46%' as any : '100%' as any, backgroundColor: f.gradient[0] },
                   ]}
                 >
-                  <LinearGradient
-                    colors={[...f.gradient]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
                   <View style={[styles.featureIconCircle, { backgroundColor: f.iconBg }]}>
-                    <FontAwesome name={f.iconName} size={22} color={f.iconColor} />
+                    <FeatureIcon size={22} color={f.iconColor} strokeWidth={1.5} />
                   </View>
                   <Text style={styles.featureTitle}>{f.title}</Text>
                   <Text style={styles.featureDesc}>{f.description}</Text>
                 </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         </View>
@@ -529,13 +523,7 @@ export default function LandingScreen() {
               One plan. Full access.{'\n'}Less than a coffee a week.
             </Text>
 
-            <View style={styles.pricingCard}>
-              <LinearGradient
-                colors={['rgba(202,138,4,0.1)', 'rgba(30,58,138,0.1)', 'rgba(15,23,42,0.95)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
+            <View style={[styles.pricingCard, {backgroundColor: '#000000'}]}>
               <View style={styles.pricingCardBorder} />
 
               <View style={styles.proBadge}>
@@ -584,7 +572,7 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ MTD SECTION ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: '#0B0F1A' }]}>
+        <View style={[styles.section, { backgroundColor: '#000000' }]}>
           <View style={[styles.sectionInner, { maxWidth: 800 }]}>
             <View style={styles.mtdBadge}>
               <Text style={styles.mtdBadgeText}>IMPORTANT UPDATE</Text>
@@ -654,12 +642,7 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ FINAL CTA ═══════════════ */}
-        <LinearGradient
-          colors={['#0F172A', '#1A2B5C', '#1E3A8A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.finalCTA}
-        >
+        <View style={[styles.finalCTA, {backgroundColor: '#000000'}]}>
           <View style={styles.finalCTAGlow} />
           <Text style={styles.finalCTATitle}>
             Stop guessing.{'\n'}Start knowing.
@@ -673,7 +656,7 @@ export default function LandingScreen() {
             </Pressable>
           </Link>
           <Text style={styles.finalNoCard}>14 days free · No credit card · Cancel anytime</Text>
-        </LinearGradient>
+        </View>
 
         {/* ═══════════════ FOOTER ═══════════════ */}
         <View style={styles.footer}>
@@ -719,7 +702,7 @@ export default function LandingScreen() {
 
 // ─── Styles ──────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#080C18' },
+  root: { flex: 1, backgroundColor: '#000000' },
   scroll: { flex: 1 },
   scrollContent: { flexGrow: 1 },
 
@@ -733,7 +716,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: Spacing.lg,
     alignItems: 'center' as const,
-    backgroundColor: 'rgba(8,12,24,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.06)',
     ...(Platform.OS === 'web' ? {
@@ -744,7 +727,7 @@ const styles = StyleSheet.create({
     } : {}) as any,
   },
   stickyHeaderSolid: {
-    backgroundColor: 'rgba(8,12,24,0.95)',
+    backgroundColor: 'rgba(0,0,0,0.95)',
   },
   stickyHeaderInner: {
     flexDirection: 'row',
@@ -759,7 +742,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stickyNavLink: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     color: 'rgba(255,255,255,0.55)',
     paddingVertical: 6,
@@ -782,15 +765,15 @@ const styles = StyleSheet.create({
   hero: { paddingBottom: 40, overflow: 'hidden', position: 'relative' },
   orbTopRight: {
     position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: 200,
-    backgroundColor: 'rgba(30,58,138,0.15)',
+    backgroundColor: 'rgba(0,102,255,0.15)',
   },
   orbBottomLeft: {
     position: 'absolute', bottom: -50, left: -150, width: 350, height: 350, borderRadius: 175,
-    backgroundColor: 'rgba(202,138,4,0.06)',
+    backgroundColor: 'rgba(0,102,255,0.06)',
   },
   orbCenter: {
     position: 'absolute', top: '40%', left: '30%', width: 500, height: 500, borderRadius: 250,
-    backgroundColor: 'rgba(30,58,138,0.08)',
+    backgroundColor: 'rgba(0,102,255,0.08)',
     transform: [{ translateX: -250 }, { translateY: -250 }],
   },
   heroSafe: { alignItems: 'center', width: '100%' },
@@ -800,30 +783,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     width: '100%', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm,
   },
-  navLogo: { fontFamily: Fonts.playfair.bold, fontSize: 28, color: Colors.white, letterSpacing: -0.5 },
+  navLogo: { fontFamily: Fonts.lexend.bold, fontSize: 28, color: Colors.white, letterSpacing: -0.5 },
   navLinks: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
-  navLink: { fontFamily: Fonts.manrope.medium, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
+  navLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
   navLoginBtn: {
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.button,
   },
-  navLoginText: { fontFamily: Fonts.manrope.medium, fontSize: 14, color: 'rgba(255,255,255,0.8)' },
+  navLoginText: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.8)' },
   navCTABtn: {
     paddingVertical: 10, paddingHorizontal: 20,
     borderRadius: BorderRadius.button, backgroundColor: Colors.accent,
   },
-  navCTAText: { fontFamily: Fonts.manrope.bold, fontSize: 14, color: Colors.white },
+  navCTAText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: Colors.white },
 
   // Urgency banner
   urgencyBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(30,58,138,0.1)', borderWidth: 1, borderColor: 'rgba(30,58,138,0.2)',
+    backgroundColor: 'rgba(0,102,255,0.1)', borderWidth: 1, borderColor: 'rgba(0,102,255,0.2)',
     borderRadius: BorderRadius.pill, paddingVertical: 8, paddingHorizontal: 16,
     marginTop: Spacing.md, marginHorizontal: Spacing.lg,
     alignSelf: 'center',
   },
   urgencyDot: { fontSize: 8, color: Colors.secondary },
-  urgencyText: { fontFamily: Fonts.manrope.medium, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  urgencyText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
 
   // Hero content
   heroContent: {
@@ -837,13 +820,13 @@ const styles = StyleSheet.create({
   heroPhoneColumn: { alignItems: 'center', marginTop: 48 },
   heroPhoneColumnDesktop: { marginTop: 0, flexShrink: 0 },
   heroHeadline: {
-    fontFamily: Fonts.playfair.bold, fontSize: 42, color: Colors.white,
+    fontFamily: Fonts.lexend.bold, fontSize: 42, color: Colors.white,
     textAlign: 'center', lineHeight: 52, letterSpacing: -0.5,
   },
   heroHeadlineDesktop: { fontSize: 64, lineHeight: 76, textAlign: 'left', letterSpacing: -1 },
   heroHeadlineGold: { color: Colors.accent },
   heroSubtitle: {
-    fontFamily: Fonts.manrope.regular, fontSize: 18, color: 'rgba(248,250,252,0.6)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 18, color: 'rgba(248,250,252,0.6)',
     textAlign: 'center', marginTop: Spacing.lg, lineHeight: 30, maxWidth: 520,
   },
   heroSubtitleDesktop: { fontSize: 20, lineHeight: 32, textAlign: 'left' },
@@ -853,11 +836,11 @@ const styles = StyleSheet.create({
   },
   heroCTAsDesktop: { flexDirection: 'row', alignItems: 'center', maxWidth: 440 },
   heroNoCard: {
-    fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)',
     marginTop: Spacing.md,
   },
   heroJoinCount: {
-    fontFamily: Fonts.manrope.semiBold, fontSize: 13, color: Colors.accent,
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: Colors.accent,
     marginTop: Spacing.sm, opacity: 0.85,
   },
 
@@ -865,24 +848,24 @@ const styles = StyleSheet.create({
   ctaGold: {
     backgroundColor: Colors.accent, paddingVertical: 18, paddingHorizontal: 36,
     borderRadius: 14, alignItems: 'center', width: '100%',
-    shadowColor: 'rgba(202,138,4,0.4)',
+    shadowColor: 'rgba(0,102,255,0.4)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 24,
     elevation: 8,
   },
-  ctaGoldText: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white, letterSpacing: 0.3 },
+  ctaGoldText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: Colors.white, letterSpacing: 0.3 },
   ctaGhost: {
     paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14,
     alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)', width: '100%',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  ctaGhostText: { fontFamily: Fonts.manrope.semiBold, fontSize: 16, color: 'rgba(255,255,255,0.8)' },
+  ctaGhostText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: 'rgba(255,255,255,0.8)' },
   pressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
 
   // ── Trust Bar ──
   trustBar: {
-    backgroundColor: '#060A14', paddingVertical: Spacing.xl, alignItems: 'center',
+    backgroundColor: '#000000', paddingVertical: Spacing.xl, alignItems: 'center',
     borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
   },
   trustBarInner: {
@@ -893,23 +876,23 @@ const styles = StyleSheet.create({
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   trustIconCircle: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(202,138,4,0.1)',
-    borderWidth: 1, borderColor: 'rgba(202,138,4,0.15)',
+    backgroundColor: 'rgba(0,102,255,0.1)',
+    borderWidth: 1, borderColor: 'rgba(0,102,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  trustLabel: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
-  trustSublabel: { fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
+  trustLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+  trustSublabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, color: 'rgba(255,255,255,0.4)' },
   bankStrip: {
     width: '100%', alignItems: 'center', paddingHorizontal: Spacing.lg,
     marginTop: Spacing.lg, paddingTop: Spacing.lg,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)',
   },
   bankStripPrefix: {
-    fontFamily: Fonts.manrope.semiBold, fontSize: 11, color: 'rgba(255,255,255,0.35)',
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: 'rgba(255,255,255,0.35)',
     letterSpacing: 1, textTransform: 'uppercase', marginBottom: Spacing.sm,
   },
   bankStripNames: {
-    fontFamily: Fonts.manrope.medium, fontSize: 13, color: 'rgba(255,255,255,0.5)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.5)',
     textAlign: 'center', lineHeight: 22,
   },
 
@@ -917,15 +900,15 @@ const styles = StyleSheet.create({
   section: { paddingVertical: 80, alignItems: 'center' },
   sectionInner: { width: '100%', paddingHorizontal: Spacing.lg, alignItems: 'center' },
   sectionTag: {
-    fontFamily: Fonts.manrope.bold, fontSize: 11, letterSpacing: 3, marginBottom: Spacing.md,
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, letterSpacing: 3, marginBottom: Spacing.md,
     textTransform: 'uppercase',
   },
   sectionTitle: {
-    fontFamily: Fonts.playfair.bold, fontSize: 32, textAlign: 'center',
+    fontFamily: Fonts.lexend.bold, fontSize: 32, textAlign: 'center',
     marginBottom: Spacing.lg, lineHeight: 42, letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontFamily: Fonts.manrope.regular, fontSize: 17, textAlign: 'center',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 17, textAlign: 'center',
     lineHeight: 28, maxWidth: 600, marginBottom: Spacing.xl,
   },
 
@@ -939,21 +922,21 @@ const styles = StyleSheet.create({
   },
   stepNumberRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.md, width: '100%', justifyContent: 'center' },
   stepNumberCircle: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(202,138,4,0.15)',
-    borderWidth: 1, borderColor: 'rgba(202,138,4,0.3)',
+    width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,102,255,0.15)',
+    borderWidth: 1, borderColor: 'rgba(0,102,255,0.3)',
     alignItems: 'center', justifyContent: 'center',
   },
-  stepNumber: { fontFamily: Fonts.manrope.bold, fontSize: 14, color: Colors.accent },
+  stepNumber: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: Colors.accent },
   stepConnector: {
-    flex: 1, height: 1, backgroundColor: 'rgba(202,138,4,0.15)', marginLeft: Spacing.md,
+    flex: 1, height: 1, backgroundColor: 'rgba(0,102,255,0.15)', marginLeft: Spacing.md,
   },
   stepIcon: { fontSize: 32, marginBottom: Spacing.md },
   stepTitle: {
-    fontFamily: Fonts.manrope.bold, fontSize: 19, color: Colors.white,
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 19, color: Colors.white,
     marginBottom: Spacing.sm, textAlign: 'center', letterSpacing: -0.2,
   },
   stepDesc: {
-    fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.55)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.55)',
     textAlign: 'center', lineHeight: 22,
   },
 
@@ -978,13 +961,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
-  // featureIcon removed — using FontAwesome component instead
+  // featureIcon removed — using Lucide icons instead
   featureTitle: {
-    fontFamily: Fonts.manrope.bold, fontSize: 18, color: Colors.white, marginBottom: Spacing.sm,
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 18, color: Colors.white, marginBottom: Spacing.sm,
     letterSpacing: -0.2,
   },
   featureDesc: {
-    fontFamily: Fonts.manrope.regular, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.55)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 22, color: 'rgba(255,255,255,0.55)',
   },
 
   // ── Stats bar ──
@@ -997,14 +980,14 @@ const styles = StyleSheet.create({
   },
   statsBarDesktop: { justifyContent: 'space-around' },
   statItem: { alignItems: 'center', minWidth: 120 },
-  statValue: { fontFamily: Fonts.playfair.bold, fontSize: 32, color: Colors.white, letterSpacing: -0.5 },
-  statLabel: { fontFamily: Fonts.manrope.medium, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  statValue: { fontFamily: Fonts.lexend.bold, fontSize: 32, color: Colors.white, letterSpacing: -0.5 },
+  statLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
 
   // ── Pricing ──
   pricingCard: {
     width: '100%', borderRadius: 24, overflow: 'hidden',
     padding: Spacing.xl, position: 'relative',
-    shadowColor: 'rgba(202,138,4,0.15)',
+    shadowColor: 'rgba(0,102,255,0.15)',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 1,
     shadowRadius: 32,
@@ -1012,34 +995,34 @@ const styles = StyleSheet.create({
   },
   pricingCardBorder: {
     ...StyleSheet.absoluteFillObject,
-    borderWidth: 1.5, borderColor: 'rgba(202,138,4,0.25)', borderRadius: 24,
+    borderWidth: 1.5, borderColor: 'rgba(0,102,255,0.25)', borderRadius: 24,
   },
   proBadge: {
     backgroundColor: Colors.accent, paddingVertical: 5, paddingHorizontal: 14,
     borderRadius: BorderRadius.pill, alignSelf: 'center', marginBottom: Spacing.lg,
   },
-  proBadgeText: { fontFamily: Fonts.manrope.bold, fontSize: 11, color: Colors.white, letterSpacing: 1.5 },
+  proBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.white, letterSpacing: 1.5 },
   priceOptions: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: Spacing.lg, marginBottom: Spacing.lg,
   },
   priceOption: { alignItems: 'center' },
-  priceAmount: { fontFamily: Fonts.playfair.bold, fontSize: 42, color: Colors.white, letterSpacing: -1 },
-  pricePeriod: { fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+  priceAmount: { fontFamily: Fonts.lexend.bold, fontSize: 42, color: Colors.white, letterSpacing: -1 },
+  pricePeriod: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   priceOptionDivider: {
     width: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.1)',
   },
   saveBadge: {
-    backgroundColor: 'rgba(22,163,74,0.15)', borderRadius: BorderRadius.pill,
+    backgroundColor: 'rgba(0,200,83,0.15)', borderRadius: BorderRadius.pill,
     paddingVertical: 3, paddingHorizontal: 8, marginTop: 4,
   },
-  saveBadgeText: { fontFamily: Fonts.manrope.bold, fontSize: 10, color: '#16A34A', letterSpacing: 0.5 },
+  saveBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: '#00C853', letterSpacing: 0.5 },
   pricingDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: Spacing.lg },
   pricingFeatureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 10 },
-  checkMark: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.accent },
-  pricingFeatureText: { fontFamily: Fonts.manrope.regular, fontSize: 15, color: 'rgba(255,255,255,0.75)' },
+  checkMark: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: Colors.accent },
+  pricingFeatureText: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, color: 'rgba(255,255,255,0.75)' },
   pricingNoCard: {
-    fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)',
     textAlign: 'center', marginTop: Spacing.sm,
   },
   priceAnchor: {
@@ -1047,16 +1030,16 @@ const styles = StyleSheet.create({
     padding: Spacing.md, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
   },
   priceAnchorText: {
-    fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.45)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.45)',
     textAlign: 'center', lineHeight: 20,
   },
 
   // ── MTD ──
   mtdBadge: {
-    backgroundColor: 'rgba(220,38,38,0.1)', borderWidth: 1, borderColor: 'rgba(220,38,38,0.2)',
+    backgroundColor: 'rgba(255,59,48,0.1)', borderWidth: 1, borderColor: 'rgba(255,59,48,0.2)',
     borderRadius: BorderRadius.pill, paddingVertical: 6, paddingHorizontal: 16, marginBottom: Spacing.md,
   },
-  mtdBadgeText: { fontFamily: Fonts.manrope.bold, fontSize: 11, color: '#DC2626', letterSpacing: 1.5 },
+  mtdBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: '#FF3B30', letterSpacing: 1.5 },
   mtdTimeline: { width: '100%', gap: 0 },
   mtdTimelineDesktop: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.lg },
   mtdTimelineItem: {
@@ -1066,17 +1049,17 @@ const styles = StyleSheet.create({
     width: 14, height: 14, borderRadius: 7, backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', marginTop: 4,
   },
-  mtdDotActive: { backgroundColor: '#DC2626', borderColor: '#DC2626' },
+  mtdDotActive: { backgroundColor: '#FF3B30', borderColor: '#FF3B30' },
   mtdTimelineLine: {
     width: 2, height: 20, backgroundColor: 'rgba(255,255,255,0.08)', marginLeft: 6,
   },
   mtdTimelineContent: { flex: 1 },
-  mtdDate: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: Colors.white, marginBottom: 2 },
-  mtdDesc: { fontFamily: Fonts.manrope.medium, fontSize: 14, color: 'rgba(255,255,255,0.6)' },
-  mtdCount: { fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  mtdDate: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: Colors.white, marginBottom: 2 },
+  mtdDesc: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.6)' },
+  mtdCount: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
   mtdCTA: { alignItems: 'center', marginTop: Spacing.xl, gap: Spacing.md },
   mtdCTAText: {
-    fontFamily: Fonts.manrope.semiBold, fontSize: 16, color: Colors.accent, textAlign: 'center',
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: Colors.accent, textAlign: 'center',
   },
 
   // ── FAQ ──
@@ -1087,18 +1070,18 @@ const styles = StyleSheet.create({
   },
   faqHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   faqQuestion: {
-    fontFamily: Fonts.manrope.semiBold, fontSize: 15, color: Colors.white,
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 15, color: Colors.white,
     flex: 1, paddingRight: Spacing.md,
   },
   faqChevronCircle: {
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center',
   },
-  faqChevronCircleOpen: { backgroundColor: 'rgba(202,138,4,0.15)' },
-  faqChevron: { fontFamily: Fonts.manrope.bold, fontSize: 16, color: 'rgba(255,255,255,0.5)' },
+  faqChevronCircleOpen: { backgroundColor: 'rgba(0,102,255,0.15)' },
+  faqChevron: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, color: 'rgba(255,255,255,0.5)' },
   faqChevronOpen: { color: Colors.accent },
   faqAnswer: {
-    fontFamily: Fonts.manrope.regular, fontSize: 14, lineHeight: 22,
+    fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 22,
     color: 'rgba(255,255,255,0.55)', marginTop: Spacing.md,
   },
 
@@ -1109,25 +1092,25 @@ const styles = StyleSheet.create({
   },
   finalCTAGlow: {
     position: 'absolute', top: '50%', left: '50%', width: 500, height: 500, borderRadius: 250,
-    backgroundColor: 'rgba(202,138,4,0.08)',
+    backgroundColor: 'rgba(0,102,255,0.08)',
     transform: [{ translateX: -250 }, { translateY: -250 }],
   },
   finalCTATitle: {
-    fontFamily: Fonts.playfair.bold, fontSize: 38, color: Colors.white,
+    fontFamily: Fonts.lexend.bold, fontSize: 38, color: Colors.white,
     textAlign: 'center', marginBottom: Spacing.md, lineHeight: 50, letterSpacing: -0.5,
   },
   finalCTASubtitle: {
-    fontFamily: Fonts.manrope.regular, fontSize: 17, color: 'rgba(255,255,255,0.6)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 17, color: 'rgba(255,255,255,0.6)',
     textAlign: 'center', marginBottom: Spacing.xl, maxWidth: 480,
   },
   finalNoCard: {
-    fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.35)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.35)',
     marginTop: Spacing.md,
   },
 
   // ── Footer ──
   footer: {
-    backgroundColor: '#050810', paddingTop: Spacing.xxl, paddingBottom: Spacing.lg,
+    backgroundColor: '#000000', paddingTop: Spacing.xxl, paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg, alignItems: 'center',
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)',
   },
@@ -1136,26 +1119,26 @@ const styles = StyleSheet.create({
   },
   footerDesktop: { flexDirection: 'row', justifyContent: 'space-between' },
   footerBrand: {},
-  footerLogo: { fontFamily: Fonts.playfair.bold, fontSize: 24, color: Colors.white, letterSpacing: -0.3 },
+  footerLogo: { fontFamily: Fonts.lexend.bold, fontSize: 24, color: Colors.white, letterSpacing: -0.3 },
   footerTagline: {
-    fontFamily: Fonts.manrope.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4,
+    fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4,
   },
   footerColsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xl },
   footerColsRowDesktop: { gap: 56 },
   footerCol: { gap: Spacing.sm, minWidth: 100 },
   footerColTitle: {
-    fontFamily: Fonts.manrope.bold, fontSize: 12, color: 'rgba(255,255,255,0.5)',
+    fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, color: 'rgba(255,255,255,0.5)',
     letterSpacing: 1, textTransform: 'uppercase', marginBottom: Spacing.xs,
   },
-  footerLink: { fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.5)' },
+  footerLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.5)' },
   footerBottom: {
     width: '100%', alignItems: 'center', gap: 6,
     marginTop: Spacing.xl, paddingTop: Spacing.lg,
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)',
   },
-  footerCopyright: { fontFamily: Fonts.manrope.regular, fontSize: 12, color: 'rgba(255,255,255,0.3)' },
+  footerCopyright: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: 'rgba(255,255,255,0.3)' },
   footerDisclaimer: {
-    fontFamily: Fonts.manrope.regular, fontSize: 11, color: 'rgba(255,255,255,0.2)',
+    fontFamily: Fonts.sourceSans.regular, fontSize: 11, color: 'rgba(255,255,255,0.2)',
     textAlign: 'center', maxWidth: 500,
   },
 });

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Plus, Trash2, Camera, Info, RefreshCw, MapPin, X, Lightbulb } from 'lucide-react-native';
+import { Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Plus, Trash2, Camera, Info, RefreshCw, MapPin, X, Lightbulb, Receipt } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
 import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
@@ -515,7 +515,7 @@ export default function ExpensesScreen() {
           </>
         ) : (
           <EmptyState
-            icon="receipt-outline"
+            icon={Receipt}
             title="No expenses yet"
             subtitle="Start logging your business expenses to reduce your tax bill."
             actionLabel="Add Expense"
@@ -613,7 +613,7 @@ export default function ExpensesScreen() {
         {/* Auto Mileage Coming Soon Card */}
         <View style={[styles.comingSoonCard, { backgroundColor: colors.surface }]}>
           <View style={styles.comingSoonContent}>
-            <FontAwesome name="map-marker" size={20} color={Colors.secondary} />
+            <MapPin size={20} color={Colors.secondary} strokeWidth={1.5} />
             <View style={styles.comingSoonText}>
               <Text style={[styles.comingSoonTitle, { color: colors.text }]}>Auto mileage tracking</Text>
               <Text style={[styles.comingSoonSub, { color: colors.textSecondary }]}>Coming soon</Text>
@@ -633,12 +633,12 @@ export default function ExpensesScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.formTitle, { color: colors.text }]} accessibilityRole="header">New Expense</Text>
               <Pressable onPress={() => { setOpenedFromReceipt(false); setShowForm(false); }} accessibilityRole="button" accessibilityLabel="Close expense form">
-                <FontAwesome name="times" size={20} color={colors.textSecondary} />
+                <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
             </View>
             {openedFromReceipt && (
               <View style={styles.receiptNotice}>
-                <FontAwesome name="camera" size={13} color={Colors.secondary} />
+                <Camera size={13} color={Colors.secondary} strokeWidth={1.5} />
                 <Text style={[styles.receiptNoticeText, { color: colors.textSecondary }]}>
                   Receipt scanning coming soon — add your expense manually for now.
                 </Text>
@@ -709,8 +709,8 @@ export default function ExpensesScreen() {
               })}
             </ScrollView>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, opacity: 0.5 }}>
-              <FontAwesome name="camera" size={14} color={colors.textSecondary} />
-              <Text style={{ fontFamily: Fonts.manrope.medium, fontSize: 13, color: colors.textSecondary }}>
+              <Camera size={14} color={colors.textSecondary} strokeWidth={1.5} />
+              <Text style={{ fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary }}>
                 Receipt scanning — coming soon
               </Text>
             </View>
@@ -742,7 +742,7 @@ export default function ExpensesScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.formTitle, { color: colors.text }]} accessibilityRole="header">New Recurring Expense</Text>
               <Pressable onPress={() => setShowRecurringForm(false)} accessibilityRole="button" accessibilityLabel="Close recurring expense form">
-                <FontAwesome name="times" size={20} color={colors.textSecondary} />
+                <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
             </View>
             <TextInput
@@ -901,7 +901,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 24,
   },
   fabButton: {
@@ -928,13 +928,13 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   metricLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 22,
     marginTop: 6,
   },
@@ -951,7 +951,7 @@ const styles = StyleSheet.create({
     ...Shadows.medium,
   },
   scanButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     ...Shadows.soft,
   },
   outlineButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.secondary,
   },
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
   },
   itemsBadge: {
@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   itemsBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     color: Colors.success,
   },
@@ -1024,7 +1024,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   expenseDesc: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   expenseSubRow: {
@@ -1039,11 +1039,11 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   hmrcBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
   expenseSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   expenseAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 14,
   },
   claimedBadge: {
@@ -1062,7 +1062,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   claimedBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
     color: Colors.success,
   },
@@ -1073,12 +1073,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xl,
   },
   emptyTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     marginTop: Spacing.md,
   },
   emptyText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     marginTop: Spacing.sm,
@@ -1087,7 +1087,7 @@ const styles = StyleSheet.create({
   /* Gold Insight Banner */
   insightBanner: {
     flexDirection: 'row',
-    backgroundColor: Colors.gold[50],
+    backgroundColor: 'rgba(0,102,255,0.08)',
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
     alignItems: 'flex-start',
@@ -1100,20 +1100,20 @@ const styles = StyleSheet.create({
   },
   insightText: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
-    color: Colors.gold[700],
+    color: Colors.accent,
     lineHeight: 19,
   },
   insightBold: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
   },
 
   /* Coming Soon Card */
   comingSoonCard: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
   },
@@ -1126,11 +1126,11 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   comingSoonTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   comingSoonSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -1141,7 +1141,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   soonBadgeText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 11,
     color: Colors.secondary,
   },
@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
@@ -1173,7 +1173,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   formTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 18,
   },
   input: {
@@ -1181,12 +1181,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 14,
     paddingHorizontal: Spacing.md,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     marginBottom: Spacing.sm,
   },
   categoryLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
@@ -1203,14 +1203,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 9999,
     borderWidth: 1.5,
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
   },
   categoryPillSelected: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   categoryPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   categoryPillTextSelected: {
@@ -1231,12 +1231,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
   fieldError: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   receiptNoticeText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     flex: 1,
     lineHeight: 18,
@@ -1269,7 +1269,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   addRecurringText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     color: Colors.white,
   },
@@ -1281,11 +1281,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   recurringEmptyTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
   recurringEmptyText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     textAlign: 'center',
     maxWidth: 260,
@@ -1305,7 +1305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   frequencyPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
   categoryChartCard: {

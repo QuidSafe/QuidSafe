@@ -364,7 +364,7 @@ export default function InvoicesScreen() {
           <InvoicesSkeleton />
         ) : invoices.length === 0 && activeFilter === 'all' ? (
           <EmptyState
-            icon="document-text-outline"
+            icon={FileText}
             title="No invoices yet"
             subtitle="Create your first invoice to start tracking payments"
             actionLabel="Create Invoice"

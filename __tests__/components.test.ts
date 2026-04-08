@@ -118,20 +118,10 @@ describe('Colors constants', () => {
     expect(Colors.white).toBe('#FFFFFF');
   });
 
-  it('has light and dark theme objects', () => {
-    expect(Colors.light).toBeDefined();
+  it('has dark theme object (dark-only mode)', () => {
     expect(Colors.dark).toBeDefined();
-    expect(Colors.light.text).toBe('#0F172A');
-    expect(Colors.dark.text).toBe('#F8FAFC');
-  });
-
-  it('has grey scale with expected keys', () => {
-    expect(Colors.grey[50]).toBe('#F8FAFC');
-    expect(Colors.grey[900]).toBe('#0F172A');
-  });
-
-  it('has gold scale', () => {
-    expect(Colors.gold[600]).toBe('#CA8A04');
+    expect(Colors.dark.text).toBe('#FFFFFF');
+    expect(Colors.dark.background).toBe('#000000');
   });
 });
 

@@ -724,13 +724,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 24,
     lineHeight: 32,
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
 
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   connectedText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     color: Colors.success,
   },
@@ -787,14 +787,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   connectTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 20,
     lineHeight: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   connectDescription: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   benefitText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     lineHeight: 18,
     flex: 1,
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   connectButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   quarterDates: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 8.5,
     textAlign: 'center',
     lineHeight: 12,
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   statusText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 9,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   statusTextSmall: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
 
@@ -955,11 +955,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   detailLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   detailValue: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
   },
   detailDivider: {
@@ -979,7 +979,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   submitButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -1008,13 +1008,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   successTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 22,
     textAlign: 'center',
     marginBottom: 4,
   },
   successSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: Spacing.lg,
@@ -1028,14 +1028,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   receiptLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
   },
   receiptId: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.bold,
     fontSize: 16,
     letterSpacing: 0.5,
   },
@@ -1045,7 +1045,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.button,
   },
   dismissButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 
@@ -1069,11 +1069,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   historyQuarter: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   historyReceipt: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     marginTop: 1,
   },
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   historyBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
   historyDivider: {

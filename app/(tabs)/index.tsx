@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { ArrowUp, ArrowDown, Landmark, Lock, Lightbulb, Check, ChevronRight, ArrowLeftRight, Calculator, Wallet, ShieldCheck, Clock } from 'lucide-react-native';
+import { ArrowUp, ArrowDown, Landmark, Lock, Lightbulb, Check, ChevronRight, ArrowLeftRight, Calculator, Wallet, ShieldCheck, Clock, CheckCircle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { MiniChart } from '@/components/ui/MiniChart';
@@ -501,7 +501,7 @@ export default function DashboardScreen() {
                         type="action"
                         title="Connect your bank"
                         description="Link your bank account to automatically track income and expenses."
-                        icon="university"
+                        icon={Landmark}
                         onPress={handleConnectBank}
                       />
                     )}
@@ -509,14 +509,14 @@ export default function DashboardScreen() {
                       type="warning"
                       title={`Q${quarter} payment due`}
                       description="Submit your quarterly update to HMRC before the deadline."
-                      icon="clock-o"
+                      icon={Clock}
                       onPress={() => router.push('/mtd')}
                     />
                     <ActionCard
                       type="success"
                       title="Tax pot on track"
                       description="You're setting aside enough to cover your tax bill."
-                      icon="check-circle"
+                      icon={CheckCircle}
                       onPress={() => router.push('/(tabs)/settings')}
                     />
                   </>

@@ -257,7 +257,7 @@ const BankConnectionRow = memo(function BankConnectionRow({
 
   return (
     <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
-      <IconBox name="bank" bg={Colors.secondary} />
+      <IconBox icon={<Landmark size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.secondary} />
       <View style={styles.rowText}>
         <Text style={[styles.rowTitle, { color: colors.text }]}>{connection.bankName}</Text>
         <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>Synced: {lastSynced}</Text>
@@ -839,7 +839,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Transactions"
                 >
-                  <IconBox name="exchange" bg={Colors.secondary} />
+                  <IconBox icon={<RefreshCw size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.secondary} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Transactions</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -849,7 +849,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Expenses"
                 >
-                  <IconBox name="shopping-cart" bg={Colors.error} />
+                  <IconBox icon={<CreditCard size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.error} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Expenses</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -859,7 +859,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Invoices"
                 >
-                  <IconBox name="file-text-o" bg={Colors.accent} />
+                  <IconBox icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.accent} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Invoices</Text>
                 </Pressable>
                 <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
@@ -869,7 +869,7 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Export Tax Summary"
                 >
-                  <IconBox name="calculator" bg={Colors.success} />
+                  <IconBox icon={<PoundSterling size={15} color={Colors.white} strokeWidth={1.5} />} bg={Colors.success} />
                   <Text style={[styles.modalOptionText, { color: colors.text }]}>Export Tax Summary</Text>
                 </Pressable>
               </View>

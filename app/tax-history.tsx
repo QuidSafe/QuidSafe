@@ -397,7 +397,7 @@ export default function TaxHistoryScreen() {
                   </Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>
                     {priorYear}
                   </Text>

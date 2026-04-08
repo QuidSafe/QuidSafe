@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, X } from 'lucide-react-native';
+import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, X, Wallet } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
@@ -232,7 +232,7 @@ export default function IncomeScreen() {
           <IncomeSkeleton />
         ) : grossIncome === 0 && sources.length === 0 ? (
           <EmptyState
-            icon="wallet-outline"
+            icon={Wallet}
             title="No income recorded yet"
             subtitle="Connect your bank account or create your first invoice to start tracking income."
             actionLabel="Create Invoice"
