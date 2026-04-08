@@ -8,13 +8,82 @@ import {
   useWindowDimensions,
   Platform,
   Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
+
+
+// ─── BrandLogo ─────────────────────────────────────────
+// Programmatic shield + pound logo — no image dependency.
+// Renders a navy shield shape with a blue pound symbol, plus
+// the "QuidSafe" wordmark in PlayfairDisplay.
+function BrandLogo({
+  size = 36,
+  showText = true,
+  textSize = 24,
+}: {
+  size?: number;
+  showText?: boolean;
+  textSize?: number;
+}) {
+  const poundSize = size * 0.5;
+
+  return (
+    <View style={logoStyles.container}>
+      {/* Shield icon with overlaid pound sign */}
+      <View style={[logoStyles.shieldWrap, { width: size, height: size }]}>
+        <FontAwesome name="shield" size={size} color="#1E293B" />
+        <Text
+          style={[
+            logoStyles.pound,
+            { fontSize: poundSize, lineHeight: size, width: size, height: size },
+          ]}
+        >
+          {'\u00A3'}
+        </Text>
+      </View>
+      {showText && (
+        <Text style={[logoStyles.wordmark, { fontSize: textSize }]}>QuidSafe</Text>
+      )}
+    </View>
+  );
+}
+
+const logoStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  shieldWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  pound: {
+    position: 'absolute',
+    textAlign: 'center',
+    fontFamily: Fonts.manrope.bold,
+    color: '#3B82F6',
+    top: 0,
+    left: 0,
+  },
+  wordmark: {
+    fontFamily: Fonts.playfair.bold,
+    color: Colors.white,
+    letterSpacing: -0.5,
+  },
+});
+
+// ─── Section IDs for nav ───────────────────────────────
+const NAV_SECTIONS = ['Features', 'How it works', 'Pricing', 'FAQ'] as const;
+type SectionId = (typeof NAV_SECTIONS)[number];
 
 
 // ─── Data ────────────────────────────────────────────────
@@ -463,32 +532,120 @@ export default function LandingScreen() {
   const router = useRouter();
   const colors = Colors.dark;
   const scrollRef = useRef<ScrollView>(null);
-  const featuresYRef = useRef(0);
-  const pricingYRef = useRef(0);
+
+  // Section y-offsets for scroll-to navigation
+  const sectionOffsets = useRef<Record<SectionId, number>>({
+    'Features': 0,
+    'How it works': 0,
+    'Pricing': 0,
+    'FAQ': 0,
+  });
+
+  // Track which section is active for nav highlighting
+  const [activeSection, setActiveSection] = useState<SectionId | null>(null);
+  const [headerSolid, setHeaderSolid] = useState(false);
 
   const isDesktop = width >= 768;
   const isWide = width >= 1024;
   const contentMaxWidth = 1120;
 
-  const scrollToFeatures = useCallback(() => {
-    if (scrollRef.current && featuresYRef.current > 0) {
-      scrollRef.current.scrollTo({ y: featuresYRef.current, animated: true });
+  const scrollToSection = useCallback((section: SectionId) => {
+    const y = sectionOffsets.current[section];
+    if (scrollRef.current && y > 0) {
+      // Offset by sticky header height
+      scrollRef.current.scrollTo({ y: y - 56, animated: true });
     }
   }, []);
 
-  const scrollToPricing = useCallback(() => {
-    if (scrollRef.current && pricingYRef.current > 0) {
-      scrollRef.current.scrollTo({ y: pricingYRef.current, animated: true });
-    }
-  }, []);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = e.nativeEvent.contentOffset.y;
+      setHeaderSolid(y > 80);
+
+      // Determine active section based on scroll position
+      const offset = y + 120; // account for header + some offset
+      const sections = NAV_SECTIONS;
+      let current: SectionId | null = null;
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (sectionOffsets.current[sections[i]] > 0 && offset >= sectionOffsets.current[sections[i]]) {
+          current = sections[i];
+          break;
+        }
+      }
+      setActiveSection(current);
+    },
+    [],
+  );
 
   return (
     <View style={styles.root}>
+      {/* ═══════════════ STICKY HEADER ═══════════════ */}
+      <View
+        style={[
+          styles.stickyHeader,
+          headerSolid && styles.stickyHeaderSolid,
+        ]}
+      >
+        <View style={[styles.stickyHeaderInner, { maxWidth: contentMaxWidth }]}>
+          <Pressable
+            onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
+            accessibilityRole="button"
+            accessibilityLabel="Scroll to top"
+          >
+            <BrandLogo size={28} textSize={20} />
+          </Pressable>
+
+          <View style={styles.stickyNav}>
+            {isDesktop &&
+              NAV_SECTIONS.map((section) => (
+                <Pressable
+                  key={section}
+                  onPress={() => scrollToSection(section)}
+                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Go to ${section}`}
+                >
+                  <Text
+                    style={[
+                      styles.stickyNavLink,
+                      activeSection === section && styles.stickyNavLinkActive,
+                    ]}
+                  >
+                    {section}
+                  </Text>
+                  {activeSection === section && <View style={styles.stickyNavIndicator} />}
+                </Pressable>
+              ))}
+
+            <Link href="/(auth)/login" asChild>
+              <Pressable
+                style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Log in"
+              >
+                <Text style={styles.navLoginText}>Log in</Text>
+              </Pressable>
+            </Link>
+            <Link href="/(auth)/signup" asChild>
+              <Pressable
+                style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Start free trial"
+              >
+                <Text style={styles.navCTAText}>Start free</Text>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+      </View>
+
       <ScrollView
         ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* ═══════════════ HERO ═══════════════ */}
         <LinearGradient
@@ -503,25 +660,31 @@ export default function LandingScreen() {
           <View style={styles.orbCenter} />
 
           <SafeAreaView edges={['top']} style={styles.heroSafe}>
-            {/* Nav */}
+            {/* Hero-local nav (hidden once sticky header takes over) */}
             <View style={[styles.heroNav, { maxWidth: contentMaxWidth }]}>
-              <Text style={styles.navLogo}>QuidSafe</Text>
+              <BrandLogo size={36} textSize={28} />
               <View style={styles.navLinks}>
-                {isDesktop && (
-                  <>
-                    <Pressable onPress={scrollToFeatures}>
-                      <Text style={styles.navLink}>Features</Text>
+                {isDesktop &&
+                  NAV_SECTIONS.map((section) => (
+                    <Pressable key={section} onPress={() => scrollToSection(section)}>
+                      <Text style={styles.navLink}>{section}</Text>
                     </Pressable>
-                    <Text style={styles.navLink}>Pricing</Text>
-                  </>
-                )}
+                  ))}
                 <Link href="/(auth)/login" asChild>
-                  <Pressable style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]} accessibilityRole="button" accessibilityLabel="Log in">
+                  <Pressable
+                    style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Log in"
+                  >
                     <Text style={styles.navLoginText}>Log in</Text>
                   </Pressable>
                 </Link>
                 <Link href="/(auth)/signup" asChild>
-                  <Pressable style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel="Start free trial">
+                  <Pressable
+                    style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Start free trial"
+                  >
                     <Text style={styles.navCTAText}>Start free</Text>
                   </Pressable>
                 </Link>
@@ -554,7 +717,7 @@ export default function LandingScreen() {
                       <Text style={styles.ctaGoldText}>Start 14-day free trial</Text>
                     </Pressable>
                   </Link>
-                  <Pressable style={({ pressed }) => [styles.ctaGhost, pressed && styles.pressed]} onPress={scrollToFeatures} accessibilityRole="button" accessibilityLabel="See how it works">
+                  <Pressable style={({ pressed }) => [styles.ctaGhost, pressed && styles.pressed]} onPress={() => scrollToSection('How it works')} accessibilityRole="button" accessibilityLabel="See how it works">
                     <Text style={styles.ctaGhostText}>See how it works</Text>
                   </Pressable>
                 </View>
@@ -617,7 +780,10 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ HOW IT WORKS ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: '#0B0F1A' }]}>
+        <View
+          style={[styles.section, { backgroundColor: '#0B0F1A' }]}
+          onLayout={(e) => { sectionOffsets.current['How it works'] = e.nativeEvent.layout.y; }}
+        >
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>HOW IT WORKS</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -647,7 +813,7 @@ export default function LandingScreen() {
         {/* ═══════════════ FEATURES ═══════════════ */}
         <View
           style={[styles.section, { backgroundColor: colors.background }]}
-          onLayout={(e) => { featuresYRef.current = e.nativeEvent.layout.y; }}
+          onLayout={(e) => { sectionOffsets.current['Features'] = e.nativeEvent.layout.y; }}
         >
           <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>FEATURES</Text>
@@ -766,7 +932,7 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ PRICING ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: colors.background }]} onLayout={(e) => { pricingYRef.current = e.nativeEvent.layout.y; }}>
+        <View style={[styles.section, { backgroundColor: colors.background }]} onLayout={(e) => { sectionOffsets.current['Pricing'] = e.nativeEvent.layout.y; }}>
           <View style={[styles.sectionInner, { maxWidth: 560 }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>PRICING</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -881,7 +1047,10 @@ export default function LandingScreen() {
         </View>
 
         {/* ═══════════════ FAQ ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: colors.background }]}>
+        <View
+          style={[styles.section, { backgroundColor: colors.background }]}
+          onLayout={(e) => { sectionOffsets.current['FAQ'] = e.nativeEvent.layout.y; }}
+        >
           <View style={[styles.sectionInner, { maxWidth: 720 }]}>
             <Text style={[styles.sectionTag, { color: Colors.accent }]}>FAQ</Text>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -920,15 +1089,15 @@ export default function LandingScreen() {
         <View style={styles.footer}>
           <View style={[styles.footerInner, { maxWidth: contentMaxWidth }, isDesktop && styles.footerDesktop]}>
             <View style={styles.footerBrand}>
-              <Text style={styles.footerLogo}>QuidSafe</Text>
+              <BrandLogo size={32} textSize={24} />
               <Text style={styles.footerTagline}>Your tax. Sorted. Safe.</Text>
             </View>
 
             <View style={[styles.footerColsRow, isDesktop && styles.footerColsRowDesktop]}>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Product</Text>
-                <Pressable onPress={scrollToFeatures}><Text style={styles.footerLink}>Features</Text></Pressable>
-                <Pressable onPress={scrollToPricing}><Text style={styles.footerLink}>Pricing</Text></Pressable>
+                <Pressable onPress={() => scrollToSection('Features')}><Text style={styles.footerLink}>Features</Text></Pressable>
+                <Pressable onPress={() => scrollToSection('Pricing')}><Text style={styles.footerLink}>Pricing</Text></Pressable>
                 <Link href="/mtd" asChild><Pressable><Text style={styles.footerLink}>MTD Guide</Text></Pressable></Link>
               </View>
               <View style={styles.footerCol}>
@@ -963,6 +1132,58 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#080C18' },
   scroll: { flex: 1 },
   scrollContent: { flexGrow: 1 },
+
+  // ── Sticky Header ──
+  stickyHeader: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: 'rgba(8,12,24,0.75)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    ...(Platform.OS === 'web' ? {
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+    } : {}) as any,
+  },
+  stickyHeaderSolid: {
+    backgroundColor: 'rgba(8,12,24,0.95)',
+  },
+  stickyHeaderInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignSelf: 'center',
+  },
+  stickyNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stickyNavLink: {
+    fontFamily: Fonts.manrope.medium,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  stickyNavLinkActive: {
+    color: Colors.accent,
+  },
+  stickyNavIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 10,
+    right: 10,
+    height: 2,
+    backgroundColor: Colors.accent,
+    borderRadius: 1,
+  },
 
   // ── Hero ──
   hero: { paddingBottom: 40, overflow: 'hidden', position: 'relative' },
