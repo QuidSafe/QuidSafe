@@ -684,12 +684,12 @@ const styles = StyleSheet.create({
   },
   barIncome: {
     width: 8,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#0066FF',
     borderRadius: 4,
   },
   barExpense: {
     width: 8,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     borderRadius: 4,
   },
   chartLabel: {
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sourceBadge: {
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#2A2A2A',
     borderRadius: BorderRadius.pill,
     paddingHorizontal: 10,
     paddingVertical: 2,
@@ -772,9 +772,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: Colors.grey[200],
+    borderColor: '#2A2A2A',
   },
   filterPillActive: {
     backgroundColor: Colors.primary,
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
   filterPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
-    color: Colors.grey[600],
+    color: '#666666',
   },
   filterPillTextActive: {
     color: Colors.white,
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.large,
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   submitButton: {
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
     borderRadius: BorderRadius.button,
     paddingVertical: 14,
     alignItems: 'center',
