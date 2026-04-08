@@ -206,13 +206,21 @@ app.get('/banking/callback', async (c) => {
 
   // Handle OAuth denial / error from provider
   if (oauthError || !code) {
+    let isNative = false;
     if (state) {
-      // Clean up the state so it doesn't linger
-      await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
-      const isNative = state.endsWith('_native');
-      if (isNative) {
-        return c.redirect('quidsafe://banking/callback?error=denied');
+      // Validate state against DB before using it — prevents CSRF bypass on error path
+      const validState = await queryOne<{ user_id: string }>(
+        c.env.DB,
+        'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+        [state],
+      );
+      if (validState) {
+        isNative = state.endsWith('_native');
+        await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
       }
+    }
+    if (isNative) {
+      return c.redirect('quidsafe://banking/callback?error=denied');
     }
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
     return c.redirect(`${appUrl}/(tabs)?bankError=denied`);
@@ -308,12 +316,21 @@ app.get('/mtd/callback', async (c) => {
 
   // Handle OAuth denial / error from provider
   if (oauthError || !code) {
+    let isNative = false;
     if (state) {
-      await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
-      const isNative = state.endsWith('_native');
-      if (isNative) {
-        return c.redirect('quidsafe://hmrc/callback?error=denied');
+      // Validate state against DB before using it — prevents CSRF bypass on error path
+      const validState = await queryOne<{ user_id: string }>(
+        c.env.DB,
+        'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+        [state],
+      );
+      if (validState) {
+        isNative = state.endsWith('_native');
+        await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
       }
+    }
+    if (isNative) {
+      return c.redirect('quidsafe://hmrc/callback?error=denied');
     }
     const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
     return c.redirect(`${appUrl}/mtd?hmrcError=denied`);
