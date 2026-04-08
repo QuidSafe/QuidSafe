@@ -20,6 +20,7 @@ import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DateInput } from '@/components/ui/DateInput';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -609,7 +610,7 @@ const styles = StyleSheet.create({
 
   // Heading
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
     marginBottom: Spacing.md,
   },
@@ -631,14 +632,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   summaryLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 10.5,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   grossAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 30,
     marginBottom: 4,
   },
@@ -648,17 +649,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   yoyText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
   netAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 24,
     color: Colors.success,
     marginBottom: 4,
   },
   afterExpenses: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
   },
 
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   chartLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 9,
     marginTop: 4,
   },
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
   },
 
@@ -726,7 +727,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
   },
   sourceBadge: {
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   sourceBadgeText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
   },
 
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     padding: 0,
   },
@@ -779,7 +780,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   filterPillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.grey[600],
   },
@@ -818,30 +819,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sourceName: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourceSubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
   },
   sourceAmounts: {
     alignItems: 'flex-end',
   },
   sourceAmount: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourcePercent: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
   },
 
   // Empty state
   emptyText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
@@ -888,11 +889,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
   },
   fieldLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -900,7 +901,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalInput: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -924,19 +925,19 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     color: Colors.white,
   },
   fieldError: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
     marginTop: -2,
   },
   errorText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     color: Colors.error,
     textAlign: 'center',
@@ -954,7 +955,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   viewInvoicesText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     flex: 1,
   },

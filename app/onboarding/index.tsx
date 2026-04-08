@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
@@ -584,7 +585,7 @@ const styles = StyleSheet.create({
     ...Shadows.soft,
   },
   poundText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -641,13 +642,13 @@ const styles = StyleSheet.create({
 
   /* Typography */
   heading: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -676,12 +677,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
     marginBottom: 2,
   },
   featureDesc: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   label: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: Spacing.sm,
   },
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textInput: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 15,
     padding: 0,
   },
@@ -726,12 +727,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   infoBoxTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   infoBoxSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -758,7 +759,7 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -780,7 +781,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs + 2,
   },
   trustBadgeText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
   },
 
@@ -796,7 +797,7 @@ const styles = StyleSheet.create({
   },
   infoNoteText: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -812,7 +813,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   setupTimeBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
 
@@ -823,7 +824,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   bankStripLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     marginBottom: Spacing.sm,
   },
@@ -840,7 +841,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   bankPillText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
   },
 
@@ -855,7 +856,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   hmrcBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
 
@@ -876,14 +877,14 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   ctaButtonText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     color: Colors.white,
   },
 
   /* Skip text */
   skipText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
     paddingVertical: Spacing.sm,
     textDecorationLine: 'underline',

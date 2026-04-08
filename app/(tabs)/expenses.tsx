@@ -20,6 +20,7 @@ import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useExpenses, useAddExpense, useDeleteExpense, useDashboard, useRecurringExpenses, useCreateRecurringExpense, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
@@ -709,7 +710,7 @@ export default function ExpensesScreen() {
             </ScrollView>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, opacity: 0.5 }}>
               <FontAwesome name="camera" size={14} color={colors.textSecondary} />
-              <Text style={{ fontFamily: 'Manrope_500Medium', fontSize: 13, color: colors.textSecondary }}>
+              <Text style={{ fontFamily: Fonts.manrope.medium, fontSize: 13, color: colors.textSecondary }}>
                 Receipt scanning — coming soon
               </Text>
             </View>
@@ -900,7 +901,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
   },
   fabButton: {
@@ -927,13 +928,13 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   metricLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 22,
     marginTop: 6,
   },
@@ -950,7 +951,7 @@ const styles = StyleSheet.create({
     ...Shadows.medium,
   },
   scanButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -968,7 +969,7 @@ const styles = StyleSheet.create({
     ...Shadows.soft,
   },
   outlineButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     color: Colors.secondary,
   },
@@ -981,7 +982,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
   },
   itemsBadge: {
@@ -991,7 +992,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   itemsBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.success,
   },
@@ -1023,7 +1024,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   expenseDesc: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   expenseSubRow: {
@@ -1038,11 +1039,11 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   hmrcBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
   expenseSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -1050,7 +1051,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   expenseAmount: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14,
   },
   claimedBadge: {
@@ -1061,7 +1062,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   claimedBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
     color: Colors.success,
   },
@@ -1072,12 +1073,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xl,
   },
   emptyTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
     marginTop: Spacing.md,
   },
   emptyText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     textAlign: 'center',
     marginTop: Spacing.sm,
@@ -1099,13 +1100,13 @@ const styles = StyleSheet.create({
   },
   insightText: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     color: Colors.gold[700],
     lineHeight: 19,
   },
   insightBold: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
   },
 
   /* Coming Soon Card */
@@ -1125,11 +1126,11 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   comingSoonTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   comingSoonSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -1140,7 +1141,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   soonBadgeText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 11,
     color: Colors.secondary,
   },
@@ -1172,7 +1173,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   formTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
   },
   input: {
@@ -1180,12 +1181,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 14,
     paddingHorizontal: Spacing.md,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 15,
     marginBottom: Spacing.sm,
   },
   categoryLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
@@ -1209,7 +1210,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   categoryPillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
   categoryPillTextSelected: {
@@ -1230,12 +1231,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
   fieldError: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
@@ -1251,7 +1252,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   receiptNoticeText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12.5,
     flex: 1,
     lineHeight: 18,
@@ -1268,7 +1269,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   addRecurringText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.white,
   },
@@ -1280,11 +1281,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   recurringEmptyTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
   },
   recurringEmptyText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     textAlign: 'center',
     maxWidth: 260,
@@ -1304,7 +1305,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   frequencyPillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
   categoryChartCard: {

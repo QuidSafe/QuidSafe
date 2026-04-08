@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, Platform } from 'react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface DateInputProps {
@@ -118,7 +119,7 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
 
 const styles = StyleSheet.create({
   label: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   input: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   errorText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,

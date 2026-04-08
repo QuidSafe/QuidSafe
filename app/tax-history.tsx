@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
   },
 
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.accent,
   },
   pillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
   pillTextActive: {
@@ -472,7 +473,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   summaryHeading: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     marginBottom: Spacing.md,
   },
@@ -486,14 +487,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   summaryLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 10.5,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   summaryValue: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 20,
   },
   effectiveRateRow: {
@@ -505,13 +506,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   effectiveRateLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   effectiveRateValue: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 18,
   },
 
@@ -520,7 +521,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   comparisonHeading: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     marginBottom: Spacing.md,
   },
@@ -538,25 +539,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   comparisonLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 14,
   },
   comparisonValues: {
     alignItems: 'flex-end',
   },
   comparisonAmount: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
   },
   comparisonPct: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     marginTop: 2,
   },
 
   // Section heading
   sectionHeading: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: -0.2,
     marginBottom: Spacing.sm,
@@ -574,7 +575,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   quarterTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
   },
   statusBadge: {
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   statusText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
   quarterDates: {
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   quarterDateText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
   },
   quarterMetrics: {
@@ -605,14 +606,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quarterMetricLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 2,
   },
   quarterMetricValue: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
   },
 
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   chartLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
     marginTop: 6,
   },
@@ -671,7 +672,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
   },
 });

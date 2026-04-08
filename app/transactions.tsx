@@ -20,6 +20,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
     letterSpacing: -0.3,
   },
@@ -612,7 +613,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   autoCategoriseText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
     color: Colors.white,
   },
@@ -632,7 +633,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   filterPillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
 
@@ -659,11 +660,11 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   txMerchant: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
   },
   txDate: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -672,7 +673,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   txAmount: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
   },
 
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
 
@@ -712,11 +713,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 22,
   },
   emptySubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 15,
     textAlign: 'center',
   },
@@ -745,7 +746,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   modalTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 20,
     marginBottom: 12,
   },
@@ -758,17 +759,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   modalDetailLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   modalDetailValue: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
   },
   modalDescription: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     marginBottom: 16,
   },
@@ -786,16 +787,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   aiSuggestionTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   aiConfidenceText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     marginLeft: 22,
   },
   aiReasoningText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     lineHeight: 19,
     marginLeft: 22,
@@ -804,7 +805,7 @@ const styles = StyleSheet.create({
 
   // Category buttons
   modalSectionLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -823,7 +824,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
 
@@ -843,7 +844,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   incomeSourceText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 13,
   },
 
@@ -855,7 +856,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   confirmButtonText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     color: Colors.white,
   },

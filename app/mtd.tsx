@@ -16,6 +16,7 @@ import * as WebBrowser from 'expo-web-browser';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useMtdObligations, useSubmitQuarterly, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -735,13 +736,13 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
     lineHeight: 32,
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
@@ -755,7 +756,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 14,
   },
 
@@ -777,7 +778,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.success,
   },
   connectedText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
     color: Colors.success,
   },
@@ -798,14 +799,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   connectTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 20,
     lineHeight: 28,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   connectDescription: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     lineHeight: 22,
     textAlign: 'center',
@@ -824,7 +825,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   benefitText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     lineHeight: 18,
     flex: 1,
@@ -841,7 +842,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   connectButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -854,7 +855,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -886,7 +887,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   quarterDates: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 8.5,
     textAlign: 'center',
     lineHeight: 12,
@@ -906,7 +907,7 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   statusText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 9,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -917,7 +918,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   statusTextSmall: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
 
@@ -966,11 +967,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   detailLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 14,
   },
   detailValue: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
   },
   detailDivider: {
@@ -990,7 +991,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   submitButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -1019,13 +1020,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   successTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 22,
     textAlign: 'center',
     marginBottom: 4,
   },
   successSubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: Spacing.lg,
@@ -1039,14 +1040,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   receiptLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
   },
   receiptId: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: 0.5,
   },
@@ -1056,7 +1057,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.button,
   },
   dismissButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
   },
 
@@ -1080,11 +1081,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   historyQuarter: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   historyReceipt: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
     marginTop: 1,
   },
@@ -1094,7 +1095,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   historyBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
   historyDivider: {

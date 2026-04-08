@@ -3,6 +3,7 @@ import { View, Text, Pressable, Image, Modal, StyleSheet, Platform } from 'react
 import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface ReceiptCaptureProps {
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   label: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   addButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   pressed: {
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   modalTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
     textAlign: 'center',
   },
@@ -239,11 +240,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
   },
   optionSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   cancelText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
   },
 });

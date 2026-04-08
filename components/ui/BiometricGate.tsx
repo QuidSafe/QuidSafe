@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, AppState, Animated, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { authenticate, isBiometricEnabled } from '@/lib/biometrics';
 
@@ -122,13 +123,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   brandText: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 32,
     color: Colors.white,
     marginBottom: 8,
   },
   subtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 15,
     marginBottom: 48,
   },
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   unlockText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 16,
     color: Colors.white,
   },

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -159,7 +160,7 @@ const s = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 48,
     color: Colors.white,
     letterSpacing: -1,
@@ -173,7 +174,7 @@ const s = StyleSheet.create({
     marginBottom: 14,
   },
   tagline: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 15,
     color: 'rgba(255,255,255,0.5)',
     letterSpacing: 0.3,
@@ -202,7 +203,7 @@ const s = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   propText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     color: 'rgba(255,255,255,0.55)',
   },
@@ -221,7 +222,7 @@ const s = StyleSheet.create({
     borderColor: 'rgba(202, 138, 4, 0.12)',
   },
   trustText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
     color: 'rgba(255,255,255,0.4)',
     letterSpacing: 0.2,
@@ -247,7 +248,7 @@ const s = StyleSheet.create({
     paddingVertical: 16,
   },
   googleText: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 16,
     color: Colors.white,
     letterSpacing: -0.2,
@@ -265,7 +266,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   dividerText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     color: 'rgba(255,255,255,0.3)',
   },
@@ -282,7 +283,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   emailText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -298,7 +299,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   footerText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
@@ -309,7 +310,7 @@ const s = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   footerSub: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
     color: 'rgba(255,255,255,0.2)',
   },

@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -157,14 +158,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   pressed: {
     opacity: 0.7,
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
     lineHeight: 32,
     marginBottom: Spacing.lg,
@@ -173,13 +174,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     lineHeight: 24,
     marginBottom: Spacing.sm,
   },
   body: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: Spacing.sm,
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     paddingLeft: Spacing.sm,
   },
   bullet: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     lineHeight: 22,
     marginRight: Spacing.sm,

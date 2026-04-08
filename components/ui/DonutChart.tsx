@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface DonutSegment {
@@ -147,11 +148,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   centerValue: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 22,
   },
   centerLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   legendLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 13,
     flex: 1,
   },
@@ -205,13 +206,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   legendAmount: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 13,
     minWidth: 60,
     textAlign: 'right',
   },
   legendPercent: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     minWidth: 44,
     textAlign: 'right',

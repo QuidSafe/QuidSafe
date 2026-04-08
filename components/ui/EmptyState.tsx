@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface EmptyStateProps {
@@ -65,13 +66,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     textAlign: 'center',
     maxWidth: 280,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   actionButtonText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     color: Colors.white,
   },

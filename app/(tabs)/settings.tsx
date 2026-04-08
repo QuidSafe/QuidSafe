@@ -20,6 +20,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import * as WebBrowser from 'expo-web-browser';
 import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
@@ -918,12 +919,12 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 28,
     marginBottom: Spacing.xs,
   },
   sectionLabel: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -958,11 +959,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12.5,
   },
   rowSubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 10.5,
     marginTop: 1,
   },
@@ -973,7 +974,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   activeBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10.5,
     color: Colors.success,
   },
@@ -996,7 +997,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
   },
   signOutText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   deleteButton: {
@@ -1004,7 +1005,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   deleteText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: Colors.error,
   },
@@ -1018,7 +1019,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   comingSoonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10.5,
     color: Colors.grey[500],
   },
@@ -1033,7 +1034,7 @@ const styles = StyleSheet.create({
   },
   nameInput: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     borderWidth: 1,
     borderRadius: 8,
@@ -1050,7 +1051,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.white,
   },
@@ -1067,7 +1068,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.secondary,
   },
   syncText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10.5,
     color: Colors.secondary,
   },
@@ -1079,7 +1080,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   disconnectText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10.5,
     color: Colors.error,
   },
@@ -1098,7 +1099,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   addBankText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12.5,
     color: Colors.secondary,
   },
@@ -1116,13 +1117,13 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 20,
     textAlign: 'center',
     marginBottom: 4,
   },
   modalSubtitle: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12.5,
     textAlign: 'center',
     marginBottom: Spacing.md,
@@ -1136,7 +1137,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   modalOptionText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
     marginLeft: 10,
   },
@@ -1148,11 +1149,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   modalCancelText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
   pushStatusCaption: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 10.5,
     marginLeft: Spacing.xs,
     marginTop: 2,

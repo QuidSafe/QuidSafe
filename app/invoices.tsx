@@ -22,6 +22,7 @@ import { DateInput } from '@/components/ui/DateInput';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Skeleton, TransactionListSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { useInvoices } from '@/lib/hooks/useApi';
 import {
@@ -680,7 +681,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   title: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
   },
 
@@ -703,7 +704,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   filterPillText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.grey[600],
   },
@@ -723,7 +724,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -731,7 +732,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statValue: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 18,
   },
 
@@ -757,16 +758,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   clientName: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     marginBottom: 4,
   },
   invoiceDesc: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
   },
   invoiceAmount: {
-    fontFamily: 'Manrope_800ExtraBold',
+    fontFamily: Fonts.manrope.extraBold,
     fontSize: 18,
     marginBottom: 6,
   },
@@ -776,7 +777,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   statusBadgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
   },
   invoiceBottomRow: {
@@ -785,7 +786,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   dueDate: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
   },
   pdfButton: {
@@ -798,7 +799,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   emptyFilterText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -849,11 +850,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 18,
   },
   fieldLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -861,7 +862,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalInput: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -874,7 +875,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   fieldError: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
@@ -895,7 +896,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusPickerText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
 
@@ -910,7 +911,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   markPaidText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -928,7 +929,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -944,7 +945,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   deleteButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     color: Colors.error,
   },

@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { useTheme } from '@/lib/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 
 interface MiniChartDataPoint {
   label: string;
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     marginRight: BAR_WIDTH / 2,
   },
   tooltipText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 10,
     color: Colors.white,
   },
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   avgLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 8,
     position: 'absolute',
     right: 0,

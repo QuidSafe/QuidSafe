@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { View, TextInput, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface SearchFilterProps {
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 14,
     padding: 0,
   },
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   filterChipText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
 
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   dateInput: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   clearLinkText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
     color: Colors.accent,
   },

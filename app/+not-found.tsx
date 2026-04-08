@@ -1,6 +1,7 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, View, Text } from 'react-native';
 import { Colors, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 
 export default function NotFoundScreen() {
   return (
@@ -25,7 +26,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
   title: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 20,
     color: Colors.light.text,
   },
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   linkText: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 14,
     color: Colors.primary,
   },

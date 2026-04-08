@@ -17,6 +17,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import {
   useDashboard,
   useBankConnections,
@@ -949,12 +950,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     fontSize: 24,
     lineHeight: 32,
   },
   lastRefreshed: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
     marginTop: 2,
   },
@@ -987,7 +988,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   sectionTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -1006,11 +1007,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   statLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 13,
   },
   statValue: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
   rowEnd: {
@@ -1037,7 +1038,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   badgeText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 10.5,
   },
 
@@ -1051,7 +1052,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   countBadgeText: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 11,
   },
 
@@ -1080,12 +1081,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   categoryLabel: {
-    fontFamily: 'Manrope_500Medium',
+    fontFamily: Fonts.manrope.medium,
     fontSize: 13,
     flex: 1,
   },
   categoryValue: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 12,
   },
 
@@ -1105,11 +1106,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   bankName: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
   },
   bankDetail: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 11,
     marginLeft: 16,
   },
@@ -1120,7 +1121,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   syncButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 11,
     color: Colors.secondary,
   },
@@ -1139,7 +1140,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   invoiceBadgeLabel: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 10,
   },
 
@@ -1157,7 +1158,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   quarterLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     fontSize: 14,
   },
 
@@ -1171,13 +1172,13 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   linkText: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
 
   // Empty text
   emptyText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: Spacing.md,

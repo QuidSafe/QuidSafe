@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 import { useArticles } from '@/lib/hooks/useApi';
 import type { Article, ArticleCategory } from '@/lib/types';
@@ -345,12 +346,12 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 24,
-    fontFamily: 'PlayfairDisplay_700Bold',
+    fontFamily: Fonts.playfair.bold,
     lineHeight: 32,
   },
   subtitle: {
     fontSize: 12,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     marginBottom: 4,
     marginTop: 2,
   },
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     padding: 0,
   },
   pillRow: {
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontSize: 11.5,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
   },
   emptyState: {
     alignItems: 'center',
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
   },
   card: {
     borderRadius: BorderRadius.card,
@@ -422,18 +423,18 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 9.5,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     letterSpacing: 0.05 * 9.5,
     textTransform: 'uppercase',
   },
   cardTitle: {
     fontSize: 13.5,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 12,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     lineHeight: 12 * 1.45,
     marginBottom: 8,
   },
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontSize: 12.5,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     lineHeight: 12.5 * 1.6,
   },
   loadingState: {
@@ -484,6 +485,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 10.5,
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
   },
 });

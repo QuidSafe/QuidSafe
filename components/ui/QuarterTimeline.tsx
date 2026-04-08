@@ -2,6 +2,7 @@
 
 import { StyleSheet, View, Text } from 'react-native';
 import { Colors, Spacing } from '@/constants/Colors';
+import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
 interface QuarterTimelineProps {
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   title: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 14,
     marginBottom: Spacing.md,
   },
@@ -93,14 +94,14 @@ const styles = StyleSheet.create({
   check: {
     color: Colors.white,
     fontSize: 14,
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: Fonts.manrope.bold,
   },
   label: {
-    fontFamily: 'Manrope_600SemiBold',
+    fontFamily: Fonts.manrope.semiBold,
     fontSize: 13,
   },
   months: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: Fonts.manrope.regular,
     fontSize: 10,
     marginTop: 2,
   },
