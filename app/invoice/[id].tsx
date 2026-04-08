@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ArrowLeft, CheckCircle, FileText, Pencil, Trash2, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -27,10 +27,10 @@ import { hapticSuccess, hapticMedium } from '@/lib/haptics';
 import type { Invoice, InvoiceStatus } from '@/lib/types';
 
 const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string }> = {
-  draft: { bg: Colors.grey[200], text: Colors.grey[700] },
-  sent: { bg: '#DBEAFE', text: Colors.secondary },
-  paid: { bg: '#D1FAE5', text: Colors.success },
-  overdue: { bg: '#FEE2E2', text: Colors.error },
+  draft: { bg: '#2A2A2A', text: '#666666' },
+  sent: { bg: 'rgba(0,102,255,0.12)', text: Colors.secondary },
+  paid: { bg: 'rgba(0,200,83,0.12)', text: Colors.success },
+  overdue: { bg: 'rgba(255,59,48,0.12)', text: Colors.error },
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -148,7 +148,7 @@ export default function InvoiceDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+            <ArrowLeft size={20} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Invoice</Text>
           <View style={{ width: 20 }} />
@@ -158,7 +158,7 @@ export default function InvoiceDetailScreen() {
           <InvoiceDetailSkeleton />
         ) : !invoice ? (
           <Card style={styles.errorCard}>
-            <FontAwesome name="exclamation-triangle" size={32} color={Colors.error} />
+            <AlertTriangle size={32} color={Colors.error} strokeWidth={1.5} />
             <Text style={[styles.errorTitle, { color: colors.text }]}>Invoice not found</Text>
             <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
               This invoice may have been deleted or the link is invalid.
@@ -231,7 +231,7 @@ export default function InvoiceDetailScreen() {
                     <ActivityIndicator color={Colors.white} size="small" />
                   ) : (
                     <>
-                      <FontAwesome name="check-circle" size={16} color={Colors.white} style={styles.actionIcon} />
+                      <CheckCircle size={16} color={Colors.white} strokeWidth={1.5} style={styles.actionIcon} />
                       <Text style={styles.actionButtonTextLight}>Mark as Paid</Text>
                     </>
                   )}
@@ -243,7 +243,7 @@ export default function InvoiceDetailScreen() {
                 onPress={handleDownloadPDF}
                
               >
-                <FontAwesome name="file-pdf-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                <FileText size={16} color={Colors.error} strokeWidth={1.5} style={styles.actionIcon} />
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Download PDF</Text>
               </Pressable>
 
@@ -252,7 +252,7 @@ export default function InvoiceDetailScreen() {
                 onPress={handleEdit}
                
               >
-                <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                <Pencil size={16} color={Colors.secondary} strokeWidth={1.5} style={styles.actionIcon} />
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Invoice</Text>
               </Pressable>
 
@@ -266,7 +266,7 @@ export default function InvoiceDetailScreen() {
                   <ActivityIndicator color={Colors.error} size="small" />
                 ) : (
                   <>
-                    <FontAwesome name="trash-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                    <Trash2 size={16} color={Colors.error} strokeWidth={1.5} style={styles.actionIcon} />
                     <Text style={styles.deleteButtonText}>
                       {deleteConfirm ? 'Tap again to confirm' : 'Delete Invoice'}
                     </Text>
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
   },
 
@@ -308,13 +308,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   clientName: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
     textAlign: 'center',
     marginBottom: 4,
   },
   clientEmail: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     marginBottom: Spacing.sm,
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   statusBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
@@ -336,14 +336,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   amountLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   amountValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 36,
   },
 
@@ -359,14 +359,14 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   detailLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   detailValue: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 
@@ -388,12 +388,12 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionButtonTextLight: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
   actionButtonTextDark: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
   markPaidButton: {
@@ -402,12 +402,12 @@ const styles = StyleSheet.create({
   pdfButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
   },
   editButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
   },
   deleteButton: {
     backgroundColor: 'transparent',
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   deleteButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.error,
   },
@@ -427,12 +427,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   errorTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 18,
     marginTop: Spacing.sm,
   },
   errorSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   backButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.white,
   },

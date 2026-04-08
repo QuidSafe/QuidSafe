@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Plus, Trash2, Camera, Info, RefreshCw, MapPin, X, Lightbulb } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
 import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
@@ -26,16 +26,16 @@ import { formatCurrency } from '@/lib/tax-engine';
 import { useTheme } from '@/lib/ThemeContext';
 import { hapticSuccess, hapticMedium } from '@/lib/haptics';
 
-const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; color: string }> = {
-  mileage: { icon: 'car', bg: '#EFF6FF', color: Colors.secondary },
-  phone: { icon: 'phone', bg: '#F0FDF4', color: Colors.success },
-  office: { icon: 'briefcase', bg: '#FEF9C3', color: Colors.gold[700] },
-  equipment: { icon: 'laptop', bg: '#F5F3FF', color: '#7C3AED' },
-  travel: { icon: 'plane', bg: '#FFF7ED', color: '#EA580C' },
-  food: { icon: 'cutlery', bg: '#FEF2F2', color: Colors.error },
-  software: { icon: 'code', bg: '#EFF6FF', color: Colors.secondary },
-  insurance: { icon: 'shield', bg: '#F0FDF4', color: Colors.success },
-  default: { icon: 'file-text-o', bg: '#F1F5F9', color: Colors.grey[600] },
+const CATEGORY_ICONS: Record<string, { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; color: string }> = {
+  mileage: { IconComponent: Car, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  phone: { IconComponent: Phone, bg: 'rgba(0,200,83,0.12)', color: '#00C853' },
+  office: { IconComponent: Briefcase, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  equipment: { IconComponent: Laptop, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  travel: { IconComponent: Plane, bg: 'rgba(255,149,0,0.12)', color: '#EA580C' },
+  food: { IconComponent: Utensils, bg: 'rgba(255,59,48,0.12)', color: '#FF3B30' },
+  software: { IconComponent: Code, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  insurance: { IconComponent: Shield, bg: 'rgba(0,200,83,0.12)', color: '#00C853' },
+  default: { IconComponent: FileText, bg: '#1A1A1A', color: '#666666' },
 };
 
 function getCategoryMeta(category?: string) {
@@ -58,10 +58,10 @@ const FREQUENCY_LABELS: Record<string, string> = {
 };
 
 const FREQUENCY_COLORS: Record<string, { bg: string; color: string }> = {
-  weekly: { bg: '#FEF9C3', color: '#A16207' },
-  monthly: { bg: '#EFF6FF', color: '#1E3A8A' },
-  quarterly: { bg: '#F0FDF4', color: '#16A34A' },
-  yearly: { bg: '#F5F3FF', color: '#7C3AED' },
+  weekly: { bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  monthly: { bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  quarterly: { bg: 'rgba(0,200,83,0.12)', color: '#00C853' },
+  yearly: { bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
 };
 
 const HMRC_CATEGORIES = [
@@ -137,7 +137,7 @@ const ExpenseRow = React.memo(function ExpenseRow({
       accessibilityHint="Tap to view expense details"
     >
       <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
-        <FontAwesome name={meta.icon} size={16} color={meta.color} />
+        <meta.IconComponent size={16} color={meta.color} strokeWidth={1.5} />
       </View>
       <View style={styles.expenseMiddle}>
         <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
@@ -170,7 +170,7 @@ const ExpenseRow = React.memo(function ExpenseRow({
         accessibilityLabel={`Delete expense: ${exp.description}`}
         accessibilityHint="Tap to delete this expense"
       >
-        <FontAwesome name="trash-o" size={16} color={Colors.error} />
+        <Trash2 size={16} color="#FF3B30" strokeWidth={1.5} />
       </Pressable>
     </Pressable>
   );
@@ -410,7 +410,7 @@ export default function ExpensesScreen() {
             accessibilityLabel="Add new expense"
             accessibilityHint="Tap to open the add expense form"
           >
-            <FontAwesome name="plus" size={16} color={Colors.white} />
+            <Plus size={16} color={Colors.white} strokeWidth={1.5} />
           </Pressable>
         </View>
 
@@ -461,7 +461,7 @@ export default function ExpensesScreen() {
           accessibilityLabel="Add expense from receipt"
           accessibilityHint="Tap to add a new expense"
         >
-          <FontAwesome name="camera" size={16} color={Colors.white} />
+          <Camera size={16} color={Colors.white} strokeWidth={1.5} />
           <Text style={styles.scanButtonText}>Add expense from receipt</Text>
         </Pressable>
 
@@ -473,7 +473,7 @@ export default function ExpensesScreen() {
           accessibilityLabel="What can I claim? See the full list"
           accessibilityHint="Opens the Learn page with claimable expenses"
         >
-          <FontAwesome name="info-circle" size={16} color={Colors.secondary} />
+          <Info size={16} color="#0066FF" strokeWidth={1.5} />
           <Text style={styles.outlineButtonText}>What can I claim? See the full list</Text>
         </Pressable>
 
@@ -539,7 +539,7 @@ export default function ExpensesScreen() {
             accessibilityRole="button"
             accessibilityLabel="Add recurring expense"
           >
-            <FontAwesome name="plus" size={12} color={Colors.white} />
+            <Plus size={12} color={Colors.white} strokeWidth={1.5} />
             <Text style={styles.addRecurringText}>Add Recurring</Text>
           </Pressable>
         </View>
@@ -558,7 +558,7 @@ export default function ExpensesScreen() {
                   ]}
                 >
                   <View style={[styles.iconBadge, { backgroundColor: meta.bg }]}>
-                    <FontAwesome name="refresh" size={16} color={meta.color} />
+                    <RefreshCw size={16} color={meta.color} strokeWidth={1.5} />
                   </View>
                   <View style={styles.expenseMiddle}>
                     <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>
@@ -585,7 +585,7 @@ export default function ExpensesScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={`Cancel recurring expense: ${rec.description}`}
                   >
-                    <FontAwesome name="trash-o" size={16} color={Colors.error} />
+                    <Trash2 size={16} color="#FF3B30" strokeWidth={1.5} />
                   </Pressable>
                 </View>
               );
@@ -593,7 +593,7 @@ export default function ExpensesScreen() {
           </Card>
         ) : (
           <Card variant="elevated" style={styles.recurringEmpty}>
-            <FontAwesome name="refresh" size={20} color={colors.textSecondary} />
+            <RefreshCw size={20} color={colors.textSecondary} strokeWidth={1.5} />
             <Text style={[styles.recurringEmptyTitle, { color: colors.text }]}>No recurring expenses</Text>
             <Text style={[styles.recurringEmptyText, { color: colors.textSecondary }]}>
               Add monthly subscriptions, rent, or phone bills to auto-log them.
@@ -603,7 +603,7 @@ export default function ExpensesScreen() {
 
         {/* Gold Insight Banner */}
         <View style={styles.insightBanner} accessibilityLabel="Tip: Do you use your car for work? Track your mileage to claim up to 45p per mile in tax relief.">
-          <FontAwesome name="lightbulb-o" size={18} color={Colors.gold[700]} style={styles.insightIcon} />
+          <Lightbulb size={18} color="#0066FF" strokeWidth={1.5} style={styles.insightIcon} />
           <Text style={styles.insightText}>
             <Text style={styles.insightBold}>Tip: </Text>
             Do you use your car for work? Track your mileage to claim up to 45p per mile in tax relief.

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ArrowLeft, Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Image as ImageIcon, Pencil, Trash2, Check, X, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -23,16 +23,16 @@ import { formatCurrency } from '@/lib/tax-engine';
 import { hapticMedium } from '@/lib/haptics';
 import type { Expense } from '@/lib/types';
 
-const CATEGORY_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; color: string }> = {
-  mileage: { icon: 'car', bg: '#EFF6FF', color: Colors.secondary },
-  phone: { icon: 'phone', bg: '#F0FDF4', color: Colors.success },
-  office: { icon: 'briefcase', bg: '#FEF9C3', color: Colors.gold[700] },
-  equipment: { icon: 'laptop', bg: '#F5F3FF', color: '#7C3AED' },
-  travel: { icon: 'plane', bg: '#FFF7ED', color: '#EA580C' },
-  food: { icon: 'cutlery', bg: '#FEF2F2', color: Colors.error },
-  software: { icon: 'code', bg: '#EFF6FF', color: Colors.secondary },
-  insurance: { icon: 'shield', bg: '#F0FDF4', color: Colors.success },
-  default: { icon: 'file-text-o', bg: '#F1F5F9', color: Colors.grey[600] },
+const CATEGORY_ICONS: Record<string, { Icon: React.ComponentType<any>; bg: string; color: string }> = {
+  mileage: { Icon: Car, bg: 'rgba(0,102,255,0.12)', color: Colors.secondary },
+  phone: { Icon: Phone, bg: 'rgba(0,200,83,0.12)', color: Colors.success },
+  office: { Icon: Briefcase, bg: 'rgba(0,102,255,0.12)', color: Colors.secondary },
+  equipment: { Icon: Laptop, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  travel: { Icon: Plane, bg: 'rgba(0,102,255,0.12)', color: '#0066FF' },
+  food: { Icon: Utensils, bg: 'rgba(255,59,48,0.12)', color: Colors.error },
+  software: { Icon: Code, bg: 'rgba(0,102,255,0.12)', color: Colors.secondary },
+  insurance: { Icon: Shield, bg: 'rgba(0,200,83,0.12)', color: Colors.success },
+  default: { Icon: FileText, bg: '#2A2A2A', color: '#666666' },
 };
 
 const HMRC_CATEGORIES = [
@@ -224,7 +224,7 @@ export default function ExpenseDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+            <ArrowLeft size={20} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Expense</Text>
           <View style={{ width: 20 }} />
@@ -234,7 +234,7 @@ export default function ExpenseDetailScreen() {
           <ExpenseDetailSkeleton />
         ) : !expense ? (
           <Card style={styles.errorCard}>
-            <FontAwesome name="exclamation-triangle" size={32} color={Colors.error} />
+            <AlertTriangle size={32} color={Colors.error} strokeWidth={1.5} />
             <Text style={[styles.errorTitle, { color: colors.text }]}>Expense not found</Text>
             <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
               This expense may have been deleted or the link is invalid.
@@ -263,7 +263,7 @@ export default function ExpenseDetailScreen() {
                       onChangeText={setEditAmount}
                       keyboardType="decimal-pad"
                       placeholder="0.00"
-                      placeholderTextColor={Colors.grey[400]}
+                      placeholderTextColor={'#666666'}
                     />
                   </View>
 
@@ -274,7 +274,7 @@ export default function ExpenseDetailScreen() {
                       value={editDescription}
                       onChangeText={setEditDescription}
                       placeholder="What was this expense for?"
-                      placeholderTextColor={Colors.grey[400]}
+                      placeholderTextColor={'#666666'}
                       maxLength={500}
                     />
                   </View>
@@ -286,7 +286,7 @@ export default function ExpenseDetailScreen() {
                       value={editDate}
                       onChangeText={setEditDate}
                       placeholder="2026-01-15"
-                      placeholderTextColor={Colors.grey[400]}
+                      placeholderTextColor={'#666666'}
                     />
                   </View>
 
@@ -330,7 +330,7 @@ export default function ExpenseDetailScreen() {
                       <ActivityIndicator color={Colors.white} size="small" />
                     ) : (
                       <>
-                        <FontAwesome name="check" size={16} color={Colors.white} style={styles.actionIcon} />
+                        <Check size={16} color={Colors.white} strokeWidth={1.5} style={styles.actionIcon} />
                         <Text style={styles.saveButtonText}>Save Changes</Text>
                       </>
                     )}
@@ -341,7 +341,7 @@ export default function ExpenseDetailScreen() {
                     onPress={handleCancelEdit}
                    
                   >
-                    <FontAwesome name="times" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                    <X size={16} color={Colors.secondary} strokeWidth={1.5} style={styles.actionIcon} />
                     <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Cancel</Text>
                   </Pressable>
                 </View>
@@ -351,7 +351,7 @@ export default function ExpenseDetailScreen() {
                 {/* Category Icon & Description */}
                 <View style={styles.topSection}>
                   <View style={[styles.categoryIconLarge, { backgroundColor: categoryMeta.bg }]}>
-                    <FontAwesome name={categoryMeta.icon} size={28} color={categoryMeta.color} />
+                    <categoryMeta.Icon size={28} color={categoryMeta.color} strokeWidth={1.5} />
                   </View>
                   <Text style={[styles.expenseDescription, { color: colors.text }]}>
                     {expense.description}
@@ -401,7 +401,7 @@ export default function ExpenseDetailScreen() {
                     <Text style={[styles.receiptLabel, { color: colors.textSecondary }]}>Receipt</Text>
                     {imageError ? (
                       <View style={styles.receiptFallback}>
-                        <FontAwesome name="image" size={32} color={Colors.grey[400]} />
+                        <ImageIcon size={32} color="#666666" strokeWidth={1.5} />
                         <Text style={[styles.receiptFallbackText, { color: colors.textSecondary }]}>
                           Receipt unavailable
                         </Text>
@@ -425,7 +425,7 @@ export default function ExpenseDetailScreen() {
                     onPress={handleEdit}
                    
                   >
-                    <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
+                    <Pencil size={16} color={Colors.secondary} strokeWidth={1.5} style={styles.actionIcon} />
                     <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Expense</Text>
                   </Pressable>
 
@@ -439,7 +439,7 @@ export default function ExpenseDetailScreen() {
                       <ActivityIndicator color={Colors.error} size="small" />
                     ) : (
                       <>
-                        <FontAwesome name="trash-o" size={16} color={Colors.error} style={styles.actionIcon} />
+                        <Trash2 size={16} color={Colors.error} strokeWidth={1.5} style={styles.actionIcon} />
                         <Text style={styles.deleteButtonText}>
                           {deleteConfirm ? 'Tap again to confirm' : 'Delete Expense'}
                         </Text>
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
   },
 
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   expenseDescription: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     textAlign: 'center',
     marginBottom: Spacing.sm,
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   categoryBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
@@ -513,14 +513,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   amountLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   amountValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 36,
   },
 
@@ -536,14 +536,14 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   detailLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   detailValue: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
 
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   receiptLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -567,13 +567,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 120,
     borderRadius: BorderRadius.input,
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#0A0A0A',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
   },
   receiptFallbackText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
 
@@ -595,13 +595,13 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionButtonTextDark: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
   editButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.grey[300],
+    borderColor: '#2A2A2A',
   },
   deleteButton: {
     backgroundColor: 'transparent',
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   deleteButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.error,
   },
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   editSectionTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 20,
     marginBottom: Spacing.xs,
   },
@@ -628,13 +628,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   editInput: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.secondary,
   },
   categoryChipText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   categoryChipTextSelected: {
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   saveButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -679,12 +679,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   errorTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 18,
     marginTop: Spacing.sm,
   },
   errorSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   backButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.white,
   },

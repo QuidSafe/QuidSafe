@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowUp, ArrowDown, Landmark, Lock, Lightbulb, Check, ChevronRight, ArrowLeftRight, Calculator, Wallet, ShieldCheck, Clock } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { MiniChart } from '@/components/ui/MiniChart';
@@ -34,13 +32,13 @@ function calcYoYGrowth(byMonth?: { month: string; income: number }[]): number | 
 }
 
 const SOURCE_COLORS = [
-  Colors.secondary,   // Royal Blue
-  Colors.accent,      // Warm Gold
-  Colors.success,     // Green
-  '#8B5CF6',          // Purple
+  '#0066FF',          // Blue
+  '#0066FF',          // Blue
+  '#00C853',          // Green
+  '#0066FF',          // Blue
   '#EC4899',          // Pink
   '#06B6D4',          // Cyan
-  Colors.error,       // Red
+  '#FF3B30',          // Red
   '#F97316',          // Orange
 ];
 
@@ -55,7 +53,7 @@ export default function DashboardScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -114,15 +112,15 @@ export default function DashboardScreen() {
             {/* Health badge -- income growth indicator (YoY from byMonth data) */}
             {yoyGrowth !== null && (
               <View
-                style={[styles.healthBadge, { backgroundColor: yoyGrowth >= 0 ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)' }]}
+                style={[styles.healthBadge, { backgroundColor: yoyGrowth >= 0 ? 'rgba(0,200,83,0.1)' : 'rgba(255,59,48,0.1)' }]}
                 accessibilityLabel={`Income growth: ${yoyGrowth >= 0 ? 'plus' : 'minus'} ${Math.abs(yoyGrowth)} percent`}
               >
-                <FontAwesome
-                  name={yoyGrowth >= 0 ? 'arrow-up' : 'arrow-down'}
-                  size={11}
-                  color={yoyGrowth >= 0 ? Colors.success : Colors.error}
-                />
-                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? Colors.success : Colors.error }]}>
+                {yoyGrowth >= 0 ? (
+                  <ArrowUp size={11} color="#00C853" strokeWidth={1.5} />
+                ) : (
+                  <ArrowDown size={11} color="#FF3B30" strokeWidth={1.5} />
+                )}
+                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? '#00C853' : '#FF3B30' }]}>
                   {yoyGrowth >= 0 ? '+' : ''}{yoyGrowth}%
                 </Text>
               </View>
@@ -142,11 +140,8 @@ export default function DashboardScreen() {
           <>
             {/* ── WELCOME: Hero with dashboard preview ── */}
             <View>
-              <LinearGradient
-                colors={['#0C1222', '#142044', '#1A2D6B', '#142044', '#0C1222']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={ws.hero}
+              <View
+                style={[ws.hero, { backgroundColor: '#000000' }]}
               >
                 {/* Layered atmospheric glows */}
                 <View style={ws.glowGold} />
@@ -158,6 +153,7 @@ export default function DashboardScreen() {
 
                 {/* Oversized headline */}
                 <Text style={ws.heroEyebrow}>SOLE TRADER TAX</Text>
+
                 <Text style={ws.heroHeadline}>
                   Know exactly{'\n'}what to set aside
                 </Text>
@@ -183,9 +179,8 @@ export default function DashboardScreen() {
                       <Text style={ws.previewBoxVal}>—</Text>
                     </View>
                   </View>
-                  <LinearGradient
-                    colors={['transparent', 'rgba(12,18,34,0.95)']}
-                    style={ws.previewFade}
+                  <View
+                    style={[ws.previewFade, { backgroundColor: 'rgba(0,0,0,0.85)' }]}
                   />
                 </View>
 
@@ -202,17 +197,14 @@ export default function DashboardScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Connect your bank account"
                   >
-                    <LinearGradient
-                      colors={['#D4A017', '#CA8A04', '#A16207']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={ws.ctaGradient}
+                    <View
+                      style={[ws.ctaGradient, { backgroundColor: '#0066FF' }]}
                     >
-                      <FontAwesome name="university" size={16} color="#FFF" />
+                      <Landmark size={16} color="#FFF" strokeWidth={1.5} />
                       <Text style={ws.ctaText}>
                         {isConnecting ? 'Connecting...' : 'Connect Your Bank'}
                       </Text>
-                    </LinearGradient>
+                    </View>
                   </Pressable>
                 </View>
 
@@ -220,41 +212,41 @@ export default function DashboardScreen() {
                 <View style={ws.trustRow}>
                   {['256-bit encrypted', 'Read-only access', 'Bank-grade security'].map((t) => (
                     <View key={t} style={ws.trustChip}>
-                      <FontAwesome name="lock" size={9} color="rgba(202,138,4,0.6)" />
+                      <Lock size={9} color="rgba(0,102,255,0.6)" strokeWidth={1.5} />
                       <Text style={ws.trustText}>{t}</Text>
                     </View>
                   ))}
                 </View>
-              </LinearGradient>
+              </View>
             </View>
 
             {/* ── FEATURES: Cascading staggered cards ── */}
             {([
               {
-                icon: 'swap-horizontal' as const,
+                IconComponent: ArrowLeftRight,
                 title: 'Auto-track income',
                 desc: 'Transactions imported via Open Banking and categorised by AI — no manual entry.',
-                accent: Colors.secondary,
+                accent: '#0066FF',
               },
               {
-                icon: 'calculator' as const,
+                IconComponent: Calculator,
                 title: 'Real-time tax calculation',
                 desc: 'Income Tax + NI Class 2 & 4, updated live as you earn. Personal allowance and thresholds built in.',
-                accent: Colors.accent,
+                accent: '#0066FF',
               },
               {
-                icon: 'wallet' as const,
+                IconComponent: Wallet,
                 title: 'Monthly set-aside amount',
                 desc: 'Tells you exactly what to put away each month so January never surprises you.',
-                accent: Colors.success,
+                accent: '#00C853',
               },
               {
-                icon: 'shield-checkmark' as const,
+                IconComponent: ShieldCheck,
                 title: 'Making Tax Digital ready',
                 desc: 'Quarterly updates pre-formatted for HMRC. Deadlines tracked on your dashboard.',
-                accent: '#8B5CF6',
+                accent: '#0066FF',
               },
-            ] as const).map((f, i) => (
+            ] as const).map((f) => (
               <View
                 key={f.title}
               >
@@ -269,7 +261,7 @@ export default function DashboardScreen() {
                   ]}
                 >
                   <View style={[ws.featureIcon, { backgroundColor: f.accent + '14' }]}>
-                    <Ionicons name={f.icon} size={22} color={f.accent} />
+                    <f.IconComponent size={22} color={f.accent} strokeWidth={1.5} />
                   </View>
                   <View style={ws.featureBody}>
                     <Text style={[ws.featureTitle, { color: colors.text }]}>{f.title}</Text>
@@ -292,12 +284,12 @@ export default function DashboardScreen() {
                     { n: '3', title: 'Dashboard goes live', desc: 'Tax owed, set-aside amount, and quarterly deadlines — all in real time.' },
                   ].map((step, i) => (
                     <View key={step.n} style={ws.timelineStep}>
-                      {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? Colors.accent : colors.border }]} />}
+                      {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? '#0066FF' : colors.border }]} />}
                       <View style={[
                         ws.timelineNum,
                         {
-                          backgroundColor: i === 0 ? Colors.accent : 'transparent',
-                          borderColor: i === 0 ? Colors.accent : colors.border,
+                          backgroundColor: i === 0 ? '#0066FF' : 'transparent',
+                          borderColor: i === 0 ? '#0066FF' : colors.border,
                         },
                       ]}>
                         <Text style={[ws.timelineNumText, { color: i === 0 ? '#FFF' : colors.textSecondary }]}>
@@ -326,7 +318,7 @@ export default function DashboardScreen() {
               >
                 <View style={ws.bottomCtaInner}>
                   <View style={ws.bottomCtaIconWrap}>
-                    <FontAwesome name="university" size={16} color={Colors.accent} />
+                    <Landmark size={16} color="#0066FF" strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[ws.bottomCtaTitle, { color: colors.text }]}>Ready to get started?</Text>
@@ -334,7 +326,7 @@ export default function DashboardScreen() {
                       Takes 2 minutes — connect your bank and let QuidSafe handle the rest.
                     </Text>
                   </View>
-                  <FontAwesome name="chevron-right" size={14} color={Colors.accent} />
+                  <ChevronRight size={14} color="#0066FF" strokeWidth={1.5} />
                 </View>
               </Pressable>
             </View>
@@ -349,11 +341,8 @@ export default function DashboardScreen() {
                 accessibilityLabel={`Tax summary. Set aside ${formatCurrency(tax?.totalTaxOwed ?? 0)} for tax based on ${formatCurrency(tax?.totalIncome ?? 0)} income this tax year`}
                 style={({ pressed }) => [pressed && styles.pressedCard]}
               >
-                <LinearGradient
-                  colors={isDark ? ['#0F172A', '#0A0A0F'] : ['#0F172A', '#1E3A8A']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.heroCard}
+                <View
+                  style={[styles.heroCard, { backgroundColor: '#000000' }]}
                 >
                   {/* Radial gold glow overlays */}
                   <View style={styles.heroGlow} importantForAccessibility="no" accessibilityElementsHidden={true} />
@@ -401,7 +390,7 @@ export default function DashboardScreen() {
                       {formatCurrency(tax?.setAsideMonthly ?? 0)}
                     </Text>
                   </View>
-                </LinearGradient>
+                </View>
               </Pressable>
             </View>
 
@@ -428,7 +417,7 @@ export default function DashboardScreen() {
                         {formatCurrency(periodTotal)} over {last6.length} months
                       </Text>
                     </View>
-                    <MiniChart data={chartData} color={Colors.success} height={72} />
+                    <MiniChart data={chartData} color="#00C853" height={72} />
                   </Card>
                 </View>
               );
@@ -444,16 +433,16 @@ export default function DashboardScreen() {
                   style={({ pressed }) => [
                     styles.insightBanner,
                     {
-                      backgroundColor: isDark ? 'rgba(202,138,4,0.08)' : Colors.gold[50],
-                      borderColor: 'rgba(202,138,4,0.12)',
+                      backgroundColor: 'rgba(0,102,255,0.08)',
+                      borderColor: 'rgba(0,102,255,0.12)',
                     },
                     pressed && styles.pressedCard,
                   ]}
                 >
                   <View style={styles.insightIcon}>
-                    <FontAwesome name="lightbulb-o" size={14} color={Colors.gold[700]} />
+                    <Lightbulb size={14} color="#0066FF" strokeWidth={1.5} />
                   </View>
-                  <Text style={[styles.insightText, { color: isDark ? Colors.gold[100] : Colors.gold[700] }]}>
+                  <Text style={[styles.insightText, { color: '#0066FF' }]}>
                     {tax.plainEnglish}
                   </Text>
                 </Pressable>
@@ -466,7 +455,7 @@ export default function DashboardScreen() {
                 accessibilityLabel={`Set aside this month ${formatCurrency(tax?.setAsideMonthly ?? 0)}. Effective tax rate ${tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}`}
                 style={({ pressed }) => [
                   styles.setAsideCard,
-                  { backgroundColor: isDark ? '#292524' : Colors.gold[50] },
+                  { backgroundColor: '#0A0A0A' },
                   pressed && styles.pressedCard,
                 ]}
               >
@@ -478,7 +467,7 @@ export default function DashboardScreen() {
                 </View>
                 <View style={styles.setAsideRight}>
                   <View style={styles.onTrackBadge} accessibilityLabel="Status: On track">
-                    <FontAwesome name="check" size={11} color={Colors.success} />
+                    <Check size={11} color="#00C853" strokeWidth={1.5} />
                     <Text style={styles.onTrackText}>On track</Text>
                   </View>
                 </View>
@@ -547,9 +536,9 @@ export default function DashboardScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="View full tax history"
               >
-                <FontAwesome name="history" size={14} color={Colors.accent} style={{ marginRight: 8 }} />
+                <Clock size={14} color="#0066FF" strokeWidth={1.5} style={{ marginRight: 8 }} />
                 <Text style={[styles.taxHistoryText, { color: colors.text }]}>View Tax History</Text>
-                <FontAwesome name="chevron-right" size={11} color={colors.textSecondary} />
+                <ChevronRight size={11} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
 
               {/* Income by Source */}
@@ -577,7 +566,7 @@ export default function DashboardScreen() {
                           </View>
                           <View style={styles.sourceRight}>
                             <Text style={[styles.sourceAmount, { color: colors.text }]}>{formatCurrency(src.amount)}</Text>
-                            <View style={[styles.sourceBar, { backgroundColor: isDark ? Colors.grey[700] : Colors.grey[200] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>
+                            <View style={[styles.sourceBar, { backgroundColor: '#666666' }]} importantForAccessibility="no" accessibilityElementsHidden={true}>
                               <View style={[styles.sourceBarFill, { width: `${src.percentage}%`, backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }]} />
                             </View>
                           </View>
@@ -622,11 +611,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   greeting: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
   },
   name: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
     marginTop: 2,
     letterSpacing: -0.3,
@@ -637,12 +626,12 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#0066FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -657,7 +646,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   healthText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11.5,
   },
 
@@ -688,7 +677,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(202, 138, 4, 0.1)',
+    backgroundColor: 'rgba(0,102,255,0.1)',
   },
   heroGlowSecondary: {
     position: 'absolute',
@@ -697,7 +686,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(30, 58, 138, 0.12)',
+    backgroundColor: 'rgba(0,102,255,0.12)',
   },
   heroLabelRow: {
     flexDirection: 'row',
@@ -709,24 +698,24 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
   },
   heroLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 10,
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   heroAmount: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 40,
     color: Colors.white,
     lineHeight: 42,
     letterSpacing: -1,
   },
   heroSubtext: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11.5,
     color: 'rgba(255,255,255,0.45)',
     marginTop: Spacing.xs,
@@ -748,7 +737,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   heroBoxLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 9.5,
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
@@ -756,7 +745,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   heroBoxValue: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
@@ -770,25 +759,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
+    backgroundColor: 'rgba(0,102,255,0.12)',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },
   heroSetAsideLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 10.5,
-    color: Colors.accent,
+    color: '#0066FF',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   heroSetAsideAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 22,
-    color: Colors.accent,
+    color: '#0066FF',
   },
 
-  // Insight banner (gold-themed to match mockup)
+  // Insight banner
   insightBanner: {
     borderRadius: BorderRadius.card,
     padding: 11,
@@ -806,7 +795,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   insightText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     lineHeight: 18,
     flex: 1,
@@ -818,20 +807,20 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: Colors.accent,
+    borderColor: '#0066FF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   setAsideLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 10.5,
-    color: Colors.gold[700],
+    color: '#0066FF',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   setAsideAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 26,
     marginTop: 2,
   },
@@ -842,15 +831,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+    backgroundColor: 'rgba(0,200,83,0.1)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: BorderRadius.pill,
   },
   onTrackText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
-    color: Colors.success,
+    color: '#00C853',
   },
 
   // Actions
@@ -866,7 +855,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   sectionHeading: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
@@ -876,12 +865,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chartTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     letterSpacing: -0.2,
   },
   chartSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -905,7 +894,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   sourceName: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
   },
   sourceRight: {
@@ -913,7 +902,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   sourceAmount: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   sourceBar: {
@@ -923,7 +912,7 @@ const styles = StyleSheet.create({
   },
   sourceBarFill: {
     height: 4,
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#0066FF',
     borderRadius: 2,
   },
   taxHistoryLink: {
@@ -936,7 +925,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.card,
   },
   taxHistoryText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     flex: 1,
   },
@@ -966,7 +955,7 @@ const ws = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(202, 138, 4, 0.12)',
+    backgroundColor: 'rgba(0,102,255,0.12)',
   },
   glowBlue: {
     position: 'absolute',
@@ -975,7 +964,7 @@ const ws = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(30, 58, 138, 0.18)',
+    backgroundColor: 'rgba(0,102,255,0.18)',
   },
   glowSoft: {
     position: 'absolute',
@@ -984,25 +973,25 @@ const ws = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: 'rgba(202, 138, 4, 0.03)',
+    backgroundColor: 'rgba(0,102,255,0.03)',
   },
   accentLine: {
     width: 40,
     height: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
     borderRadius: 2,
     marginBottom: 16,
     opacity: 0.8,
   },
   heroEyebrow: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 10,
-    color: 'rgba(202,138,4,0.65)',
+    color: 'rgba(0,102,255,0.65)',
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   heroHeadline: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 34,
     color: Colors.white,
     lineHeight: 42,
@@ -1030,16 +1019,16 @@ const ws = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.accent,
+    backgroundColor: '#0066FF',
   },
   previewLabel: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 9,
     color: 'rgba(255,255,255,0.4)',
     letterSpacing: 1.5,
   },
   previewAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 32,
     color: 'rgba(255,255,255,0.2)',
     letterSpacing: -1,
@@ -1059,7 +1048,7 @@ const ws = StyleSheet.create({
     paddingHorizontal: 10,
   },
   previewBoxLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 8.5,
     color: 'rgba(255,255,255,0.3)',
     letterSpacing: 0.3,
@@ -1067,7 +1056,7 @@ const ws = StyleSheet.create({
     marginBottom: 2,
   },
   previewBoxVal: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
     color: 'rgba(255,255,255,0.15)',
   },
@@ -1080,7 +1069,7 @@ const ws = StyleSheet.create({
   },
 
   heroSub: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     color: 'rgba(255,255,255,0.55)',
     lineHeight: 21,
@@ -1091,7 +1080,7 @@ const ws = StyleSheet.create({
   cta: {
     borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: 'rgba(202,138,4,0.35)',
+    shadowColor: 'rgba(0,102,255,0.35)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 20,
@@ -1111,7 +1100,7 @@ const ws = StyleSheet.create({
     paddingHorizontal: 32,
   },
   ctaText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 16,
     color: Colors.white,
     letterSpacing: -0.2,
@@ -1135,7 +1124,7 @@ const ws = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   trustText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
     color: 'rgba(255,255,255,0.35)',
   },
@@ -1163,13 +1152,13 @@ const ws = StyleSheet.create({
     paddingTop: 2,
   },
   featureTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     letterSpacing: -0.1,
     marginBottom: 3,
   },
   featureDesc: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -1179,7 +1168,7 @@ const ws = StyleSheet.create({
     marginTop: 8,
   },
   timelineHeading: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 20,
     letterSpacing: -0.3,
     marginBottom: 16,
@@ -1211,7 +1200,7 @@ const ws = StyleSheet.create({
     justifyContent: 'center',
   },
   timelineNumText: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 13,
   },
   timelineBody: {
@@ -1219,12 +1208,12 @@ const ws = StyleSheet.create({
     paddingTop: 4,
   },
   timelineTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14.5,
     letterSpacing: -0.1,
   },
   timelineDesc: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12.5,
     lineHeight: 18,
     marginTop: 2,
@@ -1246,17 +1235,17 @@ const ws = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(202, 138, 4, 0.1)',
+    backgroundColor: 'rgba(0,102,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bottomCtaTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14.5,
     letterSpacing: -0.1,
   },
   bottomCtaDesc: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     lineHeight: 17,
     marginTop: 2,
