@@ -25,7 +25,7 @@ migrations_dir = "worker/migrations"
 
 [env.dev.vars]
 ENVIRONMENT = "development"
-CLERK_PUBLISHABLE_KEY = ""
+CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
 
 # ─── Staging ───────────────────────────────────────────────
 [env.staging]
@@ -39,7 +39,7 @@ migrations_dir = "worker/migrations"
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
-CLERK_PUBLISHABLE_KEY = ""
+CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
 
 # ─── Production ────────────────────────────────────────────
 [env.production]
@@ -57,4 +57,4 @@ migrations_dir = "worker/migrations"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-CLERK_PUBLISHABLE_KEY = ""
+CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
