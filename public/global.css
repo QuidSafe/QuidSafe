@@ -48,16 +48,34 @@ body {
   background: rgba(255,255,255,0.15);
 }
 
+/* ── Cursor pointer on all interactive elements ── */
+[role="button"], [role="link"], [role="switch"],
+[role="tab"], [role="checkbox"], [role="radio"],
+a, button, [tabindex="0"] {
+  cursor: pointer;
+}
+
 /* ── Smooth transitions on all interactive React Native Web elements ── */
 [role="button"],
 [role="link"],
 a {
-  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease,
+              background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ── Hover lift effect for card-like Pressable wrappers ── */
-[data-testid] > [role="button"]:hover {
-  transform: translateY(-1px);
+/* ── Hover lift for interactive cards ── */
+[role="button"]:hover {
+  opacity: 0.95;
+}
+
+/* ── Respect reduced motion preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Base Typography ── */

@@ -59,114 +59,12 @@ export default function DashboardScreen() {
 
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // ── Orchestrated entrance animations ──
-  // Header
-  const headerFade = useRef(new Animated.Value(0)).current;
-  const headerSlide = useRef(new Animated.Value(16)).current;
-  // Hero card
-  const heroFade = useRef(new Animated.Value(0)).current;
-  const heroSlide = useRef(new Animated.Value(30)).current;
-  const heroScale = useRef(new Animated.Value(0.92)).current;
-  // Preview card inside hero (nested stagger)
-  const previewFade = useRef(new Animated.Value(0)).current;
-  const previewSlide = useRef(new Animated.Value(16)).current;
-  // CTA button
-  const ctaFade = useRef(new Animated.Value(0)).current;
-  const ctaScale = useRef(new Animated.Value(0.9)).current;
-  // Feature cards — individual stagger (4 cards)
-  const featureAnims = useRef(
-    Array.from({ length: 4 }, () => ({
-      fade: new Animated.Value(0),
-      slide: new Animated.Value(24),
-    })),
-  ).current;
-  // Timeline section
-  const timelineFade = useRef(new Animated.Value(0)).current;
-  const timelineSlide = useRef(new Animated.Value(18)).current;
-  // Bottom CTA
-  const bottomFade = useRef(new Animated.Value(0)).current;
-  const bottomSlide = useRef(new Animated.Value(14)).current;
-  // Content fade (used by non-welcome sections)
-  const contentFade = useRef(new Animated.Value(0)).current;
-  const contentSlide = useRef(new Animated.Value(14)).current;
+  // Single subtle fade-in for the whole page (200ms, not 1.5s stagger)
+  const pageFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isLoading) return;
-
-    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, duration: number) =>
-      Animated.parallel([
-        Animated.timing(fade, { toValue: 1, duration, useNativeDriver: true }),
-        Animated.timing(slide, { toValue: 0, duration, useNativeDriver: true }),
-      ]);
-
-    // 1. Header — immediate
-    fadeSlide(headerFade, headerSlide, 300).start();
-
-    const welcome = (data?.income?.total ?? 0) === 0 && (!data?.actions || data.actions.length === 0);
-    if (welcome) {
-      // 2. Hero card — 80ms delay, spring scale
-      Animated.sequence([
-        Animated.delay(80),
-        Animated.parallel([
-          Animated.timing(heroFade, { toValue: 1, duration: 500, useNativeDriver: true }),
-          Animated.timing(heroSlide, { toValue: 0, duration: 500, useNativeDriver: true }),
-          Animated.spring(heroScale, { toValue: 1, friction: 7, tension: 50, useNativeDriver: true }),
-        ]),
-      ]).start();
-
-      // 3. Preview card inside hero — 350ms
-      Animated.sequence([
-        Animated.delay(350),
-        Animated.parallel([
-          Animated.timing(previewFade, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(previewSlide, { toValue: 0, duration: 400, useNativeDriver: true }),
-        ]),
-      ]).start();
-
-      // 4. CTA button — 550ms, spring pop
-      Animated.sequence([
-        Animated.delay(550),
-        Animated.parallel([
-          Animated.timing(ctaFade, { toValue: 1, duration: 350, useNativeDriver: true }),
-          Animated.spring(ctaScale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
-        ]),
-      ]).start();
-
-      // 5. Feature cards — cascading stagger starting at 700ms, 120ms apart
-      featureAnims.forEach((anim, i) => {
-        Animated.sequence([
-          Animated.delay(700 + i * 120),
-          fadeSlide(anim.fade, anim.slide, 380),
-        ]).start();
-      });
-
-      // 6. Timeline — 1250ms
-      Animated.sequence([
-        Animated.delay(1250),
-        fadeSlide(timelineFade, timelineSlide, 400),
-      ]).start();
-
-      // 7. Bottom CTA — 1500ms
-      Animated.sequence([
-        Animated.delay(1500),
-        fadeSlide(bottomFade, bottomSlide, 350),
-      ]).start();
-    } else {
-      // Non-welcome: hero + content
-      Animated.sequence([
-        Animated.delay(100),
-        Animated.parallel([
-          Animated.timing(heroFade, { toValue: 1, duration: 450, useNativeDriver: true }),
-          Animated.timing(heroSlide, { toValue: 0, duration: 450, useNativeDriver: true }),
-          Animated.spring(heroScale, { toValue: 1, friction: 8, tension: 60, useNativeDriver: true }),
-        ]),
-      ]).start();
-
-      Animated.sequence([
-        Animated.delay(220),
-        fadeSlide(contentFade, contentSlide, 400),
-      ]).start();
-    }
+    Animated.timing(pageFade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
@@ -202,7 +100,7 @@ export default function DashboardScreen() {
       >
         {/* Header / Greeting */}
         <Animated.View
-          style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}
+          style={[styles.header, { opacity: pageFade }]}
           accessible={true}
           accessibilityRole="header"
         >
@@ -243,7 +141,7 @@ export default function DashboardScreen() {
         ) : isWelcome ? (
           <>
             {/* ── WELCOME: Hero with dashboard preview ── */}
-            <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }, { scale: heroScale }] }}>
+            <View>
               <LinearGradient
                 colors={['#0C1222', '#142044', '#1A2D6B', '#142044', '#0C1222']}
                 start={{ x: 0, y: 0 }}
@@ -265,7 +163,7 @@ export default function DashboardScreen() {
                 </Text>
 
                 {/* Mocked dashboard preview — staggered reveal */}
-                <Animated.View style={[ws.previewCard, { opacity: previewFade, transform: [{ translateY: previewSlide }] }]}>
+                <View style={ws.previewCard}>
                   <View style={ws.previewHeader}>
                     <View style={ws.previewDot} />
                     <Text style={ws.previewLabel}>SET ASIDE FOR TAX</Text>
@@ -289,14 +187,14 @@ export default function DashboardScreen() {
                     colors={['transparent', 'rgba(12,18,34,0.95)']}
                     style={ws.previewFade}
                   />
-                </Animated.View>
+                </View>
 
                 <Text style={ws.heroSub}>
                   Connect your bank account and this dashboard fills itself — income tracked, tax calculated, nothing to configure.
                 </Text>
 
                 {/* Primary CTA — spring pop entrance */}
-                <Animated.View style={{ opacity: ctaFade, transform: [{ scale: ctaScale }] }}>
+                <View>
                   <Pressable
                     style={({ pressed }) => [ws.cta, pressed && ws.ctaPressed]}
                     onPress={handleConnectBank}
@@ -316,7 +214,7 @@ export default function DashboardScreen() {
                       </Text>
                     </LinearGradient>
                   </Pressable>
-                </Animated.View>
+                </View>
 
                 {/* Trust chips */}
                 <View style={ws.trustRow}>
@@ -328,7 +226,7 @@ export default function DashboardScreen() {
                   ))}
                 </View>
               </LinearGradient>
-            </Animated.View>
+            </View>
 
             {/* ── FEATURES: Cascading staggered cards ── */}
             {([
@@ -357,12 +255,8 @@ export default function DashboardScreen() {
                 accent: '#8B5CF6',
               },
             ] as const).map((f, i) => (
-              <Animated.View
+              <View
                 key={f.title}
-                style={{
-                  opacity: featureAnims[i].fade,
-                  transform: [{ translateY: featureAnims[i].slide }],
-                }}
               >
                 <View
                   style={[
@@ -382,11 +276,11 @@ export default function DashboardScreen() {
                     <Text style={[ws.featureDesc, { color: colors.textSecondary }]}>{f.desc}</Text>
                   </View>
                 </View>
-              </Animated.View>
+              </View>
             ))}
 
             {/* ── HOW IT WORKS: Numbered timeline ── */}
-            <Animated.View style={{ opacity: timelineFade, transform: [{ translateY: timelineSlide }] }}>
+            <View>
               <View style={ws.timelineSection}>
                 <Text style={[ws.timelineHeading, { color: colors.text }]}>
                   Two minutes to set up
@@ -420,10 +314,10 @@ export default function DashboardScreen() {
                   ))}
                 </View>
               </View>
-            </Animated.View>
+            </View>
 
             {/* ── BOTTOM CTA ── */}
-            <Animated.View style={{ opacity: bottomFade, transform: [{ translateY: bottomSlide }] }}>
+            <View>
               <Pressable
                 style={({ pressed }) => [ws.bottomCta, { borderColor: colors.border }, pressed && ws.ctaPressed]}
                 onPress={handleConnectBank}
@@ -443,12 +337,12 @@ export default function DashboardScreen() {
                   <FontAwesome name="chevron-right" size={14} color={Colors.accent} />
                 </View>
               </Pressable>
-            </Animated.View>
+            </View>
           </>
         ) : (
           <>
             {/* Hero Tax Card */}
-            <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }] }}>
+            <View>
               <Pressable
                 accessible={true}
                 accessibilityRole="summary"
@@ -471,9 +365,9 @@ export default function DashboardScreen() {
                     <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
                   </View>
 
-                  <Animated.Text style={[styles.heroAmount, { transform: [{ scale: heroScale }] }]}>
+                  <Text style={styles.heroAmount}>
                     {formatCurrency(tax?.totalTaxOwed ?? 0)}
-                  </Animated.Text>
+                  </Text>
                   <Text style={styles.heroSubtext}>
                     Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
                   </Text>
@@ -509,7 +403,7 @@ export default function DashboardScreen() {
                   </View>
                 </LinearGradient>
               </Pressable>
-            </Animated.View>
+            </View>
 
             {/* Income Trend Chart */}
             {income?.byMonth && income.byMonth.length > 0 && (() => {
@@ -526,7 +420,7 @@ export default function DashboardScreen() {
               const periodTotal = last6.reduce((s, m) => s + m.income, 0);
 
               return (
-                <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
+                <View>
                   <Card>
                     <View style={styles.chartHeader}>
                       <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
@@ -536,11 +430,11 @@ export default function DashboardScreen() {
                     </View>
                     <MiniChart data={chartData} color={Colors.success} height={72} />
                   </Card>
-                </Animated.View>
+                </View>
               );
             })()}
 
-            <Animated.View style={{ opacity: contentFade, transform: [{ translateY: contentSlide }] }}>
+            <View>
               {/* Plain English Insight */}
               {tax?.plainEnglish ? (
                 <Pressable
@@ -693,7 +587,7 @@ export default function DashboardScreen() {
                   </Card>
                 </>
               )}
-            </Animated.View>
+            </View>
           </>
         )}
       </ScrollView>

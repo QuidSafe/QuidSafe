@@ -170,12 +170,6 @@ export default function RootLayout() {
           "priceValidUntil": "2027-12-31",
           "availability": "https://schema.org/InStock"
         },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.5",
-          "ratingCount": "12",
-          "bestRating": "5"
-        },
         "featureList": [
           "Open Banking integration via TrueLayer (FCA authorised AISP)",
           "AI auto-categorisation of transactions",

@@ -1,5 +1,5 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, Pressable, Animated } from 'react-native';
+import { useCallback } from 'react';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
@@ -14,54 +14,6 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
   const { colors } = useTheme();
-
-  // ── Orchestrated entrance ──
-  const logoFade = useRef(new Animated.Value(0)).current;
-  const logoSlide = useRef(new Animated.Value(-20)).current;
-  const accentScale = useRef(new Animated.Value(0)).current;
-  const bodyFade = useRef(new Animated.Value(0)).current;
-  const bodySlide = useRef(new Animated.Value(24)).current;
-  const ctaFade = useRef(new Animated.Value(0)).current;
-  const ctaScale = useRef(new Animated.Value(0.9)).current;
-  const footerFade = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const fadeSlide = (fade: Animated.Value, slide: Animated.Value, dur: number) =>
-      Animated.parallel([
-        Animated.timing(fade, { toValue: 1, duration: dur, useNativeDriver: true }),
-        Animated.timing(slide, { toValue: 0, duration: dur, useNativeDriver: true }),
-      ]);
-
-    // 1. Logo drops in
-    fadeSlide(logoFade, logoSlide, 500).start();
-
-    // 2. Gold accent line scales from center
-    Animated.sequence([
-      Animated.delay(250),
-      Animated.spring(accentScale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
-    ]).start();
-
-    // 3. Body content rises
-    Animated.sequence([
-      Animated.delay(400),
-      fadeSlide(bodyFade, bodySlide, 450),
-    ]).start();
-
-    // 4. CTA buttons pop in
-    Animated.sequence([
-      Animated.delay(650),
-      Animated.parallel([
-        Animated.timing(ctaFade, { toValue: 1, duration: 350, useNativeDriver: true }),
-        Animated.spring(ctaScale, { toValue: 1, friction: 6, tension: 70, useNativeDriver: true }),
-      ]),
-    ]).start();
-
-    // 5. Footer fades
-    Animated.sequence([
-      Animated.delay(850),
-      Animated.timing(footerFade, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
-  }, []);
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
@@ -83,20 +35,17 @@ export default function LoginScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Atmospheric glows */}
-      <View style={s.glowGold} />
-      <View style={s.glowBlue} />
 
       <SafeAreaView style={s.safe}>
         {/* ── Brand ── */}
-        <Animated.View style={[s.brandWrap, { opacity: logoFade, transform: [{ translateY: logoSlide }] }]}>
+        <View style={s.brandWrap}>
           <Text style={s.logo}>QuidSafe</Text>
-          <Animated.View style={[s.accentBar, { transform: [{ scaleX: accentScale }] }]} />
+          <View style={s.accentBar} />
           <Text style={s.tagline}>Your tax. Sorted. Safe.</Text>
-        </Animated.View>
+        </View>
 
         {/* ── Content ── */}
-        <Animated.View style={[s.content, { opacity: bodyFade, transform: [{ translateY: bodySlide }] }]}>
+        <View style={s.content}>
           {/* Value props */}
           <View style={s.propsRow}>
             {[
@@ -116,10 +65,10 @@ export default function LoginScreen() {
             <FontAwesome name="lock" size={10} color="rgba(202,138,4,0.6)" />
             <Text style={s.trustText}>Bank-grade encryption  ·  Read-only access  ·  HMRC compliant</Text>
           </View>
-        </Animated.View>
+        </View>
 
         {/* ── Auth buttons ── */}
-        <Animated.View style={[s.authSection, { opacity: ctaFade, transform: [{ scale: ctaScale }] }]}>
+        <View style={s.authSection}>
           {/* Google SSO */}
           <Pressable
             style={({ pressed }) => [s.googleBtn, pressed && s.pressed]}
@@ -156,10 +105,10 @@ export default function LoginScreen() {
               <Text style={s.emailText}>Continue with Email</Text>
             </Pressable>
           </Link>
-        </Animated.View>
+        </View>
 
         {/* ── Footer ── */}
-        <Animated.View style={[s.footer, { opacity: footerFade }]}>
+        <View style={s.footer}>
           <Text style={s.footerText}>
             By continuing, you agree to our{' '}
             <Link href="/terms"><Text style={s.footerLink}>Terms of Service</Text></Link>
@@ -167,7 +116,7 @@ export default function LoginScreen() {
             <Link href="/privacy"><Text style={s.footerLink}>Privacy Policy</Text></Link>
           </Text>
           <Text style={s.footerSub}>Tax tracking for UK sole traders</Text>
-        </Animated.View>
+        </View>
       </SafeAreaView>
     </View>
   );
