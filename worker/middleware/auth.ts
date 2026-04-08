@@ -51,6 +51,12 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
     throw new Error('Token expired');
   }
 
+  // Reject tokens issued too long ago (max 1 hour) — limits window for compromised tokens
+  const MAX_TOKEN_AGE_SECONDS = 3600;
+  if (Date.now() / 1000 - payload.iat > MAX_TOKEN_AGE_SECONDS) {
+    throw new Error('Token too old');
+  }
+
   // Extract Clerk frontend API domain from publishable key
   // pk_test_xxx or pk_live_xxx → decode the base64 part after pk_test_/pk_live_
   const keyPart = publishableKey.replace(/^pk_(test|live)_/, '');

@@ -68,6 +68,7 @@ export interface Env {
   TRUELAYER_REDIRECT_URI: string;
   HMRC_CLIENT_ID: string;
   HMRC_CLIENT_SECRET: string;
+  HMRC_REDIRECT_URI?: string;
   ENCRYPTION_KEY: string;
   ANTHROPIC_API_KEY: string;
   APP_URL?: string;
@@ -144,6 +145,7 @@ app.use('*', async (c, next) => {
   c.header('X-Frame-Options', 'DENY');
   c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
   c.header('Referrer-Policy', 'no-referrer');
+  c.header('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
 });
 app.use('*', rateLimit());
 
@@ -192,6 +194,79 @@ app.get('/articles/:id', async (c) => {
   const article = await queryOne(c.env.DB, 'SELECT * FROM articles WHERE id = ?', [c.req.param('id')]);
   if (!article) return c.json({ error: 'Not found' }, 404);
   return c.json({ article });
+});
+
+// ─── Public Banking OAuth Callback ───────────────────────
+// TrueLayer redirects here — no JWT available, uses oauth_state for user identification
+app.get('/banking/callback', async (c) => {
+  const code = c.req.query('code');
+  const state = c.req.query('state');
+  if (!code) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
+  }
+  if (!state) {
+    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
+  }
+
+  // Validate OAuth state to identify user and prevent CSRF
+  const oauthState = await queryOne<{ user_id: string }>(
+    c.env.DB,
+    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
+    [state],
+  );
+  if (!oauthState) {
+    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
+  }
+  const userId = oauthState.user_id;
+  // Delete used state to prevent replay
+  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
+
+  const config = getTrueLayerConfig(c.env);
+  const tokens = await exchangeCode(code, config);
+  const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
+  const bankName = await detectBankName(tokens.access_token, config);
+
+  const connectionId = crypto.randomUUID();
+  await execute(
+    c.env.DB,
+    'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
+    [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
+  );
+
+  const connection: BankConnectionRow = {
+    id: connectionId,
+    user_id: userId,
+    bank_name: bankName,
+    access_token_encrypted: encrypted.accessTokenEncrypted,
+    refresh_token_encrypted: encrypted.refreshTokenEncrypted,
+    last_synced_at: null,
+    active: 1,
+  };
+
+  try {
+    const result = await syncTransactions(c.env.DB, connection, config);
+    if (result.synced > 0) {
+      try {
+        const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string }>(
+          c.env.DB,
+          'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL',
+          [userId],
+        );
+        if (uncategorised.length > 0) {
+          await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
+        }
+      } catch (catErr) {
+        console.error('Auto-categorisation after connect failed:', catErr);
+      }
+    }
+    // Redirect to the app after successful connection
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
+  } catch (err) {
+    console.error('Initial sync failed:', err);
+    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
+  }
 });
 
 // ─── Auth-Protected Routes ────────────────────────────────
@@ -679,80 +754,7 @@ authed.get('/banking/connect', async (c) => {
   return c.json({ url });
 });
 
-authed.get('/banking/callback', async (c) => {
-  const userId = c.get('userId');
-  const code = c.req.query('code');
-  const state = c.req.query('state');
-  if (!code) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing code parameter' } }, 400);
-  }
-
-  // Validate OAuth state to prevent CSRF
-  if (!state) {
-    return c.json({ error: { code: 'VALIDATION_ERROR', message: 'Missing state parameter' } }, 400);
-  }
-  const oauthState = await queryOne<{ user_id: string }>(
-    c.env.DB,
-    'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
-    [state],
-  );
-  if (!oauthState || oauthState.user_id !== userId) {
-    return c.json({ error: { code: 'INVALID_STATE', message: 'Invalid or expired OAuth state' } }, 403);
-  }
-  // Delete used state to prevent replay
-  await execute(c.env.DB, 'DELETE FROM oauth_states WHERE state = ?', [state]);
-
-  const config = getTrueLayerConfig(c.env);
-  const tokens = await exchangeCode(code, config);
-  const encrypted = await encryptTokens(tokens, c.env.ENCRYPTION_KEY);
-
-  // Detect bank name from TrueLayer
-  const bankName = await detectBankName(tokens.access_token, config);
-
-  const connectionId = crypto.randomUUID();
-  await execute(
-    c.env.DB,
-    'INSERT INTO bank_connections (id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted) VALUES (?, ?, ?, ?, ?)',
-    [connectionId, userId, bankName, encrypted.accessTokenEncrypted, encrypted.refreshTokenEncrypted],
-  );
-
-  // Trigger initial transaction sync (last 30 days)
-  const connection: BankConnectionRow = {
-    id: connectionId,
-    user_id: userId,
-    bank_name: bankName,
-    access_token_encrypted: encrypted.accessTokenEncrypted,
-    refresh_token_encrypted: encrypted.refreshTokenEncrypted,
-    last_synced_at: null,
-    active: 1,
-  };
-
-  try {
-    const result = await syncTransactions(c.env.DB, connection, config);
-
-    // Auto-trigger AI categorisation for newly synced transactions
-    if (result.synced > 0) {
-      try {
-        const uncategorised = await query<{ id: string; amount: number; description: string; merchant_name: string | null }>(
-          c.env.DB,
-          'SELECT id, amount, description, merchant_name FROM transactions WHERE user_id = ? AND ai_category IS NULL LIMIT 200',
-          [userId],
-        );
-        if (uncategorised.length > 0) {
-          await categoriseAndSave(c.env.DB, uncategorised, userId, c.env.ANTHROPIC_API_KEY);
-        }
-      } catch (catErr) {
-        console.error('Auto-categorisation after connect failed:', catErr);
-      }
-    }
-
-    return c.json({ connectionId, bankName, success: true, synced: result.synced });
-  } catch (err) {
-    // Connection saved even if initial sync fails — user can retry
-    console.error('Initial sync failed:', err);
-    return c.json({ connectionId, bankName, success: true, synced: 0, syncError: 'Initial sync failed — will retry automatically' });
-  }
-});
+// Banking callback moved to public routes (above) — TrueLayer redirects without JWT
 
 authed.get('/banking/connections', async (c) => {
   const userId = c.get('userId');
@@ -1089,7 +1091,7 @@ function getHmrcConfig(env: Env): HmrcConfig {
   return {
     clientId: env.HMRC_CLIENT_ID,
     clientSecret: env.HMRC_CLIENT_SECRET,
-    redirectUri: `${env.TRUELAYER_REDIRECT_URI.replace('/banking/callback', '/mtd/callback')}`,
+    redirectUri: env.HMRC_REDIRECT_URI || `${env.TRUELAYER_REDIRECT_URI.replace('/banking/callback', '/mtd/callback')}`,
   };
 }
 
@@ -1303,7 +1305,7 @@ authed.get('/settings', async (c) => {
   if (user && typeof user.nino_encrypted === 'string') {
     const { decrypt } = await import('./utils/crypto');
     const nino = await decrypt(user.nino_encrypted, c.env.ENCRYPTION_KEY);
-    ninoMasked = nino.slice(0, 2) + '****' + nino.slice(7);
+    ninoMasked = nino.slice(0, 2) + ' *** *** ' + nino.slice(-1);
     ninoSet = true;
   }
 

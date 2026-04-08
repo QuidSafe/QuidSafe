@@ -1,5 +1,14 @@
 import type { Invoice } from './types';
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -40,7 +49,7 @@ export function generateInvoiceHTML(invoice: Invoice, businessName?: string): st
 </head>
 <body>
   <div class="header">
-    <div class="brand">${businessName || 'QuidSafe'}</div>
+    <div class="brand">${escapeHtml(businessName || 'QuidSafe')}</div>
     <div>
       <div class="invoice-label">INVOICE</div>
       <div class="invoice-number">#${invoice.id.slice(0, 8).toUpperCase()}</div>
@@ -49,19 +58,19 @@ export function generateInvoiceHTML(invoice: Invoice, businessName?: string): st
   <div class="details">
     <div class="details-section">
       <h3>Bill To</h3>
-      <p><strong>${invoice.clientName}</strong></p>
+      <p><strong>${escapeHtml(invoice.clientName)}</strong></p>
     </div>
     <div class="details-section" style="text-align: right;">
       <h3>Invoice Details</h3>
       <p>Due: ${formatDate(invoice.dueDate)}</p>
-      <p>Status: <span class="status status-${invoice.status}">${invoice.status.toUpperCase()}</span></p>
+      <p>Status: <span class="status status-${escapeHtml(invoice.status)}">${escapeHtml(invoice.status.toUpperCase())}</span></p>
       ${invoice.paidAt ? `<p>Paid: ${formatDate(invoice.paidAt)}</p>` : ''}
     </div>
   </div>
   <table>
     <thead><tr><th>Description</th><th class="amount">Amount</th></tr></thead>
     <tbody>
-      <tr><td>${invoice.description}</td><td class="amount">${formatAmount(invoice.amount)}</td></tr>
+      <tr><td>${escapeHtml(invoice.description)}</td><td class="amount">${formatAmount(invoice.amount)}</td></tr>
     </tbody>
     <tfoot>
       <tr class="total-row"><td><strong>Total</strong></td><td class="amount">${formatAmount(invoice.amount)}</td></tr>

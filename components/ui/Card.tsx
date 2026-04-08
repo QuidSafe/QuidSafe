@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { StyleSheet, View, ViewProps, Pressable } from 'react-native';
 import { BorderRadius, Spacing, Shadows, PressedState } from '@/constants/Colors';
 import { useTheme } from '@/lib/ThemeContext';
@@ -12,23 +13,28 @@ interface CardProps extends ViewProps {
 export function Card({ children, variant = 'default', style, onPress, accessibilityLabel, ...props }: CardProps) {
   const { colors, isDark } = useTheme();
 
-  const variantStyles = {
-    default: {
-      backgroundColor: isDark ? '#17171F' : colors.surface,
-      borderColor: isDark ? 'rgba(255,255,255,0.07)' : colors.cardBorder,
-      ...(isDark ? Shadows.darkSoft : Shadows.soft),
-    },
-    glass: {
-      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.surfaceGlass,
-      borderColor: isDark ? 'rgba(255,255,255,0.08)' : colors.cardBorder,
-      ...(isDark ? Shadows.darkSoft : Shadows.soft),
-    },
-    elevated: {
-      backgroundColor: isDark ? '#1A1A24' : colors.surface,
-      borderColor: isDark ? 'rgba(255,255,255,0.09)' : colors.cardBorder,
-      ...(isDark ? Shadows.darkMedium : Shadows.medium),
-    },
-  };
+  const variantStyle = useMemo(() => {
+    switch (variant) {
+      case 'glass':
+        return {
+          backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.surfaceGlass,
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : colors.cardBorder,
+          ...(isDark ? Shadows.darkSoft : Shadows.soft),
+        };
+      case 'elevated':
+        return {
+          backgroundColor: isDark ? '#1A1A24' : colors.surface,
+          borderColor: isDark ? 'rgba(255,255,255,0.09)' : colors.cardBorder,
+          ...(isDark ? Shadows.darkMedium : Shadows.medium),
+        };
+      default:
+        return {
+          backgroundColor: isDark ? '#17171F' : colors.surface,
+          borderColor: isDark ? 'rgba(255,255,255,0.07)' : colors.cardBorder,
+          ...(isDark ? Shadows.darkSoft : Shadows.soft),
+        };
+    }
+  }, [variant, isDark, colors.surface, colors.surfaceGlass, colors.cardBorder]);
 
   if (variant === 'elevated' && onPress) {
     return (
@@ -38,7 +44,7 @@ export function Card({ children, variant = 'default', style, onPress, accessibil
         accessibilityLabel={accessibilityLabel}
         style={({ pressed }) => [
           styles.card,
-          variantStyles[variant],
+          variantStyle,
           pressed && PressedState,
           style,
         ]}
@@ -51,7 +57,7 @@ export function Card({ children, variant = 'default', style, onPress, accessibil
 
   return (
     <View
-      style={[styles.card, variantStyles[variant], style]}
+      style={[styles.card, variantStyle, style]}
       accessibilityRole="none"
       accessibilityLabel={accessibilityLabel}
       {...props}

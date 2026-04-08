@@ -557,13 +557,21 @@ export default function LandingScreen() {
     }
   }, []);
 
+  const prevHeaderSolid = useRef(false);
+  const prevActiveSection = useRef<SectionId | null>(null);
+
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = e.nativeEvent.contentOffset.y;
-      setHeaderSolid(y > 80);
 
-      // Determine active section based on scroll position
-      const offset = y + 120; // account for header + some offset
+      // Only setState when value actually changes — prevents no-op re-renders at 60fps
+      const solid = y > 80;
+      if (solid !== prevHeaderSolid.current) {
+        prevHeaderSolid.current = solid;
+        setHeaderSolid(solid);
+      }
+
+      const offset = y + 120;
       const sections = NAV_SECTIONS;
       let current: SectionId | null = null;
       for (let i = sections.length - 1; i >= 0; i--) {
@@ -572,7 +580,10 @@ export default function LandingScreen() {
           break;
         }
       }
-      setActiveSection(current);
+      if (current !== prevActiveSection.current) {
+        prevActiveSection.current = current;
+        setActiveSection(current);
+      }
     },
     [],
   );
