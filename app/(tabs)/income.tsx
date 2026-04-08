@@ -6,7 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   Modal,
   KeyboardAvoidingView,
   Platform,
@@ -349,11 +349,11 @@ export default function IncomeScreen() {
               {FILTERS.map((f) => {
                 const isActive = f.key === activeFilter;
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={f.key}
                     style={[styles.filterPill, isActive && styles.filterPillActive]}
                     onPress={() => setActiveFilter(f.key)}
-                    activeOpacity={0.7}
+                   
                     accessibilityRole="button"
                     accessibilityLabel={`Filter: ${f.label}`}
                     accessibilityState={{ selected: isActive }}
@@ -366,7 +366,7 @@ export default function IncomeScreen() {
                     >
                       {f.label}
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 );
               })}
             </ScrollView>
@@ -434,10 +434,10 @@ export default function IncomeScreen() {
             </Card>
 
             {/* View All Invoices button */}
-            <TouchableOpacity
+            <Pressable
               style={[styles.viewInvoicesButton, { borderColor: colors.border }]}
               onPress={() => router.push('/invoices')}
-              activeOpacity={0.7}
+             
               accessibilityRole="button"
               accessibilityLabel="View all invoices"
               accessibilityHint="Tap to see your complete invoice list"
@@ -445,23 +445,23 @@ export default function IncomeScreen() {
               <FontAwesome name="file-text-o" size={16} color={Colors.accent} style={{ marginRight: 10 }} />
               <Text style={[styles.viewInvoicesText, { color: colors.text }]}>View All Invoices</Text>
               <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} />
-            </TouchableOpacity>
+            </Pressable>
           </>
         )}
       </ScrollView>
 
       {/* Floating Action Button — Create Invoice */}
       {!isLoading && (
-        <TouchableOpacity
+        <Pressable
           style={[styles.fab, Shadows.medium]}
           onPress={() => setInvoiceModalVisible(true)}
-          activeOpacity={0.8}
+         
           accessibilityRole="button"
           accessibilityLabel="Create new invoice"
           accessibilityHint="Tap to open the create invoice form"
         >
           <FontAwesome name="plus" size={20} color={Colors.white} />
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       {/* Create Invoice Modal */}
@@ -479,7 +479,7 @@ export default function IncomeScreen() {
             <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Create Invoice</Text>
-              <TouchableOpacity
+              <Pressable
                 onPress={() => {
                   resetInvoiceForm();
                   setInvoiceModalVisible(false);
@@ -489,7 +489,7 @@ export default function IncomeScreen() {
                 accessibilityLabel="Close invoice form"
               >
                 <FontAwesome name="times" size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             {/* Client Name */}
@@ -556,14 +556,14 @@ export default function IncomeScreen() {
             />
 
             {/* Submit button */}
-            <TouchableOpacity
+            <Pressable
               style={[
                 styles.submitButton,
                 (!isFormValid || createInvoiceMutation.isPending) && styles.submitButtonDisabled,
               ]}
               onPress={handleCreateInvoice}
               disabled={!isFormValid || createInvoiceMutation.isPending}
-              activeOpacity={0.8}
+             
               accessibilityRole="button"
               accessibilityLabel="Create invoice"
               accessibilityHint="Tap to create a new invoice"
@@ -574,7 +574,7 @@ export default function IncomeScreen() {
               ) : (
                 <Text style={styles.submitButtonText}>Create Invoice</Text>
               )}
-            </TouchableOpacity>
+            </Pressable>
 
             {createInvoiceMutation.isError && (
               <Text style={styles.errorText}>

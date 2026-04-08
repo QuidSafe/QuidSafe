@@ -4,7 +4,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   TextInput,
   Pressable,
   ActivityIndicator,
@@ -220,14 +219,14 @@ export default function ExpenseDetailScreen() {
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
             <FontAwesome name="arrow-left" size={20} color={colors.text} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Expense</Text>
           <View style={{ width: 20 }} />
         </View>
@@ -241,13 +240,13 @@ export default function ExpenseDetailScreen() {
             <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
               This expense may have been deleted or the link is invalid.
             </Text>
-            <TouchableOpacity
+            <Pressable
               style={styles.backButton}
               onPress={() => router.replace('/(tabs)/expenses')}
-              activeOpacity={0.8}
+             
             >
               <Text style={styles.backButtonText}>View All Expenses</Text>
-            </TouchableOpacity>
+            </Pressable>
           </Card>
         ) : (
           <>
@@ -322,11 +321,11 @@ export default function ExpenseDetailScreen() {
 
                 {/* Save / Cancel Buttons */}
                 <View style={styles.actionsSection}>
-                  <TouchableOpacity
+                  <Pressable
                     style={[styles.actionButton, styles.saveButton, updateMutation.isPending && styles.actionButtonDisabled]}
                     onPress={handleSave}
                     disabled={updateMutation.isPending}
-                    activeOpacity={0.8}
+                   
                   >
                     {updateMutation.isPending ? (
                       <ActivityIndicator color={Colors.white} size="small" />
@@ -336,16 +335,16 @@ export default function ExpenseDetailScreen() {
                         <Text style={styles.saveButtonText}>Save Changes</Text>
                       </>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
 
-                  <TouchableOpacity
+                  <Pressable
                     style={[styles.actionButton, styles.editButton]}
                     onPress={handleCancelEdit}
-                    activeOpacity={0.8}
+                   
                   >
                     <FontAwesome name="times" size={16} color={Colors.secondary} style={styles.actionIcon} />
                     <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Cancel</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               </>
             ) : (
@@ -422,20 +421,20 @@ export default function ExpenseDetailScreen() {
 
                 {/* Action Buttons */}
                 <View style={styles.actionsSection}>
-                  <TouchableOpacity
+                  <Pressable
                     style={[styles.actionButton, styles.editButton]}
                     onPress={handleEdit}
-                    activeOpacity={0.8}
+                   
                   >
                     <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
                     <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Expense</Text>
-                  </TouchableOpacity>
+                  </Pressable>
 
-                  <TouchableOpacity
+                  <Pressable
                     style={[styles.actionButton, styles.deleteButton, deleteMutation.isPending && styles.actionButtonDisabled]}
                     onPress={handleDelete}
                     disabled={deleteMutation.isPending}
-                    activeOpacity={0.8}
+                   
                   >
                     {deleteMutation.isPending ? (
                       <ActivityIndicator color={Colors.error} size="small" />
@@ -447,7 +446,7 @@ export default function ExpenseDetailScreen() {
                         </Text>
                       </>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               </>
             )}

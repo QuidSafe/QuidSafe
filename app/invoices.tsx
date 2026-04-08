@@ -6,7 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   Modal,
   KeyboardAvoidingView,
   Platform,
@@ -320,9 +320,9 @@ export default function InvoicesScreen() {
       >
         {/* Header row with back button */}
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <Pressable onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <FontAwesome name="arrow-left" size={20} color={colors.text} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Invoices</Text>
           <View style={{ width: 20 }} />
         </View>
@@ -336,16 +336,16 @@ export default function InvoicesScreen() {
           {FILTERS.map((f) => {
             const isActive = f.key === activeFilter;
             return (
-              <TouchableOpacity
+              <Pressable
                 key={f.key}
                 style={[styles.filterPill, isActive && styles.filterPillActive]}
                 onPress={() => setActiveFilter(f.key)}
-                activeOpacity={0.7}
+               
               >
                 <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
                   {f.label}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </ScrollView>
@@ -404,9 +404,9 @@ export default function InvoicesScreen() {
                 const statusColor = STATUS_COLORS[invoice.status];
                 const isOverdue = invoice.status === 'overdue';
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={invoice.id}
-                    activeOpacity={0.7}
+                   
                     onPress={() => router.push(`/invoice/${invoice.id}`)}
                   >
                     <Card
@@ -439,20 +439,20 @@ export default function InvoicesScreen() {
                         <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
                           {formatDueDate(invoice.dueDate)}
                         </Text>
-                        <TouchableOpacity
+                        <Pressable
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                           onPress={(e) => {
                             e.stopPropagation();
                             downloadInvoicePDF(invoice);
                           }}
-                          activeOpacity={0.6}
+                         
                           style={styles.pdfButton}
                         >
                           <FontAwesome name="file-pdf-o" size={16} color={Colors.error} />
-                        </TouchableOpacity>
+                        </Pressable>
                       </View>
                     </Card>
-                  </TouchableOpacity>
+                  </Pressable>
                 );
               })
             )}
@@ -462,13 +462,13 @@ export default function InvoicesScreen() {
 
       {/* FAB — Create Invoice */}
       {!isLoading && (
-        <TouchableOpacity
+        <Pressable
           style={[styles.fab, Shadows.medium]}
           onPress={openCreateModal}
-          activeOpacity={0.8}
+         
         >
           <FontAwesome name="plus" size={20} color={Colors.white} />
-        </TouchableOpacity>
+        </Pressable>
       )}
 
       {/* Create / Edit Invoice Modal */}
@@ -492,12 +492,12 @@ export default function InvoicesScreen() {
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
                   {isEditing ? 'Edit Invoice' : 'Create Invoice'}
                 </Text>
-                <TouchableOpacity
+                <Pressable
                   onPress={closeModal}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   <FontAwesome name="times" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
+                </Pressable>
               </View>
 
               {/* Client Name */}
@@ -578,7 +578,7 @@ export default function InvoicesScreen() {
                       const isActive = formStatus === s;
                       const sc = STATUS_COLORS[s];
                       return (
-                        <TouchableOpacity
+                        <Pressable
                           key={s}
                           style={[
                             styles.statusPickerBtn,
@@ -586,7 +586,7 @@ export default function InvoicesScreen() {
                             isActive && { backgroundColor: sc.bg },
                           ]}
                           onPress={() => setFormStatus(s)}
-                          activeOpacity={0.7}
+                         
                         >
                           <Text
                             style={[
@@ -596,7 +596,7 @@ export default function InvoicesScreen() {
                           >
                             {STATUS_LABELS[s]}
                           </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       );
                     })}
                   </View>
@@ -605,11 +605,11 @@ export default function InvoicesScreen() {
 
               {/* Mark as Paid button (edit mode, not already paid) */}
               {isEditing && selectedInvoice?.status !== 'paid' && (
-                <TouchableOpacity
+                <Pressable
                   style={[styles.markPaidButton, updateMutation.isPending && styles.submitButtonDisabled]}
                   onPress={handleMarkPaid}
                   disabled={isMutating}
-                  activeOpacity={0.8}
+                 
                 >
                   {updateMutation.isPending ? (
                     <ActivityIndicator color={Colors.white} size="small" />
@@ -619,15 +619,15 @@ export default function InvoicesScreen() {
                       <Text style={styles.markPaidText}>Mark as Paid</Text>
                     </>
                   )}
-                </TouchableOpacity>
+                </Pressable>
               )}
 
               {/* Save / Create button */}
-              <TouchableOpacity
+              <Pressable
                 style={[styles.submitButton, (!isFormValid || isMutating) && styles.submitButtonDisabled]}
                 onPress={isEditing ? handleUpdate : handleCreate}
                 disabled={!isFormValid || isMutating}
-                activeOpacity={0.8}
+               
               >
                 {(isEditing ? updateMutation.isPending : createMutation.isPending) ? (
                   <ActivityIndicator color={Colors.white} size="small" />
@@ -636,15 +636,15 @@ export default function InvoicesScreen() {
                     {isEditing ? 'Save Changes' : 'Create Invoice'}
                   </Text>
                 )}
-              </TouchableOpacity>
+              </Pressable>
 
               {/* Delete button (edit mode only) */}
               {isEditing && (
-                <TouchableOpacity
+                <Pressable
                   style={[styles.deleteButton, deleteMutation.isPending && styles.submitButtonDisabled]}
                   onPress={handleDelete}
                   disabled={isMutating}
-                  activeOpacity={0.8}
+                 
                 >
                   {deleteMutation.isPending ? (
                     <ActivityIndicator color={Colors.error} size="small" />
@@ -653,7 +653,7 @@ export default function InvoicesScreen() {
                       {deleteConfirm ? 'Tap again to confirm delete' : 'Delete Invoice'}
                     </Text>
                   )}
-                </TouchableOpacity>
+                </Pressable>
               )}
             </View>
           </ScrollView>

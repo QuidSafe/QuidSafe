@@ -4,10 +4,11 @@ import {
   Text,
   StyleSheet,
   Animated,
-  TouchableOpacity,
+  Pressable,
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { hapticSuccess, hapticError } from '@/lib/haptics';
@@ -43,17 +44,17 @@ const TOAST_COLORS: Record<ToastType, string> = {
   warning: Colors.accent,
 };
 
-function ToastIcon({ type }: { type: ToastType }) {
-  const icons: Record<ToastType, string> = {
-    success: '✓',
-    error: '✕',
-    info: 'ℹ',
-    warning: '⚠',
-  };
+const TOAST_ICONS: Record<ToastType, React.ComponentProps<typeof FontAwesome>['name']> = {
+  success: 'check',
+  error: 'times',
+  info: 'info-circle',
+  warning: 'exclamation-triangle',
+};
 
+function ToastIcon({ type }: { type: ToastType }) {
   return (
     <View style={styles.iconContainer}>
-      <Text style={styles.iconText}>{icons[type]}</Text>
+      <FontAwesome name={TOAST_ICONS[type]} size={14} color="#FFF" />
     </View>
   );
 }
@@ -84,9 +85,8 @@ function ToastItem({
         Shadows.medium,
       ]}
     >
-      <TouchableOpacity
-        style={styles.toastContent}
-        activeOpacity={0.8}
+      <Pressable
+        style={({ pressed }) => [styles.toastContent, pressed && { opacity: 0.8 }]}
         onPress={() => onDismiss(item.id)}
         accessibilityRole="button"
         accessibilityLabel={`Dismiss: ${item.message}`}
@@ -96,7 +96,7 @@ function ToastItem({
         <Text style={styles.toastText} numberOfLines={2}>
           {item.message}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 }

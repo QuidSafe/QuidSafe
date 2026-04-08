@@ -124,43 +124,6 @@ const SUPPORTED_BANKS = [
   'Barclays', 'HSBC', 'Lloyds', 'NatWest', 'Monzo', 'Starling', 'Revolut', 'Nationwide',
 ];
 
-const PAIN_POINTS = [
-  { stat: '5.4M', text: 'sole traders in the UK (ONS 2025)' },
-  { stat: '£0', text: 'the amount most set aside until January' },
-  { stat: '2026', text: 'MTD becomes mandatory for income over £50K' },
-];
-
-const COMPETITORS = [
-  { name: 'FreeAgent', price: '£19.50/mo', issue: 'Full accounting suite — more than most sole traders need' },
-  { name: 'QuickBooks', price: '£12/mo', issue: 'US-focused — UK tax rules are secondary' },
-  { name: 'Xero', price: '£15+/mo', issue: 'Designed for accountants to use on your behalf' },
-  { name: 'Spreadsheets', price: 'Free', issue: 'Won\'t meet MTD digital record requirements' },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: 'I used to spend an entire weekend every quarter figuring out my tax. Now I just open the app and it is all there.',
-    name: 'Early access user',
-    occupation: 'Freelance designer',
-    stars: 5,
-    saving: '',
-  },
-  {
-    quote: 'The set-aside feature alone is worth it. I actually know what I owe before January for the first time.',
-    name: 'Beta tester',
-    occupation: 'IT contractor',
-    stars: 4,
-    saving: '',
-  },
-  {
-    quote: 'Simple and does exactly what it says. Connected my bank in about two minutes and everything was categorised.',
-    name: 'Early access user',
-    occupation: 'Delivery driver',
-    stars: 4,
-    saving: '',
-  },
-];
-
 const PLAN_FEATURES = [
   'Unlimited bank accounts',
   'AI auto-categorisation',
@@ -241,229 +204,6 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     </Pressable>
   );
 }
-
-// ─── Phone Mockup ────────────────────────────────────────
-function PhoneMockup({ scale = 1 }: { scale?: number }) {
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
-
-  useEffect(() => {
-    const floatAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, { toValue: -10, duration: 2000, useNativeDriver: true }),
-        Animated.timing(floatAnim, { toValue: 10, duration: 2000, useNativeDriver: true }),
-      ])
-    );
-    const glowAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 0.8, duration: 2500, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0.4, duration: 2500, useNativeDriver: false }),
-      ])
-    );
-    floatAnimation.start();
-    glowAnimation.start();
-    return () => { floatAnimation.stop(); glowAnimation.stop(); };
-  }, [floatAnim, glowAnim]);
-
-  return (
-    <Animated.View style={[phoneMockupStyles.wrapper, { transform: [{ scale }, { translateY: floatAnim }] }]}>
-      {/* Glow behind phone */}
-      <Animated.View style={[phoneMockupStyles.phoneGlow, { opacity: glowAnim }]} />
-
-      <View style={phoneMockupStyles.frame}>
-        {/* Dynamic Island */}
-        <View style={phoneMockupStyles.dynamicIsland} />
-
-        {/* Status bar */}
-        <View style={phoneMockupStyles.statusBar}>
-          <Text style={phoneMockupStyles.statusTime}>9:41</Text>
-          <View style={phoneMockupStyles.statusRight}>
-            <Text style={phoneMockupStyles.statusIcon}>●●●</Text>
-            <Text style={phoneMockupStyles.statusIcon}>▌</Text>
-          </View>
-        </View>
-
-        {/* Screen content */}
-        <View style={phoneMockupStyles.screen}>
-          <View style={phoneMockupStyles.miniHeader}>
-            <Text style={phoneMockupStyles.miniGreeting}>Good morning</Text>
-            <Text style={phoneMockupStyles.miniName}>Sarah</Text>
-          </View>
-
-          {/* Gold set-aside card */}
-          <LinearGradient
-            colors={['rgba(202,138,4,0.25)', 'rgba(202,138,4,0.1)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={phoneMockupStyles.goldCard}
-          >
-            <Text style={phoneMockupStyles.goldCardLabel}>Set aside for tax</Text>
-            <Text style={phoneMockupStyles.goldCardAmount}>£2,847</Text>
-            <View style={phoneMockupStyles.goldCardBar}>
-              <View style={phoneMockupStyles.goldCardBarFill} />
-            </View>
-          </LinearGradient>
-
-          {/* Metrics */}
-          <View style={phoneMockupStyles.metricsRow}>
-            <View style={phoneMockupStyles.metricBox}>
-              <Text style={phoneMockupStyles.metricLabel}>Income Tax</Text>
-              <Text style={phoneMockupStyles.metricValue}>£1,640</Text>
-            </View>
-            <View style={phoneMockupStyles.metricBox}>
-              <Text style={phoneMockupStyles.metricLabel}>NI</Text>
-              <Text style={phoneMockupStyles.metricValue}>£407</Text>
-            </View>
-            <View style={phoneMockupStyles.metricBox}>
-              <Text style={phoneMockupStyles.metricLabel}>Expenses</Text>
-              <Text style={[phoneMockupStyles.metricValue, { color: '#16A34A' }]}>£3,210</Text>
-            </View>
-          </View>
-
-          {/* Transaction cards */}
-          <View style={phoneMockupStyles.txCard}>
-            <View style={[phoneMockupStyles.txDot, { backgroundColor: '#16A34A' }]} />
-            <View style={phoneMockupStyles.txInfo}>
-              <View style={phoneMockupStyles.txLine} />
-              <View style={[phoneMockupStyles.txLine, { width: '50%' }]} />
-            </View>
-            <Text style={phoneMockupStyles.txAmount}>+£850</Text>
-          </View>
-          <View style={phoneMockupStyles.txCard}>
-            <View style={[phoneMockupStyles.txDot, { backgroundColor: '#CA8A04' }]} />
-            <View style={phoneMockupStyles.txInfo}>
-              <View style={phoneMockupStyles.txLine} />
-              <View style={[phoneMockupStyles.txLine, { width: '40%' }]} />
-            </View>
-            <Text style={[phoneMockupStyles.txAmount, { color: 'rgba(248,250,252,0.5)' }]}>-£45</Text>
-          </View>
-          <View style={phoneMockupStyles.txCard}>
-            <View style={[phoneMockupStyles.txDot, { backgroundColor: '#1E3A8A' }]} />
-            <View style={phoneMockupStyles.txInfo}>
-              <View style={phoneMockupStyles.txLine} />
-              <View style={[phoneMockupStyles.txLine, { width: '60%' }]} />
-            </View>
-            <Text style={phoneMockupStyles.txAmount}>+£1,200</Text>
-          </View>
-        </View>
-
-        {/* Tab bar */}
-        <View style={phoneMockupStyles.tabBar}>
-          <View style={[phoneMockupStyles.tabDot, phoneMockupStyles.tabDotActive]} />
-          <View style={phoneMockupStyles.tabDot} />
-          <View style={phoneMockupStyles.tabDot} />
-          <View style={phoneMockupStyles.tabDot} />
-          <View style={phoneMockupStyles.tabDot} />
-        </View>
-        <View style={phoneMockupStyles.homeIndicator} />
-      </View>
-    </Animated.View>
-  );
-}
-
-const phoneMockupStyles = StyleSheet.create({
-  wrapper: { alignItems: 'center', justifyContent: 'center' },
-  phoneGlow: {
-    position: 'absolute',
-    width: 280,
-    height: 480,
-    borderRadius: 140,
-    backgroundColor: 'rgba(202,138,4,0.12)',
-    ...(Platform.OS === 'web' ? { filter: 'blur(40px)' } : {}) as any,
-  },
-  frame: {
-    width: 220,
-    height: 440,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 28,
-    backgroundColor: '#0A0A12',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  dynamicIsland: {
-    width: 72,
-    height: 18,
-    backgroundColor: '#000',
-    borderRadius: 12,
-    alignSelf: 'center',
-    position: 'absolute',
-    top: 6,
-    zIndex: 10,
-  },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingTop: 28,
-    paddingBottom: 4,
-  },
-  statusTime: { fontFamily: Fonts.manrope.semiBold, fontSize: 7, color: 'rgba(248,250,252,0.8)' },
-  statusRight: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  statusIcon: { fontSize: 5, color: 'rgba(248,250,252,0.6)' },
-  screen: { flex: 1, paddingHorizontal: 10, paddingTop: 2 },
-  miniHeader: { paddingVertical: 6, paddingHorizontal: 2 },
-  miniGreeting: { fontFamily: Fonts.manrope.regular, fontSize: 6, color: 'rgba(248,250,252,0.5)' },
-  miniName: { fontFamily: Fonts.playfair.bold, fontSize: 12, color: '#F8FAFC', marginTop: 1 },
-  goldCard: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(202,138,4,0.3)',
-    padding: 10,
-    marginBottom: 8,
-  },
-  goldCardLabel: { fontFamily: Fonts.manrope.medium, fontSize: 5.5, color: '#CA8A04', marginBottom: 2 },
-  goldCardAmount: { fontFamily: Fonts.playfair.bold, fontSize: 18, color: '#FEF9C3', marginBottom: 5 },
-  goldCardBar: { height: 3, backgroundColor: 'rgba(202,138,4,0.2)', borderRadius: 2 },
-  goldCardBarFill: { height: 3, width: '65%', backgroundColor: '#CA8A04', borderRadius: 2 },
-  metricsRow: { flexDirection: 'row', gap: 5, marginBottom: 8 },
-  metricBox: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 8,
-    padding: 6,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
-  },
-  metricLabel: { fontFamily: Fonts.manrope.regular, fontSize: 4.5, color: 'rgba(148,163,184,0.8)', marginBottom: 2 },
-  metricValue: { fontFamily: Fonts.manrope.bold, fontSize: 8, color: '#F8FAFC' },
-  txCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    padding: 7,
-    marginBottom: 4,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.03)',
-  },
-  txDot: { width: 14, height: 14, borderRadius: 7 },
-  txInfo: { flex: 1, gap: 3 },
-  txLine: { height: 3, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 2, width: '75%' },
-  txAmount: { fontFamily: Fonts.manrope.bold, fontSize: 7, color: '#16A34A' },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 18,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  tabDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)' },
-  tabDotActive: { backgroundColor: '#CA8A04' },
-  homeIndicator: {
-    width: 44,
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 5,
-  },
-});
 
 // ─── Main Landing Page ───────────────────────────────────
 export default function LandingScreen() {
@@ -603,10 +343,6 @@ export default function LandingScreen() {
           end={{ x: 0.5, y: 1 }}
           style={styles.hero}
         >
-          {/* Background orbs */}
-          <View style={styles.orbTopRight} />
-          <View style={styles.orbBottomLeft} />
-          <View style={styles.orbCenter} />
 
           <SafeAreaView edges={['top']} style={styles.heroSafe}>
             {/* Hero-local nav (hidden once sticky header takes over) */}
@@ -644,8 +380,7 @@ export default function LandingScreen() {
             <View style={[styles.urgencyBanner, { maxWidth: contentMaxWidth }]}>
               <Text style={styles.urgencyDot}>●</Text>
               <Text style={styles.urgencyText}>
-                Making Tax Digital is now mandatory for income over £50K.{' '}
-                <Text style={styles.urgencyLink}>Are you ready?</Text>
+                Making Tax Digital is mandatory for income over £50K. QuidSafe is MTD compliant from day one.
               </Text>
             </View>
 
@@ -675,9 +410,6 @@ export default function LandingScreen() {
                 <Text style={styles.heroJoinCount}>Built for UK sole traders. Try free for 14 days.</Text>
               </View>
 
-              <View style={[styles.heroPhoneColumn, isDesktop && styles.heroPhoneColumnDesktop]}>
-                <PhoneMockup scale={isDesktop ? 1.05 : 0.9} />
-              </View>
             </View>
           </SafeAreaView>
         </LinearGradient>
@@ -703,28 +435,6 @@ export default function LandingScreen() {
             <Text style={styles.bankStripNames}>
               {SUPPORTED_BANKS.join('  ·  ')}
             </Text>
-          </View>
-        </View>
-
-        {/* ═══════════════ PAIN SECTION ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: colors.background }]}>
-          <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
-            <Text style={[styles.sectionTag, { color: Colors.accent }]}>WHY IT MATTERS</Text>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              The numbers behind sole trader tax
-            </Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-              Making Tax Digital changes how sole traders report to HMRC. If you earn over £50K, digital quarterly reporting is now mandatory.
-            </Text>
-
-            <View style={[styles.painGrid, isDesktop && styles.painGridDesktop]}>
-              {PAIN_POINTS.map((p) => (
-                <View key={p.stat} style={styles.painCard}>
-                  <Text style={styles.painStat}>{p.stat}</Text>
-                  <Text style={styles.painText}>{p.text}</Text>
-                </View>
-              ))}
-            </View>
           </View>
         </View>
 
@@ -808,75 +518,6 @@ export default function LandingScreen() {
                 <Text style={styles.statLabel}>{s.label}</Text>
               </View>
             ))}
-          </View>
-        </View>
-
-        {/* ═══════════════ COMPARISON ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: colors.background }]}>
-          <View style={[styles.sectionInner, { maxWidth: 800 }]}>
-            <Text style={[styles.sectionTag, { color: Colors.accent }]}>WHY QUIDSAFE</Text>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Built for sole traders.{'\n'}Not squeezed from enterprise.
-            </Text>
-
-            <View style={styles.comparisonTable}>
-              <View style={styles.compHeaderRow}>
-                <Text style={[styles.compHeaderCell, { flex: 2 }]}>Tool</Text>
-                <Text style={styles.compHeaderCell}>Price</Text>
-                <Text style={[styles.compHeaderCell, { flex: 2 }]}>Problem</Text>
-              </View>
-              {COMPETITORS.map((c) => (
-                <View key={c.name} style={styles.compRow}>
-                  <Text style={[styles.compCell, { flex: 2 }]}>{c.name}</Text>
-                  <Text style={styles.compCell}>{c.price}</Text>
-                  <Text style={[styles.compCellMuted, { flex: 2 }]}>{c.issue}</Text>
-                </View>
-              ))}
-              <View style={[styles.compRow, styles.compRowHighlight]}>
-                <Text style={[styles.compCellGold, { flex: 2 }]}>QuidSafe</Text>
-                <Text style={styles.compCellGold}>£7.99/mo</Text>
-                <Text style={[styles.compCellGold, { flex: 2 }]}>Built just for you</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* ═══════════════ TESTIMONIALS ═══════════════ */}
-        <View style={[styles.section, { backgroundColor: '#0B0F1A' }]}>
-          <View style={[styles.sectionInner, { maxWidth: contentMaxWidth }]}>
-            <Text style={[styles.sectionTag, { color: Colors.accent }]}>EARLY FEEDBACK</Text>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              What our early users say
-            </Text>
-
-            <View style={[styles.testimonialsRow, isDesktop && styles.testimonialsRowDesktop]}>
-              {TESTIMONIALS.map((t) => (
-                <View key={t.name} style={[styles.testimonialCard, { flex: isDesktop ? 1 : undefined, width: isDesktop ? undefined : '100%' as any }]}>
-                  <View style={styles.starsRow}>
-                    {Array.from({ length: t.stars }).map((_, i) => (
-                      <Text key={i} style={styles.star}>★</Text>
-                    ))}
-                  </View>
-                  <Text style={styles.testimonialQuote}>&ldquo;{t.quote}&rdquo;</Text>
-                  {t.saving ? (
-                    <View style={styles.testimonialSaving}>
-                      <Text style={styles.testimonialSavingText}>{t.saving}</Text>
-                    </View>
-                  ) : null}
-                  <View style={styles.testimonialAuthor}>
-                    <View style={styles.testimonialAvatar}>
-                      <Text style={styles.testimonialAvatarText}>
-                        {t.name.split(' ').map((n) => n[0]).join('')}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={styles.testimonialName}>{t.name}</Text>
-                      <Text style={styles.testimonialOccupation}>{t.occupation}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
           </View>
         </View>
 
@@ -1176,14 +817,13 @@ const styles = StyleSheet.create({
   // Urgency banner
   urgencyBanner: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: 'rgba(220,38,38,0.1)', borderWidth: 1, borderColor: 'rgba(220,38,38,0.2)',
+    backgroundColor: 'rgba(30,58,138,0.1)', borderWidth: 1, borderColor: 'rgba(30,58,138,0.2)',
     borderRadius: BorderRadius.pill, paddingVertical: 8, paddingHorizontal: 16,
     marginTop: Spacing.md, marginHorizontal: Spacing.lg,
     alignSelf: 'center',
   },
-  urgencyDot: { fontSize: 8, color: '#DC2626' },
+  urgencyDot: { fontSize: 8, color: Colors.secondary },
   urgencyText: { fontFamily: Fonts.manrope.medium, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
-  urgencyLink: { color: '#DC2626', textDecorationLine: 'underline' },
 
   // Hero content
   heroContent: {
@@ -1289,23 +929,6 @@ const styles = StyleSheet.create({
     lineHeight: 28, maxWidth: 600, marginBottom: Spacing.xl,
   },
 
-  // ── Pain section ──
-  painGrid: { flexDirection: 'column', gap: Spacing.md, width: '100%' },
-  painGridDesktop: { flexDirection: 'row' },
-  painCard: {
-    flex: 1, backgroundColor: 'rgba(220,38,38,0.06)', borderWidth: 1,
-    borderColor: 'rgba(220,38,38,0.12)', borderRadius: BorderRadius.card,
-    padding: Spacing.lg, alignItems: 'center',
-  },
-  painStat: {
-    fontFamily: Fonts.playfair.bold, fontSize: 44, color: '#DC2626', marginBottom: Spacing.xs,
-    letterSpacing: -1,
-  },
-  painText: {
-    fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.6)',
-    textAlign: 'center', lineHeight: 22,
-  },
-
   // ── How it works ──
   stepsRow: { flexDirection: 'column', gap: Spacing.xl, width: '100%' },
   stepsRowDesktop: { flexDirection: 'row', gap: Spacing.lg },
@@ -1376,56 +999,6 @@ const styles = StyleSheet.create({
   statItem: { alignItems: 'center', minWidth: 120 },
   statValue: { fontFamily: Fonts.playfair.bold, fontSize: 32, color: Colors.white, letterSpacing: -0.5 },
   statLabel: { fontFamily: Fonts.manrope.medium, fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-
-  // ── Comparison ──
-  comparisonTable: {
-    width: '100%', borderRadius: BorderRadius.card, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-  },
-  compHeaderRow: {
-    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.04)', paddingVertical: 12, paddingHorizontal: 16,
-  },
-  compHeaderCell: {
-    flex: 1, fontFamily: Fonts.manrope.bold, fontSize: 12, color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 1, textTransform: 'uppercase',
-  },
-  compRow: {
-    flexDirection: 'row', paddingVertical: 14, paddingHorizontal: 16,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  compRowHighlight: {
-    backgroundColor: 'rgba(202,138,4,0.08)', borderTopColor: 'rgba(202,138,4,0.2)',
-  },
-  compCell: { flex: 1, fontFamily: Fonts.manrope.medium, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
-  compCellMuted: { flex: 1, fontFamily: Fonts.manrope.regular, fontSize: 14, color: 'rgba(255,255,255,0.4)' },
-  compCellGold: { flex: 1, fontFamily: Fonts.manrope.bold, fontSize: 14, color: Colors.accent },
-
-  // ── Testimonials ──
-  testimonialsRow: { flexDirection: 'column', gap: Spacing.md, width: '100%' },
-  testimonialsRowDesktop: { flexDirection: 'row' },
-  testimonialCard: {
-    borderRadius: BorderRadius.hero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(255,255,255,0.03)', padding: Spacing.xl,
-  },
-  starsRow: { flexDirection: 'row', gap: 2, marginBottom: Spacing.md },
-  star: { fontSize: 16, color: Colors.accent },
-  testimonialQuote: {
-    fontFamily: Fonts.manrope.regular, fontSize: 15, lineHeight: 24,
-    color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', marginBottom: Spacing.md,
-  },
-  testimonialSaving: {
-    backgroundColor: 'rgba(22,163,74,0.1)', borderRadius: BorderRadius.pill,
-    paddingVertical: 4, paddingHorizontal: 12, alignSelf: 'flex-start', marginBottom: Spacing.md,
-  },
-  testimonialSavingText: { fontFamily: Fonts.manrope.semiBold, fontSize: 12, color: '#16A34A' },
-  testimonialAuthor: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  testimonialAvatar: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(202,138,4,0.15)', alignItems: 'center', justifyContent: 'center',
-  },
-  testimonialAvatarText: { fontFamily: Fonts.manrope.bold, fontSize: 14, color: Colors.accent },
-  testimonialName: { fontFamily: Fonts.manrope.semiBold, fontSize: 14, color: Colors.white },
-  testimonialOccupation: { fontFamily: Fonts.manrope.regular, fontSize: 12, color: 'rgba(255,255,255,0.45)' },
 
   // ── Pricing ──
   pricingCard: {

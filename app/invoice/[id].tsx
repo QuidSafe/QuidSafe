@@ -4,7 +4,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
   Platform,
@@ -143,14 +143,14 @@ export default function InvoiceDetailScreen() {
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
             <FontAwesome name="arrow-left" size={20} color={colors.text} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Invoice</Text>
           <View style={{ width: 20 }} />
         </View>
@@ -164,13 +164,13 @@ export default function InvoiceDetailScreen() {
             <Text style={[styles.errorSubtitle, { color: colors.textSecondary }]}>
               This invoice may have been deleted or the link is invalid.
             </Text>
-            <TouchableOpacity
+            <Pressable
               style={styles.backButton}
               onPress={() => router.replace('/invoices')}
-              activeOpacity={0.8}
+             
             >
               <Text style={styles.backButtonText}>View All Invoices</Text>
-            </TouchableOpacity>
+            </Pressable>
           </Card>
         ) : (
           <>
@@ -222,11 +222,11 @@ export default function InvoiceDetailScreen() {
             {/* Action Buttons */}
             <View style={styles.actionsSection}>
               {invoice.status !== 'paid' && (
-                <TouchableOpacity
+                <Pressable
                   style={[styles.actionButton, styles.markPaidButton, isMutating && styles.actionButtonDisabled]}
                   onPress={handleMarkPaid}
                   disabled={isMutating}
-                  activeOpacity={0.8}
+                 
                 >
                   {updateMutation.isPending ? (
                     <ActivityIndicator color={Colors.white} size="small" />
@@ -236,32 +236,32 @@ export default function InvoiceDetailScreen() {
                       <Text style={styles.actionButtonTextLight}>Mark as Paid</Text>
                     </>
                   )}
-                </TouchableOpacity>
+                </Pressable>
               )}
 
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.pdfButton]}
                 onPress={handleDownloadPDF}
-                activeOpacity={0.8}
+               
               >
                 <FontAwesome name="file-pdf-o" size={16} color={Colors.error} style={styles.actionIcon} />
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Download PDF</Text>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.editButton]}
                 onPress={handleEdit}
-                activeOpacity={0.8}
+               
               >
                 <FontAwesome name="pencil" size={16} color={Colors.secondary} style={styles.actionIcon} />
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Invoice</Text>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity
+              <Pressable
                 style={[styles.actionButton, styles.deleteButton, isMutating && styles.actionButtonDisabled]}
                 onPress={handleDelete}
                 disabled={isMutating}
-                activeOpacity={0.8}
+               
               >
                 {deleteMutation.isPending ? (
                   <ActivityIndicator color={Colors.error} size="small" />
@@ -273,7 +273,7 @@ export default function InvoiceDetailScreen() {
                     </Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </>
         )}

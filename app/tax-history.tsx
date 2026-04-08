@@ -4,7 +4,7 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -118,14 +118,14 @@ export default function TaxHistoryScreen() {
       >
         {/* Back button + Header */}
         <View style={styles.headerRow}>
-          <TouchableOpacity
+          <Pressable
             onPress={() => router.back()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
             <FontAwesome name="chevron-left" size={18} color={colors.text} />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Tax History</Text>
           <View style={{ width: 18 }} />
         </View>
@@ -139,7 +139,7 @@ export default function TaxHistoryScreen() {
           {TAX_YEARS.map((year) => {
             const isActive = year === selectedYear;
             return (
-              <TouchableOpacity
+              <Pressable
                 key={year}
                 style={[
                   styles.pill,
@@ -147,7 +147,7 @@ export default function TaxHistoryScreen() {
                   !isActive && { backgroundColor: colors.surface, borderColor: colors.border },
                 ]}
                 onPress={() => setSelectedYear(year)}
-                activeOpacity={0.7}
+               
                 accessibilityRole="button"
                 accessibilityLabel={`Tax year ${year}`}
                 accessibilityState={{ selected: isActive }}
@@ -160,7 +160,7 @@ export default function TaxHistoryScreen() {
                 >
                   {year}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </ScrollView>
