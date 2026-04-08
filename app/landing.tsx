@@ -1142,12 +1142,15 @@ const styles = StyleSheet.create({
     zIndex: 100,
     paddingVertical: 10,
     paddingHorizontal: Spacing.lg,
+    alignItems: 'center' as const,
     backgroundColor: 'rgba(8,12,24,0.75)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.06)',
     ...(Platform.OS === 'web' ? {
+      position: 'fixed' as any,
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
+      transition: 'background-color 0.3s ease',
     } : {}) as any,
   },
   stickyHeaderSolid: {
