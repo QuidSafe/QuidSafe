@@ -1498,8 +1498,8 @@ authed.post('/devices', async (c) => {
   }
   const { pushToken, platform } = result.data;
 
-  // Remove any existing entry for this token owned by this user, then insert
-  await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ? AND user_id = ?', [pushToken, userId]);
+  // Remove any existing entry for this token (any user) to prevent token squatting on device handover
+  await execute(c.env.DB, 'DELETE FROM user_devices WHERE push_token = ?', [pushToken]);
   await execute(
     c.env.DB,
     'INSERT INTO user_devices (user_id, push_token, platform) VALUES (?, ?, ?)',

@@ -130,8 +130,10 @@ export function getUKTaxDeadlines(taxYear: string): TaxDeadline[] {
 
 // ─── Send Notifications via Expo Push API ────────────────
 
-export async function sendPushNotifications(messages: PushMessage[]): Promise<void> {
-  if (messages.length === 0) return;
+export async function sendPushNotifications(messages: PushMessage[]): Promise<string[]> {
+  if (messages.length === 0) return [];
+
+  const invalidTokens: string[] = [];
 
   // Expo Push API supports batches of up to 100
   const chunks: PushMessage[][] = [];
@@ -140,16 +142,34 @@ export async function sendPushNotifications(messages: PushMessage[]): Promise<vo
   }
 
   for (const chunk of chunks) {
-    await fetch(EXPO_PUSH_URL, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(chunk),
-    });
+    try {
+      const response = await fetch(EXPO_PUSH_URL, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chunk),
+      });
+
+      if (response.ok) {
+        const body = await response.json() as { data?: { status: string; details?: { error?: string }; message?: string }[] };
+        if (body.data) {
+          for (let i = 0; i < body.data.length; i++) {
+            const ticket = body.data[i];
+            if (ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered') {
+              invalidTokens.push(chunk[i].to);
+            }
+          }
+        }
+      }
+    } catch {
+      // Network error — skip this chunk, tokens remain valid
+    }
   }
+
+  return invalidTokens;
 }
 
 // ─── Build push messages for a notification template ─────
