@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft } from 'lucide-react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -48,7 +48,7 @@ export default function PrivacyPolicyScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <FontAwesome name="chevron-left" size={14} color={colors.text} />
+          <ChevronLeft size={14} color={colors.text} strokeWidth={1.5} />
           <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
         </Pressable>
 
@@ -253,20 +253,20 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   pressed: {
     opacity: 0.7,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     lineHeight: 32,
     marginBottom: Spacing.xs,
   },
   updated: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     marginBottom: Spacing.lg,
   },
@@ -274,13 +274,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
     lineHeight: 24,
     marginBottom: Spacing.sm,
   },
   body: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: Spacing.sm,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     paddingLeft: Spacing.sm,
   },
   bullet: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     lineHeight: 22,
     marginRight: Spacing.sm,

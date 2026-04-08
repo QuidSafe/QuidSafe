@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
@@ -22,6 +22,7 @@ import { DateInput } from '@/components/ui/DateInput';
 import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
+import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
 import { useDashboard, useQuarterlyBreakdown, useCreateInvoice } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { hapticSuccess } from '@/lib/haptics';
@@ -35,14 +36,14 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'this_month', label: 'This month' },
 ];
 
-const SOURCE_ICONS: Record<string, { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string }> = {
-  'Uber / Deliveroo': { icon: 'car', bg: '#DBEAFE', dot: Colors.secondary },
-  'Cleaning clients': { icon: 'paint-brush', bg: '#D1FAE5', dot: Colors.success },
-  'Freelance dev': { icon: 'laptop', bg: '#FEF3C7', dot: Colors.accent },
-  'Consulting': { icon: 'briefcase', bg: '#F3E8FF', dot: '#7C3AED' },
+const SOURCE_ICONS: Record<string, { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string }> = {
+  'Uber / Deliveroo': { IconComponent: Car, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
+  'Cleaning clients': { IconComponent: Paintbrush, bg: 'rgba(0,200,83,0.12)', dot: '#00C853' },
+  'Freelance dev': { IconComponent: Laptop, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
+  'Consulting': { IconComponent: Briefcase, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
 };
 
-const DEFAULT_ICON: { icon: React.ComponentProps<typeof FontAwesome>['name']; bg: string; dot: string } = { icon: 'gbp', bg: Colors.grey[100], dot: Colors.grey[400] };
+const DEFAULT_ICON: { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string } = { IconComponent: PoundSterling, bg: '#2A2A2A', dot: '#666666' };
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -249,12 +250,12 @@ export default function IncomeScreen() {
                   <Text style={[styles.grossAmount, { color: colors.text }]}>{formatCurrency(grossIncome)}</Text>
                   {yoyPercent !== null && (
                     <View style={styles.yoyRow}>
-                      <FontAwesome
-                        name={yoyPercent >= 0 ? 'arrow-up' : 'arrow-down'}
-                        size={10}
-                        color={yoyPercent >= 0 ? Colors.success : Colors.error}
-                      />
-                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? Colors.success : Colors.error }]}>
+                      {yoyPercent >= 0 ? (
+                        <ArrowUp size={10} color="#00C853" strokeWidth={1.5} />
+                      ) : (
+                        <ArrowDown size={10} color="#FF3B30" strokeWidth={1.5} />
+                      )}
+                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? '#00C853' : '#FF3B30' }]}>
                         {yoyPercent >= 0 ? '+' : ''}{yoyPercent}% vs last year
                       </Text>
                     </View>
@@ -302,11 +303,11 @@ export default function IncomeScreen() {
               {/* Legend */}
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.secondary }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#0066FF' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Income</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: Colors.grey[300] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Expenses</Text>
                 </View>
               </View>
@@ -324,10 +325,10 @@ export default function IncomeScreen() {
 
             {/* Search input */}
             <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <FontAwesome
-                name="search"
+              <Search
                 size={14}
                 color={colors.textSecondary}
+                strokeWidth={1.5}
                 style={styles.searchIcon}
               />
               <TextInput
@@ -398,10 +399,10 @@ export default function IncomeScreen() {
                           { backgroundColor: iconInfo.bg },
                         ]}
                       >
-                        <FontAwesome
-                          name={iconInfo.icon}
+                        <iconInfo.IconComponent
                           size={16}
-                          color={Colors.primary}
+                          color="#0066FF"
+                          strokeWidth={1.5}
                         />
                       </View>
 
@@ -443,9 +444,9 @@ export default function IncomeScreen() {
               accessibilityLabel="View all invoices"
               accessibilityHint="Tap to see your complete invoice list"
             >
-              <FontAwesome name="file-text-o" size={16} color={Colors.accent} style={{ marginRight: 10 }} />
+              <FileText size={16} color="#0066FF" strokeWidth={1.5} style={{ marginRight: 10 }} />
               <Text style={[styles.viewInvoicesText, { color: colors.text }]}>View All Invoices</Text>
-              <FontAwesome name="chevron-right" size={12} color={colors.textSecondary} />
+              <ChevronRight size={12} color={colors.textSecondary} strokeWidth={1.5} />
             </Pressable>
           </>
         )}
@@ -461,7 +462,7 @@ export default function IncomeScreen() {
           accessibilityLabel="Create new invoice"
           accessibilityHint="Tap to open the create invoice form"
         >
-          <FontAwesome name="plus" size={20} color={Colors.white} />
+          <Plus size={20} color={Colors.white} strokeWidth={1.5} />
         </Pressable>
       )}
 
@@ -489,7 +490,7 @@ export default function IncomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Close invoice form"
               >
-                <FontAwesome name="times" size={20} color={colors.textSecondary} />
+                <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
             </View>
 
@@ -610,7 +611,7 @@ const styles = StyleSheet.create({
 
   // Heading
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     marginBottom: Spacing.md,
   },
@@ -632,14 +633,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   summaryLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10.5,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   grossAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 30,
     marginBottom: 4,
   },
@@ -649,17 +650,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   yoyText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
   },
   netAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 24,
-    color: Colors.success,
+    color: '#00C853',
     marginBottom: 4,
   },
   afterExpenses: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -692,7 +693,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   chartLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 9,
     marginTop: 4,
   },
@@ -715,7 +716,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   legendText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -727,7 +728,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
   },
   sourceBadge: {
@@ -737,7 +738,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   sourceBadgeText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
@@ -756,7 +757,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     padding: 0,
   },
@@ -780,7 +781,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   filterPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     color: Colors.grey[600],
   },
@@ -819,30 +820,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sourceName: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourceSubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
   },
   sourceAmounts: {
     alignItems: 'flex-end',
   },
   sourceAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     marginBottom: 2,
   },
   sourcePercent: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 11,
   },
 
   // Empty state
   emptyText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
@@ -889,11 +890,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 18,
   },
   fieldLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -901,7 +902,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalInput: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -925,19 +926,19 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
   fieldError: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
     marginTop: -2,
   },
   errorText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     color: Colors.error,
     textAlign: 'center',
@@ -955,7 +956,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   viewInvoicesText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     flex: 1,
   },

@@ -4,7 +4,7 @@ import { Link } from 'expo-router';
 import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Shield, Zap, Lock, Mail } from 'lucide-react-native';
 import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -13,7 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
@@ -31,9 +31,9 @@ export default function LoginScreen() {
       <SafeAreaView style={s.safe}>
         {/* ── Shield icon with blue glow ── */}
         <View style={s.iconWrap}>
-          <View style={[s.iconGlow, isDark && s.iconGlowDark]} />
-          <View style={[s.iconCircle, { backgroundColor: isDark ? Colors.charcoal : colors.surface, borderColor: colors.border }]}>
-            <FontAwesome name="shield" size={32} color={Colors.electricBlue} />
+          <View style={s.iconGlowDark} />
+          <View style={[s.iconCircle, { backgroundColor: Colors.charcoal, borderColor: colors.border }]}>
+            <Shield size={32} color={Colors.electricBlue} strokeWidth={1.5} />
           </View>
         </View>
 
@@ -47,21 +47,21 @@ export default function LoginScreen() {
         <View style={s.content}>
           <View style={s.propsRow}>
             {[
-              { icon: 'bolt' as const, text: 'Auto-track income' },
-              { icon: 'calculator' as const, text: 'Real-time tax' },
-              { icon: 'shield' as const, text: 'MTD ready' },
+              { icon: Zap, text: 'Auto-track income' },
+              { icon: Shield, text: 'Real-time tax' },
+              { icon: Shield, text: 'MTD ready' },
             ].map((p) => (
-              <View key={p.text} style={[s.propChip, { backgroundColor: isDark ? Colors.charcoal : colors.surface, borderColor: colors.border }]}>
-                <FontAwesome name={p.icon} size={11} color={Colors.electricBlue} />
+              <View key={p.text} style={[s.propChip, { backgroundColor: Colors.charcoal, borderColor: colors.border }]}>
+                <p.icon size={11} color={Colors.electricBlue} strokeWidth={1.5} />
                 <Text style={[s.propText, { color: colors.textSecondary }]}>{p.text}</Text>
               </View>
             ))}
           </View>
 
           {/* Trust badge */}
-          <View style={[s.trustBadge, { backgroundColor: Colors.blueGlow, borderColor: isDark ? 'rgba(0,102,255,0.2)' : 'rgba(0,102,255,0.15)' }]}>
-            <FontAwesome name="lock" size={10} color={Colors.electricBlue} />
-            <Text style={[s.trustText, { color: isDark ? Colors.lightGrey : Colors.muted }]}>
+          <View style={[s.trustBadge, { backgroundColor: Colors.blueGlow, borderColor: 'rgba(0,102,255,0.2)' }]}>
+            <Lock size={10} color={Colors.electricBlue} strokeWidth={1.5} />
+            <Text style={[s.trustText, { color: Colors.lightGrey }]}>
               Bank-grade encryption  ·  Read-only access  ·  HMRC compliant
             </Text>
           </View>
@@ -76,7 +76,7 @@ export default function LoginScreen() {
             accessibilityRole="button"
             accessibilityLabel="Continue with Google"
           >
-            <FontAwesome name="google" size={18} color="#FFF" />
+            <Mail size={18} color="#FFF" strokeWidth={1.5} />
             <Text style={s.googleText}>Continue with Google</Text>
           </Pressable>
 
@@ -90,11 +90,11 @@ export default function LoginScreen() {
           {/* Email */}
           <Link href="/(auth)/signup" asChild>
             <Pressable
-              style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: isDark ? Colors.charcoal : colors.surface }, pressed && s.pressed]}
+              style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: Colors.charcoal }, pressed && s.pressed]}
               accessibilityRole="button"
               accessibilityLabel="Continue with Email"
             >
-              <FontAwesome name="envelope-o" size={16} color={colors.text} style={{ marginRight: 10 }} />
+              <Mail size={16} color={colors.text} strokeWidth={1.5} style={{ marginRight: 10 }} />
               <Text style={[s.emailText, { color: colors.text }]}>Continue with Email</Text>
             </Pressable>
           </Link>
@@ -108,7 +108,7 @@ export default function LoginScreen() {
             {' '}and{' '}
             <Link href="/privacy"><Text style={s.footerLink}>Privacy Policy</Text></Link>
           </Text>
-          <Text style={[s.footerSub, { color: isDark ? Colors.muted : Colors.lightGrey }]}>
+          <Text style={[s.footerSub, { color: Colors.muted }]}>
             Tax tracking for UK sole traders
           </Text>
         </View>

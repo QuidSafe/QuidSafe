@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator, Animat
 import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Mail, Lock, ArrowLeft } from 'lucide-react-native';
 import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -11,7 +11,7 @@ import { useTheme } from '@/lib/ThemeContext';
 export default function SignupScreen() {
   const { signUp, isLoaded } = useSignUp();
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
@@ -112,11 +112,11 @@ export default function SignupScreen() {
             <>
               <View style={[
                 s.inputWrap,
-                { backgroundColor: isDark ? Colors.darkGrey : '#F5F5F5', borderColor: colors.border },
+                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
                 emailFocused && s.inputFocused,
                 emailTouched && emailError ? s.inputError : null,
               ]}>
-                <FontAwesome name="envelope-o" size={15} color={Colors.muted} style={{ marginRight: 12 }} />
+                <Mail size={15} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
                   style={[s.input, { color: colors.text }]}
                   placeholder="Email address"
@@ -160,10 +160,10 @@ export default function SignupScreen() {
             <>
               <View style={[
                 s.inputWrap,
-                { backgroundColor: isDark ? Colors.darkGrey : '#F5F5F5', borderColor: colors.border },
+                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
                 codeFocused && s.inputFocused,
               ]}>
-                <FontAwesome name="lock" size={16} color={Colors.muted} style={{ marginRight: 12 }} />
+                <Lock size={16} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
                   style={[s.input, { color: colors.text }]}
                   placeholder="Enter 6-digit code"
@@ -205,10 +205,10 @@ export default function SignupScreen() {
             accessibilityLabel="Back to login"
             style={({ pressed }) => [pressed && s.pressed]}
           >
-            <Text style={s.backLink}>
-              <FontAwesome name="arrow-left" size={12} color={Colors.electricBlue} />{' '}
-              Back to login
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <ArrowLeft size={12} color={Colors.electricBlue} strokeWidth={1.5} />
+              <Text style={s.backLink}>Back to login</Text>
+            </View>
           </Pressable>
         </Animated.View>
       </SafeAreaView>

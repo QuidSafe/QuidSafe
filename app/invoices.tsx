@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ArrowLeft, X, Plus, FileText, CheckCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -45,10 +45,10 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string }> = {
-  draft: { bg: Colors.grey[200], text: Colors.grey[700] },
-  sent: { bg: '#DBEAFE', text: Colors.secondary },
-  paid: { bg: '#D1FAE5', text: Colors.success },
-  overdue: { bg: '#FEE2E2', text: Colors.error },
+  draft: { bg: '#2A2A2A', text: '#666666' },
+  sent: { bg: 'rgba(0,102,255,0.12)', text: Colors.secondary },
+  paid: { bg: 'rgba(0,200,83,0.12)', text: Colors.success },
+  overdue: { bg: 'rgba(255,59,48,0.12)', text: Colors.error },
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -321,7 +321,7 @@ export default function InvoicesScreen() {
         {/* Header row with back button */}
         <View style={styles.headerRow}>
           <Pressable onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <FontAwesome name="arrow-left" size={20} color={colors.text} />
+            <ArrowLeft size={20} color={colors.text} strokeWidth={1.5} />
           </Pressable>
           <Text style={[styles.title, { color: colors.text }]}>Invoices</Text>
           <View style={{ width: 20 }} />
@@ -448,7 +448,7 @@ export default function InvoicesScreen() {
                          
                           style={styles.pdfButton}
                         >
-                          <FontAwesome name="file-pdf-o" size={16} color={Colors.error} />
+                          <FileText size={16} color={Colors.error} strokeWidth={1.5} />
                         </Pressable>
                       </View>
                     </Card>
@@ -467,7 +467,7 @@ export default function InvoicesScreen() {
           onPress={openCreateModal}
          
         >
-          <FontAwesome name="plus" size={20} color={Colors.white} />
+          <Plus size={20} color={Colors.white} strokeWidth={1.5} />
         </Pressable>
       )}
 
@@ -496,7 +496,7 @@ export default function InvoicesScreen() {
                   onPress={closeModal}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                  <FontAwesome name="times" size={20} color={colors.textSecondary} />
+                  <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
                 </Pressable>
               </View>
 
@@ -615,7 +615,7 @@ export default function InvoicesScreen() {
                     <ActivityIndicator color={Colors.white} size="small" />
                   ) : (
                     <>
-                      <FontAwesome name="check-circle" size={16} color={Colors.white} style={{ marginRight: 8 }} />
+                      <CheckCircle size={16} color={Colors.white} strokeWidth={1.5} style={{ marginRight: 8 }} />
                       <Text style={styles.markPaidText}>Mark as Paid</Text>
                     </>
                   )}
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
   },
 
@@ -694,18 +694,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: Colors.grey[100],
+    backgroundColor: '#0A0A0A',
     borderWidth: 1,
-    borderColor: Colors.grey[200],
+    borderColor: '#2A2A2A',
   },
   filterPillActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   filterPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
-    color: Colors.grey[600],
+    color: '#666666',
   },
   filterPillTextActive: {
     color: Colors.white,
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statValue: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 18,
   },
 
@@ -757,16 +757,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   clientName: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     marginBottom: 4,
   },
   invoiceDesc: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
   },
   invoiceAmount: {
-    fontFamily: Fonts.manrope.extraBold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 18,
     marginBottom: 6,
   },
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   statusBadgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
   invoiceBottomRow: {
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   dueDate: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
   },
   pdfButton: {
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   emptyFilterText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.grey[300],
+    backgroundColor: '#2A2A2A',
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
@@ -849,11 +849,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 18,
   },
   fieldLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalInput: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     borderWidth: 1,
     borderRadius: BorderRadius.input,
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   fieldError: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: Colors.error,
     marginBottom: Spacing.xs,
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusPickerText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   markPaidText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   deleteButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
     color: Colors.error,
   },

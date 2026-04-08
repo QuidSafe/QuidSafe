@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Wand2, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -58,9 +58,9 @@ function getCategoryColor(category: TransactionCategory | undefined): string {
     case 'business_expense':
       return Colors.secondary;
     case 'personal':
-      return Colors.grey[400];
+      return '#666666';
     default:
-      return Colors.grey[300];
+      return '#2A2A2A';
   }
 }
 
@@ -144,7 +144,7 @@ export default function TransactionsScreen() {
   const [selectedIncomeSource, setSelectedIncomeSource] = useState<string | null>(null);
   const [isAutoCategorising, setIsAutoCategorising] = useState(false);
 
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const toast = useToast();
 
   // Fetch data based on filter
@@ -270,7 +270,7 @@ export default function TransactionsScreen() {
 
       return (
         <View style={[styles.badge, { backgroundColor: Colors.error + '10', borderColor: Colors.error }]}>
-          <FontAwesome name="exclamation-circle" size={10} color={Colors.error} style={{ marginRight: 4 }} />
+          <AlertCircle size={10} color={Colors.error} strokeWidth={1.5} style={{ marginRight: 4 }} />
           <Text style={[styles.badgeText, { color: Colors.error }]}>Review</Text>
         </View>
       );
@@ -295,7 +295,7 @@ export default function TransactionsScreen() {
               pressed && { opacity: 0.85 },
             ]}
           >
-            <FontAwesome name="magic" size={13} color={Colors.white} />
+            <Wand2 size={13} color={Colors.white} strokeWidth={1.5} />
             <Text style={styles.autoCategoriseText}>
               {isAutoCategorising ? 'Working...' : 'Auto-categorise'}
             </Text>
@@ -319,8 +319,8 @@ export default function TransactionsScreen() {
                   styles.filterPill,
                   {
                     backgroundColor: isActive
-                      ? (isDark ? Colors.accent : Colors.primary)
-                      : (isDark ? Colors.grey[800] : Colors.grey[100]),
+                      ? Colors.accent
+                      : '#0A0A0A',
                     borderColor: isActive
                       ? 'transparent'
                       : colors.border,
@@ -366,7 +366,7 @@ export default function TransactionsScreen() {
         >
           <Animated.View style={[styles.emptyState, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <View style={[styles.emptyIcon, { backgroundColor: Colors.success + '15' }]}>
-              <FontAwesome name="check-circle" size={40} color={Colors.success} />
+              <CheckCircle size={40} color={Colors.success} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>All caught up!</Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
@@ -458,9 +458,9 @@ export default function TransactionsScreen() {
                 )}
 
                 {/* AI suggestion */}
-                <View style={[styles.aiSuggestion, { backgroundColor: isDark ? Colors.grey[800] : Colors.grey[50] }]}>
+                <View style={[styles.aiSuggestion, { backgroundColor: '#0A0A0A' }]}>
                   <View style={styles.aiSuggestionHeader}>
-                    <FontAwesome name="lightbulb-o" size={14} color={Colors.accent} />
+                    <Lightbulb size={14} color={Colors.accent} strokeWidth={1.5} />
                     <Text style={[styles.aiSuggestionTitle, { color: colors.text }]}>
                       AI thinks this is:{' '}
                       <Text style={{ color: getCategoryColor(selectedTransaction.aiCategory) }}>
@@ -488,7 +488,7 @@ export default function TransactionsScreen() {
                   {([
                     { key: 'income' as TransactionCategory, label: 'Income', color: Colors.success },
                     { key: 'business_expense' as TransactionCategory, label: 'Business Expense', color: Colors.secondary },
-                    { key: 'personal' as TransactionCategory, label: 'Personal', color: Colors.grey[500] },
+                    { key: 'personal' as TransactionCategory, label: 'Personal', color: '#666666' },
                   ]).map((cat) => {
                     const isSelected = selectedCategory === cat.key;
                     return (
@@ -501,7 +501,7 @@ export default function TransactionsScreen() {
                         style={[
                           styles.categoryButton,
                           {
-                            backgroundColor: isSelected ? cat.color + '20' : isDark ? Colors.grey[800] : Colors.grey[100],
+                            backgroundColor: isSelected ? cat.color + '20' : '#0A0A0A',
                             borderColor: isSelected ? cat.color : colors.border,
                           },
                         ]}
@@ -535,7 +535,7 @@ export default function TransactionsScreen() {
                             style={[
                               styles.incomeSourcePill,
                               {
-                                backgroundColor: isSelected ? Colors.accent + '20' : isDark ? Colors.grey[800] : Colors.grey[100],
+                                backgroundColor: isSelected ? Colors.accent + '20' : '#0A0A0A',
                                 borderColor: isSelected ? Colors.accent : colors.border,
                               },
                             ]}
@@ -563,8 +563,8 @@ export default function TransactionsScreen() {
                     styles.confirmButton,
                     {
                       backgroundColor: selectedCategory
-                        ? (isDark ? Colors.accent : Colors.primary)
-                        : Colors.grey[300],
+                        ? Colors.accent
+                        : '#2A2A2A',
                       opacity: overrideMutation.isPending ? 0.6 : pressed ? 0.9 : 1,
                     },
                   ]}
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 24,
     letterSpacing: -0.3,
   },
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   autoCategoriseText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
     color: Colors.white,
   },
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   filterPillText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
@@ -660,11 +660,11 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   txMerchant: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
   },
   txDate: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginTop: 2,
   },
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   txAmount: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 16,
   },
 
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
   },
 
@@ -713,11 +713,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyTitle: {
-    fontFamily: Fonts.playfair.bold,
+    fontFamily: Fonts.lexend.semiBold,
     fontSize: 22,
   },
   emptySubtitle: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     textAlign: 'center',
   },
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   modalTitle: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 20,
     marginBottom: 12,
   },
@@ -759,17 +759,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   modalDetailLabel: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   modalDetailValue: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 18,
   },
   modalDescription: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     marginBottom: 16,
   },
@@ -787,16 +787,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   aiSuggestionTitle: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
   },
   aiConfidenceText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     marginLeft: 22,
   },
   aiReasoningText: {
-    fontFamily: Fonts.manrope.regular,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
     lineHeight: 19,
     marginLeft: 22,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
 
   // Category buttons
   modalSectionLabel: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryButtonText: {
-    fontFamily: Fonts.manrope.semiBold,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
 
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   incomeSourceText: {
-    fontFamily: Fonts.manrope.medium,
+    fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
   },
 
@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   confirmButtonText: {
-    fontFamily: Fonts.manrope.bold,
+    fontFamily: Fonts.mono.semiBold,
     fontSize: 16,
     color: Colors.white,
   },
