@@ -11,7 +11,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Lock, Zap, BarChart3, FileText, Landmark, ChevronDown, Check, ArrowRight } from 'lucide-react-native';
 import { Colors, BorderRadius, Spacing } from '@/constants/Colors';
@@ -208,6 +208,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 export default function LandingScreen() {
   const { width } = useWindowDimensions();
   const colors = Colors.dark;
+  const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
 
   // Section y-offsets for scroll-to navigation
@@ -305,24 +306,22 @@ export default function LandingScreen() {
                 </Pressable>
               ))}
 
-            <Link href="/(auth)/login" asChild>
-              <Pressable
-                style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Log in"
-              >
-                <Text style={styles.navLoginText}>Log in</Text>
-              </Pressable>
-            </Link>
-            <Link href="/(auth)/signup" asChild>
-              <Pressable
-                style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Start free trial"
-              >
-                <Text style={styles.navCTAText}>Start free</Text>
-              </Pressable>
-            </Link>
+            <Pressable
+              style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push('/(auth)/login')}
+              accessibilityRole="button"
+              accessibilityLabel="Log in"
+            >
+              <Text style={styles.navLoginText}>Log in</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push('/(auth)/signup')}
+              accessibilityRole="button"
+              accessibilityLabel="Start free trial"
+            >
+              <Text style={styles.navCTAText}>Start free</Text>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -339,36 +338,9 @@ export default function LandingScreen() {
         <View style={[styles.hero, {backgroundColor: '#000000'}]}>
 
           <SafeAreaView edges={['top']} style={styles.heroSafe}>
-            {/* Hero-local nav (hidden once sticky header takes over) */}
-            <View style={[styles.heroNav, { maxWidth: contentMaxWidth }]}>
-              <BrandLogo size={36} textSize={28} />
-              <View style={styles.navLinks}>
-                {isDesktop &&
-                  NAV_SECTIONS.map((section) => (
-                    <Pressable key={section} onPress={() => scrollToSection(section)}>
-                      <Text style={styles.navLink}>{section}</Text>
-                    </Pressable>
-                  ))}
-                <Link href="/(auth)/login" asChild>
-                  <Pressable
-                    style={({ pressed }) => [styles.navLoginBtn, pressed && { opacity: 0.8 }]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Log in"
-                  >
-                    <Text style={styles.navLoginText}>Log in</Text>
-                  </Pressable>
-                </Link>
-                <Link href="/(auth)/signup" asChild>
-                  <Pressable
-                    style={({ pressed }) => [styles.navCTABtn, pressed && { opacity: 0.85 }]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Start free trial"
-                  >
-                    <Text style={styles.navCTAText}>Start free</Text>
-                  </Pressable>
-                </Link>
-              </View>
-            </View>
+
+            {/* Spacer for sticky header */}
+            <View style={{ height: 56 }} />
 
             {/* MTD urgency banner */}
             <View style={[styles.urgencyBanner, { maxWidth: contentMaxWidth }]}>
@@ -390,11 +362,9 @@ export default function LandingScreen() {
                 </Text>
 
                 <View style={[styles.heroCTAs, isDesktop && styles.heroCTAsDesktop]}>
-                  <Link href="/(auth)/signup" asChild>
-                    <Pressable style={({ pressed }) => [styles.ctaGold, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Start free trial">
-                      <Text style={styles.ctaGoldText}>Start 14-day free trial</Text>
-                    </Pressable>
-                  </Link>
+                  <Pressable style={({ pressed }) => [styles.ctaGold, pressed && styles.pressed]} onPress={() => router.push('/(auth)/signup')} accessibilityRole="button" accessibilityLabel="Start free trial">
+                    <Text style={styles.ctaGoldText}>Start 14-day free trial</Text>
+                  </Pressable>
                   <Pressable style={({ pressed }) => [styles.ctaGhost, pressed && styles.pressed]} onPress={() => scrollToSection('How it works')} accessibilityRole="button" accessibilityLabel="See how it works">
                     <Text style={styles.ctaGhostText}>See how it works</Text>
                   </Pressable>
@@ -555,11 +525,9 @@ export default function LandingScreen() {
                 </View>
               ))}
 
-              <Link href="/(auth)/signup" asChild>
-                <Pressable style={({ pressed }) => [styles.ctaGold, { marginTop: Spacing.lg }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Start free trial">
-                  <Text style={styles.ctaGoldText}>Start free trial</Text>
-                </Pressable>
-              </Link>
+              <Pressable style={({ pressed }) => [styles.ctaGold, { marginTop: Spacing.lg }, pressed && styles.pressed]} onPress={() => router.push('/(auth)/signup')} accessibilityRole="button" accessibilityLabel="Start free trial">
+                <Text style={styles.ctaGoldText}>Start free trial</Text>
+              </Pressable>
               <Text style={styles.pricingNoCard}>No credit card required · All prices inc. VAT</Text>
 
               <View style={styles.priceAnchor}>
@@ -615,11 +583,9 @@ export default function LandingScreen() {
 
             <View style={styles.mtdCTA}>
               <Text style={styles.mtdCTAText}>QuidSafe is MTD compliant from day one.</Text>
-              <Link href="/(auth)/signup" asChild>
-                <Pressable style={({ pressed }) => [styles.ctaGold, { maxWidth: 320 }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Get MTD ready">
-                  <Text style={styles.ctaGoldText}>Get MTD ready now</Text>
-                </Pressable>
-              </Link>
+              <Pressable style={({ pressed }) => [styles.ctaGold, { maxWidth: 320 }, pressed && styles.pressed]} onPress={() => router.push('/(auth)/signup')} accessibilityRole="button" accessibilityLabel="Get MTD ready">
+                <Text style={styles.ctaGoldText}>Get MTD ready now</Text>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -650,11 +616,9 @@ export default function LandingScreen() {
           <Text style={styles.finalCTASubtitle}>
             The simplest way for UK sole traders to stay on top of tax.
           </Text>
-          <Link href="/(auth)/signup" asChild>
-            <Pressable style={({ pressed }) => [styles.ctaGold, { maxWidth: 340 }, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Start free trial">
-              <Text style={styles.ctaGoldText}>Start your free trial</Text>
-            </Pressable>
-          </Link>
+          <Pressable style={({ pressed }) => [styles.ctaGold, { maxWidth: 340 }, pressed && styles.pressed]} onPress={() => router.push('/(auth)/signup')} accessibilityRole="button" accessibilityLabel="Start free trial">
+            <Text style={styles.ctaGoldText}>Start your free trial</Text>
+          </Pressable>
           <Text style={styles.finalNoCard}>14 days free · No credit card · Cancel anytime</Text>
         </View>
 
@@ -671,19 +635,19 @@ export default function LandingScreen() {
                 <Text style={styles.footerColTitle}>Product</Text>
                 <Pressable onPress={() => scrollToSection('Features')}><Text style={styles.footerLink}>Features</Text></Pressable>
                 <Pressable onPress={() => scrollToSection('Pricing')}><Text style={styles.footerLink}>Pricing</Text></Pressable>
-                <Link href="/mtd" asChild><Pressable><Text style={styles.footerLink}>MTD Guide</Text></Pressable></Link>
+                <Pressable onPress={() => router.push('/mtd')}><Text style={styles.footerLink}>MTD Guide</Text></Pressable>
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Company</Text>
-                <Link href="/about" asChild><Pressable><Text style={styles.footerLink}>About</Text></Pressable></Link>
-                <Link href="/about" asChild><Pressable><Text style={styles.footerLink}>Contact</Text></Pressable></Link>
-                <Link href="/learn" asChild><Pressable><Text style={styles.footerLink}>Blog</Text></Pressable></Link>
+                <Pressable onPress={() => router.push('/about')}><Text style={styles.footerLink}>About</Text></Pressable>
+                <Pressable onPress={() => router.push('/about')}><Text style={styles.footerLink}>Contact</Text></Pressable>
+                <Pressable onPress={() => router.push('/learn')}><Text style={styles.footerLink}>Blog</Text></Pressable>
               </View>
               <View style={styles.footerCol}>
                 <Text style={styles.footerColTitle}>Legal</Text>
-                <Link href="/privacy" asChild><Pressable><Text style={styles.footerLink}>Privacy Policy</Text></Pressable></Link>
-                <Link href="/terms" asChild><Pressable><Text style={styles.footerLink}>Terms of Service</Text></Pressable></Link>
-                <Link href="/cookie-policy" asChild><Pressable><Text style={styles.footerLink}>Cookie Policy</Text></Pressable></Link>
+                <Pressable onPress={() => router.push('/privacy')}><Text style={styles.footerLink}>Privacy Policy</Text></Pressable>
+                <Pressable onPress={() => router.push('/terms')}><Text style={styles.footerLink}>Terms of Service</Text></Pressable>
+                <Pressable onPress={() => router.push('/cookie-policy')}><Text style={styles.footerLink}>Cookie Policy</Text></Pressable>
               </View>
             </View>
           </View>
@@ -779,13 +743,6 @@ const styles = StyleSheet.create({
   heroSafe: { alignItems: 'center', width: '100%' },
 
   // Nav
-  heroNav: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    width: '100%', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm,
-  },
-  navLogo: { fontFamily: Fonts.lexend.bold, fontSize: 28, color: Colors.white, letterSpacing: -0.5 },
-  navLinks: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
-  navLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: 'rgba(255,255,255,0.7)' },
   navLoginBtn: {
     paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.button,

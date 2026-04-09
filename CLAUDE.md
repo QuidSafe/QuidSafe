@@ -112,6 +112,8 @@ Cards: bg `#0A0A0A`, border `1px solid #2A2A2A`, border-radius `12px`. Buttons/i
 11. **Responsive design** — Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
 12. **Not FCA regulated** — QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
 13. **Pricing** — £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
+14. **No `Link asChild` with Pressable** — On web, `Link asChild` breaks Pressable styles (background, flexDirection). Use `Pressable` with `onPress={() => router.push(href)}` instead. Plain `<Link>` for inline text links is fine.
+15. **Web visual testing** — After any UI change, verify the web build renders correctly. Fonts, buttons, and layout must work on web, not just native. Run `npx expo export --platform web` and check `dist/` output.
 
 ## Agents
 
