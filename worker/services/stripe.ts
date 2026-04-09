@@ -8,7 +8,7 @@ interface StripeConfig {
   webhookSecret: string;
 }
 
-// ─── Stripe API helpers (no SDK — Workers use fetch) ──────
+// ─── Stripe API helpers (no SDK - Workers use fetch) ──────
 
 async function stripeRequest<T>(
   path: string,
@@ -224,7 +224,7 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
 
   switch (event.type) {
     case 'checkout.session.completed': {
-      // Session completed — subscription created separately
+      // Session completed - subscription created separately
       break;
     }
 
@@ -269,7 +269,7 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
     }
 
     case 'invoice.payment_succeeded': {
-      // Payment went through — subscription.updated handles the rest
+      // Payment went through - subscription.updated handles the rest
       break;
     }
 

@@ -1,4 +1,4 @@
-// Push notification service — Expo Push API
+// Push notification service - Expo Push API
 // Sends notifications to registered devices via Expo's push notification infrastructure
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
@@ -165,7 +165,7 @@ export async function sendPushNotifications(messages: PushMessage[]): Promise<st
         }
       }
     } catch {
-      // Network error — skip this chunk, tokens remain valid
+      // Network error - skip this chunk, tokens remain valid
     }
   }
 

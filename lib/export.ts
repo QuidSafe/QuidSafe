@@ -110,7 +110,7 @@ export function downloadCSV(csv: string, filename: string): void {
           Clipboard.setString(csv);
         }
       } catch {
-        // Clipboard not available — silent fail
+        // Clipboard not available - silent fail
       }
     })();
   }

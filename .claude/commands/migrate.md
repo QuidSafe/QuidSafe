@@ -25,10 +25,10 @@ Create and test a new D1 migration safely. Follow every step in order.
 
 6. **Test locally**: Run `npx wrangler d1 migrations apply quidsafe-staging --local --config wrangler.worker.toml` to verify the migration applies without errors.
 
-7. **Report**: Summarise what changed — tables added/modified, columns added, indexes created. Include the full migration SQL in the output.
+7. **Report**: Summarise what changed  -  tables added/modified, columns added, indexes created. Include the full migration SQL in the output.
 
 ## Important
 
-- Never modify an existing migration file — always create a new one
+- Never modify an existing migration file  -  always create a new one
 - Migration descriptions should be lowercase with underscores (e.g. `0006_add_invoice_payments.sql`)
 - Always include `IF NOT EXISTS` for `CREATE TABLE` and `CREATE INDEX` where possible

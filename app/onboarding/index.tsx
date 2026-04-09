@@ -61,7 +61,7 @@ function ProgressDots({ current }: { current: number }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Step 1 — Welcome                                                   */
+/*  Step 1 - Welcome                                                   */
 /* ------------------------------------------------------------------ */
 function StepWelcome() {
   const { colors } = useTheme();
@@ -78,7 +78,7 @@ function StepWelcome() {
         <Text style={[styles.setupTimeBadgeText, { color: Colors.accent }]}>Set up in 2 minutes</Text>
       </View>
 
-      {/* Animated illustration — shield with pound sign */}
+      {/* Animated illustration - shield with pound sign */}
       <View style={styles.illustrationArea}>
         <WelcomeIllustration />
       </View>
@@ -132,7 +132,7 @@ function StepWelcome() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Step 2 — Business Info                                             */
+/*  Step 2 - Business Info                                             */
 /* ------------------------------------------------------------------ */
 function StepBusinessInfo({
   businessName,
@@ -232,7 +232,7 @@ function StepBusinessInfo({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Step 3 — Connect Bank                                              */
+/*  Step 3 - Connect Bank                                              */
 /* ------------------------------------------------------------------ */
 function StepConnectBank() {
   const { colors } = useTheme();
@@ -328,7 +328,7 @@ function StepConnectBank() {
       <View style={[styles.infoNote, { borderColor: Colors.secondary + '20', backgroundColor: Colors.secondary + '08' }]}>
         <Info size={14} color={Colors.secondary} strokeWidth={1.5} style={{ marginRight: Spacing.sm, marginTop: 2 }} />
         <Text style={[styles.infoNoteText, { color: colors.textSecondary }]}>
-          We use Open Banking — we can see transactions but never move money, see your PIN, or access your login details.
+          We use Open Banking - we can see transactions but never move money, see your PIN, or access your login details.
         </Text>
       </View>
 

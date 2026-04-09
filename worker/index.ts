@@ -135,7 +135,7 @@ app.use(
       if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
         return origin;
       }
-      // Block unknown origins — returning empty string omits Access-Control-Allow-Origin header
+      // Block unknown origins - returning empty string omits Access-Control-Allow-Origin header
       return '';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -201,7 +201,7 @@ app.get('/articles/:id', async (c) => {
 });
 
 // ─── Public Banking OAuth Callback ───────────────────────
-// TrueLayer redirects here — no JWT available, uses oauth_state for user identification
+// TrueLayer redirects here - no JWT available, uses oauth_state for user identification
 app.get('/banking/callback', async (c) => {
   const code = c.req.query('code');
   const state = c.req.query('state');
@@ -211,7 +211,7 @@ app.get('/banking/callback', async (c) => {
   if (oauthError || !code) {
     let isNative = false;
     if (state) {
-      // Validate state against DB before using it — prevents CSRF bypass on error path
+      // Validate state against DB before using it - prevents CSRF bypass on error path
       const validState = await queryOne<{ user_id: string }>(
         c.env.DB,
         'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
@@ -301,7 +301,7 @@ app.get('/banking/callback', async (c) => {
     }
   } catch (err) {
     console.error('Banking token exchange failed:', err);
-    // State is NOT deleted — allows retry within the 10-minute TTL
+    // State is NOT deleted - allows retry within the 10-minute TTL
     if (isNative) {
       return c.redirect('quidsafe://banking/callback?error=exchange_failed');
     }
@@ -311,7 +311,7 @@ app.get('/banking/callback', async (c) => {
 });
 
 // ─── Public HMRC OAuth Callback ──────────────────────────
-// HMRC redirects here — no JWT available, uses oauth_state for user identification
+// HMRC redirects here - no JWT available, uses oauth_state for user identification
 app.get('/mtd/callback', async (c) => {
   const code = c.req.query('code');
   const state = c.req.query('state');
@@ -321,7 +321,7 @@ app.get('/mtd/callback', async (c) => {
   if (oauthError || !code) {
     let isNative = false;
     if (state) {
-      // Validate state against DB before using it — prevents CSRF bypass on error path
+      // Validate state against DB before using it - prevents CSRF bypass on error path
       const validState = await queryOne<{ user_id: string }>(
         c.env.DB,
         'SELECT user_id FROM oauth_states WHERE state = ? AND created_at > datetime(\'now\', \'-10 minutes\')',
@@ -377,7 +377,7 @@ app.get('/mtd/callback', async (c) => {
     return c.redirect(`${appUrl}/mtd?hmrcConnected=true`);
   } catch (err) {
     console.error('HMRC token exchange failed:', err);
-    // State is NOT deleted — allows retry within the 10-minute TTL
+    // State is NOT deleted - allows retry within the 10-minute TTL
     if (isNative) {
       return c.redirect('quidsafe://hmrc/callback?error=exchange_failed');
     }
@@ -874,7 +874,7 @@ authed.get('/banking/connect', async (c) => {
   return c.json({ url });
 });
 
-// Banking callback moved to public routes (above) — TrueLayer redirects without JWT
+// Banking callback moved to public routes (above) - TrueLayer redirects without JWT
 
 authed.get('/banking/connections', async (c) => {
   const userId = c.get('userId');
@@ -911,7 +911,7 @@ authed.post('/banking/sync/:id', async (c) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Sync failed';
     if (message === 'BANK_CONNECTION_EXPIRED') {
-      return c.json({ error: { code: 'BANK_CONNECTION_EXPIRED', message: 'Bank connection expired — please reconnect' } }, 401);
+      return c.json({ error: { code: 'BANK_CONNECTION_EXPIRED', message: 'Bank connection expired - please reconnect' } }, 401);
     }
     return c.json({ error: { code: 'SYNC_ERROR', message: 'Transaction sync failed' } }, 500);
   }
@@ -1539,7 +1539,7 @@ app.onError((err, c) => {
 });
 
 // ─── Scheduled Handler (Cron) ────────────────────────────
-// Daily sync at 6:00 AM — configured in wrangler.toml [triggers]
+// Daily sync at 6:00 AM - configured in wrangler.toml [triggers]
 async function scheduled(_event: { scheduledTime: number; cron: string }, env: Env) {
   console.log(`[Cron] Daily sync triggered at ${new Date().toISOString()}`);
   const config = getTrueLayerConfig(env);
@@ -1571,16 +1571,16 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
       } catch (refreshErr) {
         const msg = refreshErr instanceof Error ? refreshErr.message : '';
         if (msg.includes('BANK_CONNECTION_EXPIRED')) {
-          // Mark connection as inactive — user must reconnect
+          // Mark connection as inactive - user must reconnect
           await env.DB
             .prepare('UPDATE bank_connections SET active = 0 WHERE id = ?')
             .bind(connection.id)
             .run();
-          console.log('[Cron] Connection expired — deactivated');
+          console.log('[Cron] Connection expired - deactivated');
           failCount++;
           continue;
         }
-        // Other refresh errors — try sync with existing token
+        // Other refresh errors - try sync with existing token
       }
 
       const result = await syncTransactions(env.DB, connection, config);
@@ -1628,7 +1628,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
         .prepare('UPDATE subscriptions SET status = ? WHERE user_id = ?')
         .bind('cancelled', user.id)
         .run();
-      console.log('[Cron] Grace period expired — subscription cancelled');
+      console.log('[Cron] Grace period expired - subscription cancelled');
     }
 
     if (expiredGrace.results.length > 0) {
@@ -1688,7 +1688,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     console.error('[Cron] Recurring expenses auto-log failed:', recurringErr);
   }
 
-  // ── Notification checks (pre-aggregated — no per-user queries) ──
+  // ── Notification checks (pre-aggregated - no per-user queries) ──
   try {
     const now = new Date();
     const { taxYear } = getCurrentQuarter(now);
@@ -1771,7 +1771,7 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
         }
       }
 
-      // MTD submission ready — quarter ended and user hasn't submitted yet
+      // MTD submission ready - quarter ended and user hasn't submitted yet
       if (user.notify_mtd_ready) {
         for (const deadline of deadlines) {
           if (!deadline.quarter) continue;

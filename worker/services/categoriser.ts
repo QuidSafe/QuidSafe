@@ -1,4 +1,4 @@
-// AI Transaction Categoriser — Uses Claude Haiku via Anthropic API
+// AI Transaction Categoriser - Uses Claude Haiku via Anthropic API
 // All data is anonymised BEFORE reaching this module (see anonymiser.ts)
 
 import { anonymiseTransaction, anonymiseMerchant } from './anonymiser';
@@ -98,7 +98,7 @@ function applyRules(tx: AnonymisedTx): CategorisationResult | null {
     }
   }
 
-  return null; // Ambiguous — needs AI
+  return null; // Ambiguous - needs AI
 }
 
 // ─── AI Categorisation ────────────────────────────────────
@@ -128,9 +128,9 @@ function buildPrompt(transactions: AnonymisedTx[], corrections?: CorrectionExamp
   return `You are a UK tax categorisation assistant for sole traders.
 
 For each anonymised bank transaction below, classify it as:
-- "income" — money received for work/services/sales
-- "personal" — personal spending (groceries, rent, subscriptions, etc.)
-- "business_expense" — money spent to earn income (fuel, phone bill, equipment, tools, etc.)
+- "income" - money received for work/services/sales
+- "personal" - personal spending (groceries, rent, subscriptions, etc.)
+- "business_expense" - money spent to earn income (fuel, phone bill, equipment, tools, etc.)
 
 Also identify the income source type if applicable (e.g., "gig_delivery", "ecommerce", "freelance_service").
 ${fewShot}
@@ -255,7 +255,7 @@ export async function categoriseTransactions(
               category: 'personal' as const,
               confidence: 0.0,
               incomeSourceType: null,
-              reasoning: 'AI categorisation unavailable — defaulted to personal',
+              reasoning: 'AI categorisation unavailable - defaulted to personal',
             }));
           }
         }),

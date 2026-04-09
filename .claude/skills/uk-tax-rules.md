@@ -57,8 +57,8 @@ Personal allowance tapers by £1 for every £2 over £100,000.
 | Legal and professional | Accountant, legal fees |
 
 ## Key Deadlines
-- 31 January — Self Assessment + payment deadline
-- 31 July — Payment on account (2nd instalment)
+- 31 January  -  Self Assessment + payment deadline
+- 31 July  -  Payment on account (2nd instalment)
 - Quarterly MTD deadlines: 5 Aug, 5 Nov, 5 Feb, 5 May
 
 ## Implementation Notes

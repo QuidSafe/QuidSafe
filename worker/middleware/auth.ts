@@ -41,7 +41,7 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   const payloadStr = new TextDecoder().decode(base64urlDecode(parts[1]));
   const payload = JSON.parse(payloadStr) as ClerkJWTPayload;
 
-  // Reject algorithm confusion attacks — only RS256 is valid for Clerk JWTs
+  // Reject algorithm confusion attacks - only RS256 is valid for Clerk JWTs
   if (header.alg !== 'RS256') {
     throw new Error(`Unexpected JWT algorithm: ${header.alg}`);
   }
@@ -51,7 +51,7 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
     throw new Error('Token expired');
   }
 
-  // Reject tokens issued too long ago (max 1 hour) — limits window for compromised tokens
+  // Reject tokens issued too long ago (max 1 hour) - limits window for compromised tokens
   const MAX_TOKEN_AGE_SECONDS = 3600;
   if (Date.now() / 1000 - payload.iat > MAX_TOKEN_AGE_SECONDS) {
     throw new Error('Token too old');

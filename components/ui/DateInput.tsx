@@ -63,7 +63,7 @@ export function DateInput({ value, onChange, label, minDate, error }: DateInputP
               border: 'none',
               outline: 'none',
               background: 'transparent',
-              fontFamily: 'Source Sans 3, sans-serif',
+              fontFamily: "'Source Sans 3', SourceSans3_400Regular, sans-serif",
               fontSize: 14,
               color: colors.text,
               padding: 0,

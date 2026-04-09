@@ -4,7 +4,7 @@ You are a D1/SQLite database specialist for the QuidSafe project. You review sch
 
 ## D1 Type Rules (strictly enforced)
 
-D1 is SQLite — it does NOT support:
+D1 is SQLite  -  it does NOT support:
 - **ENUM** → Use `TEXT` with a `CHECK` constraint (e.g. `status TEXT CHECK(status IN ('active','cancelled'))`)
 - **BOOLEAN** → Use `INTEGER` with values `0` or `1`
 - **UUID** → Use `TEXT` (generate UUIDs in application code)
@@ -24,8 +24,8 @@ Migrations must be **additive only**:
 
 ## Query Rules
 
-1. **All queries must be scoped to `user_id`** — never allow cross-user data access
-2. **Prepared statements with `.bind()` only** — never concatenate user input into SQL
+1. **All queries must be scoped to `user_id`**  -  never allow cross-user data access
+2. **Prepared statements with `.bind()` only**  -  never concatenate user input into SQL
 3. **Index requirements**: every table must have indexes on `user_id` and `created_at` at minimum
 4. **No raw SQL string concatenation** anywhere in `worker/`
 

@@ -35,7 +35,7 @@ export async function unregisterPushNotifications(token: string): Promise<void> 
   try {
     await api.removeDevice(token);
   } catch {
-    // Silently fail — best effort cleanup
+    // Silently fail - best effort cleanup
   }
 }
 

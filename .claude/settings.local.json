@@ -1,8 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch",
-      "Bash(claude mcp:*)"
+      "Bash(gh --version)",
+      "Bash(winget list:*)",
+      "Bash(where gh:*)",
+      "Bash(gh pr create --title 'ci: add automated dev and staging deploy pipelines' --body ':*)",
+      "Bash(export PATH=\"/c/Program Files/GitHub CLI:$PATH\")",
+      "Bash(gh auth:*)"
     ]
   }
 }

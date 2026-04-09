@@ -1,4 +1,4 @@
-// Quarter timeline component — Visual Q1–Q4 progress tracker
+// Quarter timeline component - Visual Q1-Q4 progress tracker
 
 import { StyleSheet, View, Text } from 'react-native';
 import { colors, Spacing } from '@/constants/Colors';
@@ -10,10 +10,10 @@ interface QuarterTimelineProps {
 }
 
 const QUARTERS = [
-  { q: 1, label: 'Q1', months: 'Apr – Jun' },
-  { q: 2, label: 'Q2', months: 'Jul – Sep' },
-  { q: 3, label: 'Q3', months: 'Oct – Dec' },
-  { q: 4, label: 'Q4', months: 'Jan – Mar' },
+  { q: 1, label: 'Q1', months: 'Apr - Jun' },
+  { q: 2, label: 'Q2', months: 'Jul - Sep' },
+  { q: 3, label: 'Q3', months: 'Oct - Dec' },
+  { q: 4, label: 'Q4', months: 'Jan - Mar' },
 ];
 
 export function QuarterTimeline({ currentQuarter, taxYear }: QuarterTimelineProps) {

@@ -4,9 +4,9 @@ Audit the UK tax calculation code against current HMRC 2025/26 rates. Report fin
 
 ## Steps
 
-1. **Read tax engine**: Read `lib/tax-engine.ts` fully — this is the core tax calculation logic.
+1. **Read tax engine**: Read `lib/tax-engine.ts` fully  -  this is the core tax calculation logic.
 
-2. **Read categoriser**: Read `worker/services/categoriser.ts` — check how income and expenses are categorised and whether categories align with HMRC allowable expenses.
+2. **Read categoriser**: Read `worker/services/categoriser.ts`  -  check how income and expenses are categorised and whether categories align with HMRC allowable expenses.
 
 3. **Cross-reference rates**: Verify all hardcoded rates against 2025/26 HMRC rates:
 
@@ -41,7 +41,7 @@ Report findings as:
 ```
 Tax Audit Results
 =================
-[PASS] or [FAIL] Description — file:line
+[PASS] or [FAIL] Description  -  file:line
 ...
 
 Recommendations:

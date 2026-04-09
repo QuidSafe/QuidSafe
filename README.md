@@ -1,8 +1,8 @@
-# QuidSafe — Sole Trader Tax Tracker
+# QuidSafe - Sole Trader Tax Tracker
 
 > **"Set aside £648 this month. That's it."**
 
-QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time.
+QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time.
 
 Built for UK sole traders. iOS + Android + Web from one Expo codebase.
 

@@ -1,4 +1,4 @@
--- QuidSafe Seed Data — 1 test user, 1 bank connection, 50 sample transactions
+-- QuidSafe Seed Data - 1 test user, 1 bank connection, 50 sample transactions
 -- Usage: npx wrangler d1 execute quidsafe-staging --local --file=worker/migrations/seed.sql
 
 -- ─── Test User ────────────────────────────────────────────

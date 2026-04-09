@@ -9,9 +9,9 @@ You are a TDD specialist for QuidSafe.
 
 ## TDD Workflow
 
-1. **RED** — Write a failing test
-2. **GREEN** — Write minimal code to pass
-3. **REFACTOR** — Clean up, tests stay green
+1. **RED**  -  Write a failing test
+2. **GREEN**  -  Write minimal code to pass
+3. **REFACTOR**  -  Clean up, tests stay green
 
 ## Test Stack
 

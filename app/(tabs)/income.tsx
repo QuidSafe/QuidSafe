@@ -90,7 +90,7 @@ export default function IncomeScreen() {
   const totalExpenses = tax?.totalExpenses ?? 0;
   const netProfit = tax?.netProfit ?? 0;
 
-  // Monthly data for chart — use real byMonth data, fall back to empty bars
+  // Monthly data for chart - use real byMonth data, fall back to empty bars
   const rawByMonth = useMemo<{ month: string; income: number; expenses: number }[]>(
     () => income?.byMonth ?? [],
     [income?.byMonth]
@@ -98,7 +98,7 @@ export default function IncomeScreen() {
   const months = useMemo(() => getLastNMonths(rawByMonth, 6), [rawByMonth]);
   const maxMonthValue = useMemo(() => Math.max(...months.map((m) => Math.max(m.income, m.expenses)), 1), [months]);
 
-  // YoY growth — computed from real data, hidden if insufficient
+  // YoY growth - computed from real data, hidden if insufficient
   const yoyPercent = useMemo(() => computeYoYGrowth(rawByMonth), [rawByMonth]);
 
   // Source list with search and filter
@@ -371,7 +371,7 @@ export default function IncomeScreen() {
         )}
       </ScrollView>
 
-      {/* Floating Action Button — Create Invoice */}
+      {/* Floating Action Button - Create Invoice */}
       {!isLoading && (
         <Pressable
           style={[styles.fab, Shadows.medium]}

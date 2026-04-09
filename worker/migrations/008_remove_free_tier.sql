@@ -5,7 +5,7 @@
 UPDATE users SET subscription_tier = 'trialing', updated_at = datetime('now')
   WHERE subscription_tier = 'free';
 
--- Step 2: Update subscriptions table — change 'free' plans to 'pro_monthly'
+-- Step 2: Update subscriptions table - change 'free' plans to 'pro_monthly'
 UPDATE subscriptions SET plan = 'pro_monthly'
   WHERE plan = 'free';
 

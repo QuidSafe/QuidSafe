@@ -1,4 +1,4 @@
-// Skeleton loading component — Animated opacity pulse pattern
+// Skeleton loading component - Animated opacity pulse pattern
 
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View, ViewStyle } from 'react-native';
@@ -63,7 +63,7 @@ export function SkeletonCard() {
   return <CardSkeleton />;
 }
 
-/** Dashboard skeleton — mimics hero card, metric boxes, and action cards */
+/** Dashboard skeleton - mimics hero card, metric boxes, and action cards */
 export function DashboardSkeleton() {
   return (
     <View style={skeletonStyles.dashboardContainer}>
@@ -112,7 +112,7 @@ export function DashboardSkeleton() {
   );
 }
 
-/** Transaction list skeleton — 5 rows mimicking transaction items */
+/** Transaction list skeleton - 5 rows mimicking transaction items */
 export function TransactionListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <View style={[skeletonStyles.transactionList, { backgroundColor: colors.surface }]}>
@@ -136,7 +136,7 @@ export function TransactionListSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
-/** Income screen skeleton — summary card, chart area, source list */
+/** Income screen skeleton - summary card, chart area, source list */
 export function IncomeSkeleton() {
   return (
     <View style={skeletonStyles.dashboardContainer}>
@@ -169,7 +169,7 @@ export function IncomeSkeleton() {
   );
 }
 
-/** Expenses screen skeleton — metric cards, buttons, expense list */
+/** Expenses screen skeleton - metric cards, buttons, expense list */
 export function ExpensesSkeleton() {
   return (
     <View style={skeletonStyles.dashboardContainer}>

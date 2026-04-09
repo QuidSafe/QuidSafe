@@ -8,8 +8,8 @@ model: sonnet
 You are a database specialist for QuidSafe's Cloudflare D1 (SQLite) database.
 
 ## Schema Location
-- `worker/migrations/001_initial.sql` — users, categories, transactions, tax_estimates
-- `worker/migrations/002_full_schema.sql` — bank_connections, mtd_submissions, subscriptions, expenses, invoices, user_devices, category_corrections
+- `worker/migrations/001_initial.sql`  -  users, categories, transactions, tax_estimates
+- `worker/migrations/002_full_schema.sql`  -  bank_connections, mtd_submissions, subscriptions, expenses, invoices, user_devices, category_corrections
 
 ## D1/SQLite Best Practices
 

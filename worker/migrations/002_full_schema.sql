@@ -1,4 +1,4 @@
--- QuidSafe D1 Schema — Add bank_connections, mtd_submissions, subscriptions, category_corrections
+-- QuidSafe D1 Schema - Add bank_connections, mtd_submissions, subscriptions, category_corrections
 -- Migration 002
 
 -- ─── Bank Connections ─────────────────────────────────────

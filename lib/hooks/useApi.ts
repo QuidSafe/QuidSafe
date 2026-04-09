@@ -7,7 +7,7 @@ import { api } from '../api';
 import { getCached, setCache } from '../offlineCache';
 import type { TaxCalculation, Expense } from '../types';
 
-/** Sync Clerk token to API client — call once at root level */
+/** Sync Clerk token to API client - call once at root level */
 export function useApiToken() {
   const { getToken } = useAuth();
   const hasSetToken = useRef(false);

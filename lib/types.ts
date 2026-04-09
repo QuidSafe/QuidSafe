@@ -1,4 +1,4 @@
-// QuidSafe — Shared TypeScript Types
+// QuidSafe - Shared TypeScript Types
 
 export type SubscriptionTier = 'trialing' | 'pro' | 'past_due' | 'cancelled';
 export type SubscriptionPlan = 'pro_monthly' | 'pro_annual';

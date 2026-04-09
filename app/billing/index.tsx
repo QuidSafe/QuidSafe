@@ -16,14 +16,14 @@ const PLANS = [
     name: 'Monthly',
     price: '7.99',
     interval: '/month',
-    description: 'Flexible — cancel anytime',
+    description: 'Flexible - cancel anytime',
   },
   {
     id: 'annual' as const,
     name: 'Annual',
     price: '79.99',
     interval: '/year',
-    description: 'Save 17% — best value',
+    description: 'Save 17% - best value',
     badge: 'BEST VALUE',
   },
 ];

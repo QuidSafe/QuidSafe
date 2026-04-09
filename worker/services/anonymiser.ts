@@ -1,7 +1,7 @@
-// Transaction anonymiser — strips all PII before sending to Claude API
+// Transaction anonymiser - strips all PII before sending to Claude API
 // CRITICAL: No personal names, account numbers, sort codes, or emails may leave QuidSafe
 
-// ─── Merchant lookup (200+ UK merchants → anonymous categories) ───
+// ─── Merchant lookup (200+ UK merchants -> anonymous categories) ───
 const MERCHANT_MAP: Record<string, string> = {
   // Gig economy / income platforms
   'DELIVEROO': 'GIG_DELIVERY_PLATFORM',
@@ -304,12 +304,12 @@ export function anonymiseMerchant(merchantName: string | null | undefined): stri
   // Exact match
   if (MERCHANT_MAP[upper]) return MERCHANT_MAP[upper];
 
-  // Partial match — check if any key is contained in the merchant name
+  // Partial match - check if any key is contained in the merchant name
   for (const [key, value] of Object.entries(MERCHANT_MAP)) {
     if (upper.includes(key)) return value;
   }
 
-  // Generic fallback — strip potential PII and return generic
+  // Generic fallback - strip potential PII and return generic
   return 'OTHER_MERCHANT';
 }
 

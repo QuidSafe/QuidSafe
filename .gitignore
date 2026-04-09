@@ -32,6 +32,6 @@ ios/
 android/
 web-build/
 
-# Binary artifacts — never commit these
+# Binary artifacts - never commit these
 *.pdf
 *.zip

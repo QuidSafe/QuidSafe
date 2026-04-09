@@ -307,7 +307,7 @@ export default function SettingsScreen() {
   const syncBank = useSyncBank();
   const disconnectBank = useDisconnectBank();
 
-  // Toggle states — initialise from API
+  // Toggle states - initialise from API
   const [taxReminders, setTaxReminders] = useState(true);
   const [weeklySum, setWeeklySum] = useState(true);
   const [taxPotCheck, setTaxPotCheck] = useState(false);
@@ -500,7 +500,7 @@ export default function SettingsScreen() {
     );
   };
 
-  const userEmail = user?.primaryEmailAddress?.emailAddress ?? '—';
+  const userEmail = user?.primaryEmailAddress?.emailAddress ?? '-';
   const bankConnections = bankData?.connections?.filter((c) => c.active) ?? [];
 
   return (
@@ -543,17 +543,6 @@ export default function SettingsScreen() {
             subtitle="Names & numbers stripped"
             right={<ActiveBadge />}
             isLast
-          />
-        </Card>
-
-        {/* APPEARANCE */}
-        <SectionLabel label="APPEARANCE" />
-        <Card style={styles.cardPadding}>
-          <ThemeOption
-            icon="moon-o"
-            label="Dark"
-            active={true}
-            onPress={() => {}}
           />
         </Card>
 
@@ -600,7 +589,7 @@ export default function SettingsScreen() {
           </Text>
         ) : pushStatus === 'denied' ? (
           <Text style={[styles.pushStatusCaption, { color: Colors.error }]}>
-            Notifications disabled — enable in device settings
+            Notifications disabled - enable in device settings
           </Text>
         ) : pushStatus === 'granted' ? (
           <Text style={[styles.pushStatusCaption, { color: colors.textSecondary }]}>

@@ -1,14 +1,16 @@
 import { createContext, useContext, useMemo } from 'react';
 import { Colors } from '@/constants/Colors';
 
-// Dark mode is the only theme — no light mode variants
+// Dark mode is the only theme - no light mode variants
 export type ThemeMode = 'dark';
 
 export interface ThemeColors {
   text: string;
   textSecondary: string;
+  textMuted: string;
   background: string;
   surface: string;
+  surfaceSecondary: string;
   tint: string;
   tabIconDefault: string;
   tabIconSelected: string;
@@ -16,6 +18,13 @@ export interface ThemeColors {
   surfaceGlass: string;
   shadowColor: string;
   cardBorder: string;
+  accent: string;
+  accentPressed: string;
+  accentGlow: string;
+  success: string;
+  successGlow: string;
+  warning: string;
+  error: string;
 }
 
 interface ThemeContextValue {

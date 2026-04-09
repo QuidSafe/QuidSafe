@@ -19,7 +19,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Wand2, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
@@ -292,7 +292,7 @@ export default function TransactionsScreen() {
             style={({ pressed }) => [
               styles.autoCategoriseButton,
               { backgroundColor: Colors.secondary + (isAutoCategorising ? '40' : 'FF') },
-              pressed && { opacity: 0.85 },
+              pressed && PressedState,
             ]}
           >
             <Wand2 size={13} color={Colors.white} strokeWidth={1.5} />
@@ -564,8 +564,8 @@ export default function TransactionsScreen() {
                     {
                       backgroundColor: selectedCategory
                         ? Colors.accent
-                        : '#2A2A2A',
-                      opacity: overrideMutation.isPending ? 0.6 : pressed ? 0.9 : 1,
+                        : Colors.midGrey,
+                      opacity: overrideMutation.isPending ? 0.6 : pressed ? PressedState.opacity : 1,
                     },
                   ]}
                 >

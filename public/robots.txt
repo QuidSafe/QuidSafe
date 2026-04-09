@@ -1,8 +1,8 @@
-# QuidSafe — https://quidsafe.pages.dev
+# QuidSafe - https://quidsafe.pages.dev
 User-agent: *
 Allow: /
 
-# AI crawlers — explicitly allowed for GEO (Generative Engine Optimization)
+# AI crawlers - explicitly allowed for GEO (Generative Engine Optimization)
 User-agent: GPTBot
 Allow: /
 
