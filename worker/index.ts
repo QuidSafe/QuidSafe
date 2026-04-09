@@ -1423,7 +1423,7 @@ authed.get('/mtd/submission/:id', async (c) => {
 // ── Settings ──────────────────────────────────────────────
 authed.get('/settings', async (c) => {
   const userId = c.get('userId');
-  const user = await queryOne<Record<string, unknown>>(c.env.DB, 'SELECT id, name, email, business_type, subscription_tier, trial_ends_at, nino_encrypted, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready, created_at FROM users WHERE id = ?', [userId]);
+  const user = await queryOne<Record<string, unknown>>(c.env.DB, 'SELECT id, name, email, subscription_tier, nino_encrypted, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready, created_at FROM users WHERE id = ?', [userId]);
 
   let ninoMasked: string | null = null;
   let ninoSet = false;
@@ -1482,7 +1482,7 @@ authed.put('/settings', async (c) => {
     await execute(c.env.DB, `UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
   }
 
-  const user = await queryOne(c.env.DB, 'SELECT id, name, email, business_type, subscription_tier, trial_ends_at, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready FROM users WHERE id = ?', [userId]);
+  const user = await queryOne(c.env.DB, 'SELECT id, name, email, subscription_tier, notify_tax_deadlines, notify_weekly_summary, notify_transaction_alerts, notify_mtd_ready FROM users WHERE id = ?', [userId]);
   return c.json({ user });
 });
 
