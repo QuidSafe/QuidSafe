@@ -12,17 +12,20 @@ const monoFamily = Platform.select({
   default: "'JetBrains Mono', Menlo, monospace",
 });
 
+const lexendSemiBold = webFont('Lexend_600SemiBold', 'Lexend');
+const sourceSansCss = "'Source Sans 3'";
+
 export const Fonts = {
   lexend: {
-    semiBold: webFont('Lexend_600SemiBold', 'Lexend'),
+    semiBold: lexendSemiBold,
     // Legacy aliases — screens still reference these; remove when migrated
-    regular: webFont('Lexend_600SemiBold', 'Lexend'),
-    medium: webFont('Lexend_600SemiBold', 'Lexend'),
-    bold: webFont('Lexend_600SemiBold', 'Lexend'),
+    regular: lexendSemiBold,
+    medium: lexendSemiBold,
+    bold: lexendSemiBold,
   },
   sourceSans: {
-    regular: webFont('SourceSans3_400Regular', "'Source Sans 3'"),
-    semiBold: webFont('SourceSans3_600SemiBold', "'Source Sans 3'"),
+    regular: webFont('SourceSans3_400Regular', sourceSansCss),
+    semiBold: webFont('SourceSans3_600SemiBold', sourceSansCss),
   },
   mono: {
     regular: monoFamily,
