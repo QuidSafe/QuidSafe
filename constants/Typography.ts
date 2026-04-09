@@ -7,9 +7,15 @@ const webFont = (expoName: string, cssName: string) =>
   Platform.OS === 'web' ? `${expoName}, ${cssName}` : expoName;
 
 const monoFamily = Platform.select({
-  ios: 'SF Mono',
-  android: 'JetBrains Mono',
-  default: "'JetBrains Mono', Menlo, monospace",
+  ios: 'JetBrainsMono_400Regular',
+  android: 'JetBrainsMono_400Regular',
+  default: "'JetBrains Mono', JetBrainsMono_400Regular, Menlo, monospace",
+});
+
+const monoFamilySemiBold = Platform.select({
+  ios: 'JetBrainsMono_600SemiBold',
+  android: 'JetBrainsMono_600SemiBold',
+  default: "'JetBrains Mono', JetBrainsMono_600SemiBold, Menlo, monospace",
 });
 
 const lexendSemiBold = webFont('Lexend_600SemiBold', 'Lexend');
@@ -29,7 +35,7 @@ export const Fonts = {
   },
   mono: {
     regular: monoFamily,
-    semiBold: monoFamily,
+    semiBold: monoFamilySemiBold,
   },
 };
 

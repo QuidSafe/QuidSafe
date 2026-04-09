@@ -24,8 +24,6 @@
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
     "@expo-google-fonts/lexend": "^0.4.1",
-    "@expo-google-fonts/manrope": "^0.2.3",
-    "@expo-google-fonts/playfair-display": "^0.2.3",
     "@expo-google-fonts/source-sans-3": "^0.4.1",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.1.2",
