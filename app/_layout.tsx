@@ -4,6 +4,10 @@ import {
   SourceSans3_400Regular,
   SourceSans3_600SemiBold,
 } from '@expo-google-fonts/source-sans-3';
+import {
+  JetBrainsMono_400Regular,
+  JetBrainsMono_600SemiBold,
+} from '@expo-google-fonts/jetbrains-mono';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -114,6 +118,8 @@ export default function RootLayout() {
     Lexend_600SemiBold,
     SourceSans3_400Regular,
     SourceSans3_600SemiBold,
+    JetBrainsMono_400Regular,
+    JetBrainsMono_600SemiBold,
   });
 
   useEffect(() => {
