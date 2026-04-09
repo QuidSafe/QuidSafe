@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Landmark, Lock, ArrowLeftRight, Calculator, Wallet, ShieldCheck, ChevronRight } from 'lucide-react-native';
-import { Colors, BorderRadius, Shadows } from '@/constants/Colors';
+import { Colors, colors as semanticColors, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -16,13 +16,13 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
     <>
       {/* ── Hero with dashboard preview ── */}
       <View>
-        <View style={[ws.hero, { backgroundColor: '#000000' }]}>
+        <View style={[ws.hero, { backgroundColor: colors.background }]}>
           {/* Layered atmospheric glows */}
           <View style={ws.glowGold} />
           <View style={ws.glowBlue} />
           <View style={ws.glowSoft} />
 
-          {/* Gold accent line — asymmetric top-left */}
+          {/* Gold accent line - asymmetric top-left */}
           <View style={ws.accentLine} />
 
           {/* Oversized headline */}
@@ -42,22 +42,22 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
             <View style={ws.previewRow}>
               <View style={ws.previewBox}>
                 <Text style={ws.previewBoxLabel}>Income Tax</Text>
-                <Text style={ws.previewBoxVal}>—</Text>
+                <Text style={ws.previewBoxVal}>-</Text>
               </View>
               <View style={ws.previewBox}>
                 <Text style={ws.previewBoxLabel}>NI (Class 4)</Text>
-                <Text style={ws.previewBoxVal}>—</Text>
+                <Text style={ws.previewBoxVal}>-</Text>
               </View>
               <View style={ws.previewBox}>
                 <Text style={ws.previewBoxLabel}>Expenses</Text>
-                <Text style={ws.previewBoxVal}>—</Text>
+                <Text style={ws.previewBoxVal}>-</Text>
               </View>
             </View>
-            <View style={[ws.previewFade, { backgroundColor: 'rgba(0,0,0,0.85)' }]} />
+            <View style={[ws.previewFade, { backgroundColor: `${colors.background}D9` }]} />
           </View>
 
           <Text style={ws.heroSub}>
-            Connect your bank account and this dashboard fills itself — income tracked, tax calculated, nothing to configure.
+            Connect your bank account and this dashboard fills itself - income tracked, tax calculated, nothing to configure.
           </Text>
 
           {/* Primary CTA */}
@@ -69,8 +69,8 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
               accessibilityRole="button"
               accessibilityLabel="Connect your bank account"
             >
-              <View style={[ws.ctaGradient, { backgroundColor: '#0066FF' }]}>
-                <Landmark size={16} color="#FFF" strokeWidth={1.5} />
+              <View style={[ws.ctaGradient, { backgroundColor: semanticColors.accent }]}>
+                <Landmark size={16} color={semanticColors.text} strokeWidth={1.5} />
                 <Text style={ws.ctaText}>
                   {isConnecting ? 'Connecting...' : 'Connect Your Bank'}
                 </Text>
@@ -82,7 +82,7 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
           <View style={ws.trustRow}>
             {['256-bit encrypted', 'Read-only access', 'Bank-grade security'].map((t) => (
               <View key={t} style={ws.trustChip}>
-                <Lock size={9} color="rgba(0,102,255,0.6)" strokeWidth={1.5} />
+                <Lock size={9} color={`${semanticColors.accent}99`} strokeWidth={1.5} />
                 <Text style={ws.trustText}>{t}</Text>
               </View>
             ))}
@@ -95,26 +95,26 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
         {
           IconComponent: ArrowLeftRight,
           title: 'Auto-track income',
-          desc: 'Transactions imported via Open Banking and categorised by AI — no manual entry.',
-          accent: '#0066FF',
+          desc: 'Transactions imported via Open Banking and categorised by AI - no manual entry.',
+          accent: semanticColors.accent,
         },
         {
           IconComponent: Calculator,
           title: 'Real-time tax calculation',
           desc: 'Income Tax + NI Class 2 & 4, updated live as you earn. Personal allowance and thresholds built in.',
-          accent: '#0066FF',
+          accent: semanticColors.accent,
         },
         {
           IconComponent: Wallet,
           title: 'Monthly set-aside amount',
           desc: 'Tells you exactly what to put away each month so January never surprises you.',
-          accent: '#00C853',
+          accent: semanticColors.success,
         },
         {
           IconComponent: ShieldCheck,
           title: 'Making Tax Digital ready',
           desc: 'Quarterly updates pre-formatted for HMRC. Deadlines tracked on your dashboard.',
-          accent: '#0066FF',
+          accent: semanticColors.accent,
         },
       ] as const).map((f) => (
         <View key={f.title}>
@@ -147,20 +147,20 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
           </Text>
           <View style={ws.timeline}>
             {[
-              { n: '1', title: 'Link your bank', desc: 'Secure Open Banking — we never see your password.' },
-              { n: '2', title: 'AI categorises everything', desc: 'Income, expenses, and sources — sorted automatically.' },
-              { n: '3', title: 'Dashboard goes live', desc: 'Tax owed, set-aside amount, and quarterly deadlines — all in real time.' },
+              { n: '1', title: 'Link your bank', desc: 'Secure Open Banking - we never see your password.' },
+              { n: '2', title: 'AI categorises everything', desc: 'Income, expenses, and sources - sorted automatically.' },
+              { n: '3', title: 'Dashboard goes live', desc: 'Tax owed, set-aside amount, and quarterly deadlines - all in real time.' },
             ].map((step, i) => (
               <View key={step.n} style={ws.timelineStep}>
-                {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? '#0066FF' : colors.border }]} />}
+                {i < 2 && <View style={[ws.timelineConnector, { backgroundColor: i === 0 ? semanticColors.accent : colors.border }]} />}
                 <View style={[
                   ws.timelineNum,
                   {
-                    backgroundColor: i === 0 ? '#0066FF' : 'transparent',
-                    borderColor: i === 0 ? '#0066FF' : colors.border,
+                    backgroundColor: i === 0 ? semanticColors.accent : 'transparent',
+                    borderColor: i === 0 ? semanticColors.accent : colors.border,
                   },
                 ]}>
-                  <Text style={[ws.timelineNumText, { color: i === 0 ? '#FFF' : colors.textSecondary }]}>
+                  <Text style={[ws.timelineNumText, { color: i === 0 ? semanticColors.text : colors.textSecondary }]}>
                     {step.n}
                   </Text>
                 </View>
@@ -186,15 +186,15 @@ export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps)
         >
           <View style={ws.bottomCtaInner}>
             <View style={ws.bottomCtaIconWrap}>
-              <Landmark size={16} color="#0066FF" strokeWidth={1.5} />
+              <Landmark size={16} color={semanticColors.accent} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[ws.bottomCtaTitle, { color: colors.text }]}>Ready to get started?</Text>
               <Text style={[ws.bottomCtaDesc, { color: colors.textSecondary }]}>
-                Takes 2 minutes — connect your bank and let QuidSafe handle the rest.
+                Takes 2 minutes - connect your bank and let QuidSafe handle the rest.
               </Text>
             </View>
-            <ChevronRight size={14} color="#0066FF" strokeWidth={1.5} />
+            <ChevronRight size={14} color={semanticColors.accent} strokeWidth={1.5} />
           </View>
         </Pressable>
       </View>
@@ -211,8 +211,8 @@ const ws = StyleSheet.create({
     paddingBottom: 28,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    shadowColor: 'rgba(0,0,0,0.5)',
+    borderColor: `${semanticColors.text}0F`,
+    shadowColor: `${semanticColors.background}80`,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 28,
@@ -225,7 +225,7 @@ const ws = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(0,102,255,0.12)',
+    backgroundColor: `${semanticColors.accent}1F`,
   },
   glowBlue: {
     position: 'absolute',
@@ -234,7 +234,7 @@ const ws = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(0,102,255,0.18)',
+    backgroundColor: `${semanticColors.accent}2E`,
   },
   glowSoft: {
     position: 'absolute',
@@ -243,12 +243,12 @@ const ws = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: 'rgba(0,102,255,0.03)',
+    backgroundColor: `${semanticColors.accent}08`,
   },
   accentLine: {
     width: 40,
     height: 3,
-    backgroundColor: '#0066FF',
+    backgroundColor: semanticColors.accent,
     borderRadius: 2,
     marginBottom: 16,
     opacity: 0.8,
@@ -256,14 +256,14 @@ const ws = StyleSheet.create({
   heroEyebrow: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 10,
-    color: 'rgba(0,102,255,0.65)',
+    color: `${semanticColors.accent}A6`,
     letterSpacing: 2.5,
     marginBottom: 10,
   },
   heroHeadline: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 34,
-    color: Colors.white,
+    color: semanticColors.text,
     lineHeight: 42,
     letterSpacing: -0.8,
     marginBottom: 20,
@@ -271,10 +271,10 @@ const ws = StyleSheet.create({
 
   // Dashboard preview mock
   previewCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: `${semanticColors.text}0A`,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: `${semanticColors.text}0F`,
     padding: 18,
     marginBottom: 20,
     overflow: 'hidden',
@@ -289,18 +289,18 @@ const ws = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#0066FF',
+    backgroundColor: semanticColors.accent,
   },
   previewLabel: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 9,
-    color: 'rgba(255,255,255,0.4)',
+    color: `${semanticColors.text}66`,
     letterSpacing: 1.5,
   },
   previewAmount: {
     fontFamily: Fonts.mono.semiBold,
     fontSize: 32,
-    color: 'rgba(255,255,255,0.2)',
+    color: `${semanticColors.text}33`,
     letterSpacing: -1,
     marginBottom: 14,
   },
@@ -310,17 +310,17 @@ const ws = StyleSheet.create({
   },
   previewBox: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: `${semanticColors.text}08`,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: `${semanticColors.text}0D`,
     paddingVertical: 8,
     paddingHorizontal: 10,
   },
   previewBoxLabel: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 8.5,
-    color: 'rgba(255,255,255,0.3)',
+    color: `${semanticColors.text}4D`,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
     marginBottom: 2,
@@ -328,7 +328,7 @@ const ws = StyleSheet.create({
   previewBoxVal: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 15,
-    color: 'rgba(255,255,255,0.15)',
+    color: `${semanticColors.text}26`,
   },
   previewFade: {
     position: 'absolute',
@@ -341,7 +341,7 @@ const ws = StyleSheet.create({
   heroSub: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
-    color: 'rgba(255,255,255,0.55)',
+    color: `${semanticColors.text}8C`,
     lineHeight: 21,
     marginBottom: 24,
   },
@@ -350,7 +350,7 @@ const ws = StyleSheet.create({
   cta: {
     borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: 'rgba(0,102,255,0.35)',
+    shadowColor: `${semanticColors.accent}59`,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 20,
@@ -372,7 +372,7 @@ const ws = StyleSheet.create({
   ctaText: {
     fontFamily: Fonts.mono.semiBold,
     fontSize: 16,
-    color: Colors.white,
+    color: semanticColors.text,
     letterSpacing: -0.2,
   },
 
@@ -386,20 +386,20 @@ const ws = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: `${semanticColors.text}0A`,
     borderRadius: BorderRadius.pill,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: `${semanticColors.text}0F`,
   },
   trustText: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 10,
-    color: 'rgba(255,255,255,0.35)',
+    color: `${semanticColors.text}59`,
   },
 
-  // Feature items — vertical stack with left accent border
+  // Feature items - vertical stack with left accent border
   featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -505,7 +505,7 @@ const ws = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,102,255,0.1)',
+    backgroundColor: `${semanticColors.accent}1A`,
     alignItems: 'center',
     justifyContent: 'center',
   },

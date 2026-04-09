@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, ScrollView } from 'react-native';
 import { X } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useCreateRecurringExpense } from '@/lib/hooks/useApi';
 import { useTheme } from '@/lib/ThemeContext';
@@ -112,7 +112,7 @@ export default function AddRecurringExpenseModal({ visible, onClose, onSuccess }
             </Pressable>
           </View>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.amount && recErrors.amount ? Colors.error : colors.border }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.amount && recErrors.amount ? colors.error : colors.border }]}
             placeholder="Amount (e.g. 29.99)"
             placeholderTextColor={colors.textSecondary}
             value={recAmount}
@@ -126,7 +126,7 @@ export default function AddRecurringExpenseModal({ visible, onClose, onSuccess }
             <Text style={styles.fieldError}>{recErrors.amount}</Text>
           ) : null}
           <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.description && recErrors.description ? Colors.error : colors.border }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.description && recErrors.description ? colors.error : colors.border }]}
             placeholder="Description (e.g. Xero subscription)"
             placeholderTextColor={colors.textSecondary}
             value={recDescription}
@@ -211,7 +211,7 @@ export default function AddRecurringExpenseModal({ visible, onClose, onSuccess }
 
           <Text style={[styles.categoryLabel, { color: colors.text }]}>Start Date</Text>
           <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.startDate && recErrors.startDate ? Colors.error : colors.border }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: recTouched.startDate && recErrors.startDate ? colors.error : colors.border }]}
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.textSecondary}
             value={recStartDate}
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: designColors.border,
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
@@ -306,18 +306,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 9999,
     borderWidth: 1.5,
-    borderColor: '#2A2A2A',
+    borderColor: designColors.border,
   },
   categoryPillSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: designColors.accent,
+    borderColor: designColors.accent,
   },
   categoryPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   categoryPillTextSelected: {
-    color: Colors.white,
+    color: designColors.text,
   },
   frequencyRow: {
     flexDirection: 'row',
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   submitButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: designColors.accent,
     paddingVertical: 14,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
@@ -348,12 +348,12 @@ const styles = StyleSheet.create({
   submitText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
-    color: Colors.white,
+    color: designColors.text,
   },
   fieldError: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: Colors.error,
+    color: designColors.error,
     marginBottom: Spacing.xs,
     marginTop: -4,
   },

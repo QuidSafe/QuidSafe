@@ -24,7 +24,7 @@ const sourceSansCss = "'Source Sans 3'";
 export const Fonts = {
   lexend: {
     semiBold: lexendSemiBold,
-    // Legacy aliases — screens still reference these; remove when migrated
+    // Legacy aliases - screens still reference these; remove when migrated
     regular: lexendSemiBold,
     medium: lexendSemiBold,
     bold: lexendSemiBold,

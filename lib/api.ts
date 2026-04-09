@@ -34,7 +34,7 @@ class ApiClient {
     return response.json() as Promise<T>;
   }
 
-  // Articles (public — no auth required)
+  // Articles (public - no auth required)
   getArticles() {
     return this.request<{ articles: Article[] }>('/articles');
   }

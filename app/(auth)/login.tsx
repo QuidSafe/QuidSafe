@@ -5,7 +5,7 @@ import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Zap, Lock, Mail } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { Colors, Spacing, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -33,8 +33,8 @@ export default function LoginScreen() {
         {/* ── Shield icon with blue glow ── */}
         <View style={s.iconWrap}>
           <View style={s.iconGlowDark} />
-          <View style={[s.iconCircle, { backgroundColor: Colors.charcoal, borderColor: colors.border }]}>
-            <Shield size={32} color={Colors.electricBlue} strokeWidth={1.5} />
+          <View style={[s.iconCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Shield size={32} color={colors.accent} strokeWidth={1.5} />
           </View>
         </View>
 
@@ -52,17 +52,17 @@ export default function LoginScreen() {
               { icon: Shield, text: 'Real-time tax' },
               { icon: Shield, text: 'MTD ready' },
             ].map((p) => (
-              <View key={p.text} style={[s.propChip, { backgroundColor: Colors.charcoal, borderColor: colors.border }]}>
-                <p.icon size={11} color={Colors.electricBlue} strokeWidth={1.5} />
+              <View key={p.text} style={[s.propChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <p.icon size={11} color={colors.accent} strokeWidth={1.5} />
                 <Text style={[s.propText, { color: colors.textSecondary }]}>{p.text}</Text>
               </View>
             ))}
           </View>
 
           {/* Trust badge */}
-          <View style={[s.trustBadge, { backgroundColor: Colors.blueGlow, borderColor: 'rgba(0,102,255,0.2)' }]}>
-            <Lock size={10} color={Colors.electricBlue} strokeWidth={1.5} />
-            <Text style={[s.trustText, { color: Colors.lightGrey }]}>
+          <View style={[s.trustBadge, { backgroundColor: colors.accentGlow, borderColor: 'rgba(0,102,255,0.2)' }]}>
+            <Lock size={10} color={colors.accent} strokeWidth={1.5} />
+            <Text style={[s.trustText, { color: colors.textSecondary }]}>
               Bank-grade encryption  ·  Read-only access  ·  HMRC compliant
             </Text>
           </View>
@@ -84,13 +84,13 @@ export default function LoginScreen() {
           {/* Divider */}
           <View style={s.divider}>
             <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
-            <Text style={[s.dividerText, { color: Colors.muted }]}>or</Text>
+            <Text style={[s.dividerText, { color: colors.textMuted }]}>or</Text>
             <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           {/* Email */}
           <Pressable
-            style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: Colors.charcoal }, pressed && s.pressed]}
+            style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: colors.surface }, pressed && s.pressed]}
             onPress={() => router.push('/(auth)/signup')}
             accessibilityRole="button"
             accessibilityLabel="Continue with Email"
@@ -102,13 +102,13 @@ export default function LoginScreen() {
 
         {/* ── Footer ── */}
         <View style={s.footer}>
-          <Text style={[s.footerText, { color: Colors.muted }]}>
+          <Text style={[s.footerText, { color: colors.textMuted }]}>
             By continuing, you agree to our{' '}
             <Link href="/terms"><Text style={s.footerLink}>Terms of Service</Text></Link>
             {' '}and{' '}
             <Link href="/privacy"><Text style={s.footerLink}>Privacy Policy</Text></Link>
           </Text>
-          <Text style={[s.footerSub, { color: Colors.muted }]}>
+          <Text style={[s.footerSub, { color: colors.textMuted }]}>
             Tax tracking for UK sole traders
           </Text>
         </View>
@@ -141,7 +141,7 @@ const s = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   iconGlowDark: {
-    backgroundColor: Colors.blueGlow,
+    backgroundColor: designColors.accentGlow,
   },
   iconCircle: {
     width: 64,
@@ -217,20 +217,20 @@ const s = StyleSheet.create({
     marginBottom: 32,
   },
 
-  // Google button — electric blue, flat
+  // Google button - electric blue, flat
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: Colors.electricBlue,
+    backgroundColor: designColors.accent,
     paddingVertical: 16,
     borderRadius: 8,
   },
   googleText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
-    color: Colors.white,
+    color: designColors.text,
   },
 
   // Divider
@@ -248,7 +248,7 @@ const s = StyleSheet.create({
     fontSize: 13,
   },
 
-  // Email button — outlined
+  // Email button - outlined
   emailBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -279,7 +279,7 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
   footerLink: {
-    color: Colors.electricBlue,
+    color: designColors.accent,
     textDecorationLine: 'underline',
   },
   footerSub: {

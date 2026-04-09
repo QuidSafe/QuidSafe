@@ -1,5 +1,5 @@
-// QuidSafe UK Tax Engine — Pure functions, config-driven rates
-// Source: HMRC rates — see docs/TAX_RULES.md
+// QuidSafe UK Tax Engine - Pure functions, config-driven rates
+// Source: HMRC rates - see docs/TAX_RULES.md
 
 // ─── Tax Year Config ──────────────────────────────────────
 
@@ -37,7 +37,7 @@ export const TAX_YEARS: Record<string, TaxYearConfig> = {
     niClass4MainRate: 0.06,
     niClass4AdditionalRate: 0.02,
   },
-  // TODO: 2026/27 rates are PROVISIONAL — copied from 2025/26. Update when HMRC publishes official rates.
+  // TODO: 2026/27 rates are PROVISIONAL - copied from 2025/26. Update when HMRC publishes official rates.
   '2026/27': {
     year: '2026/27',
     personalAllowance: 12_570,
@@ -145,7 +145,7 @@ export function calculateIncomeTax(taxableIncome: number, config: TaxYearConfig,
 
   // Basic rate band width = basicRateThreshold minus the ACTUAL (tapered) PA.
   // When PA tapers for income over £100k, the income that loses its PA protection
-  // falls into the basic rate band — so the band widens from £37,700 up to £50,270.
+  // falls into the basic rate band - so the band widens from £37,700 up to £50,270.
   // taxableIncome already has actualPA deducted, so the band must match.
   const pa = actualPersonalAllowance ?? config.personalAllowance;
   const basicBand = config.basicRateThreshold - pa;
@@ -204,16 +204,16 @@ function generatePlainEnglish(result: Omit<TaxResult, 'plainEnglish'>): string {
   }
 
   if (totalTaxOwed === 0) {
-    return `Good news — your profit of ${formatCurrency(netProfit)} is within your £${personalAllowance.toLocaleString()} personal allowance. No tax owed yet!`;
+    return `Good news - your profit of ${formatCurrency(netProfit)} is within your £${personalAllowance.toLocaleString()} personal allowance. No tax owed yet!`;
   }
 
   if (netProfit > 100_000) {
-    return `Heads up — at ${formatCurrency(totalIncome)} income, your personal allowance is being tapered. You'll owe approximately ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate). Set aside ${formatCurrency(setAsideMonthly)} per month.`;
+    return `Heads up - at ${formatCurrency(totalIncome)} income, your personal allowance is being tapered. You'll owe approximately ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate). Set aside ${formatCurrency(setAsideMonthly)} per month.`;
   }
 
   // Approaching higher rate threshold warning
   if (netProfit > 40_000 && netProfit <= 50_270) {
-    return `Heads up — you're approaching the higher rate threshold. You've earned ${formatCurrency(totalIncome)} with ${formatCurrency(totalExpenses)} in expenses. Set aside ${formatCurrency(setAsideMonthly)} per month. Total tax: ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate).`;
+    return `Heads up - you're approaching the higher rate threshold. You've earned ${formatCurrency(totalIncome)} with ${formatCurrency(totalExpenses)} in expenses. Set aside ${formatCurrency(setAsideMonthly)} per month. Total tax: ${formatCurrency(totalTaxOwed)} (${effectiveRate}% effective rate).`;
   }
 
   // Quarter-specific message
@@ -271,8 +271,8 @@ export function calculateTax(input: TaxInput): TaxResult {
 
 /**
  * Get UK tax quarter info for a given tax year.
- * UK tax year: 6 Apr – 5 Apr
- * Q1: Apr–Jun, Q2: Jul–Sep, Q3: Oct–Dec, Q4: Jan–Mar
+ * UK tax year: 6 Apr - 5 Apr
+ * Q1: Apr-Jun, Q2: Jul-Sep, Q3: Oct-Dec, Q4: Jan-Mar
  */
 export function getQuarterDates(taxYear: string): QuarterFinancials[] {
   const startYear = parseInt(taxYear.split('/')[0], 10);

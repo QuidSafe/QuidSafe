@@ -4,9 +4,9 @@ This file provides guidance to Claude Code when working with the QuidSafe codeba
 
 ## Project Overview
 
-**QuidSafe** is a UK sole trader tax tracking app — iOS + Android + Web from one Expo codebase. It connects to bank accounts via Open Banking (via TrueLayer, which is FCA-regulated as an AISP), auto-categorises transactions with AI, and tells users exactly how much to set aside for tax.
+**QuidSafe** is a UK sole trader tax tracking app - iOS + Android + Web from one Expo codebase. It connects to bank accounts via Open Banking (via TrueLayer, which is FCA-regulated as an AISP), auto-categorises transactions with AI, and tells users exactly how much to set aside for tax.
 
-**Important**: QuidSafe is NOT FCA regulated and does not need to be — it is a tax tracking tool, not a financial adviser or investment platform. It provides tax estimates, not financial advice. Open Banking connectivity is provided by TrueLayer Ltd (FCA authorised). Never claim QuidSafe itself is FCA regulated.
+**Important**: QuidSafe is NOT FCA regulated and does not need to be - it is a tax tracking tool, not a financial adviser or investment platform. It provides tax estimates, not financial advice. Open Banking connectivity is provided by TrueLayer Ltd (FCA authorised). Never claim QuidSafe itself is FCA regulated.
 
 **Pricing**: £7.99/month or £79.99/year (save 17%). Prices are shown inclusive of VAT. VAT-registered sole traders can reclaim VAT on their QuidSafe subscription as a business expense.
 
@@ -69,14 +69,14 @@ worker/                 # Cloudflare Worker API
 
 ### Key Patterns
 - **Auth**: Clerk JWT verified in `worker/middleware/auth.ts` on every API request
-- **Database**: D1 prepared statements with `.bind()` — never concatenate SQL
+- **Database**: D1 prepared statements with `.bind()` - never concatenate SQL
 - **Encryption**: Bank tokens encrypted via AES-256-GCM (`worker/utils/crypto.ts`)
 - **AI safety**: PII stripped by `worker/services/anonymiser.ts` before Claude API calls
-- **Stripe**: Uses raw `fetch()` — no Stripe SDK (Workers compatibility)
-- **Types**: Two tsconfigs — `tsconfig.json` (Expo) and `tsconfig.worker.json` (Worker)
+- **Stripe**: Uses raw `fetch()` - no Stripe SDK (Workers compatibility)
+- **Types**: Two tsconfigs - `tsconfig.json` (Expo) and `tsconfig.worker.json` (Worker)
 - **Fonts**: Lexend (headings, weight 600), Source Sans 3 (body, weight 400/600), JetBrains Mono (monetary amounts) loaded in `app/_layout.tsx`
-- **Icons**: Lucide (`lucide-react-native`) only, 1.5px stroke — no FontAwesome
-- **Theme**: Dark-only — no light mode. `ThemeContext` always returns dark
+- **Icons**: Lucide (`lucide-react-native`) only, 1.5px stroke - no FontAwesome
+- **Theme**: Dark-only - no light mode. `ThemeContext` always returns dark
 
 ### Design System
 | Token | Value | Usage |
@@ -95,25 +95,26 @@ worker/                 # Cloudflare Worker API
 | Warning | `#FF9500` | Warnings |
 | Error | `#FF3B30` | Errors |
 
-Cards: bg `#0A0A0A`, border `1px solid #2A2A2A`, border-radius `12px`. Buttons/inputs: border-radius `8px`. No gradients — flat and clean.
+Cards: bg `#0A0A0A`, border `1px solid #2A2A2A`, border-radius `12px`. Buttons/inputs: border-radius `8px`. No gradients - flat and clean.
 
 ## Rules
 
-1. **Security first** — This is a financial app. Never log PII, always parameterise queries, always verify auth.
-2. **No Supabase** — We migrated to Cloudflare Workers + D1. Don't reference Supabase.
-3. **No Stripe SDK** — Use raw fetch in Workers. The SDK doesn't work in Workers runtime.
-4. **SQLite types** — D1 has no ENUM, BOOLEAN, UUID, or JSONB. Use TEXT + CHECK, INTEGER, TEXT, TEXT.
-5. **Two tsconfigs** — Don't import Worker types into frontend code or vice versa.
-6. **Design system** — Follow `mockup.html` and `constants/Colors.ts` for all UI work.
-7. **Fonts** — Use `Lexend_*` for headings, `SourceSans3_*` for body, `JetBrainsMono_*` for monetary amounts. Never use system fonts.
-8. **Icons** — Use `lucide-react-native` only. No FontAwesome. Always use `strokeWidth={1.5}`.
-9. **Dark only** — No light mode. No `isDark` conditionals. All colours come from the dark palette.
-10. **Platform checks** — Use `Platform.OS` for native-only features (e.g., SecureStore).
-11. **Responsive design** — Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
-12. **Not FCA regulated** — QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
-13. **Pricing** — £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
-14. **No `Link asChild` with Pressable** — On web, `Link asChild` breaks Pressable styles (background, flexDirection). Use `Pressable` with `onPress={() => router.push(href)}` instead. Plain `<Link>` for inline text links is fine.
-15. **Web visual testing** — After any UI change, verify the web build renders correctly. Fonts, buttons, and layout must work on web, not just native. Run `npx expo export --platform web` and check `dist/` output.
+1. **Security first** - This is a financial app. Never log PII, always parameterise queries, always verify auth.
+2. **No Supabase** - We migrated to Cloudflare Workers + D1. Don't reference Supabase.
+3. **No Stripe SDK** - Use raw fetch in Workers. The SDK doesn't work in Workers runtime.
+4. **SQLite types** - D1 has no ENUM, BOOLEAN, UUID, or JSONB. Use TEXT + CHECK, INTEGER, TEXT, TEXT.
+5. **Two tsconfigs** - Don't import Worker types into frontend code or vice versa.
+6. **Design system** - Follow `mockup.html` and `constants/Colors.ts` for all UI work.
+7. **Fonts** - Use `Lexend_*` for headings, `SourceSans3_*` for body, `JetBrainsMono_*` for monetary amounts. Never use system fonts.
+8. **Icons** - Use `lucide-react-native` only. No FontAwesome. Always use `strokeWidth={1.5}`.
+9. **Dark only** - No light mode. No `isDark` conditionals. All colours come from the dark palette.
+10. **Platform checks** - Use `Platform.OS` for native-only features (e.g., SecureStore).
+11. **Responsive design** - Web layout must differ from mobile. Use `useWindowDimensions()` with breakpoints: 375px (mobile), 768px (tablet/desktop), 1024px (wide). Web gets wider content areas, hover states, and different navigation.
+12. **Not FCA regulated** - QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (our Open Banking provider) is FCA regulated. Never claim QuidSafe itself is FCA regulated.
+13. **Pricing** - £7.99/mo or £79.99/year (17% off). All prices include VAT. Note VAT-registered traders can reclaim.
+14. **No `Link asChild` with Pressable** - On web, `Link asChild` breaks Pressable styles (background, flexDirection). Use `Pressable` with `onPress={() => router.push(href)}` instead. Plain `<Link>` for inline text links is fine.
+15. **Web visual testing** - After any UI change, verify the web build renders correctly. Fonts, buttons, and layout must work on web, not just native. Run `npx expo export --platform web` and check `dist/` output.
+16. **No em dashes** - Never use the em dash character. Use a hyphen (-) or a spaced hyphen ( - ) instead.
 
 ## Agents
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Trash2 } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
 
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   claimedBadge: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: designColors.successGlow,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: BorderRadius.pill,

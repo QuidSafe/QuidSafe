@@ -36,7 +36,7 @@ const HOW_IT_WORKS = [
   {
     step: '01',
     title: 'Connect your bank',
-    description: 'Link your accounts in seconds via Open Banking. Read-only — we never move your money.',
+    description: 'Link your accounts in seconds via Open Banking. Read-only - we never move your money.',
     icon: '1',
   },
   {
@@ -48,7 +48,7 @@ const HOW_IT_WORKS = [
   {
     step: '03',
     title: 'Know what to set aside',
-    description: 'See exactly what you owe HMRC in real time. Income Tax, National Insurance — sorted.',
+    description: 'See exactly what you owe HMRC in real time. Income Tax, National Insurance - sorted.',
     icon: '3',
   },
 ];
@@ -72,7 +72,7 @@ const FEATURES: {
   {
     iconName: 'bar-chart',
     title: 'Tax Set-Aside Calculator',
-    description: 'Know your Income Tax and National Insurance in real time — not as a surprise in January.',
+    description: 'Know your Income Tax and National Insurance in real time - not as a surprise in January.',
     gradient: ['rgba(0,200,83,0.15)', 'rgba(0,200,83,0.05)'],
     iconBg: 'rgba(0,200,83,0.2)',
     iconColor: '#00C853',
@@ -96,7 +96,7 @@ const FEATURES: {
   {
     iconName: 'file-text',
     title: 'Professional Invoices',
-    description: 'Create, send, and track invoices. Know when you have been paid — all in one place.',
+    description: 'Create, send, and track invoices. Know when you have been paid - all in one place.',
     gradient: ['rgba(0,102,255,0.1)', 'rgba(0,102,255,0.05)'],
     iconBg: 'rgba(0,102,255,0.15)',
     iconColor: '#0066FF',
@@ -137,7 +137,7 @@ const PLAN_FEATURES = [
 const FAQS = [
   {
     q: 'What is QuidSafe?',
-    a: 'QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time.',
+    a: 'QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time.',
   },
   {
     q: 'Is my bank data safe?',
@@ -149,11 +149,11 @@ const FAQS = [
   },
   {
     q: 'How much does QuidSafe cost?',
-    a: 'QuidSafe is £7.99/month or £79.99/year (save 17%) — all prices include VAT. Every plan includes full access to all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT on the subscription. Start with a free 14-day trial, no credit card required.',
+    a: 'QuidSafe is £7.99/month or £79.99/year (save 17%) - all prices include VAT. Every plan includes full access to all features - AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT on the subscription. Start with a free 14-day trial, no credit card required.',
   },
   {
     q: 'How is QuidSafe different from FreeAgent or QuickBooks?',
-    a: 'Those tools are built for accountants and businesses with complex needs. QuidSafe is built specifically for sole traders — it is simpler, cheaper, and uses AI to categorise your transactions automatically instead of making you do it manually.',
+    a: 'Those tools are built for accountants and businesses with complex needs. QuidSafe is built specifically for sole traders - it is simpler, cheaper, and uses AI to categorise your transactions automatically instead of making you do it manually.',
   },
   {
     q: 'What banks are supported?',
@@ -161,7 +161,7 @@ const FAQS = [
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Yes. No contracts, no hidden fees. Cancel anytime from your account settings. You can also export all your data as CSV before you go — your data always belongs to you.',
+    a: 'Yes. No contracts, no hidden fees. Cancel anytime from your account settings. You can also export all your data as CSV before you go - your data always belongs to you.',
   },
 ];
 
@@ -242,7 +242,7 @@ export default function LandingScreen() {
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = e.nativeEvent.contentOffset.y;
 
-      // Only setState when value actually changes — prevents no-op re-renders at 60fps
+      // Only setState when value actually changes - prevents no-op re-renders at 60fps
       const solid = y > 80;
       if (solid !== prevHeaderSolid.current) {
         prevHeaderSolid.current = solid;
@@ -358,7 +358,7 @@ export default function LandingScreen() {
                   <Text style={styles.heroHeadlineGold}>HMRC</Text>
                 </Text>
                 <Text style={[styles.heroSubtitle, isDesktop && styles.heroSubtitleDesktop]}>
-                  QuidSafe connects to your bank, auto-categorises every transaction with AI, and tells you exactly what to set aside for tax — updated in real time.
+                  QuidSafe connects to your bank, auto-categorises every transaction with AI, and tells you exactly what to set aside for tax - updated in real time.
                 </Text>
 
                 <View style={[styles.heroCTAs, isDesktop && styles.heroCTAsDesktop]}>
@@ -447,7 +447,7 @@ export default function LandingScreen() {
               Everything you need.{'\n'}Nothing you don{'\u2019'}t.
             </Text>
             <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-              Built for sole traders, not accountants. No double-entry journals, no chart of accounts — just connect your bank and go.
+              Built for sole traders, not accountants. No double-entry journals, no chart of accounts - just connect your bank and go.
             </Text>
 
             <View style={[styles.featuresGrid, isWide && styles.featuresGridDesktop]}>
@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
-  // featureIcon removed — using Lucide icons instead
+  // featureIcon removed - using Lucide icons instead
   featureTitle: {
     fontFamily: Fonts.sourceSans.semiBold, fontSize: 18, color: Colors.white, marginBottom: Spacing.sm,
     letterSpacing: -0.2,

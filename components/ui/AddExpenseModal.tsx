@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, ScrollView } from 'react-native';
 import { X, Camera } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useAddExpense } from '@/lib/hooks/useApi';
 import { hapticSuccess } from '@/lib/haptics';
@@ -89,14 +89,14 @@ export default function AddExpenseModal({ visible, onClose, onSuccess, openedFro
           </View>
           {openedFromReceipt && (
             <View style={styles.receiptNotice}>
-              <Camera size={13} color={Colors.secondary} strokeWidth={1.5} />
+              <Camera size={13} color={colors.accent} strokeWidth={1.5} />
               <Text style={[styles.receiptNoticeText, { color: colors.textSecondary }]}>
-                Receipt scanning coming soon — add your expense manually for now.
+                Receipt scanning coming soon - add your expense manually for now.
               </Text>
             </View>
           )}
           <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.amount && expErrors.amount ? Colors.error : colors.border }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.amount && expErrors.amount ? colors.error : colors.border }]}
             placeholder="Amount (e.g. 45.99)"
             placeholderTextColor={colors.textSecondary}
             value={amount}
@@ -110,7 +110,7 @@ export default function AddExpenseModal({ visible, onClose, onSuccess, openedFro
             <Text style={styles.fieldError}>{expErrors.amount}</Text>
           ) : null}
           <TextInput
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.description && expErrors.description ? Colors.error : colors.border }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: expTouched.description && expErrors.description ? colors.error : colors.border }]}
             placeholder="Description (min 3 characters)"
             placeholderTextColor={colors.textSecondary}
             value={description}
@@ -162,7 +162,7 @@ export default function AddExpenseModal({ visible, onClose, onSuccess, openedFro
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, opacity: 0.5 }}>
             <Camera size={14} color={colors.textSecondary} strokeWidth={1.5} />
             <Text style={{ fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary }}>
-              Receipt scanning — coming soon
+              Receipt scanning - coming soon
             </Text>
           </View>
           <Pressable
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: designColors.border,
     alignSelf: 'center',
     marginBottom: Spacing.md,
   },
@@ -248,21 +248,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 9999,
     borderWidth: 1.5,
-    borderColor: '#2A2A2A',
+    borderColor: designColors.border,
   },
   categoryPillSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: designColors.accent,
+    borderColor: designColors.accent,
   },
   categoryPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
   },
   categoryPillTextSelected: {
-    color: Colors.white,
+    color: designColors.text,
   },
   submitButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: designColors.accent,
     paddingVertical: 14,
     borderRadius: BorderRadius.button,
     alignItems: 'center',
@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
   submitText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
-    color: Colors.white,
+    color: designColors.text,
   },
   fieldError: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: Colors.error,
+    color: designColors.error,
     marginBottom: Spacing.xs,
     marginTop: -4,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: designColors.accentGlow,
     borderRadius: BorderRadius.card,
     padding: Spacing.sm,
     marginBottom: Spacing.sm,

@@ -1,4 +1,4 @@
--- QuidSafe D1 Schema — Initial migration
+-- QuidSafe D1 Schema - Initial migration
 -- Tables: users, transactions, categories, tax_estimates
 
 -- ─── Users ────────────────────────────────────────────────
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS categories (
 -- Seed default categories
 INSERT INTO categories (slug, name, type, hmrc_category, description) VALUES
   ('income',           'Income',                  'income',           NULL,                     'Business income from clients or sales'),
-  ('personal',         'Personal',                'personal',         NULL,                     'Personal spending — not deductible'),
+  ('personal',         'Personal',                'personal',         NULL,                     'Personal spending - not deductible'),
   ('office_supplies',  'Office Supplies',         'business_expense', 'Office, property and equipment', 'Stationery, printer ink, software subscriptions'),
   ('travel',           'Travel',                  'business_expense', 'Travel costs',           'Public transport, fuel, parking for business'),
   ('phone_internet',   'Phone & Internet',        'business_expense', 'Office, property and equipment', 'Business portion of phone/broadband bills'),

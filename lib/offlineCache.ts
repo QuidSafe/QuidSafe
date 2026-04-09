@@ -28,7 +28,7 @@ export async function setCache<T>(key: string, data: T): Promise<void> {
     const entry: CacheEntry<T> = { data, timestamp: Date.now() };
     await AsyncStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));
   } catch {
-    // Silent fail — cache is best-effort
+    // Silent fail - cache is best-effort
   }
 }
 

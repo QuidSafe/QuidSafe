@@ -46,7 +46,7 @@ function formatDeadline(date: Date): string {
 // --------------- SA103 Box Descriptions ---------------
 
 const SA103_BOX_INFO: Record<string, string> = {
-  '15': 'Your total business turnover — all income from self-employment before expenses.',
+  '15': 'Your total business turnover - all income from self-employment before expenses.',
   '17': 'If your total trading income is under £1,000, you can use the trading income allowance instead of deducting expenses.',
   '20': 'The cost of goods you bought for resale, or raw materials used in your business.',
   '25': 'Total of all allowable business expenses you can deduct from your turnover.',
@@ -484,7 +484,7 @@ export default function SelfAssessmentScreen() {
         {/* SA103 Form Boxes */}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SA103 SELF EMPLOYMENT</Text>
         <Card style={styles.cardPadding}>
-          {/* Box 15 — Turnover */}
+          {/* Box 15 - Turnover */}
           <SA103Row
             box="15"
             label="Turnover (total income)"
@@ -493,7 +493,7 @@ export default function SelfAssessmentScreen() {
             onToggleTooltip={handleToggleTooltip}
           />
 
-          {/* Box 17 — Trading income allowance */}
+          {/* Box 17 - Trading income allowance */}
           <SA103Row
             box="17"
             label="Trading income allowance"
@@ -503,12 +503,12 @@ export default function SelfAssessmentScreen() {
           >
             {!useTradingAllowance && (
               <Text style={[styles.noteText, { color: colors.textSecondary }]}>
-                Not applicable — income exceeds £1,000
+                Not applicable - income exceeds £1,000
               </Text>
             )}
           </SA103Row>
 
-          {/* Box 20 — Cost of goods */}
+          {/* Box 20 - Cost of goods */}
           <SA103Row
             box="20"
             label="Cost of goods bought"
@@ -523,7 +523,7 @@ export default function SelfAssessmentScreen() {
             )}
           </SA103Row>
 
-          {/* Box 25 — Total allowable expenses */}
+          {/* Box 25 - Total allowable expenses */}
           <SA103Row
             box="25"
             label="Total allowable expenses"
@@ -545,7 +545,7 @@ export default function SelfAssessmentScreen() {
             </View>
           </SA103Row>
 
-          {/* Box 27 — Net profit */}
+          {/* Box 27 - Net profit */}
           <SA103Row
             box="27"
             label="Net profit"
@@ -554,7 +554,7 @@ export default function SelfAssessmentScreen() {
             onToggleTooltip={handleToggleTooltip}
           />
 
-          {/* Box 30 — Taxable profit */}
+          {/* Box 30 - Taxable profit */}
           <SA103Row
             box="30"
             label="Taxable profit"

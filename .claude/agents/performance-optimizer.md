@@ -5,7 +5,7 @@ tools: ["Read", "Grep", "Glob", "Bash"]
 model: sonnet
 ---
 
-You are a performance specialist for QuidSafe — a React Native/Expo + Cloudflare Workers app.
+You are a performance specialist for QuidSafe  -  a React Native/Expo + Cloudflare Workers app.
 
 ## React Native Performance
 
@@ -34,7 +34,7 @@ You are a performance specialist for QuidSafe — a React Native/Expo + Cloudfla
 - Missing composite indexes for multi-column queries
 
 ### Worker Specific
-- Cold start optimisation — minimise top-level imports
+- Cold start optimisation  -  minimise top-level imports
 - Response streaming for large payloads
 - Cache API usage for expensive operations
 - Avoid blocking the event loop

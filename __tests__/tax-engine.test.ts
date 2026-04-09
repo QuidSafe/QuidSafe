@@ -102,7 +102,7 @@ describe('calculateIncomeTax', () => {
   });
 
   it('income exactly at basic rate threshold (£50,270)', () => {
-    // taxableIncome = 50270 - 12570 = 37700 — exactly fills basic band
+    // taxableIncome = 50270 - 12570 = 37700 - exactly fills basic band
     const taxable = 37_700;
     const result = calculateIncomeTax(taxable, config, 12_570);
     expect(result.basicRate).toBe(7_540);
@@ -124,7 +124,7 @@ describe('calculateIncomeTax', () => {
     expect(result.total).toBe(40_002);
   });
 
-  it('handles PA taper correctly — basic band widens', () => {
+  it('handles PA taper correctly - basic band widens', () => {
     // Income £130,000 → PA = 0 → taxableIncome = 130,000
     // basicBand should be 50270 (not 37700)
     const taxable = 130_000;

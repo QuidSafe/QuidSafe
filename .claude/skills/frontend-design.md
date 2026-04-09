@@ -44,8 +44,8 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back, sho
 
 When working on QuidSafe frontend, respect these constraints:
 - **Framework**: Expo SDK 54 + React Native Web + Expo Router (not plain HTML/CSS)
-- **Fonts**: Manrope (body) + PlayfairDisplay (headings) — already loaded, use `Fonts` from `@/constants/Typography`
-- **Colors**: Trust Navy (#0F172A) + Royal Blue (#1E3A8A) + Warm Gold (#CA8A04) — use `Colors` from `@/constants/Colors`
+- **Fonts**: Manrope (body) + PlayfairDisplay (headings)  -  already loaded, use `Fonts` from `@/constants/Typography`
+- **Colors**: Trust Navy (#0F172A) + Royal Blue (#1E3A8A) + Warm Gold (#CA8A04)  -  use `Colors` from `@/constants/Colors`
 - **Design tokens**: Use `Spacing`, `BorderRadius`, `Shadows` from `@/constants/Colors`
 - **Dark mode**: Landing/marketing pages use dark theme; app screens support both via `useTheme()`
-- **Platform**: Must work on iOS, Android, AND web — use `Platform.OS` for platform-specific code
+- **Platform**: Must work on iOS, Android, AND web  -  use `Platform.OS` for platform-specific code

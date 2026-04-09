@@ -1,4 +1,4 @@
-// Action item card — tappable with left colour border + icon
+// Action item card - tappable with left colour border + icon
 
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';

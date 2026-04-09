@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { Colors, colors as semanticColors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
 import type { TaxCalculation } from '@/lib/types';
@@ -16,7 +16,7 @@ export function TaxHeroCard({ tax }: TaxHeroCardProps) {
       accessibilityLabel={`Tax summary. Set aside ${formatCurrency(tax?.totalTaxOwed ?? 0)} for tax based on ${formatCurrency(tax?.totalIncome ?? 0)} income this tax year`}
       style={({ pressed }) => [pressed && styles.pressedCard]}
     >
-      <View style={[styles.heroCard, { backgroundColor: '#000000' }]}>
+      <View style={[styles.heroCard, { backgroundColor: semanticColors.background }]}>
         {/* Radial glow overlays */}
         <View style={styles.heroGlow} importantForAccessibility="no" accessibilityElementsHidden={true} />
         <View style={styles.heroGlowSecondary} importantForAccessibility="no" accessibilityElementsHidden={true} />
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: 'rgba(0,0,0,0.5)',
+    borderColor: `${semanticColors.text}14`,
+    shadowColor: `${semanticColors.background}80`,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 28,
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(0,102,255,0.1)',
+    backgroundColor: `${semanticColors.accent}1A`,
   },
   heroGlowSecondary: {
     position: 'absolute',
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(0,102,255,0.12)',
+    backgroundColor: `${semanticColors.accent}1F`,
   },
   heroLabelRow: {
     flexDirection: 'row',
@@ -106,26 +106,26 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#0066FF',
+    backgroundColor: semanticColors.accent,
   },
   heroLabel: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
+    color: `${semanticColors.text}8C`,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   heroAmount: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 40,
-    color: Colors.white,
+    color: semanticColors.text,
     lineHeight: 42,
     letterSpacing: -1,
   },
   heroSubtext: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 11.5,
-    color: 'rgba(255,255,255,0.45)',
+    color: `${semanticColors.text}73`,
     marginTop: Spacing.xs,
   },
   heroRow: {
@@ -135,17 +135,17 @@ const styles = StyleSheet.create({
   },
   heroBox: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: `${semanticColors.text}0D`,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: `${semanticColors.text}1A`,
     paddingVertical: 12,
     paddingHorizontal: 12,
   },
   heroBoxLabel: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 9.5,
-    color: 'rgba(255,255,255,0.5)',
+    color: `${semanticColors.text}80`,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 2,
@@ -153,17 +153,17 @@ const styles = StyleSheet.create({
   heroBoxValue: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 16,
-    color: Colors.white,
+    color: semanticColors.text,
   },
   heroBoxExpenses: {
-    color: '#86EFAC',
+    color: semanticColors.success,
   },
   heroSetAside: {
     marginTop: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,102,255,0.12)',
+    backgroundColor: `${semanticColors.accent}1F`,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -171,13 +171,13 @@ const styles = StyleSheet.create({
   heroSetAsideLabel: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 10.5,
-    color: '#0066FF',
+    color: semanticColors.accent,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   heroSetAsideAmount: {
     fontFamily: Fonts.mono.semiBold,
     fontSize: 22,
-    color: '#0066FF',
+    color: semanticColors.accent,
   },
 });

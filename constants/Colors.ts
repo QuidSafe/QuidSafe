@@ -1,4 +1,4 @@
-// QuidSafe Design System — Dark-only palette
+// QuidSafe Design System - Dark-only palette
 
 // ── Flat tokens ──────────────────────────────────────────
 export const Colors = {
@@ -16,7 +16,7 @@ export const Colors = {
   warning: '#FF9500',
   error: '#FF3B30',
 
-  // Legacy aliases — screens still reference these; remove when migrated
+  // Legacy aliases - screens still reference these; remove when migrated
   primary: '#000000',
   secondary: '#0066FF',
   accent: '#0066FF',
@@ -24,8 +24,10 @@ export const Colors = {
   dark: {
     text: '#FFFFFF',
     textSecondary: '#A0A0A0',
+    textMuted: '#666666',
     background: '#000000',
     surface: '#0A0A0A',
+    surfaceSecondary: '#1A1A1A',
     tint: '#0066FF',
     tabIconDefault: '#666666',
     tabIconSelected: '#0066FF',
@@ -33,6 +35,13 @@ export const Colors = {
     surfaceGlass: 'rgba(255,255,255,0.05)',
     shadowColor: 'rgba(0,0,0,0.3)',
     cardBorder: '#2A2A2A',
+    accent: '#0066FF',
+    accentPressed: '#0052CC',
+    accentGlow: 'rgba(0, 102, 255, 0.15)',
+    success: '#00C853',
+    successGlow: 'rgba(0, 200, 83, 0.15)',
+    warning: '#FF9500',
+    error: '#FF3B30',
   },
 };
 
@@ -49,6 +58,7 @@ export const colors = {
   accentPressed: '#0052CC',
   accentGlow: 'rgba(0, 102, 255, 0.15)',
   success: '#00C853',
+  successGlow: 'rgba(0, 200, 83, 0.15)',
   warning: '#FF9500',
   error: '#FF3B30',
 };
@@ -59,7 +69,7 @@ export const BorderRadius = {
   button: 8,
   input: 8,
   pill: 999,
-  hero: 24, // legacy — remove when screens migrate
+  hero: 24, // legacy - remove when screens migrate
 };
 
 export const Spacing = {
@@ -71,7 +81,7 @@ export const Spacing = {
   xxl: 48,
 };
 
-// ── Legacy compat — remove when screens migrate ─────────
+// ── Legacy compat - remove when screens migrate ─────────
 export const Shadows = {
   soft: {
     shadowColor: 'transparent',

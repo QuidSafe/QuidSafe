@@ -67,7 +67,7 @@ export default function LearnScreen() {
   const searchSlide = useRef(new Animated.Value(14)).current;
   const pillsFade = useRef(new Animated.Value(0)).current;
   const pillsSlide = useRef(new Animated.Value(12)).current;
-  // Article cards — dynamically sized
+  // Article cards - dynamically sized
   const MAX_CARD_ANIMS = 20;
   const cardAnims = useRef(
     Array.from({ length: MAX_CARD_ANIMS }, () => ({
@@ -85,22 +85,22 @@ export default function LearnScreen() {
         Animated.timing(slide, { toValue: 0, duration, useNativeDriver: true }),
       ]);
 
-    // 1. Header — immediate
+    // 1. Header - immediate
     fadeSlide(headerFade, headerSlide, 300).start();
 
-    // 2. Search bar — 120ms delay
+    // 2. Search bar - 120ms delay
     Animated.sequence([
       Animated.delay(120),
       fadeSlide(searchFade, searchSlide, 320),
     ]).start();
 
-    // 3. Filter pills — 220ms delay
+    // 3. Filter pills - 220ms delay
     Animated.sequence([
       Animated.delay(220),
       fadeSlide(pillsFade, pillsSlide, 300),
     ]).start();
 
-    // 4. Article cards — cascading stagger starting at 350ms, 100ms apart
+    // 4. Article cards - cascading stagger starting at 350ms, 100ms apart
     cardAnims.slice(0, articles.length).forEach((anim: { fade: Animated.Value; slide: Animated.Value }, i: number) => {
       Animated.sequence([
         Animated.delay(350 + i * 100),

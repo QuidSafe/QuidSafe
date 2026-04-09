@@ -106,7 +106,7 @@ export default function InvoicesScreen() {
   const queryStatus = activeFilter === 'all' ? undefined : activeFilter;
   const { data, isLoading, refetch, isRefetching } = useInvoices(queryStatus);
 
-  // All invoices (unfiltered) for stats — always fetch all
+  // All invoices (unfiltered) for stats - always fetch all
   const { data: allData } = useInvoices(undefined);
   const allInvoices = allData?.invoices ?? [];
 
@@ -306,7 +306,7 @@ export default function InvoicesScreen() {
         )}
       </ScrollView>
 
-      {/* FAB — Create Invoice */}
+      {/* FAB - Create Invoice */}
       {!isLoading && (
         <Pressable
           style={[styles.fab, Shadows.medium]}
@@ -316,7 +316,7 @@ export default function InvoicesScreen() {
         </Pressable>
       )}
 
-      {/* Create Invoice Modal — shared component */}
+      {/* Create Invoice Modal - shared component */}
       <CreateInvoiceModal
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}

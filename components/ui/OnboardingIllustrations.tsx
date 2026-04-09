@@ -6,7 +6,7 @@ import { colors } from '@/constants/Colors';
 const SIZE = 200;
 
 /* ------------------------------------------------------------------ */
-/*  Illustration 1 — Welcome (Shield + Pound + Orbiting Circles)       */
+/*  Illustration 1 - Welcome (Shield + Pound + Orbiting Circles)       */
 /* ------------------------------------------------------------------ */
 export function WelcomeIllustration() {
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -104,7 +104,7 @@ export function WelcomeIllustration() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Illustration 2 — Business (Clipboard + Text Lines + Check + Pen)   */
+/*  Illustration 2 - Business (Clipboard + Text Lines + Check + Pen)   */
 /* ------------------------------------------------------------------ */
 export function BusinessIllustration() {
   const slideY = useRef(new Animated.Value(40)).current;
@@ -171,7 +171,7 @@ export function BusinessIllustration() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Illustration 3 — Bank (Building + Connection + Phone + Lock)       */
+/*  Illustration 3 - Bank (Building + Connection + Phone + Lock)       */
 /* ------------------------------------------------------------------ */
 export function BankIllustration() {
   const pulseAnim = useRef(new Animated.Value(0.4)).current;

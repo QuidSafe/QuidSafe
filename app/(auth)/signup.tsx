@@ -4,7 +4,7 @@ import { useSignUp } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, ArrowLeft } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { Colors, Spacing, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -112,15 +112,15 @@ export default function SignupScreen() {
             <>
               <View style={[
                 s.inputWrap,
-                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
+                { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
                 emailFocused && s.inputFocused,
                 emailTouched && emailError ? s.inputError : null,
               ]}>
-                <Mail size={15} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
+                <Mail size={15} color={colors.textMuted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
                   style={[s.input, { color: colors.text }]}
                   placeholder="Email address"
-                  placeholderTextColor={Colors.muted}
+                  placeholderTextColor={colors.textMuted}
                   value={email}
                   onChangeText={setEmail}
                   onFocus={() => setEmailFocused(true)}
@@ -150,7 +150,7 @@ export default function SignupScreen() {
                 accessibilityHint="Tap to send a verification code to your email"
               >
                 {loading ? (
-                  <ActivityIndicator color={Colors.white} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
                   <Text style={s.ctaText}>Send Verification Code</Text>
                 )}
@@ -160,14 +160,14 @@ export default function SignupScreen() {
             <>
               <View style={[
                 s.inputWrap,
-                { backgroundColor: Colors.darkGrey, borderColor: colors.border },
+                { backgroundColor: colors.surfaceSecondary, borderColor: colors.border },
                 codeFocused && s.inputFocused,
               ]}>
-                <Lock size={16} color={Colors.muted} strokeWidth={1.5} style={{ marginRight: 12 }} />
+                <Lock size={16} color={colors.textMuted} strokeWidth={1.5} style={{ marginRight: 12 }} />
                 <TextInput
                   style={[s.input, { color: colors.text }]}
                   placeholder="Enter 6-digit code"
-                  placeholderTextColor={Colors.muted}
+                  placeholderTextColor={colors.textMuted}
                   value={code}
                   onChangeText={setCode}
                   onFocus={() => setCodeFocused(true)}
@@ -186,7 +186,7 @@ export default function SignupScreen() {
                 accessibilityHint="Tap to verify your email code and continue"
               >
                 {loading ? (
-                  <ActivityIndicator color={Colors.white} />
+                  <ActivityIndicator color={colors.text} />
                 ) : (
                   <Text style={s.ctaText}>Verify & Continue</Text>
                 )}
@@ -206,7 +206,7 @@ export default function SignupScreen() {
             style={({ pressed }) => [pressed && s.pressed]}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <ArrowLeft size={12} color={Colors.electricBlue} strokeWidth={1.5} />
+              <ArrowLeft size={12} color={colors.accent} strokeWidth={1.5} />
               <Text style={s.backLink}>Back to login</Text>
             </View>
           </Pressable>
@@ -259,10 +259,10 @@ const s = StyleSheet.create({
     paddingVertical: 15,
   },
   inputFocused: {
-    borderColor: Colors.electricBlue,
+    borderColor: designColors.accent,
   },
   inputError: {
-    borderColor: Colors.error,
+    borderColor: designColors.error,
   },
   input: {
     flex: 1,
@@ -273,7 +273,7 @@ const s = StyleSheet.create({
 
   // CTA
   ctaBtn: {
-    backgroundColor: Colors.electricBlue,
+    backgroundColor: designColors.accent,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -282,7 +282,7 @@ const s = StyleSheet.create({
   ctaText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 16,
-    color: Colors.white,
+    color: designColors.text,
   },
   ctaBtnDisabled: {
     opacity: 0.5,
@@ -291,13 +291,13 @@ const s = StyleSheet.create({
   error: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
-    color: Colors.error,
+    color: designColors.error,
     textAlign: 'center',
   },
   fieldError: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
-    color: Colors.error,
+    color: designColors.error,
     marginTop: -8,
   },
 
@@ -313,6 +313,6 @@ const s = StyleSheet.create({
   backLink: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
-    color: Colors.electricBlue,
+    color: designColors.accent,
   },
 });

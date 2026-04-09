@@ -26,7 +26,7 @@ import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
 import 'react-native-reanimated';
-// @ts-ignore — CSS import for web, ignored on native
+// @ts-ignore - CSS import for web, ignored on native
 import '../public/global.css';
 
 export { ErrorBoundary } from 'expo-router';
@@ -140,7 +140,7 @@ export default function RootLayout() {
     <>
     <Head>
       {/* ── Primary SEO ── */}
-      <title>QuidSafe — Tax Tracking for UK Sole Traders | MTD Compliant</title>
+      <title>QuidSafe - Tax Tracking for UK Sole Traders | MTD Compliant</title>
       <meta name="description" content="QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly what to set aside for HMRC. Making Tax Digital compliant. Free 14-day trial. £7.99/month." />
       <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, TrueLayer, sole trader accounting" />
       <meta name="author" content="QuidSafe Ltd" />
@@ -151,7 +151,7 @@ export default function RootLayout() {
 
       {/* ── Open Graph (Facebook, LinkedIn, WhatsApp, iMessage) ── */}
       <meta property="og:site_name" content="QuidSafe" />
-      <meta property="og:title" content="QuidSafe — Smart Tax Tracking for UK Sole Traders" />
+      <meta property="og:title" content="QuidSafe - Smart Tax Tracking for UK Sole Traders" />
       <meta property="og:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant. Free 14-day trial." />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://quidsafe.pages.dev" />
@@ -163,7 +163,7 @@ export default function RootLayout() {
 
       {/* ── Twitter / X ── */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="QuidSafe — Tax Tracking for UK Sole Traders" />
+      <meta name="twitter:title" content="QuidSafe - Tax Tracking for UK Sole Traders" />
       <meta name="twitter:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant." />
       <meta name="twitter:image" content="https://quidsafe.pages.dev/assets/images/icon.png" />
 
@@ -188,7 +188,7 @@ export default function RootLayout() {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "QuidSafe",
-        "description": "QuidSafe is a tax tracking app built for UK sole traders. It connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time. Making Tax Digital (MTD) compliant.",
+        "description": "QuidSafe is a tax tracking app built for UK sole traders. It connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time. Making Tax Digital (MTD) compliant.",
         "url": "https://quidsafe.pages.dev",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "iOS, Android, Web",
@@ -226,7 +226,7 @@ export default function RootLayout() {
           {
             "@type": "Question",
             "name": "What is QuidSafe?",
-            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC — updated in real time." }
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time." }
           },
           {
             "@type": "Question",
@@ -241,7 +241,7 @@ export default function RootLayout() {
           {
             "@type": "Question",
             "name": "How much does QuidSafe cost?",
-            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £79.99/year (save 17%) — all prices include VAT. Every plan includes all features — AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT. Start with a free 14-day trial, no credit card required." }
+            "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £79.99/year (save 17%) - all prices include VAT. Every plan includes all features - AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT. Start with a free 14-day trial, no credit card required." }
           },
           {
             "@type": "Question",

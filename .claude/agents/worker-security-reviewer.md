@@ -64,5 +64,5 @@ Every review must verify ALL of the following:
 1. Read all changed files in the PR/commit
 2. Run through all 10 checklist items
 3. For each item: report PASS, FAIL, or N/A with file:line references
-4. If any item FAILs, the review does not pass — list remediation steps
+4. If any item FAILs, the review does not pass  -  list remediation steps
 5. Summary: X/10 passed, overall verdict (APPROVED / CHANGES REQUIRED)

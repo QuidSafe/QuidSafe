@@ -90,7 +90,7 @@ const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
 ## Encryption
 
 ```typescript
-// worker/utils/crypto.ts — AES-256-GCM
+// worker/utils/crypto.ts  -  AES-256-GCM
 import { encrypt, decrypt } from '../utils/crypto';
 
 const encrypted = await encrypt(plaintext, env.ENCRYPTION_KEY);
