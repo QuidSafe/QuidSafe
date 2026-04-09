@@ -14,6 +14,8 @@
     "worker:deploy:production": "wrangler deploy --env production --config wrangler.worker.toml",
     "d1:migrate:local": "wrangler d1 migrations apply quidsafe-dev --local --config wrangler.worker.toml",
     "d1:migrate:dev": "wrangler d1 migrations apply quidsafe-dev --remote --config wrangler.worker.toml",
+    "d1:migrate:staging": "wrangler d1 migrations apply quidsafe-staging --remote --config wrangler.worker.toml --env staging",
+    "d1:migrate:production": "wrangler d1 migrations apply quidsafe-production --remote --config wrangler.worker.toml --env production",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
