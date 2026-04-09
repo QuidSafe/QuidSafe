@@ -119,13 +119,13 @@ export default function AboutScreen() {
             We would love to hear from you, whether you have a question, feedback, or just want to say hello.
           </Paragraph>
           <Paragraph>
-            General enquiries: hello@quidsafe.co.uk
+            General enquiries: hello@quidsafe.uk
           </Paragraph>
           <Paragraph>
-            Privacy and data protection: privacy@quidsafe.co.uk
+            Privacy and data protection: privacy@quidsafe.uk
           </Paragraph>
           <Paragraph>
-            Legal: legal@quidsafe.co.uk
+            Legal: legal@quidsafe.uk
           </Paragraph>
         </Section>
 

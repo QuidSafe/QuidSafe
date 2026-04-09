@@ -7,10 +7,14 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, CheckCircle, FileText, Pencil, Trash2, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle, FileText, Pencil, Trash2, AlertTriangle, Send, X } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -20,6 +24,7 @@ import { useInvoices } from '@/lib/hooks/useApi';
 import {
   useUpdateInvoiceWithToast,
   useDeleteInvoiceWithToast,
+  useSendInvoiceWithToast,
 } from '@/lib/hooks/useApiWithToast';
 import { formatCurrency } from '@/lib/tax-engine';
 import { downloadInvoicePDF } from '@/lib/invoiceActions';
@@ -73,17 +78,20 @@ export default function InvoiceDetailScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [sendModalVisible, setSendModalVisible] = useState(false);
+  const [sendEmail, setSendEmail] = useState('');
 
   const { data, isLoading, refetch, isRefetching } = useInvoices(undefined);
   const updateMutation = useUpdateInvoiceWithToast();
   const deleteMutation = useDeleteInvoiceWithToast();
+  const sendMutation = useSendInvoiceWithToast();
 
   const invoice: Invoice | undefined = useMemo(() => {
     const invoices = data?.invoices ?? [];
     return invoices.find((inv: Invoice) => inv.id === id);
   }, [data, id]);
 
-  const isMutating = updateMutation.isPending || deleteMutation.isPending;
+  const isMutating = updateMutation.isPending || deleteMutation.isPending || sendMutation.isPending;
 
   const handleMarkPaid = useCallback(async () => {
     if (!invoice) return;
@@ -117,6 +125,23 @@ export default function InvoiceDetailScreen() {
       // toast handled by hook
     }
   }, [invoice, deleteConfirm, deleteMutation, router]);
+
+  const handleOpenSend = useCallback(() => {
+    if (!invoice) return;
+    setSendEmail(invoice.clientEmail || '');
+    setSendModalVisible(true);
+  }, [invoice]);
+
+  const handleSend = useCallback(async () => {
+    if (!invoice || !sendEmail.trim()) return;
+    try {
+      await sendMutation.mutateAsync({ id: invoice.id, recipientEmail: sendEmail.trim() });
+      hapticSuccess();
+      setSendModalVisible(false);
+    } catch {
+      // toast handled by hook
+    }
+  }, [invoice, sendEmail, sendMutation]);
 
   const handleEdit = useCallback(() => {
     // Navigate back to invoices list where editing modal exists
@@ -247,10 +272,26 @@ export default function InvoiceDetailScreen() {
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Download PDF</Text>
               </Pressable>
 
+              {invoice.status !== 'paid' && (
+                <Pressable
+                  style={[styles.actionButton, styles.sendButton, isMutating && styles.actionButtonDisabled]}
+                  onPress={handleOpenSend}
+                  disabled={isMutating}
+                >
+                  {sendMutation.isPending ? (
+                    <ActivityIndicator color={Colors.white} size="small" />
+                  ) : (
+                    <>
+                      <Send size={16} color={Colors.white} strokeWidth={1.5} style={styles.actionIcon} />
+                      <Text style={styles.actionButtonTextLight}>Send to Client</Text>
+                    </>
+                  )}
+                </Pressable>
+              )}
+
               <Pressable
                 style={[styles.actionButton, styles.editButton]}
                 onPress={handleEdit}
-               
               >
                 <Pencil size={16} color={Colors.secondary} strokeWidth={1.5} style={styles.actionIcon} />
                 <Text style={[styles.actionButtonTextDark, { color: colors.text }]}>Edit Invoice</Text>
@@ -277,6 +318,52 @@ export default function InvoiceDetailScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* Send Invoice Modal */}
+      <Modal
+        visible={sendModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSendModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setSendModalVisible(false)}>
+            <Pressable style={[styles.modalCard, { backgroundColor: colors.surface }]} onPress={() => {}}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Send Invoice</Text>
+                <Pressable onPress={() => setSendModalVisible(false)} hitSlop={12}>
+                  <X size={20} color={colors.textSecondary} strokeWidth={1.5} />
+                </Pressable>
+              </View>
+              <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Recipient email</Text>
+              <TextInput
+                style={[styles.modalInput, { color: colors.text, borderColor: colors.border }]}
+                value={sendEmail}
+                onChangeText={setSendEmail}
+                placeholder="client@example.com"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Pressable
+                style={[styles.modalSendButton, (!sendEmail.trim() || sendMutation.isPending) && styles.actionButtonDisabled]}
+                onPress={handleSend}
+                disabled={!sendEmail.trim() || sendMutation.isPending}
+              >
+                {sendMutation.isPending ? (
+                  <ActivityIndicator color={Colors.white} size="small" />
+                ) : (
+                  <Text style={styles.modalSendButtonText}>Send</Text>
+                )}
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -404,6 +491,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2A2A2A',
   },
+  sendButton: {
+    backgroundColor: Colors.accent,
+  },
   editButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -446,6 +536,57 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    color: Colors.white,
+  },
+
+  // Send modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    width: '90%' as unknown as number,
+    maxWidth: 400,
+    borderRadius: BorderRadius.card,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalTitle: {
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: 18,
+  },
+  modalLabel: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 13,
+    marginBottom: Spacing.xs,
+  },
+  modalInput: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 15,
+    borderWidth: 1,
+    borderRadius: BorderRadius.input,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    marginBottom: Spacing.md,
+  },
+  modalSendButton: {
+    backgroundColor: Colors.accent,
+    borderRadius: BorderRadius.button,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  modalSendButtonText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 15,
     color: Colors.white,
   },
 });

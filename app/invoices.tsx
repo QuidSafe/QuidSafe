@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus, FileText } from 'lucide-react-native';
+import { ArrowLeft, Plus, FileText, Send } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -286,16 +286,30 @@ export default function InvoicesScreen() {
                         <Text style={[styles.dueDate, { color: colors.textSecondary }]}>
                           {formatDueDate(invoice.dueDate)}
                         </Text>
-                        <Pressable
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            downloadInvoicePDF(invoice);
-                          }}
-                          style={styles.pdfButton}
-                        >
-                          <FileText size={16} color={Colors.error} strokeWidth={1.5} />
-                        </Pressable>
+                        <View style={styles.rowActions}>
+                          {invoice.status === 'draft' && (
+                            <Pressable
+                              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                router.push(`/invoice/${invoice.id}`);
+                              }}
+                              style={styles.pdfButton}
+                            >
+                              <Send size={16} color={Colors.accent} strokeWidth={1.5} />
+                            </Pressable>
+                          )}
+                          <Pressable
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              downloadInvoicePDF(invoice);
+                            }}
+                            style={styles.pdfButton}
+                          >
+                            <FileText size={16} color={Colors.error} strokeWidth={1.5} />
+                          </Pressable>
+                        </View>
                       </View>
                     </Card>
                   </Pressable>
@@ -450,6 +464,11 @@ const styles = StyleSheet.create({
   dueDate: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
+  },
+  rowActions: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: Spacing.sm,
   },
   pdfButton: {
     padding: 4,

@@ -2,7 +2,7 @@
 
 import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission, Article } from './types';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://quidsafe-api.nathanlufc.workers.dev';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.quidsafe.uk';
 
 class ApiClient {
   private token: string | null = null;
@@ -181,6 +181,13 @@ class ApiClient {
 
   deleteInvoice(id: string) {
     return this.request<{ deleted: boolean }>(`/invoices/${id}`, { method: 'DELETE' });
+  }
+
+  sendInvoice(id: string, recipientEmail: string) {
+    return this.request<{ success: boolean }>(`/invoices/${id}/send`, {
+      method: 'POST',
+      body: JSON.stringify({ recipientEmail }),
+    });
   }
 
   // Billing

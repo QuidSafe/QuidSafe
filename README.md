@@ -103,8 +103,8 @@ npx wrangler pages deploy dist --project-name=quidsafe
 
 ## Live URLs
 
-- **API:** https://quidsafe-api.nathanlufc.workers.dev
-- **Web:** https://quidsafe.pages.dev
+- **API:** https://api.quidsafe.uk
+- **Web:** https://quidsafe.uk
 
 ## License
 

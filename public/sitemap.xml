@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://quidsafe.pages.dev/</loc>
+    <loc>https://quidsafe.uk/</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://quidsafe.pages.dev/landing</loc>
+    <loc>https://quidsafe.uk/landing</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://quidsafe.pages.dev/about</loc>
+    <loc>https://quidsafe.uk/about</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://quidsafe.pages.dev/privacy</loc>
+    <loc>https://quidsafe.uk/privacy</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://quidsafe.pages.dev/terms</loc>
+    <loc>https://quidsafe.uk/terms</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://quidsafe.pages.dev/cookie-policy</loc>
+    <loc>https://quidsafe.uk/cookie-policy</loc>
     <lastmod>2026-04-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

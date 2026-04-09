@@ -39,7 +39,7 @@ export async function createCheckoutSession(
   plan: 'monthly' | 'annual',
   config: StripeConfig,
   db: D1Database,
-  appUrl = 'https://quidsafe.pages.dev',
+  appUrl = 'https://quidsafe.uk',
 ): Promise<{ url: string }> {
   // Get or create Stripe customer
   let user = await queryOne<{ stripe_customer_id: string; email: string }>(
@@ -92,7 +92,7 @@ export async function createPortalSession(
   userId: string,
   config: StripeConfig,
   db: D1Database,
-  appUrl = 'https://quidsafe.pages.dev',
+  appUrl = 'https://quidsafe.uk',
 ): Promise<{ url: string }> {
   const user = await queryOne<{ stripe_customer_id: string }>(
     db,

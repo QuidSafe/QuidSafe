@@ -131,8 +131,8 @@ Use these agents for specialised tasks:
 | `database-reviewer` | Review D1 schemas, migrations, or queries |
 
 ## Live URLs
-- **API**: https://quidsafe-api.nathanlufc.workers.dev
-- **Web**: https://quidsafe.pages.dev
+- **API**: https://api.quidsafe.uk
+- **Web**: https://quidsafe.uk
 
 ## Pre-deploy gate
 Always run /pre-deploy before npm run worker:deploy:production.

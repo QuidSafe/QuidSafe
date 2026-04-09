@@ -111,7 +111,7 @@ export default function CookiePolicyScreen() {
             You can clear cookies at any time through your browser settings. Most browsers allow you to block or delete cookies under their privacy or security settings. Please note that clearing essential cookies will sign you out of QuidSafe and you will need to log in again.
           </Paragraph>
           <Paragraph>
-            To clear local storage, you can use your browser&apos;s developer tools or clear all site data through your browser&apos;s settings for quidsafe.pages.dev.
+            To clear local storage, you can use your browser&apos;s developer tools or clear all site data through your browser&apos;s settings for quidsafe.uk.
           </Paragraph>
         </Section>
 
@@ -126,7 +126,7 @@ export default function CookiePolicyScreen() {
             If you have any questions about our use of cookies, please contact us:
           </Paragraph>
           <Paragraph>
-            Email: privacy@quidsafe.co.uk
+            Email: privacy@quidsafe.uk
           </Paragraph>
           <Paragraph>
             QuidSafe Ltd{'\n'}United Kingdom

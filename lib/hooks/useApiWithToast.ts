@@ -5,6 +5,7 @@ import {
   useCreateInvoice,
   useUpdateInvoice,
   useDeleteInvoice,
+  useSendInvoice,
   useAddExpense,
   useDeleteExpense,
   useUpdateSettings,
@@ -68,6 +69,25 @@ export function useDeleteInvoiceWithToast() {
       try {
         const result = await mutation.mutateAsync(...args);
         show('Invoice deleted', 'success');
+        return result;
+      } catch (error) {
+        show(getErrorMessage(error), 'error');
+        throw error;
+      }
+    },
+  };
+}
+
+export function useSendInvoiceWithToast() {
+  const mutation = useSendInvoice();
+  const { show } = useToast();
+
+  return {
+    ...mutation,
+    mutateAsync: async (...args: Parameters<typeof mutation.mutateAsync>) => {
+      try {
+        const result = await mutation.mutateAsync(...args);
+        show('Invoice sent', 'success');
         return result;
       } catch (error) {
         show(getErrorMessage(error), 'error');

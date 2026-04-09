@@ -96,6 +96,11 @@ export const mtdSubmitQuarterlySchema = z.object({
   quarter: z.number().int().min(1).max(4),
 });
 
+// Send invoice email
+export const sendInvoiceEmailSchema = z.object({
+  recipientEmail: z.string().email('Invalid email address').max(320),
+});
+
 // Device push token registration
 export const registerDeviceSchema = z.object({
   pushToken: z.string().min(1, 'pushToken is required').max(500),
