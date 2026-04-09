@@ -5,6 +5,10 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 concurrency:
   group: deploy-staging-${{ github.event.pull_request.number }}
   cancel-in-progress: true
