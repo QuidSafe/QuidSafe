@@ -1,20 +1,15 @@
 /* QuidSafe — Global Web Styles
  *
  * Font strategy:
- *  1. Google Fonts CSS loads "Manrope" and "Playfair Display" for base HTML
- *     elements (inputs, selects, etc.) and as a fast early paint.
- *  2. expo-font's useFonts() loads the expo-named variants ("Manrope_700Bold"
- *     etc.) with embedded font data — this is what React Native Web uses.
+ *  1. Google Fonts CSS loads "Lexend" and "Source Sans 3" via <link> in
+ *     _layout.tsx Head as a fast early paint for web.
+ *  2. expo-font's useFonts() loads the expo-named variants
+ *     ("Lexend_600SemiBold", "SourceSans3_*") — this is what RN Web uses.
  *     The app renders null until useFonts() resolves, so there's no FOUT.
- *  3. FontAwesome CDN CSS is loaded as a fallback so icon glyphs render even
- *     before expo-font finishes loading the FontAwesome.ttf from the bundle.
  */
 
 /* ── Web Fonts ── */
 /* Google Fonts loaded via <link> in _layout.tsx Head — do NOT duplicate here */
-
-/* FontAwesome 4 CDN — fallback for tab bar icons before expo-font loads */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
 
 /* ── Base Reset ── */
 html, body, #root {
@@ -80,7 +75,7 @@ a {
 
 /* ── Base Typography ── */
 input, button, textarea, select {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Source Sans 3', 'SourceSans3_400Regular', sans-serif;
 }
 
 /* ── Selection ── */

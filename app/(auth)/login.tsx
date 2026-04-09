@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable, Platform } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
+  const router = useRouter();
   const { colors } = useTheme();
 
   const handleGoogleSignIn = useCallback(async () => {
@@ -88,16 +89,15 @@ export default function LoginScreen() {
           </View>
 
           {/* Email */}
-          <Link href="/(auth)/signup" asChild>
-            <Pressable
-              style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: Colors.charcoal }, pressed && s.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel="Continue with Email"
-            >
-              <Mail size={16} color={colors.text} strokeWidth={1.5} style={{ marginRight: 10 }} />
-              <Text style={[s.emailText, { color: colors.text }]}>Continue with Email</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            style={({ pressed }) => [s.emailBtn, { borderColor: colors.border, backgroundColor: Colors.charcoal }, pressed && s.pressed]}
+            onPress={() => router.push('/(auth)/signup')}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Email"
+          >
+            <Mail size={16} color={colors.text} strokeWidth={1.5} style={{ marginRight: 10 }} />
+            <Text style={[s.emailText, { color: colors.text }]}>Continue with Email</Text>
+          </Pressable>
         </View>
 
         {/* ── Footer ── */}
