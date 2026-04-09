@@ -17,6 +17,9 @@ coverage/
 # Local dev secrets
 .dev.vars
 
+# Wrangler local state
+.wrangler/
+
 # OS
 Thumbs.db
 
