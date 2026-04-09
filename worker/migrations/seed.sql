@@ -3,7 +3,7 @@
 
 -- ─── Test User ────────────────────────────────────────────
 INSERT OR IGNORE INTO users (id, email, name, subscription_tier, onboarding_completed, created_at, updated_at)
-VALUES ('user_test_001', 'test@quidsafe.co.uk', 'Sarah Thompson', 'pro', 1, datetime('now'), datetime('now'));
+VALUES ('user_test_001', 'test@quidsafe.uk', 'Sarah Thompson', 'pro', 1, datetime('now'), datetime('now'));
 
 -- ─── Bank Connection ─────────────────────────────────────
 INSERT OR IGNORE INTO bank_connections (id, user_id, provider, bank_name, access_token_encrypted, refresh_token_encrypted, last_synced_at, active, created_at)

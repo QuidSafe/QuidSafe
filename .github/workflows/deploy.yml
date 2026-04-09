@@ -50,7 +50,7 @@ jobs:
 
       - name: Post-deploy health check
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://quidsafe-api.nathanlufc.workers.dev/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.quidsafe.uk/health)
           if [ "$STATUS" != "200" ]; then
             echo "Health check failed with status $STATUS"
             exit 1
@@ -74,7 +74,7 @@ jobs:
       - name: Build web
         run: npx expo export --platform web
         env:
-          EXPO_PUBLIC_API_URL: https://api.quidsafe.co.uk
+          EXPO_PUBLIC_API_URL: https://api.quidsafe.uk
           EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
 

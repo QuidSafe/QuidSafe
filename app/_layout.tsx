@@ -25,6 +25,7 @@ import { AppErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { BiometricGate } from '@/components/ui/BiometricGate';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
+import { CookieConsent } from '@/components/ui/CookieConsent';
 import 'react-native-reanimated';
 // @ts-ignore - CSS import for web, ignored on native
 import '../public/global.css';
@@ -147,16 +148,16 @@ export default function RootLayout() {
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="theme-color" content="#000000" />
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-      <link rel="canonical" href="https://quidsafe.pages.dev" />
+      <link rel="canonical" href="https://quidsafe.uk" />
 
       {/* ── Open Graph (Facebook, LinkedIn, WhatsApp, iMessage) ── */}
       <meta property="og:site_name" content="QuidSafe" />
       <meta property="og:title" content="QuidSafe - Smart Tax Tracking for UK Sole Traders" />
       <meta property="og:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant. Free 14-day trial." />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://quidsafe.pages.dev" />
+      <meta property="og:url" content="https://quidsafe.uk" />
       <meta property="og:locale" content="en_GB" />
-      <meta property="og:image" content="https://quidsafe.pages.dev/assets/images/icon.png" />
+      <meta property="og:image" content="https://quidsafe.uk/assets/images/icon.png" />
       <meta property="og:image:width" content="1024" />
       <meta property="og:image:height" content="1024" />
       <meta property="og:image:alt" content="QuidSafe shield logo with pound symbol" />
@@ -165,7 +166,7 @@ export default function RootLayout() {
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="QuidSafe - Tax Tracking for UK Sole Traders" />
       <meta name="twitter:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant." />
-      <meta name="twitter:image" content="https://quidsafe.pages.dev/assets/images/icon.png" />
+      <meta name="twitter:image" content="https://quidsafe.uk/assets/images/icon.png" />
 
       {/* ── PWA / Mobile ── */}
       <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -189,7 +190,7 @@ export default function RootLayout() {
         "@type": "SoftwareApplication",
         "name": "QuidSafe",
         "description": "QuidSafe is a tax tracking app built for UK sole traders. It connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time. Making Tax Digital (MTD) compliant.",
-        "url": "https://quidsafe.pages.dev",
+        "url": "https://quidsafe.uk",
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "iOS, Android, Web",
         "offers": {
@@ -210,11 +211,11 @@ export default function RootLayout() {
           "Full CSV data export",
           "Works with Barclays, HSBC, Lloyds, NatWest, Monzo, Starling, Revolut, Nationwide"
         ],
-        "screenshot": "https://quidsafe.pages.dev/assets/images/icon.png",
+        "screenshot": "https://quidsafe.uk/assets/images/icon.png",
         "author": {
           "@type": "Organization",
           "name": "QuidSafe Ltd",
-          "url": "https://quidsafe.pages.dev"
+          "url": "https://quidsafe.uk"
         }
       }) }} />
 
@@ -257,8 +258,8 @@ export default function RootLayout() {
         "@type": "Organization",
         "name": "QuidSafe",
         "legalName": "QuidSafe Ltd",
-        "url": "https://quidsafe.pages.dev",
-        "logo": "https://quidsafe.pages.dev/assets/images/icon.png",
+        "url": "https://quidsafe.uk",
+        "logo": "https://quidsafe.uk/assets/images/icon.png",
         "description": "Smart tax tracking for UK sole traders. Open Banking, AI categorisation, MTD compliant.",
         "foundingDate": "2025",
         "areaServed": { "@type": "Country", "name": "United Kingdom" },
@@ -282,6 +283,7 @@ export default function RootLayout() {
               <BiometricGate>
               <AppErrorBoundary>
                 <ThemedStatusBar />
+                <CookieConsent />
                 <AuthRedirect>
                   <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="landing" />

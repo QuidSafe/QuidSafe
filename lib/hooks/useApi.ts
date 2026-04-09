@@ -226,6 +226,17 @@ export function useDeleteInvoice() {
   });
 }
 
+export function useSendInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, recipientEmail }: { id: string; recipientEmail: string }) =>
+      api.sendInvoice(id, recipientEmail),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+  });
+}
+
 export function useDeleteExpense() {
   const queryClient = useQueryClient();
   return useMutation({

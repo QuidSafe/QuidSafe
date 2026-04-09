@@ -214,7 +214,7 @@ export default function PrivacyPolicyScreen() {
             For any data protection queries, to exercise your rights, or to make a complaint about how we handle your data, please contact us:
           </Paragraph>
           <Paragraph>
-            Email: privacy@quidsafe.co.uk
+            Email: privacy@quidsafe.uk
           </Paragraph>
           <Paragraph>
             QuidSafe Ltd{'\n'}Data Protection Officer{'\n'}United Kingdom

@@ -1,4 +1,4 @@
-# QuidSafe - https://quidsafe.pages.dev
+# QuidSafe - https://quidsafe.uk
 User-agent: *
 Allow: /
 
@@ -24,4 +24,4 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
-Sitemap: https://quidsafe.pages.dev/sitemap.xml
+Sitemap: https://quidsafe.uk/sitemap.xml

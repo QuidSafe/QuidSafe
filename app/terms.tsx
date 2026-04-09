@@ -182,7 +182,7 @@ export default function TermsOfServiceScreen() {
             If you have any questions about these Terms, please contact us:
           </Paragraph>
           <Paragraph>
-            Email: legal@quidsafe.co.uk
+            Email: legal@quidsafe.uk
           </Paragraph>
           <Paragraph>
             QuidSafe Ltd{'\n'}United Kingdom

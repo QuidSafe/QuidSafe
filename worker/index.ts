@@ -33,6 +33,7 @@ import {
   getObligations,
   submitQuarterlyUpdate,
 } from './services/hmrc';
+import { sendInvoiceEmail } from './services/emailService';
 import type { HmrcConfig } from './services/hmrc';
 import { query, queryOne, execute } from '../lib/db';
 import {
@@ -57,6 +58,7 @@ import {
   mtdSubmitQuarterlySchema,
   registerDeviceSchema,
   deleteDeviceSchema,
+  sendInvoiceEmailSchema,
 } from './validation';
 
 export interface Env {
@@ -74,6 +76,8 @@ export interface Env {
   HMRC_REDIRECT_URI?: string;
   ENCRYPTION_KEY: string;
   ANTHROPIC_API_KEY: string;
+  RESEND_API_KEY: string;
+  FROM_EMAIL: string;
   APP_URL?: string;
 }
 
@@ -130,7 +134,7 @@ app.use(
   '*',
   cors({
     origin: (origin: string) => {
-      const allowed = ['http://localhost:8081', 'https://quidsafe.co.uk', 'https://app.quidsafe.co.uk', 'https://quidsafe.pages.dev'];
+      const allowed = ['http://localhost:8081', 'https://quidsafe.uk', 'https://app.quidsafe.uk', 'https://quidsafe.uk'];
       // Allow exact matches + Cloudflare Pages preview deployments
       if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
         return origin;
@@ -225,7 +229,7 @@ app.get('/banking/callback', async (c) => {
     if (isNative) {
       return c.redirect('quidsafe://banking/callback?error=denied');
     }
-    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
     return c.redirect(`${appUrl}/(tabs)?bankError=denied`);
   }
   if (!state) {
@@ -289,14 +293,14 @@ app.get('/banking/callback', async (c) => {
       if (isNative) {
         return c.redirect('quidsafe://banking/callback?success=true');
       }
-      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
       return c.redirect(`${appUrl}/(tabs)?bankConnected=true`);
     } catch (err) {
       console.error('Initial sync failed:', err);
       if (isNative) {
         return c.redirect('quidsafe://banking/callback?success=true&syncError=true');
       }
-      const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+      const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
       return c.redirect(`${appUrl}/(tabs)?bankConnected=true&syncError=true`);
     }
   } catch (err) {
@@ -305,7 +309,7 @@ app.get('/banking/callback', async (c) => {
     if (isNative) {
       return c.redirect('quidsafe://banking/callback?error=exchange_failed');
     }
-    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
     return c.redirect(`${appUrl}/(tabs)?bankError=exchange_failed`);
   }
 });
@@ -335,7 +339,7 @@ app.get('/mtd/callback', async (c) => {
     if (isNative) {
       return c.redirect('quidsafe://hmrc/callback?error=denied');
     }
-    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
     return c.redirect(`${appUrl}/mtd?hmrcError=denied`);
   }
   if (!state) {
@@ -373,7 +377,7 @@ app.get('/mtd/callback', async (c) => {
     if (isNative) {
       return c.redirect('quidsafe://hmrc/callback?success=true');
     }
-    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
     return c.redirect(`${appUrl}/mtd?hmrcConnected=true`);
   } catch (err) {
     console.error('HMRC token exchange failed:', err);
@@ -381,7 +385,7 @@ app.get('/mtd/callback', async (c) => {
     if (isNative) {
       return c.redirect('quidsafe://hmrc/callback?error=exchange_failed');
     }
-    const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+    const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
     return c.redirect(`${appUrl}/mtd?hmrcError=exchange_failed`);
   }
 });
@@ -1178,6 +1182,69 @@ authed.delete('/invoices/:id', async (c) => {
   return c.json({ deleted: true });
 });
 
+// Send invoice via email
+authed.post('/invoices/:id/send', async (c) => {
+  const userId = c.get('userId');
+  const invoiceId = c.req.param('id');
+  const raw = await c.req.json();
+  const result = sendInvoiceEmailSchema.safeParse(raw);
+  if (!result.success) {
+    return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
+  }
+
+  // Fetch invoice and verify ownership
+  const invoice = await queryOne<{
+    id: string; user_id: string; client_name: string; client_email: string | null;
+    amount: number; description: string; due_date: string; status: string;
+  }>(
+    c.env.DB,
+    'SELECT id, user_id, client_name, client_email, amount, description, due_date, status FROM invoices WHERE id = ? AND user_id = ?',
+    [invoiceId, userId],
+  );
+
+  if (!invoice) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'Invoice not found' } }, 404);
+  }
+
+  if (invoice.status === 'paid') {
+    return c.json({ error: { code: 'ALREADY_PAID', message: 'Cannot send a paid invoice' } }, 400);
+  }
+
+  // Get sender name
+  const user = await queryOne<{ name: string | null }>(
+    c.env.DB,
+    'SELECT name FROM users WHERE clerk_id = ?',
+    [userId],
+  );
+  const senderName = user?.name || 'A QuidSafe user';
+
+  const emailResult = await sendInvoiceEmail(
+    {
+      clientName: invoice.client_name,
+      clientEmail: result.data.recipientEmail,
+      amount: invoice.amount,
+      description: invoice.description,
+      dueDate: invoice.due_date,
+      invoiceId: invoice.id,
+      senderName,
+    },
+    { apiKey: c.env.RESEND_API_KEY, fromEmail: c.env.FROM_EMAIL },
+  );
+
+  if (!emailResult.success) {
+    return c.json({ error: { code: 'EMAIL_FAILED', message: 'Failed to send email' } }, 500);
+  }
+
+  // Update status to 'sent' and store recipient email
+  await execute(
+    c.env.DB,
+    "UPDATE invoices SET status = 'sent', client_email = ? WHERE id = ? AND user_id = ?",
+    [result.data.recipientEmail, invoiceId, userId],
+  );
+
+  return c.json({ success: true });
+});
+
 // ── Billing ──────────────────────────────────────────────
 authed.post('/billing/checkout', async (c) => {
   const userId = c.get('userId');
@@ -1188,7 +1255,7 @@ authed.post('/billing/checkout', async (c) => {
   }
   const body = result.data;
   const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
-  const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+  const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
   const session = await createCheckoutSession(userId, body.plan, config, c.env.DB, appUrl);
   return c.json(session);
 });
@@ -1196,7 +1263,7 @@ authed.post('/billing/checkout', async (c) => {
 authed.post('/billing/portal', async (c) => {
   const userId = c.get('userId');
   const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
-  const appUrl = c.env.APP_URL || 'https://quidsafe.pages.dev';
+  const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
   const session = await createPortalSession(userId, config, c.env.DB, appUrl);
   return c.json(session);
 });
@@ -1610,6 +1677,19 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   }
 
   console.log(`[Cron] Daily sync complete: ${successCount} success, ${failCount} failed out of ${connections.results.length} connections`);
+
+  // ── Invoice overdue auto-transition ────────────────────────
+  try {
+    const overdueResult = await env.DB
+      .prepare("UPDATE invoices SET status = 'overdue' WHERE status = 'sent' AND due_date < date('now')")
+      .run();
+    const overdueCount = (overdueResult.meta as { changes?: number }).changes ?? 0;
+    if (overdueCount > 0) {
+      console.log(`[Cron] Marked ${overdueCount} invoice(s) as overdue`);
+    }
+  } catch (overdueErr) {
+    console.error('[Cron] Invoice overdue check failed:', overdueErr);
+  }
 
   // ── Grace period expiry check ─────────────────────────────
   // Downgrade users whose 7-day payment grace period has expired

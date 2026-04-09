@@ -648,6 +648,7 @@ export default function LandingScreen() {
                 <Pressable onPress={() => router.push('/privacy')}><Text style={styles.footerLink}>Privacy Policy</Text></Pressable>
                 <Pressable onPress={() => router.push('/terms')}><Text style={styles.footerLink}>Terms of Service</Text></Pressable>
                 <Pressable onPress={() => router.push('/cookie-policy')}><Text style={styles.footerLink}>Cookie Policy</Text></Pressable>
+                <Pressable onPress={() => router.push('/cookie-policy')}><Text style={styles.footerLink}>Cookie Settings</Text></Pressable>
               </View>
             </View>
           </View>

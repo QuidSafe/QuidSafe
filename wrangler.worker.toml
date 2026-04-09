@@ -25,7 +25,8 @@ migrations_dir = "worker/migrations"
 
 [env.dev.vars]
 ENVIRONMENT = "development"
-CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
+FROM_EMAIL = "invoices@quidsafe.uk"
 
 # ─── Staging ───────────────────────────────────────────────
 [env.staging]
@@ -39,15 +40,15 @@ migrations_dir = "worker/migrations"
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
-CLERK_PUBLISHABLE_KEY = "pk_test_cHJvZm91bmQtcHJpbWF0ZS04Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
+FROM_EMAIL = "invoices@quidsafe.uk"
 
 # ─── Production ────────────────────────────────────────────
 [env.production]
 name = "quidsafe-api"
-# Uncomment when api.quidsafe.co.uk is added to Cloudflare DNS:
-# routes = [
-#   { pattern = "api.quidsafe.co.uk", custom_domain = true }
-# ]
+routes = [
+  { pattern = "api.quidsafe.uk", custom_domain = true }
+]
 
 [[env.production.d1_databases]]
 binding = "DB"
@@ -57,5 +58,5 @@ migrations_dir = "worker/migrations"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-# TODO: Replace with production Clerk publishable key (pk_live_...) from Clerk Dashboard > API Keys
-CLERK_PUBLISHABLE_KEY = "pk_live_REPLACE_WITH_PRODUCTION_KEY"
+CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
+FROM_EMAIL = "invoices@quidsafe.uk"
