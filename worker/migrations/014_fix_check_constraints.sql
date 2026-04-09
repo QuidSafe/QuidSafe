@@ -4,6 +4,10 @@
 --
 -- SQLite requires table rebuild to alter CHECK constraints.
 
+-- Clean up orphan tables from previous failed migration attempt
+DROP TABLE IF EXISTS users_new;
+DROP TABLE IF EXISTS subscriptions_new;
+
 -- Step 1: Rebuild users table with correct CHECK
 CREATE TABLE users_new (
   id TEXT PRIMARY KEY,
@@ -58,7 +62,7 @@ INSERT INTO subscriptions_new SELECT
     ELSE plan
   END,
   status, trial_ends_at, current_period_start, current_period_end,
-  created_at, updated_at
+  created_at, datetime('now')
 FROM subscriptions;
 
 DROP TABLE subscriptions;
@@ -67,3 +71,4 @@ ALTER TABLE subscriptions_new RENAME TO subscriptions;
 -- Recreate indexes that were on the original tables
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe ON subscriptions(stripe_customer_id);
