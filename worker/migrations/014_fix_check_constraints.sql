@@ -9,7 +9,6 @@ CREATE TABLE users_new (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   name TEXT,
-  business_type TEXT,
   stripe_customer_id TEXT,
   subscription_tier TEXT NOT NULL DEFAULT 'trialing' CHECK (subscription_tier IN ('trialing', 'pro', 'past_due', 'cancelled')),
   grace_period_ends TEXT,
@@ -24,7 +23,7 @@ CREATE TABLE users_new (
 );
 
 INSERT INTO users_new SELECT
-  id, email, name, business_type, stripe_customer_id,
+  id, email, name, stripe_customer_id,
   CASE
     WHEN subscription_tier = 'free' THEN 'trialing'
     ELSE subscription_tier
