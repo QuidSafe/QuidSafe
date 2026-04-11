@@ -47,6 +47,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Cache Metro & Expo build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .expo
+            node_modules/.cache
+          key: expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json', 'babel.config.js', 'metro.config.js') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'constants/**') }}
+          restore-keys: |
+            expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json', 'babel.config.js', 'metro.config.js') }}-
+            expo-web-${{ runner.os }}-
+
       - name: Expo export (web)
         run: npx expo export --platform web
         env:
