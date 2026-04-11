@@ -45,12 +45,18 @@ export function CookieConsent() {
           <Pressable
             style={({ pressed }) => [styles.acceptButton, pressed && styles.pressed]}
             onPress={handleAccept}
+            accessibilityRole="button"
+            accessibilityLabel="Accept essential cookies"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={styles.acceptText}>Accept</Text>
           </Pressable>
           <Pressable
             onPress={() => router.push('/cookie-policy')}
             style={({ pressed }) => [styles.learnMore, pressed && styles.pressed]}
+            accessibilityRole="link"
+            accessibilityLabel="Learn more about cookies"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={styles.learnMoreText}>Learn more</Text>
           </Pressable>

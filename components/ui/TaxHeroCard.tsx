@@ -1,5 +1,5 @@
-import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Colors, colors as semanticColors, Spacing, BorderRadius } from '@/constants/Colors';
+import { StyleSheet, View, Text, Pressable, useWindowDimensions } from 'react-native';
+import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
 import type { TaxCalculation } from '@/lib/types';
@@ -8,52 +8,80 @@ export interface TaxHeroCardProps {
   tax: TaxCalculation | undefined;
 }
 
+/**
+ * Apple-style hero tax summary: dramatic typography, subtle glow, minimal chrome.
+ * The primary number dominates. Secondary stats are quiet and tabular.
+ */
 export function TaxHeroCard({ tax }: TaxHeroCardProps) {
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 400;
+
+  const totalOwed = tax?.totalTaxOwed ?? 0;
+  const totalIncome = tax?.totalIncome ?? 0;
+  const setAsideMonthly = tax?.setAsideMonthly ?? 0;
+  const incomeTax = tax?.incomeTax?.total ?? 0;
+  const nationalInsurance = tax?.nationalInsurance?.total ?? 0;
+  const totalExpenses = tax?.totalExpenses ?? 0;
+
+  // Responsive hero type - 56-72px
+  const heroFontSize = isNarrow ? 52 : 68;
+
   return (
     <Pressable
       accessible={true}
       accessibilityRole="summary"
-      accessibilityLabel={`Tax summary. Set aside ${formatCurrency(tax?.totalTaxOwed ?? 0)} for tax based on ${formatCurrency(tax?.totalIncome ?? 0)} income this tax year`}
-      style={({ pressed }) => [pressed && styles.pressedCard]}
+      accessibilityLabel={`Set aside ${formatCurrency(totalOwed)} for tax based on ${formatCurrency(totalIncome)} income this tax year. Monthly set aside: ${formatCurrency(setAsideMonthly)}.`}
+      style={({ pressed }) => [styles.root, pressed && styles.pressed]}
     >
-      <View style={[styles.heroCard, { backgroundColor: semanticColors.background }]}>
-        {/* Radial glow overlays */}
-        <View style={styles.heroGlow} importantForAccessibility="no" accessibilityElementsHidden={true} />
-        <View style={styles.heroGlowSecondary} importantForAccessibility="no" accessibilityElementsHidden={true} />
+      {/* Subtle radial glow */}
+      <View style={styles.glow} pointerEvents="none" />
 
-        {/* Label row with dot */}
-        <View style={styles.heroLabelRow}>
-          <View style={styles.heroLabelDot} importantForAccessibility="no" accessibilityElementsHidden={true} />
-          <Text style={styles.heroLabel}>SET ASIDE FOR TAX</Text>
+      {/* Tiny uppercase label */}
+      <Text style={styles.eyebrow}>TOTAL TAX DUE THIS YEAR</Text>
+
+      {/* The hero number - everything else is secondary to this */}
+      <Text
+        style={[
+          styles.heroAmount,
+          { fontSize: heroFontSize, lineHeight: heroFontSize * 1.02 },
+        ]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {formatCurrency(totalOwed)}
+      </Text>
+
+      <Text style={styles.sub}>
+        On {formatCurrency(totalIncome)} of income
+      </Text>
+
+      {/* Monthly set-aside prominent CTA-style band */}
+      <View style={styles.monthlyBand}>
+        <View style={styles.monthlyLeft}>
+          <Text style={styles.monthlyLabel}>Set aside each month</Text>
+          <Text style={styles.monthlyAmount}>{formatCurrency(setAsideMonthly)}</Text>
         </View>
-
-        <Text style={styles.heroAmount}>{formatCurrency(tax?.totalTaxOwed ?? 0)}</Text>
-        <Text style={styles.heroSubtext}>
-          Based on {formatCurrency(tax?.totalIncome ?? 0)} income this tax year
-        </Text>
-
-        {/* 3 glassmorphic boxes */}
-        <View style={styles.heroRow}>
-          <View style={styles.heroBox} accessibilityLabel={`Income Tax: ${formatCurrency(tax?.incomeTax?.total ?? 0)}`}>
-            <Text style={styles.heroBoxLabel}>Income Tax</Text>
-            <Text style={styles.heroBoxValue}>{formatCurrency(tax?.incomeTax?.total ?? 0)}</Text>
-          </View>
-          <View style={styles.heroBox} accessibilityLabel={`National Insurance Class 4: ${formatCurrency(tax?.nationalInsurance?.total ?? 0)}`}>
-            <Text style={styles.heroBoxLabel}>NI (Class 4)</Text>
-            <Text style={styles.heroBoxValue}>{formatCurrency(tax?.nationalInsurance?.total ?? 0)}</Text>
-          </View>
-          <View style={styles.heroBox} accessibilityLabel={`Expenses: minus ${formatCurrency(tax?.totalExpenses ?? 0)}`}>
-            <Text style={styles.heroBoxLabel}>Expenses</Text>
-            <Text style={[styles.heroBoxValue, styles.heroBoxExpenses]}>
-              -{formatCurrency(tax?.totalExpenses ?? 0)}
-            </Text>
-          </View>
+        <View style={styles.monthlyBadge}>
+          <View style={styles.monthlyBadgeDot} />
+          <Text style={styles.monthlyBadgeText}>On track</Text>
         </View>
+      </View>
 
-        {/* Monthly set-aside callout inside hero */}
-        <View style={styles.heroSetAside} accessibilityLabel={`Set aside this month: ${formatCurrency(tax?.setAsideMonthly ?? 0)}`}>
-          <Text style={styles.heroSetAsideLabel}>SET ASIDE THIS MONTH</Text>
-          <Text style={styles.heroSetAsideAmount}>{formatCurrency(tax?.setAsideMonthly ?? 0)}</Text>
+      {/* Quiet breakdown - tabular, no boxes */}
+      <View style={styles.breakdown}>
+        <View style={styles.breakdownRow}>
+          <Text style={styles.breakdownLabel}>Income Tax</Text>
+          <Text style={styles.breakdownValue}>{formatCurrency(incomeTax)}</Text>
+        </View>
+        <View style={styles.breakdownRow}>
+          <Text style={styles.breakdownLabel}>National Insurance</Text>
+          <Text style={styles.breakdownValue}>{formatCurrency(nationalInsurance)}</Text>
+        </View>
+        <View style={styles.breakdownRow}>
+          <Text style={styles.breakdownLabel}>Expenses</Text>
+          <Text style={[styles.breakdownValue, styles.expensesValue]}>
+            -{formatCurrency(totalExpenses)}
+          </Text>
         </View>
       </View>
     </Pressable>
@@ -61,123 +89,123 @@ export function TaxHeroCard({ tax }: TaxHeroCardProps) {
 }
 
 const styles = StyleSheet.create({
-  pressedCard: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.95,
-  },
-  heroCard: {
-    borderRadius: 22,
-    padding: Spacing.lg,
-    paddingBottom: 20,
-    overflow: 'hidden',
+  root: {
+    position: 'relative',
+    backgroundColor: Colors.charcoal,
+    borderRadius: 20,
+    padding: Spacing.lg + 4,
     borderWidth: 1,
-    borderColor: `${semanticColors.text}14`,
-    shadowColor: `${semanticColors.background}80`,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 28,
-    elevation: 8,
+    borderColor: Colors.midGrey,
+    overflow: 'hidden',
   },
-  heroGlow: {
+  pressed: {
+    opacity: 0.92,
+  },
+  glow: {
     position: 'absolute',
-    top: -60,
-    right: -60,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: `${semanticColors.accent}1A`,
+    top: -120,
+    right: -120,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.electricBlue,
+    opacity: 0.08,
   },
-  heroGlowSecondary: {
-    position: 'absolute',
-    bottom: -40,
-    left: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: `${semanticColors.accent}1F`,
-  },
-  heroLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 5,
-  },
-  heroLabelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: semanticColors.accent,
-  },
-  heroLabel: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: 10,
-    color: `${semanticColors.text}8C`,
-    letterSpacing: 1.5,
+
+  eyebrow: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    letterSpacing: 1.4,
+    color: Colors.electricBlue,
     textTransform: 'uppercase',
+    marginBottom: 12,
   },
   heroAmount: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 40,
-    color: semanticColors.text,
-    lineHeight: 42,
-    letterSpacing: -1,
+    color: Colors.white,
+    letterSpacing: -2,
   },
-  heroSubtext: {
+  sub: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11.5,
-    color: `${semanticColors.text}73`,
-    marginTop: Spacing.xs,
+    fontSize: 14,
+    color: Colors.lightGrey,
+    marginTop: 8,
   },
-  heroRow: {
-    flexDirection: 'row',
-    gap: 7,
-    marginTop: 16,
-  },
-  heroBox: {
-    flex: 1,
-    backgroundColor: `${semanticColors.text}0D`,
-    borderRadius: 12,
+
+  // Monthly band
+  monthlyBand: {
+    marginTop: 24,
+    backgroundColor: Colors.blueGlow,
     borderWidth: 1,
-    borderColor: `${semanticColors.text}1A`,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderColor: 'rgba(0, 102, 255, 0.25)',
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  heroBoxLabel: {
+  monthlyLeft: {
+    flex: 1,
+  },
+  monthlyLabel: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    color: Colors.lightGrey,
+    marginBottom: 4,
+  },
+  monthlyAmount: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 28,
+    color: Colors.electricBlue,
+    letterSpacing: -0.5,
+  },
+  monthlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 200, 83, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 200, 83, 0.25)',
+  },
+  monthlyBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.success,
+  },
+  monthlyBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 9.5,
-    color: `${semanticColors.text}80`,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 2,
+    fontSize: 11,
+    color: Colors.success,
   },
-  heroBoxValue: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: 16,
-    color: semanticColors.text,
+
+  // Breakdown
+  breakdown: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.midGrey,
+    gap: 12,
   },
-  heroBoxExpenses: {
-    color: semanticColors.success,
-  },
-  heroSetAside: {
-    marginTop: 14,
+  breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: `${semanticColors.accent}1F`,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
   },
-  heroSetAsideLabel: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: 10.5,
-    color: semanticColors.accent,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+  breakdownLabel: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 14,
+    color: Colors.lightGrey,
   },
-  heroSetAsideAmount: {
-    fontFamily: Fonts.mono.semiBold,
-    fontSize: 22,
-    color: semanticColors.accent,
+  breakdownValue: {
+    fontFamily: Fonts.mono.regular,
+    fontSize: 15,
+    color: Colors.white,
+  },
+  expensesValue: {
+    color: Colors.success,
   },
 });
