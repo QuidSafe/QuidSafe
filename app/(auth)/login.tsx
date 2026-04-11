@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSSO, useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSSO, useSignIn } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Lock, Mail, ArrowRight } from 'lucide-react-native';
@@ -27,6 +27,7 @@ type Mode = 'signin' | 'forgot' | 'reset';
 export default function LoginScreen() {
   const { startSSOFlow } = useSSO();
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
   const { isDesktop } = useResponsiveLayout();
@@ -59,6 +60,10 @@ export default function LoginScreen() {
 
   const handleEmailSignIn = useCallback(async () => {
     if (!isLoaded || !signIn) return;
+    if (isSignedIn) {
+      router.replace('/(tabs)');
+      return;
+    }
     if (!email.trim() || !password) {
       setError('Please enter your email and password');
       return;
@@ -76,14 +81,19 @@ export default function LoginScreen() {
         setError(`Sign in incomplete (status: ${result.status}). Please try again.`);
       }
     } catch (err: unknown) {
-      const errObj = err as { errors?: Array<{ message: string; longMessage?: string }> };
+      const errObj = err as { errors?: Array<{ code?: string; message: string; longMessage?: string }> };
+      const code = errObj?.errors?.[0]?.code;
+      if (code === 'session_exists') {
+        router.replace('/(tabs)');
+        return;
+      }
       const msg = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
         || (err instanceof Error ? err.message : 'Sign in failed');
       setError(msg);
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signIn, setActive, email, password]);
+  }, [isLoaded, signIn, setActive, email, password, isSignedIn, router]);
 
   const handleRequestReset = useCallback(async () => {
     if (!isLoaded || !signIn || !email.trim()) {
