@@ -635,7 +635,9 @@ const styles = StyleSheet.create({
   /* Typography */
   heading: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 28,
+    fontSize: 36,
+    letterSpacing: -0.8,
+    lineHeight: 40,
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },

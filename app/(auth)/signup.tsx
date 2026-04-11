@@ -154,6 +154,7 @@ export default function SignupScreen() {
                 autoComplete="one-time-code"
                 textContentType="oneTimeCode"
                 onSubmitEditing={handleVerify}
+                accessibilityLabel="6-digit verification code"
               />
             </View>
           </View>
@@ -230,6 +231,7 @@ export default function SignupScreen() {
               autoCapitalize="words"
               autoComplete="name"
               textContentType="name"
+              accessibilityLabel="Full name"
             />
             {isNameValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
           </View>
@@ -255,6 +257,7 @@ export default function SignupScreen() {
               keyboardType="email-address"
               autoComplete="email"
               textContentType="emailAddress"
+              accessibilityLabel="Email address"
             />
             {isEmailValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
           </View>
@@ -281,6 +284,7 @@ export default function SignupScreen() {
               autoComplete="new-password"
               textContentType="newPassword"
               onSubmitEditing={handleSignUp}
+              accessibilityLabel="Password (minimum 8 characters)"
             />
             {isPasswordValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
           </View>

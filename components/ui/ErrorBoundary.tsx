@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
+import { reportError } from '@/lib/errorReporting';
 
 interface Props {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export class AppErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[QuidSafe ErrorBoundary]', error, errorInfo);
+    reportError(error, { componentStack: errorInfo.componentStack });
   }
 
   handleReset = () => {

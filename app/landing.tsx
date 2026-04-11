@@ -154,7 +154,13 @@ export default function LandingScreen() {
           {isDesktop && (
             <View style={s.navLinks}>
               {NAV_SECTIONS.map((section) => (
-                <Pressable key={section} onPress={() => scrollToSection(section)}>
+                <Pressable
+                  key={section}
+                  onPress={() => scrollToSection(section)}
+                  accessibilityRole="link"
+                  accessibilityLabel={`Jump to ${section} section`}
+                  hitSlop={{ top: 12, bottom: 12 }}
+                >
                   <Text style={s.navLink}>{section}</Text>
                 </Pressable>
               ))}
@@ -290,16 +296,24 @@ export default function LandingScreen() {
               <Text style={s.sectionHead}>One plan. Everything included.</Text>
 
               {/* Billing toggle */}
-              <View style={s.toggle}>
+              <View style={s.toggle} accessibilityRole="tablist">
                 <Pressable
                   onPress={() => setAnnual(false)}
                   style={[s.toggleOption, !annual && s.toggleOptionActive]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: !annual }}
+                  accessibilityLabel="Monthly billing"
+                  hitSlop={{ top: 8, bottom: 8 }}
                 >
                   <Text style={[s.toggleText, !annual && s.toggleTextActive]}>Monthly</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setAnnual(true)}
                   style={[s.toggleOption, annual && s.toggleOptionActive]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: annual }}
+                  accessibilityLabel="Yearly billing, save 17 percent"
+                  hitSlop={{ top: 8, bottom: 8 }}
                 >
                   <Text style={[s.toggleText, annual && s.toggleTextActive]}>
                     Yearly <Text style={s.toggleSave}>save 17%</Text>
@@ -384,16 +398,16 @@ export default function LandingScreen() {
               </View>
 
               <View style={s.footerLinks}>
-                <Pressable onPress={() => router.push('/about')}>
+                <Pressable onPress={() => router.push('/about')} accessibilityRole="link" hitSlop={{ top: 8, bottom: 8 }}>
                   <Text style={s.footerLink}>About</Text>
                 </Pressable>
-                <Pressable onPress={() => router.push('/terms')}>
+                <Pressable onPress={() => router.push('/terms')} accessibilityRole="link" hitSlop={{ top: 8, bottom: 8 }}>
                   <Text style={s.footerLink}>Terms</Text>
                 </Pressable>
-                <Pressable onPress={() => router.push('/privacy')}>
+                <Pressable onPress={() => router.push('/privacy')} accessibilityRole="link" hitSlop={{ top: 8, bottom: 8 }}>
                   <Text style={s.footerLink}>Privacy</Text>
                 </Pressable>
-                <Pressable onPress={() => router.push('/cookie-policy')}>
+                <Pressable onPress={() => router.push('/cookie-policy')} accessibilityRole="link" hitSlop={{ top: 8, bottom: 8 }}>
                   <Text style={s.footerLink}>Cookies</Text>
                 </Pressable>
               </View>

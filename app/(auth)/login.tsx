@@ -288,6 +288,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoComplete="email"
               textContentType="emailAddress"
+              accessibilityLabel="Email address"
             />
           </View>
         </View>
@@ -318,6 +319,7 @@ export default function LoginScreen() {
               autoComplete="current-password"
               textContentType="password"
               onSubmitEditing={handleEmailSignIn}
+              accessibilityLabel="Password"
             />
           </View>
         </View>

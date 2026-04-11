@@ -35,7 +35,13 @@
       "Bash(git push:*)",
       "Bash(gh pr:*)",
       "Bash(git commit -m 'fix: TypeScript review feedback on landing:*)",
-      "mcp__clerk__clerk_sdk_snippet"
+      "mcp__clerk__clerk_sdk_snippet",
+      "Bash(git commit -m 'fix: signup name field + Clerk error handling + perf + docs:*)",
+      "Bash(npm test:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit -m 'feat: dashboard hero + tests + a11y + error reporting scaffold:*)"
     ]
   }
 }
