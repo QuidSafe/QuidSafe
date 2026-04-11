@@ -2,38 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://quidsafe.uk/</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://quidsafe.uk/landing</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://quidsafe.uk/about</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://quidsafe.uk/mtd</loc>
+    <lastmod>2026-04-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://quidsafe.uk/self-assessment</loc>
+    <lastmod>2026-04-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quidsafe.uk/tax-history</loc>
+    <lastmod>2026-04-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://quidsafe.uk/privacy</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://quidsafe.uk/terms</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://quidsafe.uk/cookie-policy</loc>
-    <lastmod>2026-04-07</lastmod>
+    <lastmod>2026-04-11</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://quidsafe.uk/status</loc>
+    <lastmod>2026-04-11</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.3</priority>
   </url>
 </urlset>
