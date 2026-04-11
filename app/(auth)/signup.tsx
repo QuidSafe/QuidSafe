@@ -72,14 +72,22 @@ export default function SignupScreen() {
     setLoading(true);
     setError('');
     try {
+      const trimmedEmail = email.trim();
       const trimmedName = name.trim();
       const [firstName, ...rest] = trimmedName.split(/\s+/);
       const lastName = rest.join(' ') || firstName;
 
+      // Clerk production may require a username. Derive one from the email
+      // prefix so signup works regardless of the dashboard config.
+      const emailPrefix = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '');
+      const suffix = Math.random().toString(36).slice(2, 6);
+      const derivedUsername = `${emailPrefix || 'user'}_${suffix}`.slice(0, 64);
+
       await signUp.create({
         firstName,
         lastName,
-        emailAddress: email.trim(),
+        username: derivedUsername,
+        emailAddress: trimmedEmail,
         password,
       });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
