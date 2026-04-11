@@ -175,6 +175,7 @@ export default function RootLayout() {
       <meta name="application-name" content="QuidSafe" />
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="msapplication-TileColor" content="#000000" />
+      <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
       <link rel="apple-touch-icon" href="/assets/images/icon.png" />
       <link rel="manifest" href="/manifest.json" />
 
