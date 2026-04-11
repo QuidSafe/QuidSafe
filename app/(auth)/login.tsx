@@ -73,10 +73,12 @@ export default function LoginScreen() {
       if (result.status === 'complete' && setActive) {
         await setActive({ session: result.createdSessionId });
       } else {
-        setError('Unable to sign in. Please check your details.');
+        setError(`Sign in incomplete (status: ${result.status}). Please try again.`);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Sign in failed';
+      const errObj = err as { errors?: Array<{ message: string; longMessage?: string }> };
+      const msg = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
+        || (err instanceof Error ? err.message : 'Sign in failed');
       setError(msg);
     } finally {
       setLoading(false);

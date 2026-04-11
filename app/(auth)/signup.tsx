@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { useSignUp, useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Shield, Lock, Mail, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
+import { Shield, Lock, Mail, User, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
 import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -29,19 +29,22 @@ export default function SignupScreen() {
   const { colors } = useTheme();
   const { isDesktop } = useResponsiveLayout();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [nameFocus, setNameFocus] = useState(false);
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isNameValid = name.trim().length >= 2;
   const isEmailValid = EMAIL_REGEX.test(email.trim());
   const isPasswordValid = password.length >= 8;
-  const canSubmit = isEmailValid && isPasswordValid;
+  const canSubmit = isNameValid && isEmailValid && isPasswordValid;
 
   const handleGoogleSignUp = useCallback(async () => {
     try {
@@ -61,26 +64,35 @@ export default function SignupScreen() {
 
   const handleSignUp = useCallback(async () => {
     if (!isLoaded || !signUp || !canSubmit) {
-      if (!isEmailValid) setError('Please enter a valid email address');
+      if (!isNameValid) setError('Please enter your name');
+      else if (!isEmailValid) setError('Please enter a valid email address');
       else if (!isPasswordValid) setError('Password must be at least 8 characters');
       return;
     }
     setLoading(true);
     setError('');
     try {
+      const trimmedName = name.trim();
+      const [firstName, ...rest] = trimmedName.split(/\s+/);
+      const lastName = rest.join(' ') || firstName;
+
       await signUp.create({
+        firstName,
+        lastName,
         emailAddress: email.trim(),
         password,
       });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setPendingVerification(true);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Sign up failed';
+      const errObj = err as { errors?: Array<{ message: string; longMessage?: string }> };
+      const message = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
+        || (err instanceof Error ? err.message : 'Sign up failed');
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signUp, email, password, canSubmit, isEmailValid, isPasswordValid]);
+  }, [isLoaded, signUp, name, email, password, canSubmit, isNameValid, isEmailValid, isPasswordValid]);
 
   const handleVerify = useCallback(async () => {
     if (!isLoaded || !signUp || !code) return;
@@ -88,14 +100,30 @@ export default function SignupScreen() {
     setError('');
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
-      if (result.status === 'complete' && setActive) {
-        await setActive({ session: result.createdSessionId });
+
+      if (result.status === 'complete') {
+        if (setActive) {
+          await setActive({ session: result.createdSessionId });
+        }
         router.replace('/onboarding');
+        return;
+      }
+
+      // Status not complete - show exactly what's missing
+      const missing = (result.missingFields as string[] | undefined) || [];
+      const unverified = (result.unverifiedFields as string[] | undefined) || [];
+
+      if (missing.length > 0) {
+        setError(`Missing required field(s): ${missing.join(', ')}. Please start over.`);
+      } else if (unverified.length > 0) {
+        setError(`Still need to verify: ${unverified.join(', ')}.`);
       } else {
-        setError('Verification incomplete. Please try again.');
+        setError(`Unexpected status: ${result.status}. Please try again.`);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Invalid code';
+      const errObj = err as { errors?: Array<{ message: string; longMessage?: string }> };
+      const message = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
+        || (err instanceof Error ? err.message : 'Invalid code');
       setError(message);
     } finally {
       setLoading(false);
@@ -181,6 +209,30 @@ export default function SignupScreen() {
           <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           <Text style={[styles.dividerText, { color: colors.textMuted }]}>or sign up with email</Text>
           <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        </View>
+
+        {/* Name */}
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Full name</Text>
+          <View style={[
+            styles.inputWrap,
+            { borderColor: nameFocus ? colors.accent : colors.border, backgroundColor: colors.surface },
+          ]}>
+            <User size={16} color={colors.textMuted} strokeWidth={1.5} />
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="Jane Smith"
+              placeholderTextColor={colors.textMuted}
+              value={name}
+              onChangeText={setName}
+              onFocus={() => setNameFocus(true)}
+              onBlur={() => setNameFocus(false)}
+              autoCapitalize="words"
+              autoComplete="name"
+              textContentType="name"
+            />
+            {isNameValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
+          </View>
         </View>
 
         {/* Email */}

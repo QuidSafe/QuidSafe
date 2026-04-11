@@ -1722,47 +1722,47 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   try {
     const today = new Date().toISOString().split('T')[0];
     const dueRecurring = await env.DB
-      .prepare('SELECT * FROM recurring_expenses WHERE active = 1 AND next_due_date <= ?')
+      .prepare('SELECT id, user_id, amount, description, hmrc_category, frequency, next_due_date FROM recurring_expenses WHERE active = 1 AND next_due_date <= ?')
       .bind(today)
       .all<{ id: string; user_id: string; amount: number; description: string; hmrc_category: string; frequency: string; next_due_date: string }>();
 
-    let recurringLogged = 0;
-    for (const rec of dueRecurring.results) {
-      // Create the expense entry
-      const expenseId = crypto.randomUUID();
-      await env.DB
-        .prepare('INSERT INTO expenses (id, user_id, amount, description, hmrc_category, date) VALUES (?, ?, ?, ?, ?, ?)')
-        .bind(expenseId, rec.user_id, rec.amount, rec.description, rec.hmrc_category, rec.next_due_date)
-        .run();
+    if (dueRecurring.results.length > 0) {
+      // Batch all inserts and updates into a single D1 call (was N+1 before)
+      const statements = [];
+      for (const rec of dueRecurring.results) {
+        const expenseId = crypto.randomUUID();
+        statements.push(
+          env.DB
+            .prepare('INSERT INTO expenses (id, user_id, amount, description, hmrc_category, date) VALUES (?, ?, ?, ?, ?, ?)')
+            .bind(expenseId, rec.user_id, rec.amount, rec.description, rec.hmrc_category, rec.next_due_date),
+        );
 
-      // Advance next_due_date based on frequency
-      const nextDate = new Date(rec.next_due_date);
-      switch (rec.frequency) {
-        case 'weekly':
-          nextDate.setDate(nextDate.getDate() + 7);
-          break;
-        case 'monthly':
-          nextDate.setMonth(nextDate.getMonth() + 1);
-          break;
-        case 'quarterly':
-          nextDate.setMonth(nextDate.getMonth() + 3);
-          break;
-        case 'yearly':
-          nextDate.setFullYear(nextDate.getFullYear() + 1);
-          break;
+        const nextDate = new Date(rec.next_due_date);
+        switch (rec.frequency) {
+          case 'weekly':
+            nextDate.setDate(nextDate.getDate() + 7);
+            break;
+          case 'monthly':
+            nextDate.setMonth(nextDate.getMonth() + 1);
+            break;
+          case 'quarterly':
+            nextDate.setMonth(nextDate.getMonth() + 3);
+            break;
+          case 'yearly':
+            nextDate.setFullYear(nextDate.getFullYear() + 1);
+            break;
+        }
+        const nextDueDateStr = nextDate.toISOString().split('T')[0];
+
+        statements.push(
+          env.DB
+            .prepare('UPDATE recurring_expenses SET next_due_date = ? WHERE id = ?')
+            .bind(nextDueDateStr, rec.id),
+        );
       }
-      const nextDueDateStr = nextDate.toISOString().split('T')[0];
 
-      await env.DB
-        .prepare('UPDATE recurring_expenses SET next_due_date = ? WHERE id = ?')
-        .bind(nextDueDateStr, rec.id)
-        .run();
-
-      recurringLogged++;
-    }
-
-    if (recurringLogged > 0) {
-      console.log(`[Cron] Auto-logged ${recurringLogged} recurring expense(s)`);
+      await env.DB.batch(statements);
+      console.log(`[Cron] Auto-logged ${dueRecurring.results.length} recurring expense(s) via batch`);
     }
   } catch (recurringErr) {
     console.error('[Cron] Recurring expenses auto-log failed:', recurringErr);

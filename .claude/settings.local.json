@@ -26,7 +26,16 @@
       "Bash(claude mcp:*)",
       "Bash(curl -s \"https://quidsafe.uk\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://profound-primate-82.clerk.accounts.dev/.well-known/openid-configuration\")",
-      "Bash(grep -r \"CLERK_PUBLISHABLE_KEY\\\\|publishableKey\\\\|EXPO_PUBLIC_CLERK\" /Users/nathanconnell/Documents/GitHub/QuidSafe/.env* /Users/nathanconnell/Documents/GitHub/QuidSafe/wrangler.worker.toml)"
+      "Bash(grep -r \"CLERK_PUBLISHABLE_KEY\\\\|publishableKey\\\\|EXPO_PUBLIC_CLERK\" /Users/nathanconnell/Documents/GitHub/QuidSafe/.env* /Users/nathanconnell/Documents/GitHub/QuidSafe/wrangler.worker.toml)",
+      "Bash(node ./node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(npx -y skills add emilkowalski/skill)",
+      "Bash(npx -y skills add emilkowalski/skill --yes --global)",
+      "Bash(git add:*)",
+      "Bash(git commit -m 'feat: Apple-style landing redesign + 404 + sitemap:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(git commit -m 'fix: TypeScript review feedback on landing:*)",
+      "mcp__clerk__clerk_sdk_snippet"
     ]
   }
 }

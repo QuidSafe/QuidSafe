@@ -267,13 +267,14 @@ export default function RootLayout() {
         "knowsAbout": ["sole trader tax", "Making Tax Digital", "HMRC", "self-assessment", "National Insurance", "Open Banking", "expense categorisation"]
       }) }} />
 
-      {/* ── Fonts ── */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&display=swap"
-        rel="stylesheet"
+      {/* ── Plausible Analytics (privacy-friendly, no cookies, GDPR-compliant) ── */}
+      <script
+        defer
+        data-domain="quidsafe.uk"
+        src="https://plausible.io/js/script.js"
       />
+
+      {/* Fonts bundled via @expo-google-fonts/* - no external CDN fetch */}
     </Head>
     {publishableKey ? (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
