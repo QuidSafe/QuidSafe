@@ -5,13 +5,13 @@ import {
   Text,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
+import { FullScreenSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
@@ -167,9 +167,7 @@ export default function TaxHistoryScreen() {
         </ScrollView>
 
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.secondary} />
-          </View>
+          <FullScreenSkeleton />
         ) : (
           <>
             {/* Year Summary Card */}
@@ -460,12 +458,6 @@ const styles = StyleSheet.create({
   },
   pillTextActive: {
     color: Colors.white,
-  },
-
-  // Loading
-  loadingContainer: {
-    paddingVertical: Spacing.xxl,
-    alignItems: 'center',
   },
 
   // Year Summary Card

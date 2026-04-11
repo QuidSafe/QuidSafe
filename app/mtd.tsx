@@ -17,6 +17,7 @@ import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Landmark, CheckCircle, Check, X, ArrowDown, ArrowUp, PoundSterling, Link, Send, Scale } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
+import { FullScreenSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useMtdObligations, useSubmitQuarterly, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
@@ -257,12 +258,7 @@ export default function MTDScreen() {
           </Animated.View>
 
           {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.tint} />
-              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-                Loading MTD data...
-              </Text>
-            </View>
+            <FullScreenSkeleton />
           ) : !isConnected ? (
             /* ─── Empty / Not Connected State ─────────────── */
             <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
@@ -746,18 +742,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
-  },
-
-  // Loading
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xxl * 2,
-    gap: Spacing.md,
-  },
-  loadingText: {
-    fontFamily: Fonts.sourceSans.regular,
-    fontSize: 14,
   },
 
   // Connection status badge

@@ -6,13 +6,13 @@ import {
   ScrollView,
   Pressable,
   Alert,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Info, Calendar, Download, Clipboard, Check, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
+import { FullScreenSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard, useQuarterlyBreakdown, useExpenses } from '@/lib/hooks/useApi';
@@ -451,10 +451,9 @@ export default function SelfAssessmentScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.secondary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading tax data...</Text>
-        </View>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <FullScreenSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -656,16 +655,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.sm,
     paddingBottom: Spacing.xxl,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  loadingText: {
-    fontFamily: Fonts.sourceSans.regular,
-    fontSize: 14,
   },
   backButton: {
     flexDirection: 'row',

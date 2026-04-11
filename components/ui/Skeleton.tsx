@@ -169,6 +169,63 @@ export function IncomeSkeleton() {
   );
 }
 
+/** Section skeleton - a small stack of placeholder rows, sized for inline card use */
+export function SectionSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <View style={{ gap: 10 }}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Skeleton width="45%" height={12} />
+          <Skeleton width={70} height={14} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Full-screen skeleton - summary card + chart shape + list, for tax/MTD/self-assessment */
+export function FullScreenSkeleton() {
+  return (
+    <View style={{ gap: Spacing.md, paddingVertical: Spacing.md }}>
+      <View style={[skeletonStyles.card, { backgroundColor: colors.surface }]}>
+        <Skeleton width="35%" height={12} />
+        <Skeleton width="60%" height={34} style={{ marginTop: 10 }} />
+        <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md }}>
+          <View style={{ flex: 1, gap: 6 }}>
+            <Skeleton width="70%" height={10} />
+            <Skeleton width="90%" height={18} />
+          </View>
+          <View style={{ flex: 1, gap: 6 }}>
+            <Skeleton width="70%" height={10} />
+            <Skeleton width="90%" height={18} />
+          </View>
+        </View>
+      </View>
+
+      <View style={[skeletonStyles.card, { backgroundColor: colors.surface }]}>
+        <Skeleton width="40%" height={12} />
+        <View style={skeletonStyles.chartBarsRow}>
+          {[50, 75, 40, 85, 60, 70].map((h, i) => (
+            <View key={i} style={skeletonStyles.chartBarCol}>
+              <Skeleton width={16} height={h} borderRadius={4} />
+              <Skeleton width={22} height={9} borderRadius={3} style={{ marginTop: 4 }} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <TransactionListSkeleton rows={4} />
+    </View>
+  );
+}
+
 /** Expenses screen skeleton - metric cards, buttons, expense list */
 export function ExpensesSkeleton() {
   return (

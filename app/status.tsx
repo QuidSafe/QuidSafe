@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
+import { SectionSkeleton } from '@/components/ui/Skeleton';
 import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import {
@@ -508,7 +509,7 @@ export default function StatusScreen() {
         <SectionTitle title="Financial Summary" colors={colors} />
         <Card style={[styles.cardPadding, styles.goldLeftBorder]}>
           {dashboard.isLoading ? (
-            <ActivityIndicator size="small" color={Colors.secondary} />
+            <SectionSkeleton rows={4} />
           ) : (
             <>
               <StatRow
@@ -566,7 +567,7 @@ export default function StatusScreen() {
         <SectionTitle title="Bank Connections" colors={colors} />
         <Card style={styles.cardPadding}>
           {bankConnections.isLoading ? (
-            <ActivityIndicator size="small" color={Colors.secondary} />
+            <SectionSkeleton rows={3} />
           ) : connections.length === 0 ? (
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               No bank connections
@@ -625,7 +626,7 @@ export default function StatusScreen() {
         <SectionTitle title="Transaction Stats" colors={colors} />
         <Card style={styles.cardPadding}>
           {transactions.isLoading ? (
-            <ActivityIndicator size="small" color={Colors.secondary} />
+            <SectionSkeleton rows={3} />
           ) : (
             <>
               <StatRow
@@ -707,7 +708,7 @@ export default function StatusScreen() {
         <SectionTitle title="Invoices Overview" colors={colors} />
         <Card style={styles.cardPadding}>
           {invoices.isLoading ? (
-            <ActivityIndicator size="small" color={Colors.secondary} />
+            <SectionSkeleton rows={4} />
           ) : (
             <>
               <StatRow
@@ -785,7 +786,7 @@ export default function StatusScreen() {
         <SectionTitle title="HMRC MTD Status" colors={colors} />
         <Card style={styles.cardPadding}>
           {mtd.isLoading ? (
-            <ActivityIndicator size="small" color={Colors.secondary} />
+            <SectionSkeleton rows={3} />
           ) : (
             <>
               <View style={styles.statRow}>
