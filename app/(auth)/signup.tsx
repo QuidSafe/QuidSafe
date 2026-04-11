@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSignUp, useSSO } from '@clerk/clerk-expo';
+import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Lock, Mail, User, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
@@ -25,6 +25,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignupScreen() {
   const { signUp, isLoaded, setActive } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const { isSignedIn, signOut } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
   const { isDesktop } = useResponsiveLayout();
@@ -71,28 +72,53 @@ export default function SignupScreen() {
     }
     setLoading(true);
     setError('');
+
+    // Clerk rejects signUp.create() if a session already exists. Clear any
+    // stale session up front so users stuck in a partial-signup state recover.
+    if (isSignedIn && signOut) {
+      try {
+        await signOut();
+      } catch {
+        // best-effort - Clerk will throw the specific error below if it matters
+      }
+    }
+
     try {
+      const trimmedEmail = email.trim();
       const trimmedName = name.trim();
       const [firstName, ...rest] = trimmedName.split(/\s+/);
       const lastName = rest.join(' ') || firstName;
 
+      // Clerk production may require a username. Derive one from the email
+      // prefix so signup works regardless of the dashboard config.
+      const emailPrefix = trimmedEmail.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '');
+      const suffix = Math.random().toString(36).slice(2, 6);
+      const derivedUsername = `${emailPrefix || 'user'}_${suffix}`.slice(0, 64);
+
       await signUp.create({
         firstName,
         lastName,
-        emailAddress: email.trim(),
+        username: derivedUsername,
+        emailAddress: trimmedEmail,
         password,
       });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setPendingVerification(true);
     } catch (err: unknown) {
-      const errObj = err as { errors?: Array<{ message: string; longMessage?: string }> };
+      const errObj = err as { errors?: Array<{ code?: string; message: string; longMessage?: string }> };
+      const code = errObj?.errors?.[0]?.code;
       const message = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
         || (err instanceof Error ? err.message : 'Sign up failed');
+      if (code === 'session_exists') {
+        setError("You're already signed in. Taking you to the app...");
+        router.replace('/(tabs)');
+        return;
+      }
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signUp, name, email, password, canSubmit, isNameValid, isEmailValid, isPasswordValid]);
+  }, [isLoaded, signUp, name, email, password, canSubmit, isNameValid, isEmailValid, isPasswordValid, isSignedIn, signOut, router]);
 
   const handleVerify = useCallback(async () => {
     if (!isLoaded || !signUp || !code) return;
