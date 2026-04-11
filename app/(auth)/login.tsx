@@ -51,6 +51,7 @@ export default function LoginScreen() {
       });
       if (createdSessionId && ssoSetActive) {
         await ssoSetActive({ session: createdSessionId });
+        router.replace('/(tabs)');
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Google sign-in failed';
@@ -77,6 +78,7 @@ export default function LoginScreen() {
       });
       if (result.status === 'complete' && setActive) {
         await setActive({ session: result.createdSessionId });
+        router.replace('/(tabs)');
       } else {
         setError(`Sign in incomplete (status: ${result.status}). Please try again.`);
       }
@@ -132,6 +134,7 @@ export default function LoginScreen() {
       });
       if (result.status === 'complete' && setActive) {
         await setActive({ session: result.createdSessionId });
+        router.replace('/(tabs)');
       } else {
         setError('Reset incomplete. Please try again.');
       }
@@ -141,7 +144,7 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signIn, setActive, resetCode, newPassword]);
+  }, [isLoaded, signIn, setActive, resetCode, newPassword, router]);
 
   const renderForm = () => {
     if (mode === 'reset') {

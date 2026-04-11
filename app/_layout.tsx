@@ -59,13 +59,17 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoaded) return;
+    // isSignedIn is boolean | undefined during Clerk state transitions.
+    // Only act when it has settled to a concrete boolean, otherwise we
+    // race with setActive() and bounce users back to /landing.
+    if (typeof isSignedIn !== 'boolean') return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const onLanding = segments[0] === 'landing';
 
-    if (isSignedIn && (inAuthGroup || onLanding)) {
+    if (isSignedIn === true && (inAuthGroup || onLanding)) {
       router.replace('/(tabs)');
-    } else if (!isSignedIn && !inAuthGroup && !onLanding) {
+    } else if (isSignedIn === false && !inAuthGroup && !onLanding) {
       router.replace('/landing');
     }
   }, [isSignedIn, isLoaded, segments, router]);

@@ -56,12 +56,13 @@ export default function SignupScreen() {
       });
       if (createdSessionId && ssoSetActive) {
         await ssoSetActive({ session: createdSessionId });
+        router.replace('/(tabs)');
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Google sign-up failed';
       setError(msg);
     }
-  }, [startSSOFlow]);
+  }, [startSSOFlow, router]);
 
   const handleSignUp = useCallback(async () => {
     if (!isLoaded || !signUp || !canSubmit) {
