@@ -1,13 +1,24 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, View, Text, TextInput, Pressable, ActivityIndicator, Platform } from 'react-native';
-import { useSignUp, useSSO } from '@clerk/clerk-expo';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSignUp, useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, ArrowLeft, Shield } from 'lucide-react-native';
-import { Spacing, colors as designColors } from '@/constants/Colors';
+import { Shield, Lock, Mail, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
+import { Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTheme } from '@/lib/ThemeContext';
+import { useResponsiveLayout } from '@/lib/useResponsiveLayout';
+import { AuthLeftPanel } from '@/components/ui/AuthLeftPanel';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -16,6 +27,7 @@ export default function SignupScreen() {
   const { startSSOFlow } = useSSO();
   const router = useRouter();
   const { colors } = useTheme();
+  const { isDesktop } = useResponsiveLayout();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +35,13 @@ export default function SignupScreen() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailFocus, setEmailFocus] = useState(false);
+  const [passwordFocus, setPasswordFocus] = useState(false);
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = EMAIL_REGEX.test(email.trim());
+  const isPasswordValid = password.length >= 8;
+  const canSubmit = isEmailValid && isPasswordValid;
 
   const handleGoogleSignUp = useCallback(async () => {
     try {
@@ -43,13 +60,9 @@ export default function SignupScreen() {
   }, [startSSOFlow]);
 
   const handleSignUp = useCallback(async () => {
-    if (!isLoaded || !signUp) return;
-    if (!email.trim() || !EMAIL_REGEX.test(email.trim())) {
-      setError('Please enter a valid email address');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (!isLoaded || !signUp || !canSubmit) {
+      if (!isEmailValid) setError('Please enter a valid email address');
+      else if (!isPasswordValid) setError('Password must be at least 8 characters');
       return;
     }
     setLoading(true);
@@ -67,7 +80,7 @@ export default function SignupScreen() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signUp, email, password]);
+  }, [isLoaded, signUp, email, password, canSubmit, isEmailValid, isPasswordValid]);
 
   const handleVerify = useCallback(async () => {
     if (!isLoaded || !signUp || !code) return;
@@ -89,112 +102,21 @@ export default function SignupScreen() {
     }
   }, [isLoaded, signUp, setActive, code, router]);
 
-  return (
-    <View style={[s.root, { backgroundColor: colors.background }]}>
-      <SafeAreaView style={s.safe}>
-        {/* Shield icon */}
-        <View style={s.iconWrap}>
-          <View style={s.iconGlowDark} />
-          <View style={[s.iconCircle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Shield size={32} color={colors.accent} strokeWidth={1.5} />
-          </View>
-        </View>
-
-        <View style={s.header}>
-          <Text style={[s.title, { color: colors.text }]}>
-            {pendingVerification ? 'Check your email' : 'Create your account'}
+  const renderForm = () => {
+    if (pendingVerification) {
+      return (
+        <>
+          <Text style={[styles.title, { color: colors.text }]}>Check your email</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            We sent a 6-digit code to {email}.
           </Text>
-          <Text style={[s.subtitle, { color: colors.textSecondary }]}>
-            {pendingVerification
-              ? `We sent a 6-digit code to ${email}`
-              : 'Start tracking your tax in minutes'}
-          </Text>
-        </View>
 
-        {!pendingVerification ? (
-          <View style={s.form}>
-            {/* Google SSO */}
-            <Pressable
-              style={({ pressed }) => [s.googleBtn, pressed && s.pressed]}
-              onPress={handleGoogleSignUp}
-              accessibilityRole="button"
-              accessibilityLabel="Continue with Google"
-            >
-              <Mail size={18} color={designColors.text} strokeWidth={1.5} />
-              <Text style={s.googleText}>Continue with Google</Text>
-            </Pressable>
-
-            <View style={s.divider}>
-              <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
-              <Text style={[s.dividerText, { color: colors.textMuted }]}>or</Text>
-              <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
-            </View>
-
-            {/* Email */}
-            <View style={[s.inputWrap, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
-              <Mail size={15} color={colors.textMuted} strokeWidth={1.5} style={{ marginRight: 12 }} />
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Verification code</Text>
+            <View style={[styles.inputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+              <Lock size={16} color={colors.textMuted} strokeWidth={1.5} />
               <TextInput
-                style={[s.input, { color: colors.text }]}
-                placeholder="Email address"
-                placeholderTextColor={colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                textContentType="emailAddress"
-              />
-            </View>
-
-            {/* Password */}
-            <View style={[s.inputWrap, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
-              <Lock size={15} color={colors.textMuted} strokeWidth={1.5} style={{ marginRight: 12 }} />
-              <TextInput
-                style={[s.input, { color: colors.text }]}
-                placeholder="Password (min 8 characters)"
-                placeholderTextColor={colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="new-password"
-                textContentType="newPassword"
-                onSubmitEditing={handleSignUp}
-              />
-            </View>
-
-            {error ? <Text style={s.error}>{error}</Text> : null}
-
-            <Pressable
-              style={({ pressed }) => [s.ctaBtn, loading && s.ctaBtnDisabled, pressed && s.pressed]}
-              onPress={handleSignUp}
-              disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel="Create account"
-            >
-              {loading ? (
-                <ActivityIndicator color={designColors.text} />
-              ) : (
-                <Text style={s.ctaText}>Create Account</Text>
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={() => router.replace('/(auth)/login')}
-              accessibilityRole="link"
-              accessibilityLabel="Sign in instead"
-            >
-              <Text style={[s.switchText, { color: colors.textSecondary }]}>
-                Already have an account? <Text style={s.switchLink}>Sign in</Text>
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View style={s.form}>
-            <View style={[s.inputWrap, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
-              <Lock size={16} color={colors.textMuted} strokeWidth={1.5} style={{ marginRight: 12 }} />
-              <TextInput
-                style={[s.input, { color: colors.text }]}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Enter 6-digit code"
                 placeholderTextColor={colors.textMuted}
                 value={code}
@@ -206,130 +128,304 @@ export default function SignupScreen() {
                 onSubmitEditing={handleVerify}
               />
             </View>
-
-            {error ? <Text style={s.error}>{error}</Text> : null}
-
-            <Pressable
-              style={({ pressed }) => [s.ctaBtn, (loading || !code) && s.ctaBtnDisabled, pressed && s.pressed]}
-              onPress={handleVerify}
-              disabled={loading || !code}
-              accessibilityRole="button"
-              accessibilityLabel="Verify email"
-            >
-              {loading ? (
-                <ActivityIndicator color={designColors.text} />
-              ) : (
-                <Text style={s.ctaText}>Verify & Continue</Text>
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                setPendingVerification(false);
-                setCode('');
-                setError('');
-              }}
-              accessibilityRole="link"
-              accessibilityLabel="Back to sign up"
-            >
-              <View style={s.backRow}>
-                <ArrowLeft size={12} color={colors.accent} strokeWidth={1.5} />
-                <Text style={s.switchLink}>Use a different email</Text>
-              </View>
-            </Pressable>
           </View>
-        )}
-      </SafeAreaView>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Pressable
+            style={({ pressed }) => [styles.primaryBtn, (loading || !code) && styles.btnDisabled, pressed && styles.pressed]}
+            onPress={handleVerify}
+            disabled={loading || !code}
+          >
+            {loading ? <ActivityIndicator color={Colors.white} /> : (
+              <>
+                <Text style={styles.primaryBtnText}>Verify & continue</Text>
+                <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
+              </>
+            )}
+          </Pressable>
+
+          <Pressable
+            style={styles.textLinkBtn}
+            onPress={() => {
+              setPendingVerification(false);
+              setCode('');
+              setError('');
+            }}
+          >
+            <ArrowLeft size={14} color={colors.accent} strokeWidth={1.5} />
+            <Text style={[styles.textLink, { color: colors.accent }]}>Use a different email</Text>
+          </Pressable>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Text style={[styles.title, { color: colors.text }]}>Create your account</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Start your 14-day free trial. No card required.
+        </Text>
+
+        {/* Google SSO */}
+        <Pressable
+          style={({ pressed }) => [styles.ssoBtn, { borderColor: colors.border, backgroundColor: colors.surface }, pressed && styles.pressed]}
+          onPress={handleGoogleSignUp}
+        >
+          <GoogleIcon />
+          <Text style={[styles.ssoText, { color: colors.text }]}>Continue with Google</Text>
+        </Pressable>
+
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.dividerText, { color: colors.textMuted }]}>or sign up with email</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+        </View>
+
+        {/* Email */}
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Email</Text>
+          <View style={[
+            styles.inputWrap,
+            { borderColor: emailFocus ? colors.accent : colors.border, backgroundColor: colors.surface },
+          ]}>
+            <Mail size={16} color={colors.textMuted} strokeWidth={1.5} />
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="you@example.com"
+              placeholderTextColor={colors.textMuted}
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setEmailFocus(true)}
+              onBlur={() => setEmailFocus(false)}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+            />
+            {isEmailValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
+          </View>
+        </View>
+
+        {/* Password */}
+        <View style={styles.fieldGroup}>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Password</Text>
+          <View style={[
+            styles.inputWrap,
+            { borderColor: passwordFocus ? colors.accent : colors.border, backgroundColor: colors.surface },
+          ]}>
+            <Lock size={16} color={colors.textMuted} strokeWidth={1.5} />
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="Minimum 8 characters"
+              placeholderTextColor={colors.textMuted}
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setPasswordFocus(true)}
+              onBlur={() => setPasswordFocus(false)}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="new-password"
+              textContentType="newPassword"
+              onSubmitEditing={handleSignUp}
+            />
+            {isPasswordValid && <Check size={16} color={Colors.success} strokeWidth={2} />}
+          </View>
+          {password.length > 0 && password.length < 8 && (
+            <Text style={[styles.helperText, { color: colors.textMuted }]}>
+              {8 - password.length} more character{8 - password.length === 1 ? '' : 's'} needed
+            </Text>
+          )}
+        </View>
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Pressable
+          style={({ pressed }) => [styles.primaryBtn, loading && styles.btnDisabled, pressed && styles.pressed]}
+          onPress={handleSignUp}
+          disabled={loading}
+        >
+          {loading ? <ActivityIndicator color={Colors.white} /> : (
+            <>
+              <Text style={styles.primaryBtnText}>Create account</Text>
+              <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
+            </>
+          )}
+        </Pressable>
+
+        <View style={styles.switchRow}>
+          <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+            Already have an account?{' '}
+          </Text>
+          <Pressable onPress={() => router.replace('/(auth)/login')}>
+            <Text style={[styles.switchLink, { color: colors.accent }]}>Sign in</Text>
+          </Pressable>
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      {isDesktop && <AuthLeftPanel />}
+
+      <View style={styles.rightPanel}>
+        <SafeAreaView style={styles.rightSafe} edges={isDesktop ? [] : ['top', 'bottom']}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Mobile brand header */}
+            {!isDesktop && (
+              <View style={styles.mobileBrand}>
+                <View style={styles.mobileIcon}>
+                  <Shield size={24} color={Colors.electricBlue} strokeWidth={1.5} />
+                </View>
+                <Text style={[styles.mobileBrandText, { color: colors.text }]}>QuidSafe</Text>
+              </View>
+            )}
+
+            <View style={styles.formContainer}>{renderForm()}</View>
+
+            {/* Footer */}
+            <Text style={[styles.legalText, { color: colors.textMuted }]}>
+              By continuing, you agree to the{' '}
+              <Text style={[styles.legalLink, { color: colors.textSecondary }]} onPress={() => router.push('/terms')}>Terms</Text>
+              {' '}and{' '}
+              <Text style={[styles.legalLink, { color: colors.textSecondary }]} onPress={() => router.push('/privacy')}>Privacy Policy</Text>.
+            </Text>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1 },
-  safe: {
+function GoogleIcon() {
+  return (
+    <View style={{ width: 18, height: 18, backgroundColor: Colors.white, borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, color: '#4285F4', lineHeight: 14 }}>G</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
     flex: 1,
-    paddingHorizontal: Spacing.lg + 4,
-    justifyContent: 'center',
-    maxWidth: 440,
-    width: '100%' as unknown as number,
-    alignSelf: 'center',
+    flexDirection: 'row' as const,
+  },
+  rightPanel: {
+    flex: 1,
+    backgroundColor: Colors.black,
+  },
+  rightSafe: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 32,
+    paddingVertical: 64,
   },
 
-  iconWrap: {
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    position: 'relative',
+  // Mobile brand
+  mobileBrand: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 10,
+    marginBottom: 48,
   },
-  iconGlowDark: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: designColors.accentGlow,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  mobileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: Colors.charcoal,
     borderWidth: 1,
+    borderColor: Colors.midGrey,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  header: {
-    alignItems: 'center',
-    marginBottom: 28,
+  mobileBrandText: {
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: 22,
+    letterSpacing: -0.3,
   },
+
+  // Form container
+  formContainer: {
+    maxWidth: 400,
+    width: '100%' as unknown as number,
+    alignSelf: 'center' as const,
+  },
+
+  // Typography
   title: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 26,
-    textAlign: 'center',
-    letterSpacing: -0.3,
+    fontSize: 36,
+    lineHeight: 40,
+    letterSpacing: -0.8,
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 32,
   },
 
-  form: {
-    gap: 14,
-  },
-
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  // SSO
+  ssoBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     gap: 12,
-    backgroundColor: designColors.accent,
-    paddingVertical: 15,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 24,
   },
-  googleText: {
+  ssoText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 16,
-    color: designColors.text,
+    fontSize: 15,
   },
 
+  // Divider
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginVertical: 2,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    marginBottom: 24,
   },
-  dividerLine: { flex: 1, height: 1 },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
   dividerText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 13,
+    fontSize: 12,
   },
 
+  // Fields
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 12,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  },
   inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 8,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    borderRadius: 10,
     borderWidth: 1,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 14,
     paddingVertical: 14,
   },
   input: {
@@ -337,50 +433,84 @@ const s = StyleSheet.create({
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     padding: 0,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' as unknown as undefined } : {}),
+  },
+  helperText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    marginTop: 6,
   },
 
-  ctaBtn: {
-    backgroundColor: designColors.accent,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
+  // Buttons
+  primaryBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 10,
+    backgroundColor: Colors.electricBlue,
+    paddingVertical: 16,
+    borderRadius: 10,
+    marginTop: 8,
   },
-  ctaBtnDisabled: { opacity: 0.5 },
-  ctaText: {
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  primaryBtnText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 16,
-    color: designColors.text,
+    fontSize: 15,
+    color: Colors.white,
+  },
+  textLinkBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    paddingVertical: 16,
+  },
+  textLink: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
   },
 
+  // Error
   error: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
-    color: designColors.error,
-    textAlign: 'center',
+    color: Colors.error,
+    marginBottom: 8,
   },
 
+  // Switch
+  switchRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    marginTop: 24,
+  },
   switchText: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
-    textAlign: 'center',
-    marginTop: 4,
   },
   switchLink: {
-    color: designColors.accent,
     fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
   },
 
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 4,
+  // Footer
+  legalText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    textAlign: 'center' as const,
+    marginTop: 32,
+    maxWidth: 400,
+    alignSelf: 'center' as const,
+  },
+  legalLink: {
+    textDecorationLine: 'underline' as const,
   },
 
   pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
 });
