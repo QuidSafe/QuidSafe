@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -71,11 +71,36 @@ export default function DashboardScreen() {
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
   const income = data?.income;
-  const yoyGrowth = calcYoYGrowth(income?.byMonth);
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
   const isWelcome = (income?.total ?? 0) === 0 && (!actions || actions.length === 0);
+
+  // Memoise derived income chart data - was recomputing on every render
+  const { yoyGrowth, incomeChart } = useMemo(() => {
+    const byMonth = income?.byMonth;
+    const growth = calcYoYGrowth(byMonth);
+    if (!byMonth || byMonth.length === 0) {
+      return { yoyGrowth: growth, incomeChart: null };
+    }
+    const sorted = [...byMonth].sort((a, b) => a.month.localeCompare(b.month));
+    const last6 = sorted.slice(-6);
+    const MONTH_SHORT: Record<string, string> = {
+      '01': 'J', '02': 'F', '03': 'M', '04': 'A', '05': 'M', '06': 'J',
+      '07': 'J', '08': 'A', '09': 'S', '10': 'O', '11': 'N', '12': 'D',
+    };
+    return {
+      yoyGrowth: growth,
+      incomeChart: {
+        data: last6.map((m) => ({
+          label: MONTH_SHORT[m.month.split('-')[1]] ?? m.month.slice(-2),
+          value: m.income,
+        })),
+        periodTotal: last6.reduce((s, m) => s + m.income, 0),
+        monthCount: last6.length,
+      },
+    };
+  }, [income?.byMonth]);
 
   // Android: dismiss browser on hardware back press during OAuth flow
   useEffect(() => {
@@ -160,33 +185,19 @@ export default function DashboardScreen() {
             </View>
 
             {/* Income Trend Chart */}
-            {income?.byMonth && income.byMonth.length > 0 && (() => {
-              const sorted = [...income.byMonth].sort((a, b) => a.month.localeCompare(b.month));
-              const last6 = sorted.slice(-6);
-              const MONTH_SHORT: Record<string, string> = {
-                '01': 'J', '02': 'F', '03': 'M', '04': 'A', '05': 'M', '06': 'J',
-                '07': 'J', '08': 'A', '09': 'S', '10': 'O', '11': 'N', '12': 'D',
-              };
-              const chartData = last6.map((m) => ({
-                label: MONTH_SHORT[m.month.split('-')[1]] ?? m.month.slice(-2),
-                value: m.income,
-              }));
-              const periodTotal = last6.reduce((s, m) => s + m.income, 0);
-
-              return (
-                <View>
-                  <Card>
-                    <View style={styles.chartHeader}>
-                      <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
-                      <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
-                        {formatCurrency(periodTotal)} over {last6.length} months
-                      </Text>
-                    </View>
-                    <MiniChart data={chartData} color="#00C853" height={72} />
-                  </Card>
-                </View>
-              );
-            })()}
+            {incomeChart && (
+              <View>
+                <Card>
+                  <View style={styles.chartHeader}>
+                    <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
+                    <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
+                      {formatCurrency(incomeChart.periodTotal)} over {incomeChart.monthCount} months
+                    </Text>
+                  </View>
+                  <MiniChart data={incomeChart.data} color="#00C853" height={72} />
+                </Card>
+              </View>
+            )}
 
             <View>
               {/* Plain English Insight */}
