@@ -7,8 +7,6 @@ import {
   ScrollView,
   Platform,
   Animated,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -103,7 +101,7 @@ export default function LandingScreen() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [annual, setAnnual] = useState(false);
 
-  const onScroll = Animated.event<NativeScrollEvent>(
+  const onScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     { useNativeDriver: false },
   );
@@ -187,7 +185,7 @@ export default function LandingScreen() {
       </Animated.View>
 
       <Animated.ScrollView
-        ref={scrollRef as unknown as React.Ref<Animated.LegacyRef<ScrollView>>}
+        ref={scrollRef}
         onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={s.scrollContent}
