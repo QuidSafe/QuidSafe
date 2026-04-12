@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   itemsBadge: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: 'rgba(0,200,83,0.08)',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   soonBadge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: Colors.blueGlow,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: BorderRadius.pill,

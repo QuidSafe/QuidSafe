@@ -199,7 +199,7 @@ const ThemeOption = memo(function ThemeOption({
     <Pressable onPress={onPress} style={styles.themeOption} accessibilityRole="button" accessibilityLabel={`Theme: ${label}`} accessibilityState={{ selected: active }}>
       <View style={styles.themeLeft}>
         <IconBox
-          icon={<Moon size={15} color={active ? Colors.white : '#666666'} strokeWidth={1.5} />}
+          icon={<Moon size={15} color={active ? Colors.white : Colors.muted} strokeWidth={1.5} />}
           bg={active ? Colors.secondary : Colors.midGrey}
         />
         <Text style={[styles.rowTitle, { marginLeft: 10, color: colors.text }]}>{label}</Text>
@@ -665,7 +665,7 @@ export default function SettingsScreen() {
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Your name"
-                  placeholderTextColor={'#666666'}
+                  placeholderTextColor={Colors.muted}
                   autoCapitalize="words"
                   accessibilityLabel="Your name"
                   accessibilityHint="Enter your display name"
@@ -697,7 +697,7 @@ export default function SettingsScreen() {
                   value={nino}
                   onChangeText={setNino}
                   placeholder="QQ123456C"
-                  placeholderTextColor={'#666666'}
+                  placeholderTextColor={Colors.muted}
                   autoCapitalize="characters"
                   maxLength={9}
                   accessibilityLabel="National Insurance Number"
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
   comingSoonText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 10.5,
-    color: '#666666',
+    color: Colors.muted,
   },
   profileExpandedSection: {
     paddingLeft: 40,

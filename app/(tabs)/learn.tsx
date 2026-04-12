@@ -39,9 +39,9 @@ const ALL_TAGS = ['All', 'MTD', 'Tax Basics', 'Expenses', 'Security', 'Deadlines
 
 function getTagColors(variant: TagVariant): { bg: string; color: string } {
   switch (variant) {
-    case 'tag-n': return { bg: 'rgba(0,102,255,0.12)', color: '#93B5FF' };
-    case 'tag-ok': return { bg: 'rgba(0,200,83,0.12)', color: '#4ADE80' };
-    case 'tag-g': return { bg: 'rgba(0,102,255,0.12)', color: '#0066FF' };
+    case 'tag-n': return { bg: 'rgba(0,102,255,0.12)', color: Colors.electricBlue };
+    case 'tag-ok': return { bg: 'rgba(0,200,83,0.12)', color: Colors.success };
+    case 'tag-g': return { bg: 'rgba(0,102,255,0.12)', color: Colors.electricBlue };
   }
 }
 
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     width: 3,
     height: 36,
     borderRadius: 2,
-    backgroundColor: '#0066FF',
+    backgroundColor: Colors.electricBlue,
     marginTop: 2,
   },
   heading: {
