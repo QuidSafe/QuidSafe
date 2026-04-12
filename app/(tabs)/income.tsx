@@ -32,13 +32,13 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 const SOURCE_ICONS: Record<string, { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string }> = {
-  'Uber / Deliveroo': { IconComponent: Car, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
-  'Cleaning clients': { IconComponent: Paintbrush, bg: 'rgba(0,200,83,0.12)', dot: '#00C853' },
-  'Freelance dev': { IconComponent: Laptop, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
-  'Consulting': { IconComponent: Briefcase, bg: 'rgba(0,102,255,0.12)', dot: '#0066FF' },
+  'Uber / Deliveroo': { IconComponent: Car, bg: Colors.blueGlow, dot: Colors.electricBlue },
+  'Cleaning clients': { IconComponent: Paintbrush, bg: 'rgba(0,200,83,0.12)', dot: Colors.success },
+  'Freelance dev': { IconComponent: Laptop, bg: Colors.blueGlow, dot: Colors.electricBlue },
+  'Consulting': { IconComponent: Briefcase, bg: Colors.blueGlow, dot: Colors.electricBlue },
 };
 
-const DEFAULT_ICON: { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string } = { IconComponent: PoundSterling, bg: '#2A2A2A', dot: '#666666' };
+const DEFAULT_ICON: { IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth: number }>; bg: string; dot: string } = { IconComponent: PoundSterling, bg: Colors.midGrey, dot: Colors.muted };
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -170,11 +170,11 @@ export default function IncomeScreen() {
                   {yoyPercent !== null && (
                     <View style={styles.yoyRow}>
                       {yoyPercent >= 0 ? (
-                        <ArrowUp size={10} color="#00C853" strokeWidth={1.5} />
+                        <ArrowUp size={10} color={Colors.success} strokeWidth={1.5} />
                       ) : (
-                        <ArrowDown size={10} color="#FF3B30" strokeWidth={1.5} />
+                        <ArrowDown size={10} color={Colors.error} strokeWidth={1.5} />
                       )}
-                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? '#00C853' : '#FF3B30' }]}>
+                      <Text style={[styles.yoyText, { color: yoyPercent >= 0 ? Colors.success : Colors.error }]}>
                         {yoyPercent >= 0 ? '+' : ''}{yoyPercent}% vs last year
                       </Text>
                     </View>
@@ -222,11 +222,11 @@ export default function IncomeScreen() {
               {/* Legend */}
               <View style={styles.legendRow}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#0066FF' }]} />
+                  <View style={[styles.legendDot, { backgroundColor: Colors.electricBlue }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Income</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: '#2A2A2A' }]} />
+                  <View style={[styles.legendDot, { backgroundColor: Colors.midGrey }]} />
                   <Text style={[styles.legendText, { color: colors.textSecondary }]}>Expenses</Text>
                 </View>
               </View>
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   netAmount: {
     fontFamily: Fonts.mono.semiBold,
     fontSize: 24,
-    color: '#00C853',
+    color: Colors.success,
     marginBottom: 4,
   },
   afterExpenses: {
@@ -489,12 +489,12 @@ const styles = StyleSheet.create({
   },
   barIncome: {
     width: 8,
-    backgroundColor: '#0066FF',
+    backgroundColor: Colors.electricBlue,
     borderRadius: 4,
   },
   barExpense: {
     width: 8,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: Colors.midGrey,
     borderRadius: 4,
   },
   chartLabel: {
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sourceBadge: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: Colors.midGrey,
     borderRadius: BorderRadius.pill,
     paddingHorizontal: 10,
     paddingVertical: 2,
@@ -577,9 +577,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: Colors.midGrey,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: Colors.midGrey,
   },
   filterPillActive: {
     backgroundColor: Colors.primary,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   filterPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
-    color: '#666666',
+    color: Colors.muted,
   },
   filterPillTextActive: {
     color: Colors.white,
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#0066FF',
+    backgroundColor: Colors.electricBlue,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.large,
