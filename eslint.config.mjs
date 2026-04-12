@@ -1,6 +1,6 @@
 import expoConfig from 'eslint-config-expo/flat.js';
 
 export default [
-  { ignores: ['dist/**'] },
+  { ignores: ['dist/**', 'tests/e2e/**'] },
   ...expoConfig,
 ];
