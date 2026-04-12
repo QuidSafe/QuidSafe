@@ -9,14 +9,6 @@ import { useToast } from '@/components/ui/Toast';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
 
-// Routes that should NOT trigger a redirect to /landing when unauthenticated.
-// Includes public pages AND transitional routes that are navigated to during
-// auth flows (onboarding after signup, billing after login).
-const SAFE_ROUTES = new Set([
-  'landing', 'privacy', 'terms', 'about', 'cookie-policy', '+not-found',
-  'auth-debug', 'onboarding', 'billing',
-]);
-
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   useApiToken();
   const { isSignedIn, isLoaded } = useStableAuth();
@@ -32,13 +24,20 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
 
     const firstSegment = segments[0] as string;
     const inAuthGroup = firstSegment === '(auth)';
-    const isPublicRoute = SAFE_ROUTES.has(firstSegment);
 
     if (isSignedIn === true && (inAuthGroup || firstSegment === 'landing')) {
+      // Signed in but on auth/landing page — go to the app
       router.replace('/(tabs)');
-    } else if (isSignedIn === false && !inAuthGroup && !isPublicRoute) {
+    } else if (isSignedIn === false && inAuthGroup) {
+      // Not signed in and in auth group — stay (this is correct)
+    } else if (isSignedIn === false && !firstSegment) {
+      // Not signed in at root URL — go to landing
       router.replace('/landing');
     }
+    // All other cases: stay where you are. If the user is on /(tabs)
+    // or /onboarding or any other route without being signed in, the
+    // API calls will fail naturally and show error states. We don't
+    // forcefully yank them to /landing.
   }, [isSignedIn, isLoaded, segments, router]);
 
   useEffect(() => {
