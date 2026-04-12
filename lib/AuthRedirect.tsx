@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
+import { useStableAuth } from '@/lib/hooks/useStableAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
@@ -13,19 +14,16 @@ const PUBLIC_ROUTES = new Set(['landing', 'privacy', 'terms', 'about', 'cookie-p
 
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   useApiToken();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded } = useStableAuth();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
   const pushTokenRef = useRef<string | null>(null);
-  const hasBeenSignedIn = useRef(false);
 
   useEffect(() => {
     if (!isLoaded) return;
     if (typeof isSignedIn !== 'boolean') return;
-
-    if (isSignedIn) hasBeenSignedIn.current = true;
 
     const firstSegment = segments[0] as string;
     const inAuthGroup = firstSegment === '(auth)';
@@ -33,7 +31,7 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
 
     if (isSignedIn === true && (inAuthGroup || firstSegment === 'landing')) {
       router.replace('/(tabs)');
-    } else if (isSignedIn === false && !hasBeenSignedIn.current && !inAuthGroup && !isPublicRoute) {
+    } else if (isSignedIn === false && !inAuthGroup && !isPublicRoute) {
       router.replace('/landing');
     }
   }, [isSignedIn, isLoaded, segments, router]);
