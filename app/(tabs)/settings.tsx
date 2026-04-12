@@ -57,7 +57,7 @@ function Toggle({
 
   const trackBg = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#2A2A2A', Colors.success],
+    outputRange: [Colors.midGrey, Colors.success],
   });
 
   const knobTranslate = anim.interpolate({
@@ -200,7 +200,7 @@ const ThemeOption = memo(function ThemeOption({
       <View style={styles.themeLeft}>
         <IconBox
           icon={<Moon size={15} color={active ? Colors.white : '#666666'} strokeWidth={1.5} />}
-          bg={active ? Colors.secondary : '#2A2A2A'}
+          bg={active ? Colors.secondary : Colors.midGrey}
         />
         <Text style={[styles.rowTitle, { marginLeft: 10, color: colors.text }]}>{label}</Text>
       </View>
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     borderWidth: 1.5,
-    borderColor: '#2A2A2A',
+    borderColor: Colors.midGrey,
     borderRadius: BorderRadius.button,
     paddingVertical: Spacing.md,
     alignItems: 'center',
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   comingSoonBadge: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: Colors.midGrey,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: BorderRadius.pill,
@@ -1079,7 +1079,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#2A2A2A',
+    borderTopColor: Colors.midGrey,
     marginTop: 4,
   },
   addBankText: {

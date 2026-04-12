@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   comingSoonCard: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#2A2A2A',
+    borderColor: Colors.midGrey,
     borderRadius: BorderRadius.card,
     padding: Spacing.md,
   },
