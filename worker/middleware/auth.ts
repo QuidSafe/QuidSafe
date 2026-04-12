@@ -123,6 +123,12 @@ export function clerkAuth(): MiddlewareHandler<AuthEnv> {
       const payload = await verifyClerkJWT(token, c.env.CLERK_PUBLISHABLE_KEY);
       c.set('userId', payload.sub);
       if (payload.email) c.set('userEmail', payload.email);
+
+      // Auto-create user row on first authenticated request so the gap
+      // between Clerk signup and D1 data never causes 404s on /dashboard.
+      await c.env.DB.prepare(
+        'INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)',
+      ).bind(payload.sub, payload.email ?? '', '').run();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid token';
       return c.json({ error: { code: 'UNAUTHORIZED', message } }, 401);
