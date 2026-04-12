@@ -37,8 +37,6 @@ export default function SignupScreen() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const addLog = (msg: string) => setDebugLog((prev) => [`[${new Date().toISOString().slice(11, 23)}] ${msg}`, ...prev].slice(0, 20));
   const [nameFocus, setNameFocus] = useState(false);
   const [emailFocus, setEmailFocus] = useState(false);
   const [passwordFocus, setPasswordFocus] = useState(false);
@@ -67,16 +65,14 @@ export default function SignupScreen() {
   }, [startSSOFlow, router]);
 
   const handleSignUp = useCallback(async () => {
-    addLog(`handleSignUp: isLoaded=${isLoaded} signUp=${!!signUp} canSubmit=${canSubmit} isSignedIn=${isSignedIn}`);
+
     if (!isLoaded || !signUp || !canSubmit) {
       if (!isNameValid) setError('Please enter your name');
       else if (!isEmailValid) setError('Please enter a valid email address');
       else if (!isPasswordValid) setError('Password must be at least 8 characters');
-      addLog(`validation failed: name=${isNameValid} email=${isEmailValid} pw=${isPasswordValid}`);
       return;
     }
     if (isSignedIn) {
-      addLog('already signed in, going to tabs');
       router.replace('/(tabs)');
       return;
     }
@@ -89,23 +85,19 @@ export default function SignupScreen() {
       const [firstName, ...rest] = trimmedName.split(/\s+/);
       const lastName = rest.join(' ') || firstName;
 
-      addLog(`calling signUp.create for ${trimmedEmail}`);
       await signUp.create({
         firstName,
         lastName,
         emailAddress: trimmedEmail,
         password,
       });
-      addLog('signUp.create succeeded, preparing verification');
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      addLog('verification prepared, showing code form');
       setPendingVerification(true);
     } catch (err: unknown) {
       const errObj = err as { errors?: Array<{ code?: string; message: string; longMessage?: string }> };
       const code = errObj?.errors?.[0]?.code;
       const message = errObj?.errors?.[0]?.longMessage || errObj?.errors?.[0]?.message
         || (err instanceof Error ? err.message : 'Sign up failed');
-      addLog(`ERROR: code=${code} message=${message}`);
       if (code === 'session_exists') {
         setError("You're already signed in. Taking you to the app...");
         router.replace('/(tabs)');
@@ -367,16 +359,6 @@ export default function SignupScreen() {
             )}
 
             <View style={styles.formContainer}>{renderForm()}</View>
-
-            {/* Debug Log - visible on page */}
-            {debugLog.length > 0 && (
-              <View style={{ backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, marginTop: 16 }}>
-                <Text style={{ fontFamily: 'JetBrainsMono_400Regular', fontSize: 10, color: '#00ff88', marginBottom: 4 }}>Debug Log:</Text>
-                {debugLog.map((entry, i) => (
-                  <Text key={i} style={{ fontFamily: 'JetBrainsMono_400Regular', fontSize: 10, color: '#aaa', lineHeight: 16 }}>{entry}</Text>
-                ))}
-              </View>
-            )}
 
             {/* Footer */}
             <Text style={[styles.legalText, { color: colors.textMuted }]}>
