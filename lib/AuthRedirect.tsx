@@ -9,7 +9,13 @@ import { useToast } from '@/components/ui/Toast';
 import { useApiToken } from '@/lib/hooks/useApi';
 import { registerForPushNotifications } from '@/lib/notifications';
 
-const PUBLIC_ROUTES = new Set(['landing', 'privacy', 'terms', 'about', 'cookie-policy', '+not-found', 'auth-debug']);
+// Routes that should NOT trigger a redirect to /landing when unauthenticated.
+// Includes public pages AND transitional routes that are navigated to during
+// auth flows (onboarding after signup, billing after login).
+const SAFE_ROUTES = new Set([
+  'landing', 'privacy', 'terms', 'about', 'cookie-policy', '+not-found',
+  'auth-debug', 'onboarding', 'billing',
+]);
 
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   useApiToken();
@@ -26,7 +32,7 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
 
     const firstSegment = segments[0] as string;
     const inAuthGroup = firstSegment === '(auth)';
-    const isPublicRoute = PUBLIC_ROUTES.has(firstSegment);
+    const isPublicRoute = SAFE_ROUTES.has(firstSegment);
 
     if (isSignedIn === true && (inAuthGroup || firstSegment === 'landing')) {
       router.replace('/(tabs)');
