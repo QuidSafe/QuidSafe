@@ -32,6 +32,11 @@ ios/
 android/
 web-build/
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
 # Binary artifacts - never commit these
 *.pdf
 *.zip
