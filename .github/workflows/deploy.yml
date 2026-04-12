@@ -9,9 +9,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Detect which paths changed so we only deploy what's needed
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      worker: ${{ steps.filter.outputs.worker }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            worker:
+              - 'worker/**'
+              - 'wrangler.worker.toml'
+              - 'lib/db.ts'
+              - 'lib/types.ts'
+            web:
+              - 'app/**'
+              - 'components/**'
+              - 'lib/**'
+              - 'constants/**'
+              - 'public/**'
+              - 'app.json'
+              - 'package.json'
+              - 'tsconfig.json'
+
   migrate-db:
     name: Run D1 Migrations
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.worker == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +61,8 @@ jobs:
   deploy-worker:
     name: Deploy Worker (API)
     runs-on: ubuntu-latest
-    needs: migrate-db
+    needs: [changes, migrate-db]
+    if: needs.changes.outputs.worker == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -60,7 +91,8 @@ jobs:
   deploy-web:
     name: Deploy Web (Pages)
     runs-on: ubuntu-latest
-    needs: deploy-worker
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -70,6 +102,17 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Cache Metro & Expo build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .expo
+            node_modules/.cache
+          key: expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'constants/**') }}
+          restore-keys: |
+            expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-
+            expo-web-${{ runner.os }}-
 
       - name: Build web
         run: npx expo export --platform web
