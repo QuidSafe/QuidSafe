@@ -35,14 +35,14 @@ function calcYoYGrowth(byMonth?: { month: string; income: number }[]): number | 
 }
 
 const SOURCE_COLORS = [
-  '#0066FF',
-  '#0066FF',
-  '#00C853',
-  '#0066FF',
+  Colors.electricBlue,
+  Colors.electricBlue,
+  Colors.success,
+  Colors.electricBlue,
   '#EC4899',
   '#06B6D4',
-  '#FF3B30',
-  '#F97316',
+  Colors.error,
+  Colors.warning,
 ];
 
 function getGreeting(): string {
@@ -159,7 +159,7 @@ export default function DashboardScreen() {
                 ) : (
                   <ArrowDown size={11} color="#FF3B30" strokeWidth={1.5} />
                 )}
-                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? '#00C853' : '#FF3B30' }]}>
+                <Text style={[styles.healthText, { color: yoyGrowth >= 0 ? Colors.success : Colors.error }]}>
                   {yoyGrowth >= 0 ? '+' : ''}{yoyGrowth}%
                 </Text>
               </View>
@@ -218,36 +218,11 @@ export default function DashboardScreen() {
                   <View style={styles.insightIcon}>
                     <Lightbulb size={14} color="#0066FF" strokeWidth={1.5} />
                   </View>
-                  <Text style={[styles.insightText, { color: '#0066FF' }]}>
+                  <Text style={[styles.insightText, { color: Colors.electricBlue }]}>
                     {tax.plainEnglish}
                   </Text>
                 </Pressable>
               ) : null}
-
-              {/* Set aside card -- effective rate with "On track" badge */}
-              <Pressable
-                accessible={true}
-                accessibilityRole="summary"
-                accessibilityLabel={`Set aside this month ${formatCurrency(tax?.setAsideMonthly ?? 0)}. Effective tax rate ${tax?.effectiveRate ? `${tax.effectiveRate}%` : '0%'}`}
-                style={({ pressed }) => [
-                  styles.setAsideCard,
-                  { backgroundColor: '#0A0A0A' },
-                  pressed && styles.pressedCard,
-                ]}
-              >
-                <View>
-                  <Text style={styles.setAsideLabel}>SET ASIDE THIS MONTH</Text>
-                  <Text style={[styles.setAsideAmount, { color: colors.text }]}>
-                    {formatCurrency(tax?.setAsideMonthly ?? 0)}
-                  </Text>
-                </View>
-                <View style={styles.setAsideRight}>
-                  <View style={styles.onTrackBadge} accessibilityLabel="Status: On track">
-                    <Check size={11} color="#00C853" strokeWidth={1.5} />
-                    <Text style={styles.onTrackText}>On track</Text>
-                  </View>
-                </View>
-              </Pressable>
 
               {/* Section heading */}
               <View style={styles.sectionHeader}>
@@ -378,7 +353,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#0066FF',
+    backgroundColor: Colors.electricBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -438,7 +413,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: '#0066FF',
+    borderColor: Colors.electricBlue,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -446,7 +421,7 @@ const styles = StyleSheet.create({
   setAsideLabel: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 10.5,
-    color: '#0066FF',
+    color: Colors.electricBlue,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
@@ -470,7 +445,7 @@ const styles = StyleSheet.create({
   onTrackText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
-    color: '#00C853',
+    color: Colors.success,
   },
 
   // Actions
