@@ -282,7 +282,13 @@ export default function RootLayout() {
         src="https://plausible.io/js/script.js"
       />
 
-      {/* Fonts bundled via @expo-google-fonts/* - no external CDN fetch */}
+      {/* Google Fonts CSS for web - belt-and-suspenders with expo-font bundles.
+          If the bundled .ttf files fail (OTS parsing error), the browser uses
+          the Google Fonts CSS versions via @font-face aliases in global.css. */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet"
+      />
     </Head>
     {publishableKey ? (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>

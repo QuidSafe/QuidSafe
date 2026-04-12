@@ -8,15 +8,49 @@
  *     The app renders null until useFonts() resolves, so there's no FOUT.
  */
 
-/* ── Web Fonts ── */
-/* Google Fonts loaded via <link> in _layout.tsx Head - do NOT duplicate here */
+/* ── Web Font Aliases ──
+ * expo-font registers fonts under names like 'Lexend_600SemiBold'.
+ * If the bundled .ttf fails (OTS parsing error), these @font-face rules
+ * alias the expo names to the Google Fonts CSS names loaded via <link>
+ * in the HTML head, so the browser falls through gracefully.
+ */
+@font-face {
+  font-family: 'Lexend_600SemiBold';
+  src: local('Lexend SemiBold'), local('Lexend');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SourceSans3_400Regular';
+  src: local('Source Sans 3'), local('Source Sans 3 Regular');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SourceSans3_600SemiBold';
+  src: local('Source Sans 3 SemiBold'), local('Source Sans 3');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrainsMono_400Regular';
+  src: local('JetBrains Mono'), local('JetBrains Mono Regular');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrainsMono_600SemiBold';
+  src: local('JetBrains Mono SemiBold'), local('JetBrains Mono');
+  font-weight: 600;
+  font-display: swap;
+}
 
 /* ── Base Reset ── */
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #0A0A0F;
+  background-color: #000000;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -80,13 +114,13 @@ input, button, textarea, select {
 
 /* ── Selection ── */
 ::selection {
-  background-color: rgba(202, 138, 4, 0.3);
-  color: #F8FAFC;
+  background-color: rgba(0, 102, 255, 0.3);
+  color: #FFFFFF;
 }
 
 /* ── Accessibility ── */
 :focus-visible {
-  outline: 2px solid #CA8A04;
+  outline: 2px solid #0066FF;
   outline-offset: 2px;
 }
 
