@@ -3,14 +3,49 @@ name: CI
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'CLAUDE.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'public/robots.txt'
+      - 'public/sitemap.xml'
   push:
     branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'CLAUDE.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - 'public/robots.txt'
+      - 'public/sitemap.xml'
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'app/**'
+              - 'components/**'
+              - 'lib/**'
+              - 'constants/**'
+              - 'public/**'
+              - 'app.json'
+              - 'package.json'
+              - 'tsconfig.json'
+
   lint-typecheck:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
@@ -22,7 +57,16 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Test
         run: npm test
@@ -36,7 +80,8 @@ jobs:
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
-    needs: lint-typecheck
+    needs: [lint-typecheck, changes]
+    if: needs.changes.outputs.frontend == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +90,16 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Cache Metro & Expo build artefacts
         uses: actions/cache@v4
@@ -53,9 +107,9 @@ jobs:
           path: |
             .expo
             node_modules/.cache
-          key: expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json', 'babel.config.js', 'metro.config.js') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'constants/**') }}
+          key: expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'constants/**') }}
           restore-keys: |
-            expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json', 'babel.config.js', 'metro.config.js') }}-
+            expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-
             expo-web-${{ runner.os }}-
 
       - name: Expo export (web)
