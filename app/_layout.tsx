@@ -56,17 +56,16 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const toast = useToast();
   const pushTokenRef = useRef<string | null>(null);
-  const landingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Once true, stays true for this page lifetime. Prevents Clerk's
+  // session-refresh flicker (true->false->true) from bouncing users
+  // to /landing after they've already authenticated.
+  const hasBeenSignedIn = useRef(false);
 
   useEffect(() => {
-    // Clear any pending landing redirect on every state change
-    if (landingTimerRef.current) {
-      clearTimeout(landingTimerRef.current);
-      landingTimerRef.current = null;
-    }
-
     if (!isLoaded) return;
     if (typeof isSignedIn !== 'boolean') return;
+
+    if (isSignedIn) hasBeenSignedIn.current = true;
 
     const inAuthGroup = segments[0] === '(auth)';
     const onLanding = segments[0] === 'landing';
@@ -74,21 +73,9 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
 
     if (isSignedIn === true && (inAuthGroup || onLanding)) {
       router.replace('/(tabs)');
-    } else if (isSignedIn === false && !inAuthGroup && !onLanding && !onDebug) {
-      // Debounce the landing redirect by 500ms. This prevents a race
-      // where isSignedIn briefly flips to false during Clerk transitions
-      // (e.g. signup's signOut guard) and immediately bounces the user.
-      landingTimerRef.current = setTimeout(() => {
-        router.replace('/landing');
-      }, 500);
+    } else if (isSignedIn === false && !hasBeenSignedIn.current && !inAuthGroup && !onLanding && !onDebug) {
+      router.replace('/landing');
     }
-
-    return () => {
-      if (landingTimerRef.current) {
-        clearTimeout(landingTimerRef.current);
-        landingTimerRef.current = null;
-      }
-    };
   }, [isSignedIn, isLoaded, segments, router]);
 
   // Register for push notifications once when signed in
