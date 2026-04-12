@@ -49,29 +49,46 @@ function ThemedStatusBar() {
 }
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
-  useApiToken(); // Sync Clerk token once at root level
+  useApiToken();
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
   const pushTokenRef = useRef<string | null>(null);
+  const landingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Clear any pending landing redirect on every state change
+    if (landingTimerRef.current) {
+      clearTimeout(landingTimerRef.current);
+      landingTimerRef.current = null;
+    }
+
     if (!isLoaded) return;
-    // isSignedIn is boolean | undefined during Clerk state transitions.
-    // Only act when it has settled to a concrete boolean, otherwise we
-    // race with setActive() and bounce users back to /landing.
     if (typeof isSignedIn !== 'boolean') return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const onLanding = segments[0] === 'landing';
+    const onDebug = segments[0] === 'auth-debug';
 
     if (isSignedIn === true && (inAuthGroup || onLanding)) {
       router.replace('/(tabs)');
-    } else if (isSignedIn === false && !inAuthGroup && !onLanding) {
-      router.replace('/landing');
+    } else if (isSignedIn === false && !inAuthGroup && !onLanding && !onDebug) {
+      // Debounce the landing redirect by 500ms. This prevents a race
+      // where isSignedIn briefly flips to false during Clerk transitions
+      // (e.g. signup's signOut guard) and immediately bounces the user.
+      landingTimerRef.current = setTimeout(() => {
+        router.replace('/landing');
+      }, 500);
     }
+
+    return () => {
+      if (landingTimerRef.current) {
+        clearTimeout(landingTimerRef.current);
+        landingTimerRef.current = null;
+      }
+    };
   }, [isSignedIn, isLoaded, segments, router]);
 
   // Register for push notifications once when signed in
@@ -309,6 +326,7 @@ export default function RootLayout() {
                     <Stack.Screen name="about" options={{ headerShown: false }} />
                     <Stack.Screen name="cookie-policy" options={{ headerShown: false }} />
                     <Stack.Screen name="tax-history" options={{ headerShown: false }} />
+                    <Stack.Screen name="auth-debug" options={{ headerShown: false }} />
                     <Stack.Screen name="+not-found" />
                   </Stack>
                 </AuthRedirect>

@@ -9,18 +9,23 @@ import type { TaxCalculation, Expense } from '../types';
 
 /** Sync Clerk token to API client - call once at root level */
 export function useApiToken() {
-  const { getToken } = useAuth();
-  const hasSetToken = useRef(false);
-
-  const syncToken = useCallback(async () => {
-    const token = await getToken();
-    api.setToken(token);
-    hasSetToken.current = true;
-  }, [getToken]);
+  const { getToken, isSignedIn } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   useEffect(() => {
-    syncToken();
-  }, [syncToken]);
+    let cancelled = false;
+    async function sync() {
+      try {
+        const token = await getTokenRef.current();
+        if (!cancelled) api.setToken(token);
+      } catch {
+        if (!cancelled) api.setToken(null);
+      }
+    }
+    sync();
+    return () => { cancelled = true; };
+  }, [isSignedIn]);
 }
 
 export function useArticles() {
