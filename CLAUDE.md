@@ -41,7 +41,9 @@ npx wrangler dev --config wrangler.worker.toml        # Start Worker API on loca
 npx tsc --noEmit                                      # TypeScript check (Expo app)
 npx tsc --noEmit -p tsconfig.worker.json              # TypeScript check (Worker)
 npm run lint                                          # ESLint
-npm test                                              # Run Jest tests
+npm test                                              # Run Vitest unit tests
+npm run test:e2e                                      # Run Playwright E2E tests (against live site)
+npm run test:e2e:ui                                   # Run Playwright with interactive UI
 
 # Build
 npx expo export --platform web                        # Web build to dist/
@@ -66,8 +68,9 @@ npx wrangler secret put RESEND_API_KEY --config wrangler.worker.toml --env produ
 ```
 QuidSafe/
 ├── app/                                    # Expo Router screens (React Native Web)
-│   ├── _layout.tsx                         # Root layout, Clerk provider, auth redirect
+│   ├── _layout.tsx                         # Root layout (~60 lines, thin shell)
 │   ├── landing.tsx                         # Public marketing page
+│   ├── auth-debug.tsx                      # Debug page showing live Clerk state (temporary)
 │   ├── +not-found.tsx                      # 404 page
 │   ├── (auth)/                             # Public auth routes
 │   │   ├── _layout.tsx
@@ -95,7 +98,11 @@ QuidSafe/
 │   ├── terms.tsx                           # Terms of service
 │   └── cookie-policy.tsx                   # Cookie policy
 │
-├── components/ui/                          # Shared UI components
+├── components/
+│   ├── Providers.tsx                       # All providers: Clerk > Query > Theme > Toast > Biometric > ErrorBoundary
+│   ├── web/
+│   │   └── HeadMeta.tsx                    # Web-only SEO, meta, JSON-LD, Plausible, PWA meta, Google Fonts
+│   └── ui/                                # Shared UI components
 │   ├── BrandLogo.tsx                       # QuidSafe shield logo
 │   ├── Card.tsx                            # Base card container
 │   ├── Button.tsx                          # Primary button
@@ -129,8 +136,10 @@ QuidSafe/
 ├── lib/                                    # Shared frontend utilities
 │   ├── api.ts                              # API client (ApiClient class)
 │   ├── auth.ts                             # Clerk publishable key, tokenCache
+│   ├── AuthRedirect.tsx                    # Auth redirect logic + deep link handler + push notifications
 │   ├── db.ts                               # D1 query helpers (shared with worker)
 │   ├── tax-engine.ts                       # UK tax calculation (IT + NI + MTD)
+│   ├── errorReporting.ts                   # Sentry scaffold (reportError)
 │   ├── types.ts                            # Shared TypeScript types
 │   ├── notifications.ts                    # Expo push token registration
 │   ├── biometrics.ts                       # Expo Local Authentication wrapper
@@ -139,11 +148,12 @@ QuidSafe/
 │   ├── invoicePdf.ts                       # Invoice PDF generation
 │   ├── invoiceActions.ts                   # Invoice download/share
 │   ├── export.ts                           # CSV export
-│   ├── ThemeContext.tsx                    # Theme provider (dark-only)
+│   ├── ThemeContext.tsx                     # Theme provider (dark-only)
 │   ├── useResponsiveLayout.ts              # Breakpoint hook
 │   ├── hooks/
-│   │   ├── useApi.ts                       # React Query hooks for API
-│   │   └── useApiWithToast.ts              # Mutations with toast feedback
+│   │   ├── useApi.ts                       # React Query hooks + useApiToken (token sync)
+│   │   ├── useApiWithToast.ts              # Mutations with toast feedback
+│   │   └── useStableAuth.ts               # Clerk auth with isSignedIn debounce (800ms)
 │   └── __tests__/
 │       └── tax-engine.test.ts              # Tax engine unit tests
 │
@@ -163,32 +173,29 @@ QuidSafe/
 │   │   └── notifications.ts                # Expo push notifications
 │   ├── utils/
 │   │   └── crypto.ts                       # AES-256-GCM token encryption
-│   └── migrations/                         # D1 SQL migrations (numbered)
-│       ├── 001_initial.sql
-│       ├── 002_full_schema.sql
-│       ├── 003_notification_preferences.sql
-│       ├── 004_grace_period_and_tiers.sql
-│       ├── 005_notify_mtd_ready.sql
-│       ├── 006_recurring_expenses.sql
-│       ├── 007_rate_limits.sql
-│       ├── 008_remove_free_tier.sql
-│       ├── 009_nino.sql
-│       ├── 010_performance_indexes.sql
-│       ├── 011_oauth_states.sql
-│       ├── 012_articles.sql
-│       ├── 013_additional_indexes.sql
-│       ├── 014_fix_check_constraints.sql
+│   └── migrations/                         # D1 SQL migrations (numbered, next: 016)
+│       ├── 001_initial.sql ... 015_recurring_expenses_index.sql
 │       └── seed.sql                        # Local test data
 │
 ├── public/                                 # Static web assets
+│   ├── global.css                          # Web reset, font aliases, scrollbars, focus ring
 │   ├── manifest.json                       # PWA manifest
 │   ├── robots.txt                          # Search crawler rules
 │   └── sitemap.xml                         # SEO sitemap
 │
-├── .github/workflows/
-│   ├── ci.yml                              # Lint, typecheck, staging deploy on PR
-│   └── deploy.yml                          # Production deploy on merge to main
+├── tests/e2e/                              # Playwright E2E tests (20 tests, ~10s)
+│   ├── fixtures.ts                         # Cookie consent auto-dismiss
+│   ├── auth/                               # Login, signup, redirect tests
+│   └── public/                             # Landing page tests
 │
+├── .github/workflows/
+│   ├── ci.yml                              # Lint, typecheck, web build (path-filtered)
+│   ├── deploy.yml                          # Production deploy (split web/worker by path)
+│   ├── deploy-staging.yml                  # Staging deploy (worker path only)
+│   ├── deploy-dev.yml                      # Dev deploy (worker path only)
+│   └── e2e.yml                             # Playwright E2E on PRs
+│
+├── playwright.config.ts                    # Playwright config (live site by default)
 ├── wrangler.worker.toml                    # Cloudflare Worker config (dev/staging/prod)
 ├── tsconfig.json                           # Expo app TypeScript config
 ├── tsconfig.worker.json                    # Worker TypeScript config
@@ -204,9 +211,12 @@ QuidSafe/
 | Add a new API route | [worker/index.ts](worker/index.ts) + [worker/validation.ts](worker/validation.ts) (Zod schema) |
 | Add API client method | [lib/api.ts](lib/api.ts) + [lib/hooks/useApi.ts](lib/hooks/useApi.ts) (React Query hook) |
 | Add a toast-wrapped mutation | [lib/hooks/useApiWithToast.ts](lib/hooks/useApiWithToast.ts) |
-| Add a new screen | `app/<name>.tsx` + register in [app/_layout.tsx](app/_layout.tsx) Stack |
+| Add a new screen | `app/<name>.tsx` + add `<Stack.Screen>` in [app/_layout.tsx](app/_layout.tsx) |
+| Modify auth redirect logic | [lib/AuthRedirect.tsx](lib/AuthRedirect.tsx) (NOT _layout.tsx) |
+| Modify provider nesting | [components/Providers.tsx](components/Providers.tsx) |
+| Modify SEO/meta/JSON-LD | [components/web/HeadMeta.tsx](components/web/HeadMeta.tsx) |
 | Modify tax calculation | [lib/tax-engine.ts](lib/tax-engine.ts) + update [lib/__tests__/tax-engine.test.ts](lib/__tests__/tax-engine.test.ts) |
-| Add a D1 table/column | New migration in `worker/migrations/NNN_*.sql` (next number: 015) |
+| Add a D1 table/column | New migration in `worker/migrations/NNN_*.sql` (next number: 016) |
 | Add shared types | [lib/types.ts](lib/types.ts) |
 | Add a new colour/token | [constants/Colors.ts](constants/Colors.ts) |
 | Add a notification template | [worker/services/notifications.ts](worker/services/notifications.ts) |
@@ -241,7 +251,18 @@ QuidSafe/
 
 ## Key Patterns
 
-- **Auth**: Clerk JWT verified in [worker/middleware/auth.ts](worker/middleware/auth.ts) on every API request. Frontend calls `api.setToken()` in [lib/hooks/useApi.ts](lib/hooks/useApi.ts) `useApiToken()`.
+### Auth Architecture (critical - read this)
+
+- **Root layout** ([app/_layout.tsx](app/_layout.tsx)): Thin shell (~60 lines). Loads fonts, then renders `<HeadMeta>` + `<Providers>` + `<AuthRedirect>` + `<Stack>`.
+- **Providers** ([components/Providers.tsx](components/Providers.tsx)): All providers nested in correct order. Creates QueryClient internally.
+- **AuthRedirect** ([lib/AuthRedirect.tsx](lib/AuthRedirect.tsx)): Single source of truth for auth-based navigation. Uses `useStableAuth()` which debounces Clerk's `isSignedIn` flicker (800ms on true-to-false transitions). Only redirects to `/landing` when user is at root URL with no segments - does NOT redirect from `/(tabs)`, `/onboarding`, or any other route.
+- **useStableAuth** ([lib/hooks/useStableAuth.ts](lib/hooks/useStableAuth.ts)): Wraps Clerk's `useAuth()`. Suppresses `isSignedIn` flicker during session refresh (true->false->true within 800ms). Real sign-outs propagate after 800ms.
+- **useApiToken** ([lib/hooks/useApi.ts](lib/hooks/useApi.ts)): Syncs Clerk token to API client. Uses stable ref for `getToken` to avoid re-render loops. Keyed on `isSignedIn` changes only.
+- **D1 auto-create**: [worker/middleware/auth.ts](worker/middleware/auth.ts) runs `INSERT OR IGNORE INTO users` after JWT verification, so new Clerk users automatically get a D1 row on first API call.
+- **Login/signup handlers navigate explicitly** after `setActive()` via `router.replace('/(tabs)')`. AuthRedirect serves as backup.
+
+### Other Patterns
+
 - **Database**: D1 prepared statements with `.bind()` - never concatenate SQL. Use helpers in [lib/db.ts](lib/db.ts) (`query`, `queryOne`, `execute`).
 - **Validation**: All Worker routes validate input with Zod schemas in [worker/validation.ts](worker/validation.ts) via `.safeParse()`.
 - **Encryption**: Bank tokens encrypted via AES-256-GCM ([worker/utils/crypto.ts](worker/utils/crypto.ts)).
@@ -252,6 +273,8 @@ QuidSafe/
 - **Error handling**: API errors return `{ error: { code, message } }` shape. Frontend uses `useApiWithToast` wrappers.
 - **Platform checks**: Use `Platform.OS` for native-only features (SecureStore, haptics, biometrics).
 - **Scheduled handler**: Daily cron at 6am UTC runs bank sync, notifications, invoice overdue check, grace period expiry, and recurring expense auto-log.
+- **Web fonts**: Google Fonts CSS `<link>` in [HeadMeta.tsx](components/web/HeadMeta.tsx) + `@font-face` aliases in [global.css](public/global.css) as fallback for expo-font `.ttf` bundles that fail with OTS errors.
+- **E2E tests**: Playwright tests run against live `quidsafe.uk` by default. Use `npm run test:e2e`. Config in [playwright.config.ts](playwright.config.ts).
 
 ## Design System
 
@@ -280,10 +303,12 @@ QuidSafe/
 - Spacing scale: `xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48`
 
 ### Typography
-- **Headings**: `Lexend_600SemiBold`
-- **Body**: `SourceSans3_400Regular` / `SourceSans3_600SemiBold`
-- **Monetary amounts**: `JetBrainsMono_400Regular` / `JetBrainsMono_600SemiBold`
-- Loaded in [app/_layout.tsx](app/_layout.tsx) via `@expo-google-fonts/*`
+
+- **Headings**: `Lexend_600SemiBold` (via `Fonts.lexend.semiBold`)
+- **Body**: `SourceSans3_400Regular` / `SourceSans3_600SemiBold` (via `Fonts.sourceSans.*`)
+- **Monetary amounts**: `JetBrainsMono_400Regular` / `JetBrainsMono_600SemiBold` (via `Fonts.mono.*`)
+- **Native**: Loaded via `useFonts()` from `@expo-google-fonts/*` in [_layout.tsx](app/_layout.tsx)
+- **Web**: Google Fonts CSS `<link>` in [HeadMeta.tsx](components/web/HeadMeta.tsx) + `@font-face` aliases in [global.css](public/global.css) as fallback for expo-font OTS errors
 
 ### Icons
 - [lucide-react-native](https://lucide.dev) only
@@ -345,7 +370,11 @@ Always run `/pre-deploy` before deploying to production.
 
 ## CI/CD
 
-- **PR checks** ([.github/workflows/ci.yml](.github/workflows/ci.yml)): Lint, Typecheck, Staging migrations + worker deploy, Web build
-- **Main merge** ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)): Production D1 migrations → Worker deploy → Pages deploy
-- **Branch protection**: `main` requires "Lint & Typecheck" check to pass
-- **Health check**: Non-blocking (Cloudflare bot protection returns 403 to GitHub runners)
+- **PR checks** ([ci.yml](.github/workflows/ci.yml)): Lint, Typecheck, Tests. Web build only runs when frontend files change (dorny/paths-filter). Skips entirely for docs-only PRs (paths-ignore). Uses node_modules cache.
+- **E2E tests** ([e2e.yml](.github/workflows/e2e.yml)): Playwright against live quidsafe.uk on PRs touching app/components/lib/tests. Desktop Chrome only.
+- **Main merge** ([deploy.yml](.github/workflows/deploy.yml)): Detects changes via paths-filter. Worker-only changes skip web build. Web-only changes skip worker deploy. Both use Expo/Metro cache.
+- **Staging** ([deploy-staging.yml](.github/workflows/deploy-staging.yml)): Only runs on PRs touching worker/** or wrangler.worker.toml.
+- **Branch protection**: `main` requires "Lint & Typecheck" check to pass.
+- **Auto-merge**: Use `gh pr merge --auto --squash --delete-branch` to avoid polling CI.
+- **Health check**: Non-blocking (Cloudflare bot protection returns 403 to GitHub runners).
+- **npm version**: CI uses npm 10. If regenerating package-lock.json locally, use `npx -y npm@10 install`.
