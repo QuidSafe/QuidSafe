@@ -25,7 +25,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function SignupScreen() {
   const { signUp, isLoaded, setActive } = useSignUp();
   const { startSSOFlow } = useSSO();
-  const { isSignedIn, signOut } = useAuth();
+  const { isSignedIn } = useAuth();
   const router = useRouter();
   const { colors } = useTheme();
   const { isDesktop } = useResponsiveLayout();
@@ -71,19 +71,15 @@ export default function SignupScreen() {
       else if (!isPasswordValid) setError('Password must be at least 8 characters');
       return;
     }
-    setLoading(true);
-    setError('');
-
-    // Clerk rejects signUp.create() if a session already exists. Clear any
-    // stale session up front so users stuck in a partial-signup state recover.
-    if (isSignedIn && signOut) {
-      try {
-        await signOut();
-      } catch {
-        // best-effort - Clerk will throw the specific error below if it matters
-      }
+    // If already signed in, go straight to the app instead of silently
+    // signing out (which triggers AuthRedirect and bounces to /landing).
+    if (isSignedIn) {
+      router.replace('/(tabs)');
+      return;
     }
 
+    setLoading(true);
+    setError('');
     try {
       const trimmedEmail = email.trim();
       const trimmedName = name.trim();
@@ -119,7 +115,7 @@ export default function SignupScreen() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, signUp, name, email, password, canSubmit, isNameValid, isEmailValid, isPasswordValid, isSignedIn, signOut, router]);
+  }, [isLoaded, signUp, name, email, password, canSubmit, isNameValid, isEmailValid, isPasswordValid, isSignedIn, router]);
 
   const handleVerify = useCallback(async () => {
     if (!isLoaded || !signUp || !code) return;
