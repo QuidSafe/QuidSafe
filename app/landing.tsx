@@ -21,7 +21,7 @@ import {
   Minus,
   ArrowRight,
 } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { colors, Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { useResponsiveLayout } from '@/lib/useResponsiveLayout';

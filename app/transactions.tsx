@@ -19,12 +19,11 @@ import { useLocalSearchParams } from 'expo-router';
 import { Wand2, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
 import { useToast } from '@/components/ui/Toast';
 import type { Transaction, TransactionCategory } from '@/lib/types';
 
@@ -144,7 +143,6 @@ export default function TransactionsScreen() {
   const [selectedIncomeSource, setSelectedIncomeSource] = useState<string | null>(null);
   const [isAutoCategorising, setIsAutoCategorising] = useState(false);
 
-  const { colors } = useTheme();
   const toast = useToast();
 
   // Fetch data based on filter

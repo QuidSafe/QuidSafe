@@ -1,10 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing } from '@/constants/Colors';
+import { colors, Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
 
 export interface ExpenseMetricsProps {
   totalClaimed: number;
@@ -13,7 +12,6 @@ export interface ExpenseMetricsProps {
 }
 
 export default function ExpenseMetrics({ totalClaimed, taxSaved, thisMonthTotal }: ExpenseMetricsProps) {
-  const { colors } = useTheme();
 
   return (
     <>

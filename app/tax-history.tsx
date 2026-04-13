@@ -12,9 +12,8 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { FullScreenSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 
@@ -46,7 +45,6 @@ function formatPercentChange(current: number, prior: number): { value: string; i
 }
 
 export default function TaxHistoryScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
   const currentTaxYear = getCurrentTaxYear();
   const [selectedYear, setSelectedYear] = useState(currentTaxYear);

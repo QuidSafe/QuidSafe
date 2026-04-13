@@ -14,9 +14,8 @@ import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Lock, Mail, User, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
-import { Colors } from '@/constants/Colors';
+import { colors, Colors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useResponsiveLayout } from '@/lib/useResponsiveLayout';
 import { AuthLeftPanel } from '@/components/ui/AuthLeftPanel';
 
@@ -27,7 +26,6 @@ export default function SignupScreen() {
   const { startSSOFlow } = useSSO();
   const { isSignedIn } = useAuth();
   const router = useRouter();
-  const { colors } = useTheme();
   const { isDesktop } = useResponsiveLayout();
 
   const [name, setName] = useState('');

@@ -16,9 +16,8 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Clock, Wand2, PoundSterling, Lock, ArrowLeft, ArrowRight, EyeOff, Shield, Calendar, Check, Info, CheckCircle, Landmark } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
@@ -36,7 +35,6 @@ const TOTAL_STEPS = 3;
 /*  Progress Dots                                                      */
 /* ------------------------------------------------------------------ */
 function ProgressDots({ current }: { current: number }) {
-  const { colors } = useTheme();
   return (
     <View style={styles.dotsRow}>
       {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -64,7 +62,6 @@ function ProgressDots({ current }: { current: number }) {
 /*  Step 1 - Welcome                                                   */
 /* ------------------------------------------------------------------ */
 function StepWelcome() {
-  const { colors } = useTheme();
 
   return (
     <ScrollView
@@ -145,7 +142,6 @@ function StepBusinessInfo({
   disclaimerChecked: boolean;
   onDisclaimerChange: (val: boolean) => void;
 }) {
-  const { colors } = useTheme();
 
   return (
     <ScrollView
@@ -235,7 +231,6 @@ function StepBusinessInfo({
 /*  Step 3 - Connect Bank                                              */
 /* ------------------------------------------------------------------ */
 function StepConnectBank() {
-  const { colors } = useTheme();
   const [connecting, setConnecting] = useState(false);
 
   // Android: dismiss browser on hardware back press during OAuth flow
@@ -345,7 +340,6 @@ function StepConnectBank() {
 /*  Main Screen                                                       */
 /* ================================================================== */
 export default function OnboardingScreen() {
-  const { colors } = useTheme();
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const { width: windowWidth } = useWindowDimensions();

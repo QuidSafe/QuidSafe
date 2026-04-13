@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Shield, ArrowLeft, Home } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { colors, Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 export default function NotFoundScreen() {

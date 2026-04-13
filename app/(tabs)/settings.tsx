@@ -19,12 +19,11 @@ import { useRouter } from 'expo-router';
 import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import * as WebBrowser from 'expo-web-browser';
 import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
-import { useTheme } from '@/lib/ThemeContext';
 import { getNotificationPermissionStatus } from '@/lib/notifications';
 import {
   exportTransactionsCSV,
@@ -143,7 +142,6 @@ const SettingsRow = memo(function SettingsRow({
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }) {
-  const { colors } = useTheme();
   const content = (
     <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: colors.border }]]}>
       <IconBox icon={icon} bg={iconBg} />
@@ -178,7 +176,6 @@ function Chevron() {
 
 // --------------- Section Label ---------------
 const SectionLabel = memo(function SectionLabel({ label }: { label: string }) {
-  const { colors } = useTheme();
   return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]} accessibilityRole="header">{label}</Text>;
 });
 
@@ -194,7 +191,6 @@ const ThemeOption = memo(function ThemeOption({
   active: boolean;
   onPress: () => void;
 }) {
-  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={styles.themeOption} accessibilityRole="button" accessibilityLabel={`Theme: ${label}`} accessibilityState={{ selected: active }}>
       <View style={styles.themeLeft}>
@@ -242,7 +238,6 @@ const BankConnectionRow = memo(function BankConnectionRow({
   onDisconnect: (id: string) => void;
   isDisconnecting: boolean;
 }) {
-  const { colors } = useTheme();
   const lastSynced = formatRelativeTime(connection.lastSyncedAt);
 
   const handleDisconnect = () => {
@@ -297,7 +292,6 @@ const BankConnectionRow = memo(function BankConnectionRow({
 
 // --------------- Main Screen ---------------
 export default function SettingsScreen() {
-  const { colors } = useTheme();
   const { user } = useUser();
   const { signOut } = useAuth();
   const router = useRouter();

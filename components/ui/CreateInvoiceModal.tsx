@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { DateInput } from '@/components/ui/DateInput';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useCreateInvoiceWithToast } from '@/lib/hooks/useApiWithToast';
 import { hapticSuccess } from '@/lib/haptics';
 
@@ -26,7 +25,6 @@ interface CreateInvoiceModalProps {
 }
 
 export function CreateInvoiceModal({ visible, onClose, onSuccess }: CreateInvoiceModalProps) {
-  const { colors } = useTheme();
   const createMutation = useCreateInvoiceWithToast();
 
   // Form state
