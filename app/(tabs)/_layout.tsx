@@ -1,13 +1,12 @@
 import { View, Platform } from 'react-native';
 import { Home, PoundSterling, CreditCard, BookOpen, Settings } from 'lucide-react-native';
 import { Tabs } from 'expo-router';
-import { useTheme } from '@/lib/ThemeContext';
+import { colors } from '@/constants/Colors';
 import { useResponsiveLayout } from '@/lib/useResponsiveLayout';
 import { SidebarNav } from '@/components/ui/SidebarNav';
 import { Fonts } from '@/constants/Typography';
 
 export default function TabLayout() {
-  const { colors } = useTheme();
   const { isDesktop, isWeb } = useResponsiveLayout();
 
   // On web desktop: sidebar navigation replaces the bottom tab bar

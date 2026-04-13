@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, ScrollView } from 'react-native';
 import { X } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useCreateRecurringExpense } from '@/lib/hooks/useApi';
-import { useTheme } from '@/lib/ThemeContext';
 import { HMRC_CATEGORY_LABELS } from '@/components/ui/ExpenseRow';
 
 const HMRC_CATEGORIES = [
@@ -45,7 +44,6 @@ export interface AddRecurringExpenseModalProps {
 }
 
 export default function AddRecurringExpenseModal({ visible, onClose, onSuccess }: AddRecurringExpenseModalProps) {
-  const { colors } = useTheme();
   const createRecurring = useCreateRecurringExpense();
 
   const [recAmount, setRecAmount] = useState('');

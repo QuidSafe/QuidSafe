@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, Pressable, useWindowDimensions } from 'react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { colors, Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
 import type { TaxCalculation } from '@/lib/types';

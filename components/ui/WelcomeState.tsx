@@ -1,8 +1,7 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Landmark, Lock, ArrowLeftRight, Calculator, Wallet, ShieldCheck, ChevronRight } from 'lucide-react-native';
-import { Colors, colors as semanticColors, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, colors as semanticColors, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 export interface WelcomeStateProps {
   isConnecting: boolean;
@@ -10,7 +9,6 @@ export interface WelcomeStateProps {
 }
 
 export function WelcomeState({ isConnecting, onConnectBank }: WelcomeStateProps) {
-  const { colors } = useTheme();
 
   return (
     <>

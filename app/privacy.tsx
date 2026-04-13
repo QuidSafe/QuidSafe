@@ -2,12 +2,10 @@ import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const { colors } = useTheme();
   return (
     <View style={styles.section}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
@@ -17,12 +15,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Paragraph({ children }: { children: React.ReactNode }) {
-  const { colors } = useTheme();
   return <Text style={[styles.body, { color: colors.textSecondary }]}>{children}</Text>;
 }
 
 function BulletList({ items }: { items: string[] }) {
-  const { colors } = useTheme();
   return (
     <View style={styles.bulletList}>
       {items.map((item, i) => (
@@ -36,7 +32,6 @@ function BulletList({ items }: { items: string[] }) {
 }
 
 export default function PrivacyPolicyScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
 
   return (

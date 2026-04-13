@@ -15,9 +15,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { Skeleton, TransactionListSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useInvoices } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { downloadInvoicePDF } from '@/lib/invoiceActions';
@@ -61,7 +60,6 @@ function isCurrentMonth(dateStr: string): boolean {
 
 // --- Skeleton for invoices screen ---
 function InvoicesSkeleton() {
-  const { colors } = useTheme();
   return (
     <View style={{ gap: Spacing.md }}>
       {/* Summary stats skeleton */}
@@ -85,7 +83,6 @@ const skeletonCardStyle: Record<string, unknown> = {
 };
 
 export default function InvoicesScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [createModalVisible, setCreateModalVisible] = useState(false);

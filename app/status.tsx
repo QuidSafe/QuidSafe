@@ -17,7 +17,7 @@ import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { SectionSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import {
   useDashboard,
@@ -28,7 +28,6 @@ import {
   useMtdObligations,
   useSyncBank,
 } from '@/lib/hooks/useApi';
-import { useTheme } from '@/lib/ThemeContext';
 import { formatCurrency } from '@/lib/tax-engine';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
@@ -203,7 +202,6 @@ const toggleStyles = StyleSheet.create({
 // -------- Main Screen --------
 
 export default function StatusScreen() {
-  const { colors, isDark } = useTheme();
   const { user } = useUser();
   const router = useRouter();
 

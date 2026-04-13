@@ -4,9 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, ChevronUp, ChevronDown, Check, CheckCircle, Shield, Lock } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { api } from '@/lib/api';
 import { useBillingStatus, useCreateCheckout } from '@/lib/hooks/useApi';
 
@@ -92,7 +91,6 @@ function FAQItem({ question, answer, colors }: { question: string; answer: strin
 }
 
 export default function BillingScreen() {
-  const { colors } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
   const [portalLoading, setPortalLoading] = useState(false);
 

@@ -17,9 +17,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, CheckCircle, FileText, Pencil, Trash2, AlertTriangle, Send, X } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useInvoices } from '@/lib/hooks/useApi';
 import {
   useUpdateInvoiceWithToast,
@@ -75,7 +74,6 @@ function InvoiceDetailSkeleton() {
 
 export default function InvoiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colors } = useTheme();
   const router = useRouter();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [sendModalVisible, setSendModalVisible] = useState(false);

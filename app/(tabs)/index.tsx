@@ -13,12 +13,11 @@ import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { TaxHeroCard } from '@/components/ui/TaxHeroCard';
 import { WelcomeState } from '@/components/ui/WelcomeState';
 import { IncomeBySource } from '@/components/ui/IncomeBySource';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
 
 /** Calculate YoY income growth from byMonth data.
  *  Compares last 6 months total vs prior 6 months.
@@ -56,7 +55,6 @@ export default function DashboardScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
-  const { colors } = useTheme();
 
   const [isConnecting, setIsConnecting] = useState(false);
 

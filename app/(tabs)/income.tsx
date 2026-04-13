@@ -15,9 +15,8 @@ import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
 import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
@@ -75,7 +74,6 @@ function getLastNMonths(byMonth: { month: string; income: number; expenses: numb
 }
 
 export default function IncomeScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard();
   useQuarterlyBreakdown();

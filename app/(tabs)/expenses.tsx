@@ -21,15 +21,13 @@ import ExpenseRow, { HMRC_CATEGORY_LABELS, getCategoryMeta, formatDate, expenseR
 import AddExpenseModal from '@/components/ui/AddExpenseModal';
 import AddRecurringExpenseModal, { FREQUENCY_LABELS, FREQUENCY_COLORS } from '@/components/ui/AddRecurringExpenseModal';
 import ExpenseMetrics from '@/components/ui/ExpenseMetrics';
-import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useExpenses, useDeleteExpense, useDashboard, useRecurringExpenses, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
 import { hapticMedium } from '@/lib/haptics';
 
 export default function ExpensesScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const { data: dashboardData } = useDashboard();

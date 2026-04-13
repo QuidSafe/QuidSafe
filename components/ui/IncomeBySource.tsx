@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
+import { colors } from '@/constants/Colors';
 
 export interface IncomeSource {
   name: string;
@@ -15,7 +15,6 @@ export interface IncomeBySourceProps {
 }
 
 export function IncomeBySource({ sources, sourceColors }: IncomeBySourceProps) {
-  const { colors } = useTheme();
 
   return (
     <>

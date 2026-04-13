@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, ScrollView } from 'react-native';
 import { X, Camera } from 'lucide-react-native';
-import { Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius, colors as designColors } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useAddExpense } from '@/lib/hooks/useApi';
 import { hapticSuccess } from '@/lib/haptics';
-import { useTheme } from '@/lib/ThemeContext';
 import { HMRC_CATEGORY_LABELS } from '@/components/ui/ExpenseRow';
 
 const HMRC_CATEGORIES = [
@@ -30,7 +29,6 @@ export interface AddExpenseModalProps {
 }
 
 export default function AddExpenseModal({ visible, onClose, onSuccess, openedFromReceipt = false }: AddExpenseModalProps) {
-  const { colors } = useTheme();
   const addExpense = useAddExpense();
 
   const [amount, setAmount] = useState('');

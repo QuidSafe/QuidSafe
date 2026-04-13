@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { Shield, Zap, Lock } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/Colors';
+import { colors, Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 
 /**

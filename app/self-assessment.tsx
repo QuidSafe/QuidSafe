@@ -13,10 +13,9 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, Info, Calendar, Download, Clipboard, Check, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { FullScreenSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard, useQuarterlyBreakdown, useExpenses } from '@/lib/hooks/useApi';
-import { useTheme } from '@/lib/ThemeContext';
 import { exportTaxSummaryCSV, downloadCSV } from '@/lib/export';
 import type { TaxCalculation, Expense } from '@/lib/types';
 
@@ -113,7 +112,6 @@ const badgeStyles = StyleSheet.create({
 });
 
 function InfoTooltip({ boxNumber, visible, onToggle }: { boxNumber: string; visible: boolean; onToggle: () => void }) {
-  const { colors } = useTheme();
   return (
     <View>
       <Pressable
@@ -171,7 +169,6 @@ function SA103Row({
   isLast?: boolean;
   children?: React.ReactNode;
 }) {
-  const { colors } = useTheme();
   return (
     <View style={[rowStyles.container, !isLast && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
       <View style={rowStyles.header}>
@@ -225,7 +222,6 @@ const rowStyles = StyleSheet.create({
 });
 
 function TaxLine({ label, amount, isBold = false }: { label: string; amount: number; isBold?: boolean }) {
-  const { colors } = useTheme();
   return (
     <View style={taxLineStyles.row}>
       <Text
@@ -272,7 +268,6 @@ const taxLineStyles = StyleSheet.create({
 });
 
 function ExpenseBreakdownRow({ label, amount }: { label: string; amount: number }) {
-  const { colors } = useTheme();
   return (
     <View style={expenseStyles.row}>
       <Text style={[expenseStyles.label, { color: colors.textSecondary }]}>{label}</Text>
@@ -299,7 +294,6 @@ const expenseStyles = StyleSheet.create({
 });
 
 function DeadlineRow({ label, date, daysLeft }: { label: string; date: Date; daysLeft: number }) {
-  const { colors } = useTheme();
   const urgencyColor = daysLeft <= 30 ? Colors.error : daysLeft <= 90 ? Colors.warning : Colors.success;
   return (
     <View style={deadlineStyles.row}>
@@ -389,7 +383,6 @@ function buildSA103CSV(tax: TaxCalculation, breakdown: Record<string, number>): 
 // --------------- Main Screen ---------------
 
 export default function SelfAssessmentScreen() {
-  const { colors } = useTheme();
   const router = useRouter();
   const { data: dashboardData, isLoading: dashLoading } = useDashboard();
   const { data: quarterlyData, isLoading: quarterLoading } = useQuarterlyBreakdown();

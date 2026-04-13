@@ -15,9 +15,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Car, Phone, Briefcase, Laptop, Plane, Utensils, Code, Shield, FileText, Image as ImageIcon, Pencil, Trash2, Check, X, AlertTriangle } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useExpenses, useDeleteExpense, useUpdateExpense } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
 import { hapticMedium } from '@/lib/haptics';
@@ -102,7 +101,6 @@ function ExpenseDetailSkeleton() {
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colors } = useTheme();
   const router = useRouter();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

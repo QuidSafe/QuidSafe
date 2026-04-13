@@ -14,9 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, XCircle, AlertTriangle, ChevronUp, ChevronDown, Clock } from 'lucide-react-native';
-import { Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTheme } from '@/lib/ThemeContext';
 import { useArticles } from '@/lib/hooks/useApi';
 import type { Article, ArticleCategory } from '@/lib/types';
 
@@ -46,7 +45,6 @@ function getTagColors(variant: TagVariant): { bg: string; color: string } {
 }
 
 export default function LearnScreen() {
-  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);

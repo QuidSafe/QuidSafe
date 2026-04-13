@@ -18,12 +18,11 @@ import * as WebBrowser from 'expo-web-browser';
 import { Landmark, CheckCircle, Check, X, ArrowDown, ArrowUp, PoundSterling, Link, Send, Scale } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { FullScreenSkeleton } from '@/components/ui/Skeleton';
-import { Colors, Spacing, BorderRadius } from '@/constants/Colors';
+import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useMtdObligations, useSubmitQuarterly, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
-import { useTheme } from '@/lib/ThemeContext';
 import type { QuarterInfo } from '@/lib/types';
 
 // ─── Quarter status helpers ──────────────────────────────
@@ -80,7 +79,6 @@ function deriveQuarterStatus(
 // ─── Main Screen ──────────────────────────────────────────
 
 export default function MTDScreen() {
-  const { colors } = useTheme();
   const obligations = useMtdObligations();
   const quarters = useQuarterlyBreakdown();
   const submitMutation = useSubmitQuarterly();
