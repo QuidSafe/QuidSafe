@@ -7,6 +7,9 @@ import type { Env } from '../index';
 interface ClerkJWTPayload {
   sub: string;       // Clerk user ID
   email?: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
   exp: number;
   iat: number;
   nbf?: number;
@@ -131,11 +134,20 @@ export function clerkAuth(): MiddlewareHandler<AuthEnv> {
       c.set('userId', payload.sub);
       if (payload.email) c.set('userEmail', payload.email);
 
-      // Auto-create user row on first authenticated request so the gap
-      // between Clerk signup and D1 data never causes 404s on /dashboard.
+      // Derive display name from JWT claims if present
+      const derivedName =
+        payload.name?.trim() ||
+        [payload.first_name, payload.last_name].filter(Boolean).join(' ').trim() ||
+        '';
+
+      // Auto-create on first request AND backfill name if it's currently empty
+      // (closes the window where the security fix created rows with empty names)
       await c.env.DB.prepare(
-        'INSERT OR IGNORE INTO users (id, email, name) VALUES (?, ?, ?)',
-      ).bind(payload.sub, payload.email ?? '', '').run();
+        `INSERT INTO users (id, email, name) VALUES (?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           email = CASE WHEN users.email = '' THEN excluded.email ELSE users.email END,
+           name = CASE WHEN users.name = '' OR users.name IS NULL THEN excluded.name ELSE users.name END`,
+      ).bind(payload.sub, payload.email ?? '', derivedName).run();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid token';
       return c.json({ error: { code: 'UNAUTHORIZED', message } }, 401);

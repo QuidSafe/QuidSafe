@@ -140,10 +140,18 @@ export default function DashboardScreen() {
           accessibilityRole="header"
         >
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
-            <Text style={[styles.name, { color: colors.text }]} accessibilityRole="header">
-              {firstName || 'Welcome'}
-            </Text>
+            {firstName ? (
+              <>
+                <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()}</Text>
+                <Text style={[styles.name, { color: colors.text }]} accessibilityRole="header">
+                  {firstName}
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.name, { color: colors.text }]} accessibilityRole="header">
+                {getGreeting()}
+              </Text>
+            )}
           </View>
           <View style={styles.headerRight}>
             {/* Health badge -- income growth indicator (YoY from byMonth data) */}
