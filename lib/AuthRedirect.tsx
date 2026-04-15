@@ -25,19 +25,18 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
     const firstSegment = segments[0] as string;
     const inAuthGroup = firstSegment === '(auth)';
 
-    if (isSignedIn === true && (inAuthGroup || firstSegment === 'landing')) {
-      // Signed in but on auth/landing page — go to the app
+    // Root URL (/) renders the landing page directly via app/index.tsx,
+    // so there is no redirect needed when signed out at root.
+    const onIndex = !firstSegment;
+    const onLanding = firstSegment === 'landing';
+
+    if (isSignedIn === true && (inAuthGroup || onLanding || onIndex)) {
+      // Signed in but on auth/landing/root — go to the app
       router.replace('/(tabs)');
-    } else if (isSignedIn === false && inAuthGroup) {
-      // Not signed in and in auth group — stay (this is correct)
-    } else if (isSignedIn === false && !firstSegment) {
-      // Not signed in at root URL — go to landing
-      router.replace('/landing');
     }
-    // All other cases: stay where you are. If the user is on /(tabs)
-    // or /onboarding or any other route without being signed in, the
-    // API calls will fail naturally and show error states. We don't
-    // forcefully yank them to /landing.
+    // All other cases (signed in elsewhere, signed out anywhere): stay put.
+    // If a signed-out user navigates to a protected route, API calls will
+    // fail and show error states rather than yank them away.
   }, [isSignedIn, isLoaded, segments, router]);
 
   useEffect(() => {

@@ -36,6 +36,7 @@ import {
 import { sendInvoiceEmail } from './services/emailService';
 import type { HmrcConfig } from './services/hmrc';
 import { query, queryOne, execute } from '../lib/db';
+import { audit, auditContext } from './utils/auditLog';
 import {
   createCheckoutSession,
   createPortalSession,
@@ -197,7 +198,7 @@ app.use('*', async (c, next) => {
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
   c.header('X-Frame-Options', 'DENY');
-  c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   c.header('Referrer-Policy', 'no-referrer');
   c.header('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
@@ -1056,6 +1057,10 @@ authed.delete('/banking/connections/:id', async (c) => {
     'UPDATE bank_connections SET active = 0 WHERE id = ? AND user_id = ?',
     [connId, userId],
   );
+  await audit(c.env.DB, {
+    userId, action: 'bank.disconnect', entityType: 'bank_connection', entityId: connId,
+    ...auditContext(c.req.raw.headers),
+  });
   return c.json({ disconnected: true });
 });
 
@@ -1258,6 +1263,12 @@ authed.post('/invoices', async (c) => {
     'INSERT INTO invoices (id, user_id, client_name, client_email, amount, description, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [id, userId, body.clientName, body.clientEmail ?? null, body.amount, body.description, body.dueDate],
   );
+
+  await audit(c.env.DB, {
+    userId, action: 'invoice.create', entityType: 'invoice', entityId: id,
+    metadata: { amount: body.amount, clientName: body.clientName },
+    ...auditContext(c.req.raw.headers),
+  });
 
   return c.json({ id, success: true }, 201);
 });
@@ -1587,6 +1598,12 @@ authed.post('/mtd/submit-quarterly', async (c) => {
       'UPDATE mtd_submissions SET status = ?, hmrc_receipt_id = ?, response_json = ?, submitted_at = datetime(\'now\') WHERE id = ?',
       ['accepted', response.id, JSON.stringify(response), submissionId],
     );
+
+    await audit(c.env.DB, {
+      userId, action: 'mtd.submit', entityType: 'mtd_submission', entityId: submissionId,
+      metadata: { taxYear, quarter, hmrcReceiptId: response.id, totalIncome, totalExpenses },
+      ...auditContext(c.req.raw.headers),
+    });
 
     return c.json({
       success: true,
