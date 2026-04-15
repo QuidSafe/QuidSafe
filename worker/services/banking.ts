@@ -90,7 +90,8 @@ export async function exchangeCode(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`TrueLayer token exchange failed: ${error}`);
+    console.error('[TrueLayer token exchange]', { status: response.status, body: error.slice(0, 500) });
+    throw new Error(`TrueLayer token exchange failed (${response.status})`);
   }
 
   return response.json() as Promise<TrueLayerToken>;

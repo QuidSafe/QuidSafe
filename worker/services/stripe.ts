@@ -13,20 +13,27 @@ interface StripeConfig {
 async function stripeRequest<T>(
   path: string,
   config: StripeConfig,
-  options: { method?: string; body?: URLSearchParams } = {},
+  options: { method?: string; body?: URLSearchParams; idempotencyKey?: string } = {},
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    Authorization: `Basic ${btoa(config.secretKey + ':')}`,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  if (options.idempotencyKey) {
+    headers['Idempotency-Key'] = options.idempotencyKey;
+  }
   const response = await fetch(`https://api.stripe.com/v1${path}`, {
     method: options.method ?? 'POST',
-    headers: {
-      Authorization: `Basic ${btoa(config.secretKey + ':')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers,
     body: options.body?.toString(),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Stripe API error (${response.status}): ${error}`);
+    // Log the raw error internally for debugging but throw a sanitised
+    // message to avoid leaking Stripe internals to clients/logs.
+    console.error('[Stripe API error]', { status: response.status, body: error.slice(0, 500) });
+    throw new Error(`Payment provider error (${response.status})`);
   }
 
   return response.json() as Promise<T>;
@@ -82,7 +89,11 @@ export async function createCheckoutSession(
     'metadata[user_id]': userId,
   });
 
-  const session = await stripeRequest<{ url: string }>('/checkout/sessions', config, { body: params });
+  // Idempotency bucket: 5-minute window per user+plan to prevent duplicate
+  // checkout sessions from accidental client retries.
+  const bucket = Math.floor(Date.now() / 300_000);
+  const idempotencyKey = `checkout:${userId}:${plan}:${bucket}`;
+  const session = await stripeRequest<{ url: string }>('/checkout/sessions', config, { body: params, idempotencyKey });
   return { url: session.url };
 }
 
@@ -231,6 +242,18 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       if (!userId) break;
+
+      // Defence in depth: cross-check the customer in D1 to prevent a
+      // compromised Stripe key from upgrading arbitrary accounts.
+      if (obj.customer) {
+        const existing = await db.prepare(
+          'SELECT id FROM users WHERE id = ? AND (stripe_customer_id = ? OR stripe_customer_id IS NULL)'
+        ).bind(userId, obj.customer).first();
+        if (!existing) {
+          console.warn('[Stripe webhook] customer mismatch, rejecting', { userId, customer: obj.customer });
+          break;
+        }
+      }
 
       const interval = obj.items?.data[0]?.price?.recurring?.interval;
       const plan = interval === 'year' ? 'pro_annual' : 'pro_monthly';

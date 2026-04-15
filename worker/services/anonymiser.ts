@@ -288,6 +288,13 @@ const PII_PATTERNS: [RegExp, string][] = [
   [/\bREF\s*[A-Z0-9]{4,}\b/gi, 'REF REDACTED'],
   // Personal names (MR/MRS/MS/DR prefix)
   [/\b(?:MR|MRS|MS|MISS|DR|PROF)\s+[A-Z][A-Z]+(?:\s+[A-Z][A-Z]+)?\b/gi, 'PERSONAL_PAYMENT'],
+  // Bank transfer/payment narratives followed by names
+  // FPS CREDIT JOHN SMITH, PAYMENT FROM SARAH JONES, TFR JAMES WILSON, etc.
+  [/\b(?:FPS\s+CREDIT|PAYMENT\s+FROM|PAYMENT\s+TO|TFR|TRANSFER\s+FROM|TRANSFER\s+TO|FROM|TO)\s+[A-Z][A-Z]+(?:\s+[A-Z][A-Z]+){0,3}\b/gi, 'PERSONAL_PAYMENT'],
+  // Postcodes (UK): SW1A 1AA, M1 1AA, etc.
+  [/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/gi, 'POSTCODE_REDACTED'],
+  // National Insurance numbers: AB123456C
+  [/\b[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z]\d{6}[A-D]\b/g, 'NINO_REDACTED'],
   // Card numbers (partial)
   [/\b\d{4}\s?\*+\s?\*+\s?\d{4}\b/g, 'CARD_REDACTED'],
 ];

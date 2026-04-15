@@ -72,12 +72,16 @@ export function rateLimit(): MiddlewareHandler<RateLimitEnv> {
       return;
     }
 
+    // Prefer userId (set by auth middleware) over IP - mobile NAT and
+    // residential proxies make IP-only rate limiting trivially bypassable.
+    const userId = (c as { get?: (k: string) => string | undefined }).get?.('userId');
     const clientIp =
       c.req.header('cf-connecting-ip') ||
       c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
       'unknown';
+    const principal = userId ? `user:${userId}` : `ip:${clientIp}`;
 
-    const key = `${clientIp}:${limitType}`;
+    const key = `${principal}:${limitType}`;
     const windowStart = getWindowStart(config.windowMs);
     const db = c.env.DB;
 
@@ -123,7 +127,7 @@ export function rateLimit(): MiddlewareHandler<RateLimitEnv> {
     } catch (err) {
       // If rate limiting fails, fail closed for sensitive buckets, fail open for others.
       console.error('[RateLimit] D1 error:', err);
-      const sensitiveBuckets = new Set(['auth', 'billing', 'banking', 'mtd']);
+      const sensitiveBuckets = new Set(['auth', 'billing', 'banking', 'mtd', 'write']);
       if (sensitiveBuckets.has(limitType)) {
         c.header('Retry-After', String(Math.ceil(config.windowMs / 1000)));
         return c.json(

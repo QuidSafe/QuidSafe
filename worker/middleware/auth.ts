@@ -9,6 +9,7 @@ interface ClerkJWTPayload {
   email?: string;
   exp: number;
   iat: number;
+  nbf?: number;
   iss: string;
 }
 
@@ -47,13 +48,19 @@ async function verifyClerkJWT(token: string, publishableKey: string): Promise<Cl
   }
 
   // Check expiration
-  if (payload.exp < Date.now() / 1000) {
+  const now = Date.now() / 1000;
+  if (payload.exp < now) {
     throw new Error('Token expired');
+  }
+
+  // Check not-before claim - reject tokens that aren't valid yet (with 30s clock skew)
+  if (payload.nbf && payload.nbf > now + 30) {
+    throw new Error('Token not yet valid');
   }
 
   // Reject tokens issued too long ago (max 1 hour) - limits window for compromised tokens
   const MAX_TOKEN_AGE_SECONDS = 3600;
-  if (Date.now() / 1000 - payload.iat > MAX_TOKEN_AGE_SECONDS) {
+  if (now - payload.iat > MAX_TOKEN_AGE_SECONDS) {
     throw new Error('Token too old');
   }
 
