@@ -133,13 +133,14 @@ app.use('*', logger((str) => {
 app.use(
   '*',
   cors({
-    origin: (origin: string) => {
-      const allowed = ['http://localhost:8081', 'https://quidsafe.uk', 'https://app.quidsafe.uk', 'https://quidsafe.uk'];
-      // Allow exact matches + Cloudflare Pages preview deployments
-      if (allowed.includes(origin) || /^https:\/\/[a-z0-9]+\.quidsafe\.pages\.dev$/.test(origin)) {
-        return origin;
-      }
-      // Block unknown origins - returning empty string omits Access-Control-Allow-Origin header
+    origin: (origin: string, c: { env: Env }) => {
+      const isProd = c.env.ENVIRONMENT === 'production';
+      const allowed = isProd
+        ? ['https://quidsafe.uk', 'https://app.quidsafe.uk']
+        : ['http://localhost:8081', 'http://127.0.0.1:4173', 'https://quidsafe.uk', 'https://app.quidsafe.uk'];
+      // Pages preview deployments only allowed against non-production API
+      if (allowed.includes(origin)) return origin;
+      if (!isProd && /^https:\/\/[a-z0-9-]+\.quidsafe\.pages\.dev$/.test(origin)) return origin;
       return '';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -154,18 +155,19 @@ app.use('*', async (c, next) => {
   c.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
   c.header('Referrer-Policy', 'no-referrer');
   c.header('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+  c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  // Prevent caching of authenticated API responses (financial data)
+  if (!c.req.path.startsWith('/health') && !c.req.path.startsWith('/articles')) {
+    c.header('Cache-Control', 'no-store, private');
+  }
 });
 app.use('*', rateLimit());
 
 // ─── Public Routes ────────────────────────────────────────
 
 app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    version: '0.1.0',
-    environment: c.env.ENVIRONMENT ?? 'unknown',
-    timestamp: new Date().toISOString(),
-  });
+  // Minimal health response - don't leak environment/version to recon scans
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.post('/webhooks/stripe', async (c) => {
@@ -1213,7 +1215,7 @@ authed.post('/invoices/:id/send', async (c) => {
   // Get sender name
   const user = await queryOne<{ name: string | null }>(
     c.env.DB,
-    'SELECT name FROM users WHERE clerk_id = ?',
+    'SELECT name FROM users WHERE id = ?',
     [userId],
   );
   const senderName = user?.name || 'A QuidSafe user';
@@ -1479,7 +1481,7 @@ authed.get('/mtd/submission/:id', async (c) => {
 
   const submission = await queryOne(
     c.env.DB,
-    'SELECT * FROM mtd_submissions WHERE id = ? AND user_id = ?',
+    'SELECT id, user_id, tax_year, quarter, status, hmrc_receipt_id, submitted_at, created_at FROM mtd_submissions WHERE id = ? AND user_id = ?',
     [id, userId],
   );
 
