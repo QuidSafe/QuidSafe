@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { useStableAuth } from '@/lib/hooks/useStableAuth';
+import { useAuth } from '@clerk/clerk-expo';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useToast } from '@/components/ui/Toast';
@@ -11,7 +11,7 @@ import { registerForPushNotifications } from '@/lib/notifications';
 
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   useApiToken();
-  const { isSignedIn, isLoaded } = useStableAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
