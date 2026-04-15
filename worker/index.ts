@@ -81,6 +81,9 @@ export interface Env {
   APP_URL?: string;
   HEALTH_CHECK_TOKEN?: string;
   SENTRY_DSN?: string;
+  TRUELAYER_SANDBOX?: string;
+  STRIPE_PRICE_MONTHLY?: string;
+  STRIPE_PRICE_ANNUAL?: string;
 }
 
 type AuthedEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };
@@ -91,11 +94,51 @@ function getTrueLayerConfig(env: Env): TrueLayerConfig {
     clientSecret: env.TRUELAYER_CLIENT_SECRET,
     redirectUri: env.TRUELAYER_REDIRECT_URI,
     encryptionKey: env.ENCRYPTION_KEY,
-    sandbox: env.ENVIRONMENT !== 'production',
+    // Explicit opt-in. If TRUELAYER_SANDBOX is unset, default to sandbox=false
+    // (safer than inferring from ENVIRONMENT which could be misconfigured).
+    sandbox: env.TRUELAYER_SANDBOX === 'true',
   };
 }
 
 const app = new Hono<AuthedEnv>();
+
+// ─── Startup validation ──────────────────────────────────
+// Fail fast with a clear error if required secrets are missing, rather
+// than crashing mid-request with `undefined.replace is not a function`.
+function validateEnv(env: Env): void {
+  const required: Array<keyof Env> = [
+    'CLERK_PUBLISHABLE_KEY',
+    'CLERK_SECRET_KEY',
+    'ENCRYPTION_KEY',
+    'TRUELAYER_CLIENT_ID',
+    'TRUELAYER_CLIENT_SECRET',
+    'TRUELAYER_REDIRECT_URI',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'ANTHROPIC_API_KEY',
+  ];
+  const missing = required.filter((k) => !env[k]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required env vars: ${missing.join(', ')}`);
+  }
+  if (env.ENCRYPTION_KEY.length < 64) {
+    throw new Error('ENCRYPTION_KEY must be at least 64 hex characters');
+  }
+}
+
+let envValidated = false;
+app.use('*', async (c, next) => {
+  if (!envValidated) {
+    try {
+      validateEnv(c.env);
+      envValidated = true;
+    } catch (err) {
+      console.error('[Worker startup]', err);
+      return c.json({ error: { code: 'CONFIG_ERROR', message: 'Server misconfigured' } }, 500);
+    }
+  }
+  await next();
+});
 
 // ─── Global Middleware ────────────────────────────────────
 // ─── Helper: categorise and save results to D1 ─────────
@@ -1298,7 +1341,12 @@ authed.post('/billing/checkout', async (c) => {
     return c.json({ error: 'Validation error', details: result.error.flatten().fieldErrors }, 400);
   }
   const body = result.data;
-  const config = { secretKey: c.env.STRIPE_SECRET_KEY, webhookSecret: c.env.STRIPE_WEBHOOK_SECRET };
+  const config = {
+    secretKey: c.env.STRIPE_SECRET_KEY,
+    webhookSecret: c.env.STRIPE_WEBHOOK_SECRET,
+    priceMonthly: c.env.STRIPE_PRICE_MONTHLY,
+    priceAnnual: c.env.STRIPE_PRICE_ANNUAL,
+  };
   const appUrl = c.env.APP_URL || 'https://quidsafe.uk';
   const session = await createCheckoutSession(userId, body.plan, config, c.env.DB, appUrl);
   return c.json(session);
