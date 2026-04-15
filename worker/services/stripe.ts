@@ -73,37 +73,25 @@ export async function createCheckoutSession(
     throw new Error('Cannot create checkout: no Stripe customer ID and no email on file');
   }
 
-  // Prefer pre-created Stripe Price IDs (set priceMonthly/priceAnnual in config).
-  // Falls back to inline price_data for backwards compat during rollout.
+  // Pre-created Stripe Price IDs are required - no inline fallback.
+  // This ensures prices are auditable in the Stripe dashboard and never
+  // injectable via the checkout flow.
   const priceId = plan === 'annual' ? config.priceAnnual : config.priceMonthly;
+  if (!priceId) {
+    throw new Error(`Stripe Price ID not configured for plan: ${plan}. Set STRIPE_PRICE_${plan.toUpperCase()} secret.`);
+  }
 
-  const baseParams: Record<string, string> = {
+  const params = new URLSearchParams({
     mode: 'subscription',
     customer: customerId!,
     'line_items[0][quantity]': '1',
+    'line_items[0][price]': priceId,
     success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/billing/cancel`,
     'subscription_data[trial_period_days]': '14',
     'subscription_data[metadata][user_id]': userId,
     'metadata[user_id]': userId,
-  };
-
-  if (priceId) {
-    baseParams['line_items[0][price]'] = priceId;
-  } else {
-    // Legacy inline pricing path - remove once STRIPE_PRICE_* secrets are set in prod
-    baseParams['line_items[0][price_data][currency]'] = 'gbp';
-    baseParams['line_items[0][price_data][product_data][name]'] = 'QuidSafe Pro';
-    if (plan === 'annual') {
-      baseParams['line_items[0][price_data][unit_amount]'] = '7999';
-      baseParams['line_items[0][price_data][recurring][interval]'] = 'year';
-    } else {
-      baseParams['line_items[0][price_data][unit_amount]'] = '799';
-      baseParams['line_items[0][price_data][recurring][interval]'] = 'month';
-    }
-  }
-
-  const params = new URLSearchParams(baseParams);
+  });
 
   // Idempotency bucket: 5-minute window per user+plan to prevent duplicate
   // checkout sessions from accidental client retries.
