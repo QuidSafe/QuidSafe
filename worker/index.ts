@@ -79,6 +79,8 @@ export interface Env {
   RESEND_API_KEY: string;
   FROM_EMAIL: string;
   APP_URL?: string;
+  HEALTH_CHECK_TOKEN?: string;
+  SENTRY_DSN?: string;
 }
 
 type AuthedEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };
@@ -168,6 +170,46 @@ app.use('*', rateLimit());
 app.get('/health', (c) => {
   // Minimal health response - don't leak environment/version to recon scans
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Detailed health check - checks all critical dependencies.
+// Protected by HEALTH_CHECK_TOKEN secret to avoid leaking infra state publicly.
+app.get('/health/detailed', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  const expected = c.env.HEALTH_CHECK_TOKEN;
+  if (!expected || authHeader !== `Bearer ${expected}`) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  const checks: Record<string, { ok: boolean; latencyMs?: number; error?: string }> = {};
+  const started = Date.now();
+
+  // D1 check - simple query
+  try {
+    const t = Date.now();
+    await c.env.DB.prepare('SELECT 1').first();
+    checks.database = { ok: true, latencyMs: Date.now() - t };
+  } catch (err) {
+    checks.database = { ok: false, error: err instanceof Error ? err.message : 'unknown' };
+  }
+
+  // Clerk JWKS reachability
+  try {
+    const keyPart = c.env.CLERK_PUBLISHABLE_KEY.replace(/^pk_(test|live)_/, '');
+    const clerkDomain = atob(keyPart).replace(/\$$/, '');
+    const t = Date.now();
+    const r = await fetch(`https://${clerkDomain}/.well-known/jwks.json`);
+    checks.clerk = { ok: r.ok, latencyMs: Date.now() - t };
+  } catch (err) {
+    checks.clerk = { ok: false, error: err instanceof Error ? err.message : 'unknown' };
+  }
+
+  const allOk = Object.values(checks).every((c) => c.ok);
+  return c.json({
+    status: allOk ? 'ok' : 'degraded',
+    totalMs: Date.now() - started,
+    checks,
+  }, allOk ? 200 : 503);
 });
 
 app.post('/webhooks/stripe', async (c) => {

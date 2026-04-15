@@ -1,49 +1,52 @@
-name: Deploy
+name: Deploy Production
+
+# Production deploy gate.
+#
+# Previously: merge to main → auto-deploy to prod (risky).
+# Now: merge to main → auto-deploy to staging (see deploy-staging-web.yml)
+#      → manual "Deploy to Production" button (GitHub Actions UI)
+#      → optional: require reviewer approval via GitHub Environment rules
+#
+# Set up approval requirement:
+#   GitHub > Settings > Environments > production > Required reviewers
+#
+# Migration safety: D1 migrations run as a SEPARATE job with their own approval.
+# Prod migrations need a second click — prevents accidental schema changes.
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_worker:
+        description: 'Deploy Worker API'
+        type: boolean
+        default: true
+      deploy_web:
+        description: 'Deploy Web (Cloudflare Pages)'
+        type: boolean
+        default: true
+      apply_migrations:
+        description: 'Apply D1 migrations (requires separate approval)'
+        type: boolean
+        default: false
+      commit_sha:
+        description: 'Commit SHA to deploy (blank = main HEAD)'
+        type: string
+        default: ''
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
-  # Detect which paths changed so we only deploy what's needed
-  changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      worker: ${{ steps.filter.outputs.worker }}
-      web: ${{ steps.filter.outputs.web }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            worker:
-              - 'worker/**'
-              - 'wrangler.worker.toml'
-              - 'lib/db.ts'
-              - 'lib/types.ts'
-            web:
-              - 'app/**'
-              - 'components/**'
-              - 'lib/**'
-              - 'constants/**'
-              - 'public/**'
-              - 'app.json'
-              - 'package.json'
-              - 'tsconfig.json'
-
   migrate-db:
-    name: Run D1 Migrations
+    name: Apply D1 Migrations (Production)
     runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.worker == 'true'
+    environment: production-migrations
+    if: inputs.apply_migrations == true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -51,6 +54,11 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Dry-run migrations (show what will apply)
+        run: |
+          echo "### Pending migrations" >> $GITHUB_STEP_SUMMARY
+          ls -1 worker/migrations/*.sql | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Apply D1 migrations
         run: npx wrangler d1 migrations apply quidsafe-production --remote --config wrangler.worker.toml --env production
@@ -59,12 +67,18 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   deploy-worker:
-    name: Deploy Worker (API)
+    name: Deploy Worker (Production)
     runs-on: ubuntu-latest
-    needs: [changes, migrate-db]
-    if: needs.changes.outputs.worker == 'true'
+    environment: production
+    needs: [migrate-db]
+    if: |
+      always() &&
+      inputs.deploy_worker == true &&
+      (needs.migrate-db.result == 'success' || needs.migrate-db.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -73,28 +87,31 @@ jobs:
 
       - run: npm ci
 
-      - name: Deploy to Cloudflare Workers
+      - name: Deploy Worker
         run: npx wrangler deploy --config wrangler.worker.toml --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Post-deploy health check
+      - name: Health check
         run: |
+          sleep 3
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: QuidSafe-CI/1.0" https://api.quidsafe.uk/health)
           if [ "$STATUS" != "200" ]; then
-            echo "::warning::Health check returned status $STATUS (may be blocked by Cloudflare bot protection)"
+            echo "::warning::Health check returned $STATUS"
           else
-            echo "Health check passed (200 OK)"
+            echo "✅ API healthy"
           fi
 
   deploy-web:
-    name: Deploy Web (Pages)
+    name: Deploy Web (Production)
     runs-on: ubuntu-latest
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
+    environment: production
+    if: inputs.deploy_web == true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -110,19 +127,25 @@ jobs:
             .expo
             node_modules/.cache
           key: expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'constants/**') }}
-          restore-keys: |
-            expo-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-
-            expo-web-${{ runner.os }}-
 
-      - name: Build web
+      - name: Build web (production)
         run: npx expo export --platform web
         env:
           EXPO_PUBLIC_API_URL: https://api.quidsafe.uk
           EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name quidsafe
+        run: npx wrangler pages deploy dist --project-name quidsafe --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Summary
+        run: |
+          echo "### ✅ Production deployed" >> $GITHUB_STEP_SUMMARY
+          echo "**Web:** https://quidsafe.uk" >> $GITHUB_STEP_SUMMARY
+          echo "**API:** https://api.quidsafe.uk" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ inputs.commit_sha || github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

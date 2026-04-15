@@ -41,7 +41,11 @@
       "Bash(git stash:*)",
       "Bash(git fetch:*)",
       "Bash(git reset:*)",
-      "Bash(git commit -m 'feat: dashboard hero + tests + a11y + error reporting scaffold:*)"
+      "Bash(git commit -m 'feat: dashboard hero + tests + a11y + error reporting scaffold:*)",
+      "Bash(node ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.worker.json)",
+      "Bash(git commit -m ':*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
