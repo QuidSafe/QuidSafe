@@ -38,16 +38,34 @@ Creates `staging.quidsafe.uk` so you can test frontend changes before prod.
 
 ---
 
-## Section 3: Clerk Staging Instance (10 min)
+## Section 3: Clerk Setup (5 min)
 
-Separate Clerk instance so test users don't pollute production.
+Pragmatic choice for solo/pre-launch: **one production Clerk instance serves prod + staging**. Add a second Clerk app only for local dev.
 
-1. https://dashboard.clerk.com → **+ Create application**
-2. Name: `quidsafe-staging`
-3. Enable: Email + Password, Google OAuth (same as prod)
-4. **Domains → Add `staging.quidsafe.uk`**
-5. Configure DNS CNAME records Clerk provides (same process as production setup you did earlier)
-6. **API Keys → copy the `pk_live_...`** (production keys work on any domain you've verified)
+### Share production Clerk with staging
+1. https://dashboard.clerk.com → your QuidSafe production app
+2. **Domains → Add domain** → `staging.quidsafe.uk`
+3. Add the DNS CNAME records Clerk provides (same as production setup)
+4. Done - same `pk_live_` key works on both quidsafe.uk and staging.quidsafe.uk
+
+### Create a dev Clerk instance for localhost
+(Clerk production keys reject localhost origins - you need a separate dev instance to test auth locally)
+
+1. Clerk dashboard → **+ Create application** → `quidsafe-dev`
+2. Enable: Email + Password, Google OAuth
+3. **API Keys → copy `pk_test_...`** (accepts any origin)
+4. Add to `.env.local`:
+   ```
+   CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   ```
+
+### Later (when you grow beyond solo/pre-launch)
+Split production Clerk from staging Clerk when:
+- You have >100 real users
+- Test signups pollute the real user list noticeably
+- You add Clerk webhooks (they'd fire for test signups too)
 
 ---
 

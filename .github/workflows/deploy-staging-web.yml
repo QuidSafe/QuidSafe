@@ -52,11 +52,13 @@ jobs:
           key: expo-staging-web-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**') }}
 
       - name: Build web for staging
+        # Uses the same Clerk key as production - add staging.quidsafe.uk
+        # to Clerk's allowed domains. Stripe uses test mode key.
         run: npx expo export --platform web
         env:
           EXPO_PUBLIC_API_URL: https://api-staging.quidsafe.uk
-          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY_STAGING }}
-          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY_STAGING }}
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY_STAGING || secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
 
       - name: Deploy to Cloudflare Pages (staging)
         id: deploy
