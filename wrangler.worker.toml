@@ -27,6 +27,8 @@ migrations_dir = "worker/migrations"
 ENVIRONMENT = "development"
 CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
 FROM_EMAIL = "invoices@quidsafe.uk"
+TRUELAYER_SANDBOX = "true"
+APP_URL = "https://api-dev.quidsafe.uk"
 
 # ─── Staging ───────────────────────────────────────────────
 [env.staging]
@@ -42,6 +44,8 @@ migrations_dir = "worker/migrations"
 ENVIRONMENT = "staging"
 CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
 FROM_EMAIL = "invoices@quidsafe.uk"
+TRUELAYER_SANDBOX = "true"
+APP_URL = "https://staging.quidsafe.uk"
 
 # ─── Production ────────────────────────────────────────────
 [env.production]
@@ -60,3 +64,5 @@ migrations_dir = "worker/migrations"
 ENVIRONMENT = "production"
 CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
 FROM_EMAIL = "invoices@quidsafe.uk"
+TRUELAYER_SANDBOX = "false"
+APP_URL = "https://quidsafe.uk"
