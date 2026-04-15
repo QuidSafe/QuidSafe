@@ -472,7 +472,7 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     await clearCache();
     await signOut();
-    router.replace('/(auth)/login');
+    router.replace('/landing');
   };
 
   const handleDeleteAccount = () => {
@@ -487,7 +487,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             await api.deleteAccount();
             await signOut();
-            router.replace('/(auth)/login');
+            router.replace('/landing');
           },
         },
       ],
