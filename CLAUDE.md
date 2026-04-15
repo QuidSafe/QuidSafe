@@ -343,9 +343,90 @@ Always run `/pre-deploy` before deploying to production.
 - Changes to [lib/tax-engine.ts](lib/tax-engine.ts) → invoke `hmrc-tax-specialist` agent and run `/tax-audit`
 - New D1 migrations → invoke `database-reviewer` agent and run `/migrate`
 
-## CI/CD
+## Environments & Deployment
 
-- **PR checks** ([.github/workflows/ci.yml](.github/workflows/ci.yml)): Lint, Typecheck, Staging migrations + worker deploy, Web build
-- **Main merge** ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)): Production D1 migrations → Worker deploy → Pages deploy
-- **Branch protection**: `main` requires "Lint & Typecheck" check to pass
-- **Health check**: Non-blocking (Cloudflare bot protection returns 403 to GitHub runners)
+### The 3 environments
+
+| Env | Web | API | DB | Clerk | Purpose |
+|-----|-----|-----|-----|-------|---------|
+| **Local** | `localhost:8081` (expo start) | `localhost:8787` (wrangler dev) | Local D1 | `pk_test_*` | Your laptop |
+| **Staging** | `staging.quidsafe.uk` (Pages) | `api-staging.quidsafe.uk` (Worker) | `quidsafe-staging` | `pk_live_*` (separate) | Pre-prod verification |
+| **Production** | `quidsafe.uk` (Pages) | `api.quidsafe.uk` (Worker) | `quidsafe-production` | `pk_live_*` (real users) | Live customers |
+
+### The rollout flow
+
+```
+PR opened ─▶ Lint + tests + E2E (ci.yml, e2e.yml)
+         ─▶ Auto-deploy to staging (deploy-staging.yml, deploy-staging-web.yml)
+         ─▶ Test on staging URL (commented on PR)
+         ─▶ Merge PR (staging now matches main)
+         ─▶ Manual "Deploy Production" (deploy.yml via workflow_dispatch)
+         ─▶ If it breaks: rollback.yml (1-click revert)
+```
+
+### Workflows
+
+| Workflow | Trigger | Does what |
+|----------|---------|-----------|
+| [ci.yml](.github/workflows/ci.yml) | PR | Lint, typecheck, tests, web build (conditional) |
+| [e2e.yml](.github/workflows/e2e.yml) | PR (frontend changes) | Playwright against live |
+| [deploy-staging.yml](.github/workflows/deploy-staging.yml) | PR (worker changes) | Deploy Worker to staging |
+| [deploy-staging-web.yml](.github/workflows/deploy-staging-web.yml) | PR (frontend changes) | Deploy web to `staging.quidsafe.uk`, comment URL |
+| [deploy.yml](.github/workflows/deploy.yml) | **Manual** (`workflow_dispatch`) | Deploy to production - requires GitHub Environment approval |
+| [rollback.yml](.github/workflows/rollback.yml) | **Manual** | Rollback Worker via `wrangler rollback` |
+| [deploy-dev.yml](.github/workflows/deploy-dev.yml) | Push to non-main branch (worker paths) | Deploy to dev worker |
+
+### Required GitHub Environments (set up in repo Settings → Environments)
+
+- **`production`** — Required reviewers: 1+ (you). Worker + web deploys require approval.
+- **`production-migrations`** — Required reviewers: 1+. D1 migrations require SEPARATE approval (bad migration = dead prod).
+- **`staging`** — Auto, no approval needed.
+
+### Required GitHub Secrets
+
+Already set (production):
+- `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
+- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (pk_live_ for production Clerk)
+- `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` (pk_live_ for production Stripe)
+
+Add for staging/observability:
+- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY_STAGING` (separate pk_live_ for staging Clerk instance)
+- `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY_STAGING` (Stripe test mode pk_test_)
+- `EXPO_PUBLIC_SENTRY_DSN` (Sentry project DSN for frontend error reporting)
+- `HEALTH_CHECK_TOKEN` (Worker secret: `wrangler secret put HEALTH_CHECK_TOKEN`)
+
+### Deploying to production
+
+```bash
+# From GitHub Actions UI:
+#   Actions > Deploy Production > Run workflow
+#   Toggle: deploy_worker, deploy_web, apply_migrations
+#   (apply_migrations defaults to false - second click required)
+#
+# Or from CLI:
+gh workflow run deploy.yml \
+  -f deploy_worker=true \
+  -f deploy_web=true \
+  -f apply_migrations=false
+```
+
+### Rolling back
+
+```bash
+gh workflow run rollback.yml \
+  -f environment=production \
+  -f reason="Payments broken after deploy"
+```
+
+Worker reverts in ~30s. Web rollback is manual via Cloudflare Pages dashboard (Pages → Deployments → select previous → Rollback).
+
+### Health checks
+
+- `GET /health` — public, minimal response (for uptime monitors)
+- `GET /health/detailed` — requires `Authorization: Bearer $HEALTH_CHECK_TOKEN`, checks D1 + Clerk JWKS reachability, returns 503 if any fail
+
+### Branch protection
+
+- `main` requires "Lint & Typecheck" check to pass
+- `main` requires at least 1 approval (if you add collaborators)
+- Auto-merge via `gh pr merge --auto --squash --delete-branch` is the preferred workflow
