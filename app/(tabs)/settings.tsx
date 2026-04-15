@@ -22,7 +22,7 @@ import { Card } from '@/components/ui/Card';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import * as WebBrowser from 'expo-web-browser';
-import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank } from '@/lib/hooks/useApi';
+import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank, useBillingStatus } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { getNotificationPermissionStatus } from '@/lib/notifications';
 import {
@@ -296,6 +296,7 @@ export default function SettingsScreen() {
   const { signOut } = useAuth();
   const router = useRouter();
   const { data: bankData } = useBankConnections();
+  const { data: billing } = useBillingStatus();
   const { data: settingsData } = useSettings();
   const updateSettings = useUpdateSettings();
   const syncBank = useSyncBank();
@@ -395,6 +396,19 @@ export default function SettingsScreen() {
   };
 
   const handleExportOption = async (type: 'transactions' | 'expenses' | 'invoices' | 'tax') => {
+    // Gate CSV export behind paid subscription (trial cannot extract data)
+    const status = billing?.status ?? 'trialing';
+    if (status !== 'active' && status !== 'past_due') {
+      Alert.alert(
+        'Upgrade to export',
+        'CSV export is available on the paid plan. Upgrade from your trial to unlock exports and MTD submissions.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => router.push('/billing') },
+        ],
+      );
+      return;
+    }
     setIsExporting(true);
     try {
       switch (type) {

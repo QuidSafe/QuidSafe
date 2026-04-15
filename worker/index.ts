@@ -534,10 +534,50 @@ async function requireActiveSubscription(c: Context<AuthedEnv>, next: Next) {
   );
 }
 
-// Apply subscription guard to write-sensitive routes
+// ─── Paid Subscription Guard ─────────────────────────────
+// Stricter than requireActiveSubscription: blocks trialing users too.
+// Applied to high-value extraction features (MTD submissions, invoice
+// email) to prevent trial abuse - sign up, submit taxes, cancel.
+async function requirePaidSubscription(c: Context<AuthedEnv>, next: Next) {
+  const userId = c.get('userId');
+  const user = await queryOne<{ subscription_tier: string }>(
+    c.env.DB,
+    'SELECT subscription_tier FROM users WHERE id = ?',
+    [userId],
+  );
+
+  if (!user) {
+    return c.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, 404);
+  }
+
+  // Only paid tiers get through. Trialing, cancelled, past_due all blocked.
+  // past_due = grace period, they must reactivate before extracting value.
+  if (user.subscription_tier === 'pro') {
+    return next();
+  }
+
+  return c.json(
+    {
+      error: {
+        code: 'PAID_SUBSCRIPTION_REQUIRED',
+        message: 'This feature requires an active paid subscription. Upgrade from your trial to unlock.',
+      },
+    },
+    402,
+  );
+}
+
+// Apply ACTIVE subscription guard (trial OK) to write-sensitive routes
 authed.post('/banking/sync/:id', requireActiveSubscription);
 authed.post('/transactions/categorise', requireActiveSubscription);
-authed.post('/mtd/*', requireActiveSubscription);
+authed.get('/mtd/auth', requireActiveSubscription);
+authed.post('/mtd/callback', requireActiveSubscription);
+authed.get('/mtd/obligations', requireActiveSubscription);
+authed.get('/mtd/submission/:id', requireActiveSubscription);
+
+// Apply PAID subscription guard (trial BLOCKED) to value-extraction routes
+authed.post('/mtd/submit-quarterly', requirePaidSubscription);
+authed.post('/invoices/:id/send', requirePaidSubscription);
 
 // ── Auth ──────────────────────────────────────────────────
 authed.post('/auth/signup', async (c) => {
