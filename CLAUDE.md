@@ -10,6 +10,22 @@ This file provides guidance to Claude Code when working with the QuidSafe codeba
 
 **Pricing**: £7.99/month or £79.99/year (save 17%). Prices are shown inclusive of VAT. VAT-registered sole traders can reclaim VAT on their QuidSafe subscription as a business expense.
 
+**Trial strategy (feature-gated, 30 days, card required):**
+
+| Feature | Trial | Paid |
+|---------|-------|------|
+| Dashboard, live tax number, bank sync | ✅ | ✅ |
+| AI transaction categorisation | ✅ | ✅ |
+| View MTD obligations, tax calculator | ✅ | ✅ |
+| **Submit MTD to HMRC** | ❌ | ✅ |
+| **Email invoices to clients** | ❌ | ✅ |
+| **CSV export** | ❌ | ✅ |
+
+This prevents trial abuse (sign up in January, submit taxes, cancel). Trial proves value; paid plan unlocks extraction. Enforced by two middlewares:
+
+- `requireActiveSubscription` - trial OK. Used for sync/categorise/view routes.
+- `requirePaidSubscription` - trial BLOCKED. Used for `/mtd/submit-quarterly`, `/invoices/:id/send`. Frontend gates CSV export via `billing.status` check.
+
 ## Tech Stack
 
 | Layer | Technology |
