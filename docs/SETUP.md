@@ -208,12 +208,42 @@ Once setup is complete, your daily flow is:
 
 ---
 
+## Section 10: Cloudflare WAF Rules (5 min, when traffic grows)
+
+Free tier gives you 5 custom Firewall Rules. Add these in Cloudflare dashboard > Security > WAF > Custom rules:
+
+1. **Block admin probes**: expression `(http.request.uri.path contains "/admin") or (http.request.uri.path contains "/.env") or (http.request.uri.path contains "/wp-") or (http.request.uri.path contains ".php")`, action: Block
+2. **Block bot user agents**: expression `(http.user_agent contains "bot" and not cf.client.bot)`, action: Challenge (Managed)
+3. **Rate limit aggressive crawlers**: expression `(http.request.uri.path contains "/api/")`, action: Rate limit (100 req/min per IP)
+4. **Block countries if not serving them**: expression `(ip.geoip.country ne "GB" and ip.geoip.country ne "IE")`, action: Challenge. **Skip this for now** - lose legitimate UK travellers.
+5. **Block requests without User-Agent**: expression `(http.user_agent eq "")`, action: Block
+
+## Section 11: Clerk Bot Protection (2 min, when public launches)
+
+Clerk has built-in Cloudflare Turnstile integration. Enable before public launch.
+
+1. Clerk dashboard > your production instance > **User & Authentication > Attack protection**
+2. Toggle **Bot sign-up protection** to ON
+3. Recommend: "Invisible" mode (no challenge for real users, bot requests blocked)
+
+This blocks automated signups that would burn your Clerk user quota and pollute your Stripe customer list.
+
+## HSTS Preload Submission (2 min, one-time)
+
+After deploying PR #49 (HSTS preload directive added), submit to the browser preload list:
+
+1. Go to https://hstspreload.org
+2. Enter `quidsafe.uk`
+3. Submit
+4. After Google approves (can take weeks), all major browsers will HTTPS-only to quidsafe.uk before even visiting. Protects first-visit users.
+
 ## What still needs manual work after all above
 
-None! You're production-ready.
+None of the above blocks launch. Do them when convenient.
 
 Future work (when you grow):
 - Feature flags (GrowthBook/PostHog integration)
 - A/B testing framework
 - CDN for static assets (already on Cloudflare, fine for now)
 - Separate compliance/auditing database for GDPR requests
+- Signed invoice share URLs (infrastructure in `worker/utils/signedUrl.ts`, wire up when you add a public invoice view)
