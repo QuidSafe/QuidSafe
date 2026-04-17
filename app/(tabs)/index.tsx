@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { ArrowUp, ArrowDown, Landmark, Lightbulb, Check, ChevronRight, Clock, CheckCircle } from 'lucide-react-native';
+import { ArrowUp, ArrowDown, Landmark, Lightbulb, Check, ChevronRight, Clock, CheckCircle, Receipt, Users, Car, TrendingUp } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { MiniChart } from '@/components/ui/MiniChart';
@@ -298,6 +298,33 @@ export default function DashboardScreen() {
                 <ChevronRight size={11} color={colors.textSecondary} strokeWidth={1.5} />
               </Pressable>
 
+              {/* Quick links to tools */}
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Your tools</Text>
+              </View>
+              <View style={styles.quickLinks}>
+                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/invoices')} accessibilityRole="button">
+                  <Receipt size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                  <Text style={styles.quickLinkText}>Invoices</Text>
+                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/clients' as any)} accessibilityRole="button">
+                  <Users size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                  <Text style={styles.quickLinkText}>Clients</Text>
+                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/mileage' as any)} accessibilityRole="button">
+                  <Car size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                  <Text style={styles.quickLinkText}>Mileage</Text>
+                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/pnl-report' as any)} accessibilityRole="button">
+                  <TrendingUp size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                  <Text style={styles.quickLinkText}>P&L Report</Text>
+                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                </Pressable>
+              </View>
+
               {/* Income by Source */}
               {income && income.bySource.length > 0 && (
                 <>
@@ -499,6 +526,26 @@ const styles = StyleSheet.create({
   taxHistoryText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 13,
+    flex: 1,
+  },
+  quickLinks: {
+    gap: 4,
+  },
+  quickLink: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    backgroundColor: Colors.charcoal,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+  },
+  quickLinkText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+    color: colors.text,
     flex: 1,
   },
 });
