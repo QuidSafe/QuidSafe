@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Plus, Camera, Info, RefreshCw, MapPin, Lightbulb, Receipt, Trash2 } from 'lucide-react-native';
+import { Plus, Camera, Info, RefreshCw, MapPin, Lightbulb, Receipt, Trash2, ChevronRight } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { ExpensesSkeleton } from '@/components/ui/Skeleton';
 import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
@@ -365,19 +365,22 @@ export default function ExpensesScreen() {
           </Text>
         </View>
 
-        {/* Auto Mileage Coming Soon Card */}
-        <View style={[styles.comingSoonCard, { backgroundColor: colors.surface }]}>
+        {/* Mileage Tracking */}
+        <Pressable
+          style={[styles.comingSoonCard, { backgroundColor: colors.surface }]}
+          onPress={() => router.push('/mileage' as any)}
+          accessibilityRole="button"
+          accessibilityLabel="Track your business mileage"
+        >
           <View style={styles.comingSoonContent}>
             <MapPin size={20} color={Colors.secondary} strokeWidth={1.5} />
             <View style={styles.comingSoonText}>
-              <Text style={[styles.comingSoonTitle, { color: colors.text }]}>Auto mileage tracking</Text>
-              <Text style={[styles.comingSoonSub, { color: colors.textSecondary }]}>Coming soon</Text>
+              <Text style={[styles.comingSoonTitle, { color: colors.text }]}>Mileage tracking</Text>
+              <Text style={[styles.comingSoonSub, { color: colors.textSecondary }]}>Log business miles - HMRC rates applied</Text>
             </View>
-            <View style={styles.soonBadge}>
-              <Text style={styles.soonBadgeText}>SOON</Text>
-            </View>
+            <ChevronRight size={16} color={colors.textMuted} strokeWidth={1.5} />
           </View>
-        </View>
+        </Pressable>
       </ScrollView>
 
       <AddExpenseModal

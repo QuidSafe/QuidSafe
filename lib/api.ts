@@ -203,6 +203,50 @@ class ApiClient {
     return this.request<{ plan: string; status: string; trialEndsAt: string | null; currentPeriodEnd: string | null }>('/billing/status');
   }
 
+  // Mileage
+  getMileage(taxYear?: string) {
+    const q = taxYear ? `?taxYear=${taxYear}` : '';
+    return this.request<{ logs: any[]; summary: { totalMiles: number; totalAmount: number; taxYear: string } }>(`/mileage${q}`);
+  }
+
+  addMileage(data: { tripDate: string; description: string; miles: number; vehicleType?: string; purpose?: string }) {
+    return this.request<{ id: string; amount: number; ratePence: number }>('/mileage', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  deleteMileage(id: string) {
+    return this.request<{ deleted: boolean }>(`/mileage/${id}`, { method: 'DELETE' });
+  }
+
+  // Clients
+  getClients() {
+    return this.request<{ clients: any[] }>('/clients');
+  }
+
+  createClient(data: { name: string; email?: string; phone?: string; address?: string; notes?: string }) {
+    return this.request<{ id: string }>('/clients', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  updateClient(id: string, data: Record<string, string | undefined>) {
+    return this.request<{ updated: boolean }>(`/clients/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  deleteClient(id: string) {
+    return this.request<{ deleted: boolean }>(`/clients/${id}`, { method: 'DELETE' });
+  }
+
+  // Recurring Invoices
+  getRecurringInvoices() {
+    return this.request<{ recurringInvoices: any[] }>('/recurring-invoices');
+  }
+
+  createRecurringInvoice(data: { clientName: string; clientEmail?: string; clientId?: string; amount: number; description: string; frequency?: string; nextDueDate: string }) {
+    return this.request<{ id: string }>('/recurring-invoices', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  deleteRecurringInvoice(id: string) {
+    return this.request<{ deleted: boolean }>(`/recurring-invoices/${id}`, { method: 'DELETE' });
+  }
+
   // Settings
   getSettings() {
     return this.request<{ user: User }>('/settings');

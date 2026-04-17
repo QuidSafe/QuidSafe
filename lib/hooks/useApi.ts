@@ -289,6 +289,30 @@ export function useBillingStatus() {
   });
 }
 
+export function useMileage(taxYear?: string) {
+  return useQuery({
+    queryKey: ['mileage', taxYear],
+    queryFn: () => api.getMileage(taxYear),
+    staleTime: 30_000,
+  });
+}
+
+export function useClients() {
+  return useQuery({
+    queryKey: ['clients'],
+    queryFn: () => api.getClients(),
+    staleTime: 30_000,
+  });
+}
+
+export function useRecurringInvoices() {
+  return useQuery({
+    queryKey: ['recurring-invoices'],
+    queryFn: () => api.getRecurringInvoices(),
+    staleTime: 30_000,
+  });
+}
+
 export function useTaxCalculation() {
   return useQuery({
     queryKey: ['tax', 'calculation'],
