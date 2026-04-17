@@ -1738,6 +1738,65 @@ authed.delete('/devices', async (c) => {
   return c.json({ removed: true });
 });
 
+// ── Clients ─────────────────────────────────────────────
+authed.get('/clients', async (c) => {
+  const userId = c.get('userId');
+  const clients = await query(c.env.DB,
+    `SELECT c.*,
+      (SELECT COUNT(*) FROM invoices WHERE client_id = c.id) as invoice_count,
+      (SELECT COALESCE(SUM(amount), 0) FROM invoices WHERE client_id = c.id AND status = 'paid') as paid_total,
+      (SELECT COALESCE(SUM(amount), 0) FROM invoices WHERE client_id = c.id AND (status = 'sent' OR status = 'overdue')) as outstanding
+    FROM clients c WHERE c.user_id = ? ORDER BY c.updated_at DESC`,
+    [userId],
+  );
+  return c.json({ clients });
+});
+
+authed.post('/clients', async (c) => {
+  const userId = c.get('userId');
+  const raw = await c.req.json();
+  const { name, email, phone, address, notes } = raw as {
+    name: string; email?: string; phone?: string; address?: string; notes?: string;
+  };
+  if (!name?.trim()) {
+    return c.json({ error: { code: 'VALIDATION', message: 'Client name is required' } }, 400);
+  }
+  const id = crypto.randomUUID();
+  await execute(c.env.DB,
+    'INSERT INTO clients (id, user_id, name, email, phone, address, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, name.trim(), email?.trim() ?? null, phone?.trim() ?? null, address?.trim() ?? null, notes?.trim() ?? null],
+  );
+  return c.json({ id }, 201);
+});
+
+authed.put('/clients/:id', async (c) => {
+  const userId = c.get('userId');
+  const clientId = c.req.param('id');
+  const raw = await c.req.json();
+  const updates: string[] = [];
+  const params: unknown[] = [];
+  const fields = ['name', 'email', 'phone', 'address', 'notes'] as const;
+  for (const f of fields) {
+    if ((raw as Record<string, unknown>)[f] !== undefined) {
+      updates.push(`${f} = ?`);
+      params.push(((raw as Record<string, unknown>)[f] as string)?.trim() ?? null);
+    }
+  }
+  if (updates.length === 0) return c.json({ updated: false });
+  updates.push("updated_at = datetime('now')");
+  params.push(clientId, userId);
+  await execute(c.env.DB, `UPDATE clients SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`, params);
+  return c.json({ updated: true });
+});
+
+authed.delete('/clients/:id', async (c) => {
+  const userId = c.get('userId');
+  const clientId = c.req.param('id');
+  await execute(c.env.DB, 'UPDATE invoices SET client_id = NULL WHERE client_id = ? AND user_id = ?', [clientId, userId]);
+  await execute(c.env.DB, 'DELETE FROM clients WHERE id = ? AND user_id = ?', [clientId, userId]);
+  return c.json({ deleted: true });
+});
+
 // ── Mileage ─────────────────────────────────────────────
 authed.get('/mileage', async (c) => {
   const userId = c.get('userId');
