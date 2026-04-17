@@ -45,7 +45,13 @@
       "Bash(node ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.worker.json)",
       "Bash(git commit -m ':*)",
       "Bash(git checkout:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(gh api:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run:*)",
+      "Bash(git clean:*)",
+      "Bash(git branch:*)"
     ]
   }
 }
