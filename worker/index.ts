@@ -1258,10 +1258,19 @@ authed.post('/invoices', async (c) => {
   const body = result.data;
   const id = crypto.randomUUID();
 
+  // Generate sequential invoice number (INV-001, INV-002, etc)
+  await c.env.DB.prepare(
+    'INSERT OR IGNORE INTO invoice_counters (user_id, next_number, prefix) VALUES (?, 1, ?)',
+  ).bind(userId, 'INV').run();
+  const counter = await c.env.DB.prepare(
+    'UPDATE invoice_counters SET next_number = next_number + 1 WHERE user_id = ? RETURNING next_number - 1 AS num, prefix',
+  ).bind(userId).first<{ num: number; prefix: string }>();
+  const invoiceNumber = counter ? `${counter.prefix}-${String(counter.num).padStart(3, '0')}` : null;
+
   await execute(
     c.env.DB,
-    'INSERT INTO invoices (id, user_id, client_name, client_email, amount, description, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, body.clientName, body.clientEmail ?? null, body.amount, body.description, body.dueDate],
+    'INSERT INTO invoices (id, user_id, client_name, client_email, amount, description, due_date, invoice_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, body.clientName, body.clientEmail ?? null, body.amount, body.description, body.dueDate, invoiceNumber],
   );
 
   await audit(c.env.DB, {
@@ -1896,6 +1905,60 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
     }
   } catch (overdueErr) {
     console.error('[Cron] Invoice overdue check failed:', overdueErr);
+  }
+
+  // ── Late payment reminder emails ─────────────────────────
+  // Send reminder for invoices 3+ days overdue, max 3 reminders, min 7 days apart
+  try {
+    const overdueInvoices = await env.DB
+      .prepare(`SELECT i.id, i.user_id, i.client_name, i.client_email, i.amount, i.due_date,
+        i.invoice_number, i.reminder_count, i.last_reminder_sent,
+        u.name as sender_name, u.email as sender_email
+        FROM invoices i JOIN users u ON i.user_id = u.id
+        WHERE i.status = 'overdue'
+        AND i.client_email IS NOT NULL
+        AND i.reminder_count < 3
+        AND i.due_date < date('now', '-3 days')
+        AND (i.last_reminder_sent IS NULL OR i.last_reminder_sent < datetime('now', '-7 days'))`)
+      .all<{
+        id: string; user_id: string; client_name: string; client_email: string;
+        amount: number; due_date: string; invoice_number: string | null;
+        reminder_count: number; sender_name: string; sender_email: string;
+      }>();
+
+    for (const inv of overdueInvoices.results) {
+      try {
+        const invLabel = inv.invoice_number || inv.id.slice(0, 8);
+        const daysOverdue = Math.floor((Date.now() - new Date(inv.due_date).getTime()) / 86400000);
+        const subject = inv.reminder_count === 0
+          ? `Payment reminder: Invoice ${invLabel} is overdue`
+          : `Second reminder: Invoice ${invLabel} - ${daysOverdue} days overdue`;
+
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: `${(inv.sender_name || 'QuidSafe').replace(/[<>"]/g, '')} via QuidSafe <${env.FROM_EMAIL}>`,
+            to: [inv.client_email],
+            subject,
+            html: `<p>Hi ${inv.client_name.split(' ')[0]},</p>
+              <p>This is a friendly reminder that invoice <strong>${invLabel}</strong> for <strong>£${inv.amount.toFixed(2)}</strong> was due on ${new Date(inv.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
+              <p>If you have already paid, please disregard this email.</p>
+              <p>Kind regards,<br>${inv.sender_name || 'QuidSafe'}</p>`,
+          }),
+        });
+
+        await env.DB.prepare(
+          'UPDATE invoices SET reminder_count = reminder_count + 1, last_reminder_sent = datetime(\'now\') WHERE id = ?',
+        ).bind(inv.id).run();
+
+        console.log(`[Cron] Sent reminder ${inv.reminder_count + 1} for invoice ${invLabel} to ${inv.client_email}`);
+      } catch (reminderErr) {
+        console.error(`[Cron] Reminder failed for invoice ${inv.id}:`, reminderErr);
+      }
+    }
+  } catch (reminderErr) {
+    console.error('[Cron] Late payment reminders failed:', reminderErr);
   }
 
   // ── Grace period expiry check ─────────────────────────────
