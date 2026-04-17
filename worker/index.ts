@@ -1747,6 +1747,41 @@ authed.delete('/devices', async (c) => {
   return c.json({ removed: true });
 });
 
+// ── Recurring Invoices ──────────────────────────────────
+authed.get('/recurring-invoices', async (c) => {
+  const userId = c.get('userId');
+  const items = await query(c.env.DB,
+    'SELECT * FROM recurring_invoices WHERE user_id = ? ORDER BY next_due_date ASC',
+    [userId],
+  );
+  return c.json({ recurringInvoices: items });
+});
+
+authed.post('/recurring-invoices', async (c) => {
+  const userId = c.get('userId');
+  const raw = await c.req.json();
+  const { clientName, clientEmail, clientId, amount, description, frequency, nextDueDate } = raw as {
+    clientName: string; clientEmail?: string; clientId?: string;
+    amount: number; description: string; frequency?: string; nextDueDate: string;
+  };
+  if (!clientName?.trim() || !amount || !description?.trim() || !nextDueDate) {
+    return c.json({ error: { code: 'VALIDATION', message: 'clientName, amount, description, nextDueDate required' } }, 400);
+  }
+  const id = crypto.randomUUID();
+  await execute(c.env.DB,
+    'INSERT INTO recurring_invoices (id, user_id, client_id, client_name, client_email, amount, description, frequency, next_due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, clientId ?? null, clientName.trim(), clientEmail?.trim() ?? null, amount, description.trim(), frequency ?? 'monthly', nextDueDate],
+  );
+  return c.json({ id }, 201);
+});
+
+authed.delete('/recurring-invoices/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  await execute(c.env.DB, 'DELETE FROM recurring_invoices WHERE id = ? AND user_id = ?', [id, userId]);
+  return c.json({ deleted: true });
+});
+
 // ── Mileage ─────────────────────────────────────────────
 authed.get('/mileage', async (c) => {
   const userId = c.get('userId');
@@ -1893,6 +1928,42 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   }
 
   console.log(`[Cron] Daily sync complete: ${successCount} success, ${failCount} failed out of ${connections.results.length} connections`);
+
+  // ── Recurring invoice auto-generation ──────────────────────
+  try {
+    const dueRecurring = await env.DB
+      .prepare("SELECT * FROM recurring_invoices WHERE active = 1 AND next_due_date <= date('now')")
+      .all<{
+        id: string; user_id: string; client_id: string | null;
+        client_name: string; client_email: string | null;
+        amount: number; description: string; frequency: string;
+        next_due_date: string;
+      }>();
+
+    for (const rec of dueRecurring.results) {
+      const invoiceId = crypto.randomUUID();
+
+      // Get sequential invoice number
+      await env.DB.prepare('INSERT OR IGNORE INTO invoice_counters (user_id, next_number, prefix) VALUES (?, 1, ?)').bind(rec.user_id, 'INV').run();
+      const counter = await env.DB.prepare('UPDATE invoice_counters SET next_number = next_number + 1 WHERE user_id = ? RETURNING next_number - 1 AS num, prefix').bind(rec.user_id).first<{ num: number; prefix: string }>();
+      const invoiceNumber = counter ? `${counter.prefix}-${String(counter.num).padStart(3, '0')}` : null;
+
+      await env.DB.prepare(
+        'INSERT INTO invoices (id, user_id, client_id, client_name, client_email, amount, description, due_date, invoice_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ).bind(invoiceId, rec.user_id, rec.client_id, rec.client_name, rec.client_email, rec.amount, rec.description, rec.next_due_date, invoiceNumber).run();
+
+      // Calculate next due date based on frequency
+      const freq: Record<string, string> = { weekly: '+7 days', fortnightly: '+14 days', monthly: '+1 months', quarterly: '+3 months', annually: '+1 years' };
+      const interval = freq[rec.frequency] || '+1 months';
+      await env.DB.prepare(
+        `UPDATE recurring_invoices SET next_due_date = date(next_due_date, ?), invoices_generated = invoices_generated + 1 WHERE id = ?`,
+      ).bind(interval, rec.id).run();
+
+      console.log(`[Cron] Generated invoice ${invoiceNumber} for recurring ${rec.id}`);
+    }
+  } catch (recurringErr) {
+    console.error('[Cron] Recurring invoice generation failed:', recurringErr);
+  }
 
   // ── Invoice overdue auto-transition ────────────────────────
   try {
