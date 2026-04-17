@@ -1738,6 +1738,64 @@ authed.delete('/devices', async (c) => {
   return c.json({ removed: true });
 });
 
+// ── Mileage ─────────────────────────────────────────────
+authed.get('/mileage', async (c) => {
+  const userId = c.get('userId');
+  const taxYear = c.req.query('taxYear') || '2025/26';
+  const startDate = `${taxYear.split('/')[0]}-04-06`;
+  const endDate = `${parseInt(taxYear.split('/')[0], 10) + 1}-04-05`;
+
+  const logs = await query(c.env.DB,
+    'SELECT * FROM mileage_logs WHERE user_id = ? AND trip_date >= ? AND trip_date <= ? ORDER BY trip_date DESC',
+    [userId, startDate, endDate],
+  );
+
+  const totalMiles = logs.reduce((s: number, l: Record<string, unknown>) => s + (l.miles as number), 0);
+  const totalAmount = logs.reduce((s: number, l: Record<string, unknown>) => s + (l.amount as number), 0);
+
+  return c.json({ logs, summary: { totalMiles, totalAmount, taxYear } });
+});
+
+authed.post('/mileage', async (c) => {
+  const userId = c.get('userId');
+  const raw = await c.req.json();
+
+  const { tripDate, description, miles, vehicleType = 'car', purpose } = raw as {
+    tripDate: string; description: string; miles: number;
+    vehicleType?: 'car' | 'motorcycle' | 'bicycle'; purpose?: string;
+  };
+
+  if (!tripDate || !description || !miles || miles <= 0) {
+    return c.json({ error: { code: 'VALIDATION', message: 'tripDate, description, and miles are required' } }, 400);
+  }
+
+  // HMRC approved mileage rates 2025/26
+  const rates: Record<string, number> = { car: 45, motorcycle: 24, bicycle: 20 };
+  const ratePence = rates[vehicleType] || 45;
+  const amount = parseFloat(((miles * ratePence) / 100).toFixed(2));
+
+  const id = crypto.randomUUID();
+  await execute(c.env.DB,
+    'INSERT INTO mileage_logs (id, user_id, trip_date, description, miles, vehicle_type, purpose, rate_pence, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, tripDate, description, miles, vehicleType, purpose ?? null, ratePence, amount],
+  );
+
+  await audit(c.env.DB, {
+    userId, action: 'expense.create', entityType: 'mileage_log', entityId: id,
+    metadata: { miles, vehicleType, amount },
+    ...auditContext(c.req.raw.headers),
+  });
+
+  return c.json({ id, amount, ratePence }, 201);
+});
+
+authed.delete('/mileage/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  await execute(c.env.DB, 'DELETE FROM mileage_logs WHERE id = ? AND user_id = ?', [id, userId]);
+  return c.json({ deleted: true });
+});
+
 app.route('/', authed);
 
 // ─── Catch-all 404 ────────────────────────────────────────
