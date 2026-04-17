@@ -7,10 +7,12 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useToast } from '@/components/ui/Toast';
 import { useApiToken } from '@/lib/hooks/useApi';
+import { useInactivityTimeout } from '@/lib/hooks/useInactivityTimeout';
 import { registerForPushNotifications } from '@/lib/notifications';
 
 export function AuthRedirect({ children }: { children: React.ReactNode }) {
   useApiToken();
+  const { showWarning, secondsRemaining, staySignedIn } = useInactivityTimeout();
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -77,5 +79,30 @@ export function AuthRedirect({ children }: { children: React.ReactNode }) {
     return () => subscription.remove();
   }, [queryClient, toast]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {Platform.OS === 'web' && showWarning && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+          background: '#FF9500', color: '#000', padding: '12px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontFamily: 'system-ui, sans-serif', fontSize: 14,
+        }}>
+          <span>Your session will expire in {secondsRemaining} second{secondsRemaining !== 1 ? 's' : ''}. Still there?</span>
+          <button
+            type="button"
+            onClick={staySignedIn}
+            style={{
+              marginLeft: 16, background: '#000', color: '#fff',
+              border: 'none', borderRadius: 6, padding: '6px 14px',
+              cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            Stay signed in
+          </button>
+        </div>
+      )}
+      {children}
+    </>
+  );
 }
