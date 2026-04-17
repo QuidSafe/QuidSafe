@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock } from 'lucide-react-native';
+import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
@@ -762,6 +762,14 @@ export default function SettingsScreen() {
             subtitle="SA103 annual tax summary"
             right={<Chevron />}
             onPress={() => router.push('/self-assessment')}
+          />
+          <SettingsRow
+            icon={<TrendingUp size={15} color={Colors.white} strokeWidth={1.5} />}
+            iconBg={Colors.electricBlue}
+            title="Profit & Loss"
+            subtitle="P&L report for your accountant"
+            right={<Chevron />}
+            onPress={() => router.push('/pnl-report' as any)}
           />
           <SettingsRow
             icon={<Download size={15} color={Colors.white} strokeWidth={1.5} />}
