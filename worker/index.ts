@@ -2,7 +2,9 @@ import { Hono, type Context, type Next } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { clerkAuth } from './middleware/auth';
+import { adminAuth } from './middleware/adminAuth';
 import { rateLimit, purgeExpiredRateLimits } from './middleware/rateLimit';
+import { getSetupPayload } from './admin/setup';
 import {
   getConnectUrl,
   exchangeCode,
@@ -85,6 +87,7 @@ export interface Env {
   TRUELAYER_SANDBOX?: string;
   STRIPE_PRICE_MONTHLY?: string;
   STRIPE_PRICE_ANNUAL?: string;
+  ADMIN_EMAILS?: string;
 }
 
 type AuthedEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };
@@ -1862,6 +1865,24 @@ authed.delete('/mileage/:id', async (c) => {
   const id = c.req.param('id');
   await execute(c.env.DB, 'DELETE FROM mileage_logs WHERE id = ? AND user_id = ?', [id, userId]);
   return c.json({ deleted: true });
+});
+
+// ─── Admin routes ─────────────────────────────────────────
+// Read-only setup checklist. Gated by:
+//   1. clerkAuth (on the authed sub-app)
+//   2. adminAuth (ADMIN_EMAILS allowlist) - returns 404 for non-admins so
+//      the admin surface isn't enumerable by regular authenticated users
+//
+// Rate-limited at the same quota as the rest of the authed app - acceptable
+// because the endpoint is read-only and contains no per-user data.
+//
+// /admin/check is a trivial "am I allowed" endpoint so the frontend can
+// redirect non-admins without fetching the full setup payload.
+authed.use('/admin/*', adminAuth());
+authed.get('/admin/check', (c) => c.json({ admin: true }));
+authed.get('/admin/setup', async (c) => {
+  const payload = await getSetupPayload(c.env);
+  return c.json(payload);
 });
 
 app.route('/', authed);

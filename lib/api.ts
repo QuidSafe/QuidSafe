@@ -1,6 +1,6 @@
 // API client for QuidSafe Cloudflare Worker backend
 
-import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission, Article } from './types';
+import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculation, RecurringExpense, RecurringFrequency, MTDObligation, MTDSubmission, Article, AdminSetupPayload } from './types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.quidsafe.uk';
 
@@ -256,6 +256,15 @@ class ApiClient {
 
   getMtdSubmission(id: string) {
     return this.request<{ submission: MTDSubmission }>(`/mtd/submission/${id}`);
+  }
+
+  // Admin dashboard - gated server-side by ADMIN_EMAILS allowlist
+  getAdminCheck() {
+    return this.request<{ admin: true }>('/admin/check');
+  }
+
+  getAdminSetup() {
+    return this.request<AdminSetupPayload>('/admin/setup');
   }
 }
 

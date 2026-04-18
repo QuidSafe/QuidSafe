@@ -20,5 +20,8 @@
     "lib/db.ts",
     "lib/tax-engine.ts",
     "lib/types.ts"
+  ],
+  "exclude": [
+    "worker/**/__tests__/**"
   ]
 }

@@ -63,6 +63,7 @@ export default function RootLayout() {
             <Stack.Screen name="tax-history" />
             <Stack.Screen name="pnl-report" />
             <Stack.Screen name="auth-debug" />
+            <Stack.Screen name="admin" />
             <Stack.Screen name="+not-found" />
           </Stack>
         </AuthRedirect>
