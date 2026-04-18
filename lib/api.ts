@@ -4,11 +4,36 @@ import type { User, Transaction, Expense, Invoice, BankConnection, TaxCalculatio
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.quidsafe.uk';
 
+type TokenProvider = () => Promise<string | null>;
+
 class ApiClient {
+  // Static cache kept as a fallback for the brief window between app mount
+  // and the first tokenProvider being registered. Once a provider is set,
+  // it's always preferred - so the Worker gets a fresh JWT on every request
+  // and we never trip the 1h max-age guard in worker/middleware/auth.ts.
   private token: string | null = null;
+  private tokenProvider: TokenProvider | null = null;
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  setTokenProvider(provider: TokenProvider | null) {
+    this.tokenProvider = provider;
+  }
+
+  private async getFreshToken(): Promise<string | null> {
+    if (this.tokenProvider) {
+      try {
+        const fresh = await this.tokenProvider();
+        if (fresh) this.token = fresh;
+        return fresh ?? this.token;
+      } catch {
+        // Network or Clerk hiccup - fall back to the last cached token
+        return this.token;
+      }
+    }
+    return this.token;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -17,8 +42,9 @@ class ApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    const token = await this.getFreshToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE}${path}`, {
@@ -282,7 +308,8 @@ class ApiClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const token = await this.getFreshToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const response = await fetch(`${baseUrl}/admin/setup`, { headers });
     if (!response.ok) {
       const body = await response.json().catch(() => ({ error: { message: `HTTP ${response.status}` } }));

@@ -7,7 +7,10 @@ import { api } from '../api';
 import { getCached, setCache } from '../offlineCache';
 import type { TaxCalculation, Expense } from '../types';
 
-/** Sync Clerk token to API client - call once at root level */
+/** Sync Clerk token to API client - call once at root level.
+ *  Registers a provider that fetches a fresh JWT on every API request
+ *  (Clerk caches internally so this is cheap). Prevents the Worker's
+ *  1h token-age guard from tripping during long sessions. */
 export function useApiToken() {
   const { getToken, isSignedIn } = useAuth();
   const getTokenRef = useRef(getToken);
@@ -15,7 +18,19 @@ export function useApiToken() {
 
   useEffect(() => {
     let cancelled = false;
-    async function sync() {
+
+    // Register a provider so every request pulls a fresh JWT.
+    api.setTokenProvider(async () => {
+      try {
+        return await getTokenRef.current();
+      } catch {
+        return null;
+      }
+    });
+
+    // Also do a one-off sync so the first few requests before a provider
+    // callback resolves still have a token in hand (e.g. dashboard prefetch).
+    async function warmCache() {
       try {
         const token = await getTokenRef.current();
         if (!cancelled) api.setToken(token);
@@ -23,8 +38,12 @@ export function useApiToken() {
         if (!cancelled) api.setToken(null);
       }
     }
-    sync();
-    return () => { cancelled = true; };
+    warmCache();
+
+    return () => {
+      cancelled = true;
+      api.setTokenProvider(null);
+    };
   }, [isSignedIn]);
 }
 
