@@ -139,15 +139,39 @@ export function clerkAuth(): MiddlewareHandler<AuthEnv> {
         payload.name?.trim() ||
         [payload.first_name, payload.last_name].filter(Boolean).join(' ').trim() ||
         '';
+      const email = payload.email ?? '';
 
-      // Auto-create on first request AND backfill name if it's currently empty
-      // (closes the window where the security fix created rows with empty names)
-      await c.env.DB.prepare(
-        `INSERT INTO users (id, email, name) VALUES (?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET
-           email = CASE WHEN users.email = '' THEN excluded.email ELSE users.email END,
-           name = CASE WHEN users.name = '' OR users.name IS NULL THEN excluded.name ELSE users.name END`,
-      ).bind(payload.sub, payload.email ?? '', derivedName).run();
+      // Auto-create / upsert the users row. Two edge cases to handle:
+      //
+      //  1. id match (normal case) - backfill email/name if they're empty
+      //     (closes the window where the security fix created rows without
+      //     name populated yet).
+      //
+      //  2. email match with different id (Clerk account recreated - rare,
+      //     but previously threw SQLITE_CONSTRAINT_UNIQUE and 401'd every
+      //     request). When this happens the old row is an orphan from a
+      //     deleted Clerk identity. Delete it, then insert fresh so the
+      //     new Clerk id becomes the row id.
+      try {
+        await c.env.DB.prepare(
+          `INSERT INTO users (id, email, name) VALUES (?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+             email = CASE WHEN users.email = '' THEN excluded.email ELSE users.email END,
+             name = CASE WHEN users.name = '' OR users.name IS NULL THEN excluded.name ELSE users.name END`,
+        ).bind(payload.sub, email, derivedName).run();
+      } catch (dbErr) {
+        const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+        if (email && /UNIQUE.*users\.email/i.test(msg)) {
+          // Orphan row from a previous signup for this email. Replace.
+          console.warn('[auth] reclaiming stale users row for', payload.sub);
+          await c.env.DB.prepare('DELETE FROM users WHERE email = ?').bind(email).run();
+          await c.env.DB.prepare(
+            'INSERT INTO users (id, email, name) VALUES (?, ?, ?)',
+          ).bind(payload.sub, email, derivedName).run();
+        } else {
+          throw dbErr;
+        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid token';
       return c.json({ error: { code: 'UNAUTHORIZED', message } }, 401);
