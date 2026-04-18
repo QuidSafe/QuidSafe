@@ -254,6 +254,11 @@ export default function BillingScreen() {
           ))}
         </View>
 
+        {/* VAT note - CLAUDE.md rule: prices shown inclusive of VAT */}
+        <Text style={[styles.vatNote, { color: colors.textSecondary }]}>
+          All prices include VAT. VAT-registered sole traders can reclaim VAT on their QuidSafe subscription.
+        </Text>
+
         {/* Features */}
         <Card>
           <Text style={[styles.featuresTitle, { color: colors.text }]}>Everything in Pro</Text>
@@ -312,14 +317,14 @@ export default function BillingScreen() {
           onPress={handleCheckout}
           disabled={checkoutMutation.isPending}
           accessibilityRole="button"
-          accessibilityLabel="Start 14-day free trial"
+          accessibilityLabel="Start 30-day free trial"
           accessibilityHint="Tap to start the checkout process for your free trial"
         >
           {checkoutMutation.isPending ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
             <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
-              <Text style={styles.ctaText}>Start 14-day free trial</Text>
+              <Text style={styles.ctaText}>Start 30-day free trial</Text>
             </View>
           )}
         </Pressable>
@@ -344,7 +349,7 @@ export default function BillingScreen() {
         <View style={[styles.guaranteeBadge, { borderColor: colors.border }]}>
           <Shield size={14} color={Colors.success} strokeWidth={1.5} />
           <Text style={[styles.guaranteeText, { color: colors.textSecondary }]}>
-            14-day money-back guarantee  ·  Cancel anytime  ·  Secure checkout
+            30-day money-back guarantee  ·  Cancel anytime  ·  Secure checkout
           </Text>
         </View>
 
@@ -410,6 +415,15 @@ const styles = StyleSheet.create({
   strikethroughPrice: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, textDecorationLine: 'line-through' },
   equivalentPrice: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13 },
   planDesc: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, marginTop: Spacing.xs },
+  vatNote: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
 
   featuresTitle: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 16, marginBottom: Spacing.md },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm },

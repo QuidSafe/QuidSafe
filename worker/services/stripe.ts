@@ -88,7 +88,7 @@ export async function createCheckoutSession(
     'line_items[0][price]': priceId,
     success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/billing/cancel`,
-    'subscription_data[trial_period_days]': '14',
+    'subscription_data[trial_period_days]': '30',
     'subscription_data[metadata][user_id]': userId,
     'metadata[user_id]': userId,
   });

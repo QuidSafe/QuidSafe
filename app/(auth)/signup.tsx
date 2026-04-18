@@ -206,7 +206,7 @@ export default function SignupScreen() {
       <>
         <Text style={[styles.title, { color: colors.text }]}>Create your account</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Start your 14-day free trial. No card required.
+          Start your 30-day free trial. No card required.
         </Text>
 
         {/* Google SSO */}
