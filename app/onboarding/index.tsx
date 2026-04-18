@@ -12,6 +12,7 @@ import {
   Platform,
   BackHandler,
   useWindowDimensions,
+  Easing,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +20,6 @@ import { Clock, Wand2, PoundSterling, Lock, ArrowLeft, ArrowRight, EyeOff, Shiel
 import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { api } from '@/lib/api';
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import {
   WelcomeIllustration,
@@ -36,24 +36,31 @@ const TOTAL_STEPS = 3;
 /* ------------------------------------------------------------------ */
 function ProgressDots({ current }: { current: number }) {
   return (
-    <View style={styles.dotsRow}>
-      {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.dot,
-            {
-              width: i === current ? 24 : 8,
-              backgroundColor:
-                i === current
-                  ? Colors.accent
-                  : i < current
-                  ? Colors.accent + '60'
-                  : colors.border,
-            },
-          ]}
-        />
-      ))}
+    <View style={styles.progressWrap}>
+      <Text style={styles.progressCounter} accessibilityLiveRegion="polite">
+        Step {current + 1} of {TOTAL_STEPS}
+      </Text>
+      <View style={styles.dotsRow} accessibilityLabel={`Step ${current + 1} of ${TOTAL_STEPS}`}>
+        {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.dot,
+              {
+                width: i === current ? 28 : 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor:
+                  i === current
+                    ? Colors.accent
+                    : i < current
+                    ? Colors.accent + '60'
+                    : colors.border,
+              },
+            ]}
+          />
+        ))}
+      </View>
     </View>
   );
 }
@@ -351,11 +358,11 @@ export default function OnboardingScreen() {
 
   const animateTo = useCallback(
     (nextStep: number) => {
-      Animated.spring(slideAnim, {
+      Animated.timing(slideAnim, {
         toValue: -nextStep * slideWidth,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-        tension: 80,
-        friction: 14,
       }).start();
       setStep(nextStep);
     },
@@ -384,17 +391,30 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.innerContainer, Platform.OS === 'web' && { maxWidth: MAX_SLIDE_WIDTH, alignSelf: 'center' as const, width: '100%' as unknown as number }]}>
-      {/* Top bar: back button + dots */}
+      {/* Top bar: back button + progress + skip */}
       <View style={styles.topBar}>
         {step > 0 ? (
-          <Pressable onPress={handleBack} style={styles.backButton}>
+          <Pressable
+            onPress={handleBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Back to previous step"
+          >
             <ArrowLeft size={18} color={colors.text} strokeWidth={1.5} />
           </Pressable>
         ) : (
-          <View style={styles.backButtonPlaceholder} />
+          <View style={styles.topBarSideSlot} />
         )}
         <ProgressDots current={step} />
-        <View style={styles.backButtonPlaceholder} />
+        <Pressable
+          onPress={handleSkip}
+          style={styles.skipLink}
+          accessibilityRole="button"
+          accessibilityLabel="Skip onboarding"
+          hitSlop={8}
+        >
+          <Text style={[styles.skipLinkText, { color: colors.textSecondary }]}>Skip</Text>
+        </Pressable>
       </View>
 
       {/* Slides */}
@@ -449,9 +469,14 @@ export default function OnboardingScreen() {
         )}
 
         {step === 2 && (
-          <Pressable onPress={handleSkip}>
-            <Text style={[styles.skipText, { color: colors.textSecondary }]}>
-              Skip for now
+          <Pressable
+            onPress={handleSkip}
+            style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Connect bank later"
+          >
+            <Text style={[styles.secondaryButtonText, { color: colors.textSecondary }]}>
+              I&apos;ll connect my bank later
             </Text>
           </Pressable>
         )}
@@ -487,21 +512,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 20,
   },
-  backButtonPlaceholder: {
-    width: 40,
+  topBarSideSlot: {
+    width: 48,
     height: 40,
   },
+  skipLink: {
+    minWidth: 48,
+    height: 40,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xs,
+  },
+  skipLinkText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+  },
 
-  /* Dots */
+  /* Progress */
+  progressWrap: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressCounter: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    letterSpacing: 0.6,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
   dotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  dot: {
-    height: 8,
-    borderRadius: 4,
-  },
+  dot: {},
 
   /* Slides */
   slides: {
@@ -870,12 +914,15 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
 
-  /* Skip text */
-  skipText: {
-    fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 15,
+  /* Secondary (step 3 "connect later" fallback) */
+  secondaryButton: {
     paddingVertical: Spacing.sm,
-    textDecorationLine: 'underline',
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  secondaryButtonText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
   },
 
   /* Footer */
