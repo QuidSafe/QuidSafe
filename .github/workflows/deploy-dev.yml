@@ -1,14 +1,22 @@
 name: Deploy Dev
 
+# Manual-only. The dev environment is for experimentation; auto-deploying
+# on every branch push produced a lot of noise in the Actions list for
+# very little value. Run explicitly when you actually want dev updated:
+#
+#   gh workflow run deploy-dev.yml -f ref=<branch-name>
+
 on:
-  push:
-    branches-ignore: [main]
-    paths:
-      - 'worker/**'
-      - 'wrangler.worker.toml'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch or commit to deploy to dev'
+        required: false
+        type: string
+        default: ''
 
 concurrency:
-  group: deploy-dev-${{ github.ref }}
+  group: deploy-dev
   cancel-in-progress: true
 
 jobs:
@@ -17,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -37,6 +47,8 @@ jobs:
     needs: migrate-db
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-node@v4
         with:

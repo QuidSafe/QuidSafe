@@ -389,9 +389,8 @@ Always run `/pre-deploy` before deploying to production.
 PR opened ─▶ Lint + tests + E2E (ci.yml, e2e.yml)
          ─▶ Auto-deploy to staging (deploy-staging.yml, deploy-staging-web.yml)
          ─▶ Test on staging URL (commented on PR)
-         ─▶ Merge PR (staging now matches main)
-         ─▶ Manual "Deploy Production" (deploy.yml via workflow_dispatch)
-         ─▶ If it breaks: rollback.yml (1-click revert)
+         ─▶ Merge PR → auto-deploys to production (deploy.yml on push)
+         ─▶ If it breaks: `npx wrangler rollback --env production`
 ```
 
 ### Workflows
@@ -402,9 +401,8 @@ PR opened ─▶ Lint + tests + E2E (ci.yml, e2e.yml)
 | [e2e.yml](.github/workflows/e2e.yml) | PR (frontend changes) | Playwright against live |
 | [deploy-staging.yml](.github/workflows/deploy-staging.yml) | PR (worker changes) | Deploy Worker to staging |
 | [deploy-staging-web.yml](.github/workflows/deploy-staging-web.yml) | PR (frontend changes) | Deploy web to `staging.quidsafe.uk`, comment URL |
-| [deploy.yml](.github/workflows/deploy.yml) | **Manual** (`workflow_dispatch`) | Deploy to production - requires GitHub Environment approval |
-| [rollback.yml](.github/workflows/rollback.yml) | **Manual** | Rollback Worker via `wrangler rollback` |
-| [deploy-dev.yml](.github/workflows/deploy-dev.yml) | Push to non-main branch (worker paths) | Deploy to dev worker |
+| [deploy.yml](.github/workflows/deploy.yml) | Push to main (auto) OR manual `workflow_dispatch` | Auto-deploys Worker + Web on merge. Migrations still require manual approval via `workflow_dispatch` with `apply_migrations=true`. |
+| [deploy-dev.yml](.github/workflows/deploy-dev.yml) | **Manual** (`workflow_dispatch`) | Deploy a specific branch to the dev Worker |
 
 ### Required GitHub Environments (set up in repo Settings → Environments)
 
@@ -442,13 +440,13 @@ gh workflow run deploy.yml \
 
 ### Rolling back
 
+Worker rollback (one command, ~30s):
+
 ```bash
-gh workflow run rollback.yml \
-  -f environment=production \
-  -f reason="Payments broken after deploy"
+npx wrangler rollback --config wrangler.worker.toml --env production --message "Payments broken after deploy"
 ```
 
-Worker reverts in ~30s. Web rollback is manual via Cloudflare Pages dashboard (Pages → Deployments → select previous → Rollback).
+Web rollback is manual via Cloudflare Pages dashboard (Pages → Deployments → select previous → Rollback).
 
 ### Health checks
 
