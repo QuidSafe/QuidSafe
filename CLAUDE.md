@@ -239,6 +239,26 @@ QuidSafe/
 | `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_Y2xlcmsucXVpZHNhZmUudWsk` |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` |
 
+## Admin Surface
+
+Owner-only read-only dashboard at [`/admin/setup`](app/admin/setup.tsx) showing env-var presence, D1 migration status, and external service wiring. Worker gates `/admin/*` via an `ADMIN_EMAILS` allowlist and returns **404** (not 403) to non-admins so the surface isn't enumerable.
+
+**Add or remove an admin** (value is comma-separated, case-insensitive):
+```bash
+wrangler secret put ADMIN_EMAILS --config wrangler.worker.toml --env production
+# Enter: owner@example.com,cofounder@example.com
+```
+
+**When the repo changes, update the knowledge base**:
+- New Worker env var → add to [worker/admin/config.ts](worker/admin/config.ts) `REQUIRED_ENV_VARS`
+- New D1 migration → add filename to `MIGRATION_FILES` (a drift test in [worker/admin/__tests__/config.test.ts](worker/admin/__tests__/config.test.ts) fails CI if you forget)
+- New third-party service → add to `EXTERNAL_SERVICES` with the env keys that prove it's wired
+
+**Security rules for this surface** - never weaken these:
+- `secret`-kind env keys must have `previewable: false`. Last 4 chars of a Stripe/Clerk key helps an attacker confirm a leaked credential.
+- Don't log the admin's email in [worker/middleware/adminAuth.ts](worker/middleware/adminAuth.ts) - Cloudflare Workers tail logs are visible to every account collaborator.
+- Read-only only. No write actions on `/admin/*` routes until we add MFA gating + audit logging.
+
 ## Key Patterns
 
 - **Auth**: Clerk JWT verified in [worker/middleware/auth.ts](worker/middleware/auth.ts) on every API request. Frontend calls `api.setToken()` in [lib/hooks/useApi.ts](lib/hooks/useApi.ts) `useApiToken()`.
