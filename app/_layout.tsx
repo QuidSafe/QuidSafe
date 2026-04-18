@@ -10,6 +10,7 @@ import { HeadMeta } from '@/components/web/HeadMeta';
 import { Providers } from '@/components/Providers';
 import { AuthRedirect } from '@/lib/AuthRedirect';
 import { CookieConsent } from '@/components/ui/CookieConsent';
+import { EnvBanner } from '@/components/ui/EnvBanner';
 import 'react-native-reanimated';
 // @ts-ignore - CSS import for web, ignored on native
 import '../public/global.css';
@@ -41,6 +42,7 @@ export default function RootLayout() {
       <HeadMeta />
       <Providers>
         <StatusBar style="light" />
+        <EnvBanner />
         <CookieConsent />
         <AuthRedirect>
           <Stack screenOptions={{ headerShown: false }}>

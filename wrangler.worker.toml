@@ -39,8 +39,15 @@ TRUELAYER_SANDBOX = "true"
 APP_URL = "https://api-dev.quidsafe.uk"
 
 # ─── Staging ───────────────────────────────────────────────
+# api-staging.quidsafe.uk is gated by Cloudflare Access (Zero Trust).
+# Anyone hitting it gets a one-time-PIN login prompt before reaching
+# the Worker. Allowlist managed at Cloudflare dashboard > Zero Trust >
+# Access > Applications > "QuidSafe Staging". See docs/runbooks/staging-access.md.
 [env.staging]
 name = "quidsafe-api-staging"
+routes = [
+  { pattern = "api-staging.quidsafe.uk", custom_domain = true }
+]
 
 [[env.staging.d1_databases]]
 binding = "DB"
@@ -54,6 +61,7 @@ CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsucXVpZHNhZmUudWsk"
 FROM_EMAIL = "invoices@quidsafe.uk"
 TRUELAYER_SANDBOX = "true"
 APP_URL = "https://staging.quidsafe.uk"
+TRUELAYER_REDIRECT_URI = "https://api-staging.quidsafe.uk/banking/callback"
 
 # ─── Production ────────────────────────────────────────────
 [env.production]
