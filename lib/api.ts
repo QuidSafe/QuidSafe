@@ -266,6 +266,38 @@ class ApiClient {
   getAdminSetup() {
     return this.request<AdminSetupPayload>('/admin/setup');
   }
+
+  // Cross-env admin fetch. Uses a fully-qualified base URL instead of the
+  // default API_BASE so the prod admin page can probe staging + dev Workers
+  // directly. Same Clerk JWT works across envs (shared Clerk instance).
+  //
+  // SECURITY: baseUrl is validated against a hardcoded allowlist before any
+  // fetch. Never let caller-supplied or env-derived strings reach the fetch
+  // unvalidated - the method forwards the live Clerk bearer token, and a
+  // malicious baseUrl would exfiltrate it.
+  async getAdminSetupFor(baseUrl: string): Promise<AdminSetupPayload> {
+    if (!ADMIN_API_ORIGIN_ALLOWLIST.has(baseUrl)) {
+      throw new Error('Unknown admin API origin');
+    }
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const response = await fetch(`${baseUrl}/admin/setup`, { headers });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({ error: { message: `HTTP ${response.status}` } }));
+      throw new Error((body as { error?: { message?: string } }).error?.message ?? `HTTP ${response.status}`);
+    }
+    return response.json() as Promise<AdminSetupPayload>;
+  }
 }
+
+// Hardcoded allowlist used by getAdminSetupFor. Any new env URL must also
+// be listed here - adding it to ENVIRONMENTS alone is not enough.
+const ADMIN_API_ORIGIN_ALLOWLIST = new Set<string>([
+  'https://api.quidsafe.uk',
+  'https://api-staging.quidsafe.uk',
+  'https://quidsafe-api-dev.nathanlufc.workers.dev',
+]);
 
 export const api = new ApiClient();

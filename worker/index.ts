@@ -1924,6 +1924,18 @@ async function scheduled(_event: { scheduledTime: number; cron: string }, env: E
   console.log(`[Cron] Daily sync triggered at ${new Date().toISOString()}`);
   const config = getTrueLayerConfig(env);
 
+  // Prune admin audit log rows older than 90 days. GDPR-friendly retention.
+  // Runs first so a D1 outage here doesn't block the bank-sync work below.
+  try {
+    const result = await env.DB
+      .prepare("DELETE FROM admin_access_log WHERE created_at < datetime('now', '-90 days')")
+      .run();
+    const meta = result as { meta?: { changes?: number } };
+    console.log(`[Cron] Pruned ${meta.meta?.changes ?? 0} old admin_access_log rows`);
+  } catch (err) {
+    console.warn('[Cron] admin_access_log prune skipped:', err instanceof Error ? err.message : err);
+  }
+
   // Get all active bank connections
   const connections = await env.DB
     .prepare('SELECT id, user_id, bank_name, access_token_encrypted, refresh_token_encrypted, last_synced_at, active FROM bank_connections WHERE active = 1')
