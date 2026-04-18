@@ -52,6 +52,8 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="transactions" options={{ presentation: 'modal' }} />
             <Stack.Screen name="billing" />
+            <Stack.Screen name="billing/success" />
+            <Stack.Screen name="billing/cancel" />
             <Stack.Screen name="mtd" options={{ presentation: 'modal' }} />
             <Stack.Screen name="invoices" />
             <Stack.Screen name="invoice/[id]" />
