@@ -52,15 +52,89 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
-function SectionHeading({ icon: Icon, title, sub }: { icon: React.FC<{ size?: number; color?: string; strokeWidth?: number }>; title: string; sub?: string }) {
+function ProgressBar({ value, total }: { value: number; total: number }) {
+  const pct = total === 0 ? 0 : Math.round((value / total) * 100);
+  const colorFor = pct === 100 ? Colors.success : pct >= 75 ? Colors.electricBlue : pct >= 50 ? Colors.warning : Colors.error;
+  return (
+    <View style={styles.progressTrack}>
+      <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: colorFor }]} />
+    </View>
+  );
+}
+
+function SectionHeading({ icon: Icon, title, sub, progress }: {
+  icon: React.FC<{ size?: number; color?: string; strokeWidth?: number }>;
+  title: string;
+  sub?: string;
+  progress?: { value: number; total: number };
+}) {
   return (
     <View style={styles.sectionHead}>
       <View style={styles.sectionIconBox}>
         <Icon size={14} color={Colors.electricBlue} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          {progress ? (
+            <Text style={styles.sectionCount}>
+              {progress.value}<Text style={styles.sectionCountSep}> / </Text>{progress.total}
+            </Text>
+          ) : null}
+        </View>
         {sub ? <Text style={styles.sectionSub}>{sub}</Text> : null}
+        {progress ? <ProgressBar value={progress.value} total={progress.total} /> : null}
+      </View>
+    </View>
+  );
+}
+
+// Top-of-page KPI strip. Gives instant status across all three envs
+// without needing to click into each tab.
+function HealthSummary({ queries }: { queries: { env: EnvDescriptor; query: { data?: EnvSetupResult; isLoading: boolean } }[] }) {
+  const liveResults = queries.map(({ env, query }) => ({
+    env,
+    result: query.data ?? (query.isLoading ? { status: 'loading' as const } : undefined),
+  }));
+
+  const healthyCount = liveResults.filter((r) => r.result?.status === 'ok').length;
+  const totalEnvs = liveResults.length;
+
+  const prodResult = liveResults.find((r) => r.env.key === 'production')?.result;
+  const prodVars = prodResult?.status === 'ok'
+    ? { present: prodResult.payload.envVars.filter((v) => v.present).length, total: prodResult.payload.envVars.length }
+    : null;
+  const prodMigrations = prodResult?.status === 'ok'
+    ? { applied: prodResult.payload.migrations.totalApplied, total: prodResult.payload.migrations.totalInRepo }
+    : null;
+
+  return (
+    <View style={styles.kpiRow}>
+      <View style={styles.kpiCard}>
+        <Text style={styles.kpiLabel}>Environments healthy</Text>
+        <Text style={[styles.kpiValue, { color: healthyCount === totalEnvs ? Colors.success : Colors.warning }]}>
+          {healthyCount}<Text style={styles.kpiValueSub}> / {totalEnvs}</Text>
+        </Text>
+      </View>
+      <View style={styles.kpiCard}>
+        <Text style={styles.kpiLabel}>Prod env vars</Text>
+        <Text style={[styles.kpiValue, { color: prodVars && prodVars.present === prodVars.total ? Colors.success : Colors.warning }]}>
+          {prodVars ? (
+            <>
+              {prodVars.present}<Text style={styles.kpiValueSub}> / {prodVars.total}</Text>
+            </>
+          ) : '—'}
+        </Text>
+      </View>
+      <View style={styles.kpiCard}>
+        <Text style={styles.kpiLabel}>Prod migrations</Text>
+        <Text style={[styles.kpiValue, { color: prodMigrations && prodMigrations.applied === prodMigrations.total ? Colors.success : Colors.warning }]}>
+          {prodMigrations ? (
+            <>
+              {prodMigrations.applied}<Text style={styles.kpiValueSub}> / {prodMigrations.total}</Text>
+            </>
+          ) : '—'}
+        </Text>
       </View>
     </View>
   );
@@ -216,7 +290,10 @@ function EnvPanel({ env, result, onRefresh, isRefreshing }: {
       <SectionHeading
         icon={Key}
         title="Environment variables"
-        sub={`${data.envVars.filter((v) => v.present).length} of ${data.envVars.length} set`}
+        progress={{
+          value: data.envVars.filter((v) => v.present).length,
+          total: data.envVars.length,
+        }}
       />
       <Card style={styles.cardPadding}>
         {data.envVars.map((v) => <EnvVarRow key={v.key} row={v} />)}
@@ -225,17 +302,24 @@ function EnvPanel({ env, result, onRefresh, isRefreshing }: {
       <SectionHeading
         icon={Database}
         title="D1 migrations"
-        sub={
-          data.migrations.totalApplied === data.migrations.totalInRepo
-            ? `All ${data.migrations.totalInRepo} applied`
-            : `${data.migrations.totalApplied} of ${data.migrations.totalInRepo} applied`
-        }
+        progress={{
+          value: data.migrations.totalApplied,
+          total: data.migrations.totalInRepo,
+        }}
       />
       <Card style={styles.cardPadding}>
         {data.migrations.rows.map((m) => <MigrationRow key={m.filename} row={m} />)}
       </Card>
 
-      <SectionHeading icon={Globe} title="External services" sub="Tap to open each dashboard" />
+      <SectionHeading
+        icon={Globe}
+        title="External services"
+        progress={{
+          value: data.externalServices.filter((s) => s.configured).length,
+          total: data.externalServices.length,
+        }}
+        sub="Tap to open each dashboard"
+      />
       <Card style={styles.cardPadding}>
         {data.externalServices.map((s) => <ServiceRow key={s.name} row={s} />)}
       </Card>
@@ -288,6 +372,7 @@ export default function AdminSetupScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={styles.maxWidth}>
       <View style={styles.topBar}>
         <Pressable
           onPress={() => router.back()}
@@ -304,6 +389,10 @@ export default function AdminSetupScreen() {
           title="Admin · Setup"
           subtitle="Live config across all environments"
         />
+      </View>
+
+      <View style={styles.kpiWrap}>
+        <HealthSummary queries={envQueries} />
       </View>
 
       <View style={styles.tabsRow}>
@@ -326,12 +415,21 @@ export default function AdminSetupScreen() {
           isRefreshing={activeQuery.query.isRefetching}
         />
       ) : null}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  // Cap content width on wide desktop monitors so long KPI cards and
+  // rows don't stretch edge-to-edge. No effect on mobile.
+  maxWidth: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1024,
+    alignSelf: 'center',
+  },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, padding: Spacing.lg },
 
   topBar: {
@@ -415,7 +513,7 @@ const styles = StyleSheet.create({
   /* Sections */
   sectionHead: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.sm,
     marginTop: Spacing.sm,
   },
@@ -427,16 +525,79 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
   sectionTitle: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
     color: colors.text,
+  },
+  sectionCount: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 12,
+    color: colors.text,
+    letterSpacing: 0.3,
+  },
+  sectionCountSep: {
+    color: colors.textMuted,
   },
   sectionSub: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: 1,
+  },
+
+  /* Progress bar */
+  progressTrack: {
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+
+  /* KPI summary */
+  kpiWrap: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  kpiRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: BorderRadius.card,
+    padding: Spacing.md,
+    gap: 4,
+  },
+  kpiLabel: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  kpiValue: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 22,
+    letterSpacing: -0.3,
+  },
+  kpiValueSub: {
+    fontFamily: Fonts.mono.regular,
+    fontSize: 14,
+    color: colors.textMuted,
   },
 
   cardPadding: { padding: 0, overflow: 'hidden' },
