@@ -52,6 +52,8 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="transactions" options={{ presentation: 'modal' }} />
             <Stack.Screen name="billing" />
+            <Stack.Screen name="billing/success" />
+            <Stack.Screen name="billing/cancel" />
             <Stack.Screen name="mtd" options={{ presentation: 'modal' }} />
             <Stack.Screen name="invoices" />
             <Stack.Screen name="invoice/[id]" />
@@ -64,6 +66,8 @@ export default function RootLayout() {
             <Stack.Screen name="cookie-policy" />
             <Stack.Screen name="tax-history" />
             <Stack.Screen name="pnl-report" />
+            <Stack.Screen name="mileage" />
+            <Stack.Screen name="clients" />
             <Stack.Screen name="auth-debug" />
             <Stack.Screen name="admin" />
             <Stack.Screen name="+not-found" />

@@ -172,7 +172,11 @@ export default function MTDScreen() {
     setIsConnectingHmrc(true);
     try {
       const { url } = await api.getHmrcAuthUrl(Platform.OS !== 'web' ? 'native' : undefined);
-      await WebBrowser.openBrowserAsync(url);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
     } catch {
       Alert.alert('Connection Error', 'Could not connect to HMRC. Please try again.');
     } finally {

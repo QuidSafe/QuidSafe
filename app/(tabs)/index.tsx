@@ -116,7 +116,13 @@ export default function DashboardScreen() {
     setIsConnecting(true);
     try {
       const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
-      await WebBrowser.openBrowserAsync(url);
+      if (Platform.OS === 'web') {
+        // Native's WebBrowser.openBrowserAsync no-ops on web. Use window.open
+        // so the TrueLayer OAuth page actually loads in a new tab.
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
     } finally {

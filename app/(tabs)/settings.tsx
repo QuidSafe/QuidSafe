@@ -447,7 +447,11 @@ export default function SettingsScreen() {
     setIsAddingBank(true);
     try {
       const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
-      await WebBrowser.openBrowserAsync(url);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
     } finally {
@@ -461,7 +465,9 @@ export default function SettingsScreen() {
     router.replace('/landing');
   };
 
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const handleDeleteAccount = () => {
+    if (isDeletingAccount) return;
     Alert.alert(
       'Delete Account',
       'This will permanently delete your account and all data. This cannot be undone.',
@@ -471,9 +477,16 @@ export default function SettingsScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await api.deleteAccount();
-            await signOut();
-            router.replace('/landing');
+            setIsDeletingAccount(true);
+            try {
+              await api.deleteAccount();
+              await signOut();
+              router.replace('/landing');
+            } catch (err) {
+              setIsDeletingAccount(false);
+              const msg = err instanceof Error ? err.message : 'Could not delete account';
+              Alert.alert('Delete failed', `${msg}\n\nYour account has NOT been deleted. Please try again or contact support.`);
+            }
           },
         },
       ],
@@ -819,8 +832,19 @@ export default function SettingsScreen() {
         </Pressable>
 
         {/* Delete account */}
-        <Pressable style={styles.deleteButton} onPress={handleDeleteAccount} accessibilityRole="button" accessibilityLabel="Delete account" accessibilityHint="Tap to permanently delete your account and all data">
-          <Text style={styles.deleteText}>Delete account</Text>
+        <Pressable
+          style={[styles.deleteButton, isDeletingAccount && styles.pressed]}
+          onPress={handleDeleteAccount}
+          disabled={isDeletingAccount}
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          accessibilityHint="Tap to permanently delete your account and all data"
+        >
+          {isDeletingAccount ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <Text style={styles.deleteText}>Delete account</Text>
+          )}
         </Pressable>
       </ScrollView>
 
