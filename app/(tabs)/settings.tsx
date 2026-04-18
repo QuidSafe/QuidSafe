@@ -447,7 +447,11 @@ export default function SettingsScreen() {
     setIsAddingBank(true);
     try {
       const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
-      await WebBrowser.openBrowserAsync(url);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
     } catch {
       Alert.alert('Connection Error', 'Could not start bank connection. Please try again.');
     } finally {

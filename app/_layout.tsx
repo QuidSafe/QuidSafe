@@ -64,6 +64,8 @@ export default function RootLayout() {
             <Stack.Screen name="cookie-policy" />
             <Stack.Screen name="tax-history" />
             <Stack.Screen name="pnl-report" />
+            <Stack.Screen name="mileage" />
+            <Stack.Screen name="clients" />
             <Stack.Screen name="auth-debug" />
             <Stack.Screen name="admin" />
             <Stack.Screen name="+not-found" />
