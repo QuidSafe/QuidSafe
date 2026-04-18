@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp } from 'lucide-react-native';
+import { Shield, Lock, ChevronRight, ChevronDown, Plus, User, CreditCard, Bell, Landmark, RefreshCw, Eye, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -96,15 +96,7 @@ const toggleStyles = StyleSheet.create({
 });
 
 // --------------- Icon Box ---------------
-function IconBox({
-  icon,
-  bg,
-  color = Colors.white,
-}: {
-  icon: React.ReactNode;
-  bg: string;
-  color?: string;
-}) {
+function IconBox({ icon, bg }: { icon: React.ReactNode; bg: string }) {
   return (
     <View style={[styles.iconBox, { backgroundColor: bg }]}>
       {icon}
@@ -172,38 +164,12 @@ const SettingsRow = memo(function SettingsRow({
 
 // --------------- Chevron ---------------
 function Chevron() {
-  return <ChevronRight size={12} color="#666666" strokeWidth={1.5} />;
+  return <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />;
 }
 
 // --------------- Section Label ---------------
 const SectionLabel = memo(function SectionLabel({ label }: { label: string }) {
   return <Text style={[styles.sectionLabel, { color: colors.textSecondary }]} accessibilityRole="header">{label}</Text>;
-});
-
-// --------------- Theme Option ---------------
-const ThemeOption = memo(function ThemeOption({
-  icon,
-  label,
-  active,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={styles.themeOption} accessibilityRole="button" accessibilityLabel={`Theme: ${label}`} accessibilityState={{ selected: active }}>
-      <View style={styles.themeLeft}>
-        <IconBox
-          icon={<Moon size={15} color={active ? Colors.white : Colors.muted} strokeWidth={1.5} />}
-          bg={active ? Colors.secondary : Colors.midGrey}
-        />
-        <Text style={[styles.rowTitle, { marginLeft: 10, color: colors.text }]}>{label}</Text>
-      </View>
-      {active && <Check size={14} color={Colors.success} strokeWidth={1.5} />}
-    </Pressable>
-  );
 });
 
 // --------------- Relative Time ---------------
@@ -657,17 +623,17 @@ export default function SettingsScreen() {
             subtitle={userEmail}
             right={
               profileExpanded
-                ? <ChevronDown size={12} color="#666666" strokeWidth={1.5} />
-                : <ChevronRight size={12} color="#666666" strokeWidth={1.5} />
+                ? <ChevronDown size={12} color={colors.textMuted} strokeWidth={1.5} />
+                : <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
             }
             onPress={() => setProfileExpanded((prev) => !prev)}
           />
           {profileExpanded && (
             <View style={styles.profileExpandedSection}>
-              <Text style={[styles.rowSubtitle, { color: colors.textSecondary, marginBottom: 6 }]}>
+              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>
                 Email: {userEmail}
               </Text>
-              <Text style={[styles.rowTitle, { color: colors.text, marginBottom: 4, fontSize: 11 }]}>
+              <Text style={[styles.profileFieldLabel, { color: colors.text }]}>
                 Change name
               </Text>
               <View style={styles.nameInputRow}>
@@ -699,8 +665,8 @@ export default function SettingsScreen() {
                   )}
                 </Pressable>
               </View>
-              <Text style={[styles.rowTitle, { color: colors.text, marginBottom: 4, fontSize: 11, marginTop: 12 }]}>
-                National Insurance Number {ninoSet && <Text style={{ color: Colors.success, fontSize: 11 }}>(saved)</Text>}
+              <Text style={[styles.profileFieldLabel, styles.profileFieldLabelSpaced, { color: colors.text }]}>
+                National Insurance Number {ninoSet && <Text style={styles.savedLabel}>(saved)</Text>}
               </Text>
               <View style={styles.nameInputRow}>
                 <TextInput
@@ -743,6 +709,20 @@ export default function SettingsScreen() {
             onPress={() => router.push('/billing')}
           />
           <SettingsRow
+            icon={<Download size={15} color={Colors.white} strokeWidth={1.5} />}
+            iconBg={Colors.success}
+            title="Export data"
+            subtitle="Download CSV or PDF"
+            right={<Chevron />}
+            isLast
+            onPress={handleExportData}
+          />
+        </Card>
+
+        {/* TAX & HMRC */}
+        <SectionLabel label="TAX & HMRC" />
+        <Card style={styles.cardPadding}>
+          <SettingsRow
             icon={<Clock size={15} color={Colors.white} strokeWidth={1.5} />}
             iconBg={Colors.accent}
             title="Tax History"
@@ -772,16 +752,8 @@ export default function SettingsScreen() {
             title="Profit & Loss"
             subtitle="P&L report for your accountant"
             right={<Chevron />}
-            onPress={() => router.push('/pnl-report' as any)}
-          />
-          <SettingsRow
-            icon={<Download size={15} color={Colors.white} strokeWidth={1.5} />}
-            iconBg={Colors.success}
-            title="Export data"
-            subtitle="Download CSV or PDF"
-            right={<Chevron />}
             isLast
-            onPress={handleExportData}
+            onPress={() => router.push('/pnl-report' as any)}
           />
         </Card>
 
@@ -798,20 +770,20 @@ export default function SettingsScreen() {
           />
           <SettingsRow
             icon={<Info size={15} color={Colors.white} strokeWidth={1.5} />}
-            iconBg="#666666"
+            iconBg={Colors.muted}
             title="App version"
             subtitle={Constants.expoConfig?.version ?? '0.1.0'}
           />
           <SettingsRow
             icon={<FileText size={15} color={Colors.white} strokeWidth={1.5} />}
-            iconBg="#666666"
+            iconBg={Colors.muted}
             title="Terms of Service"
             right={<Chevron />}
             onPress={() => router.push('/terms')}
           />
           <SettingsRow
             icon={<Shield size={15} color={Colors.white} strokeWidth={1.5} />}
-            iconBg="#666666"
+            iconBg={Colors.muted}
             title="Privacy Policy"
             right={<Chevron />}
             isLast
@@ -979,16 +951,6 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: Colors.success,
   },
-  themeOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  themeLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   signOutButton: {
     borderWidth: 1.5,
     borderColor: Colors.midGrey,
@@ -1027,6 +989,24 @@ const styles = StyleSheet.create({
   profileExpandedSection: {
     paddingLeft: 40,
     paddingBottom: 10,
+  },
+  profileEmail: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  profileFieldLabel: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    marginBottom: 4,
+  },
+  profileFieldLabelSpaced: {
+    marginTop: 12,
+  },
+  savedLabel: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    color: Colors.success,
   },
   nameInputRow: {
     flexDirection: 'row',
