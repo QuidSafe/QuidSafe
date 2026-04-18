@@ -1,9 +1,44 @@
 # Cloudflare Pages headers file - applied to all responses
 
+# ─── Security headers (all responses) ────────────────────────────────
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://plausible.io https://*.clerk.accounts.dev https://clerk.quidsafe.uk https://js.stripe.com; frame-src https://js.stripe.com https://*.clerk.accounts.dev https://clerk.quidsafe.uk; connect-src 'self' https://api.quidsafe.uk https://api-staging.quidsafe.uk https://api-dev.quidsafe.uk https://*.clerk.accounts.dev https://clerk.quidsafe.uk https://plausible.io; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://plausible.io https://*.clerk.accounts.dev https://clerk.quidsafe.uk https://js.stripe.com; frame-src https://js.stripe.com https://*.clerk.accounts.dev https://clerk.quidsafe.uk; connect-src 'self' https://api.quidsafe.uk https://api-staging.quidsafe.uk https://api-dev.quidsafe.uk https://quidsafe-api-dev.nathanlufc.workers.dev https://*.clerk.accounts.dev https://clerk.quidsafe.uk https://plausible.io; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+# ─── HTML entry points: NEVER cache ──────────────────────────────────
+# Prevents the "black screen after deploy" problem: stale index.html
+# references JS chunks that no longer exist post-deploy, so the app
+# fails to boot. Force every browser to ask for a fresh index.html
+# on each navigation.
+/
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+
+# ─── Hashed static assets: cache forever ─────────────────────────────
+# Filenames contain a content hash (e.g. entry-996102baba77...js) so
+# new deploys produce new filenames. Old JS is still fetchable by any
+# stale tab in the wild, and the new index.html references only the
+# new files. Safe to cache aggressively.
+/_expo/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ─── Service worker & manifest: short cache ──────────────────────────
+# Small files that describe the app; need to update within a session
+# but don't benefit from no-cache (they change rarely).
+/manifest.json
+  Cache-Control: public, max-age=3600
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400
