@@ -1,19 +1,31 @@
 name: Deploy Production
 
-# Production deploy gate.
+# Production deploy.
 #
-# Previously: merge to main → auto-deploy to prod (risky).
-# Now: merge to main → auto-deploy to staging (see deploy-staging-web.yml)
-#      → manual "Deploy to Production" button (GitHub Actions UI)
-#      → optional: require reviewer approval via GitHub Environment rules
+# - Worker + Web auto-deploy on every merge to main (no manual gate).
+#   Protection still exists: Cloudflare rollbacks are one click, and the
+#   manual workflow_dispatch path is kept for rolling a specific commit.
+# - D1 migrations are the ONLY step still behind a manual approval -
+#   they're the genuinely dangerous case (schema changes can brick prod).
+# - Mobile/iOS/Android is deployed separately via EAS Build, not this file.
 #
-# Set up approval requirement:
-#   GitHub > Settings > Environments > production > Required reviewers
-#
-# Migration safety: D1 migrations run as a SEPARATE job with their own approval.
-# Prod migrations need a second click — prevents accidental schema changes.
+# Rollback: `gh workflow run rollback.yml -f environment=production`
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'constants/**'
+      - 'worker/**'
+      - 'public/**'
+      - 'wrangler.worker.toml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'app.json'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       deploy_worker:
@@ -25,7 +37,7 @@ on:
         type: boolean
         default: true
       apply_migrations:
-        description: 'Apply D1 migrations (requires separate approval)'
+        description: 'Apply D1 migrations (manual approval required)'
         type: boolean
         default: false
       commit_sha:
@@ -42,7 +54,9 @@ jobs:
     name: Apply D1 Migrations (Production)
     runs-on: ubuntu-latest
     environment: production-migrations
-    if: inputs.apply_migrations == true
+    # Only runs when manually triggered with apply_migrations=true.
+    # Push events never touch migrations - schema changes require a deliberate click.
+    if: github.event_name == 'workflow_dispatch' && inputs.apply_migrations == true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,11 +83,12 @@ jobs:
   deploy-worker:
     name: Deploy Worker (Production)
     runs-on: ubuntu-latest
-    environment: production
     needs: [migrate-db]
+    # Push events: always deploy Worker. Manual: respect the deploy_worker flag.
+    # Wait for migrate-db only when it's running (not skipped).
     if: |
       always() &&
-      inputs.deploy_worker == true &&
+      (github.event_name == 'push' || inputs.deploy_worker == true) &&
       (needs.migrate-db.result == 'success' || needs.migrate-db.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
@@ -106,8 +121,7 @@ jobs:
   deploy-web:
     name: Deploy Web (Production)
     runs-on: ubuntu-latest
-    environment: production
-    if: inputs.deploy_web == true
+    if: github.event_name == 'push' || inputs.deploy_web == true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -149,4 +163,4 @@ jobs:
           echo "**Web:** https://quidsafe.uk" >> $GITHUB_STEP_SUMMARY
           echo "**API:** https://api.quidsafe.uk" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ inputs.commit_sha || github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }} · ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

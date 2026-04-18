@@ -14,6 +14,10 @@ const LIMITS: Record<string, RateLimitConfig> = {
   read: { windowMs: 60_000, maxRequests: 60 },
   write: { windowMs: 60_000, maxRequests: 20 },
   webhook: { windowMs: 60_000, maxRequests: 30 },
+  // Admin routes get the strictest limit. A legitimate admin refreshes
+  // occasionally; anything above a dozen req/min is almost certainly
+  // a bot or scanner probing the /admin/* path.
+  admin: { windowMs: 60_000, maxRequests: 12 },
 };
 
 type RateLimitEnv = { Bindings: Env; Variables: { userId: string; userEmail?: string } };
@@ -25,6 +29,10 @@ type RateLimitEnv = { Bindings: Env; Variables: { userId: string; userEmail?: st
 function getLimitType(method: string, path: string): string | null {
   // Health endpoint is never rate limited
   if (path === '/health') return null;
+
+  // Admin routes first - tighter than any other bucket.
+  // Applies to /admin/check too, so unauthenticated probing is capped.
+  if (path.startsWith('/admin/')) return 'admin';
 
   // Webhooks get their own bucket
   if (path.startsWith('/webhooks/')) return 'webhook';
@@ -127,7 +135,7 @@ export function rateLimit(): MiddlewareHandler<RateLimitEnv> {
     } catch (err) {
       // If rate limiting fails, fail closed for sensitive buckets, fail open for others.
       console.error('[RateLimit] D1 error:', err);
-      const sensitiveBuckets = new Set(['auth', 'billing', 'banking', 'mtd', 'write']);
+      const sensitiveBuckets = new Set(['auth', 'admin', 'billing', 'banking', 'mtd', 'write']);
       if (sensitiveBuckets.has(limitType)) {
         c.header('Retry-After', String(Math.ceil(config.windowMs / 1000)));
         return c.json(
