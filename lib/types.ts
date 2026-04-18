@@ -217,3 +217,43 @@ export interface ApiError {
     details?: Record<string, unknown>;
   };
 }
+
+// ─── Admin dashboard ──────────────────────────────────────
+export interface AdminEnvVarStatus {
+  key: string;
+  kind: 'secret' | 'var';
+  description: string;
+  present: boolean;
+  preview: string | null;
+}
+
+export interface AdminMigrationStatus {
+  filename: string;
+  applied: boolean;
+  appliedAt: string | null;
+}
+
+export interface AdminExternalServiceStatus {
+  name: string;
+  dashboardUrl: string;
+  configured: boolean;
+}
+
+export interface AdminSetupPayload {
+  environment: string;
+  generatedAt: string;
+  envVars: AdminEnvVarStatus[];
+  migrations: {
+    totalInRepo: number;
+    totalApplied: number;
+    latestApplied: string | null;
+    latestAppliedAt: string | null;
+    rows: AdminMigrationStatus[];
+  };
+  externalServices: AdminExternalServiceStatus[];
+  runtime: {
+    commitSha: string | null;
+    appUrl: string | null;
+    sandboxBanking: boolean;
+  };
+}

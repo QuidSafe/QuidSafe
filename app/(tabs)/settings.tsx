@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser, useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
-import { Shield, Lock, ChevronRight, ChevronDown, Plus, User, CreditCard, Bell, Landmark, RefreshCw, Eye, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp } from 'lucide-react-native';
+import { Shield, Lock, ChevronRight, ChevronDown, Plus, User, CreditCard, Bell, Landmark, RefreshCw, Eye, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp, Settings as SettingsIcon } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -24,6 +24,7 @@ import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import * as WebBrowser from 'expo-web-browser';
 import { useBankConnections, useSettings, useUpdateSettings, useDisconnectBank, useSyncBank, useBillingStatus } from '@/lib/hooks/useApi';
+import { useAdminAccess } from '@/lib/hooks/useAdmin';
 import { api } from '@/lib/api';
 import { getNotificationPermissionStatus } from '@/lib/notifications';
 import {
@@ -264,6 +265,10 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { data: bankData } = useBankConnections();
   const { data: billing } = useBillingStatus();
+  // Admin link is only shown if the Worker confirms ADMIN_EMAILS allowlist
+  // membership. Non-admins see nothing - no leakage, no 404 dead-ends.
+  const { data: adminCheck } = useAdminAccess();
+  const isAdminUser = adminCheck?.admin === true;
   const { data: settingsData } = useSettings();
   const updateSettings = useUpdateSettings();
   const syncBank = useSyncBank();
@@ -786,9 +791,20 @@ export default function SettingsScreen() {
             iconBg={Colors.muted}
             title="Privacy Policy"
             right={<Chevron />}
-            isLast
+            isLast={!isAdminUser}
             onPress={() => router.push('/privacy')}
           />
+          {isAdminUser ? (
+            <SettingsRow
+              icon={<SettingsIcon size={15} color={Colors.white} strokeWidth={1.5} />}
+              iconBg={Colors.electricBlue}
+              title="Admin · Setup"
+              subtitle="Env vars, migrations, service status"
+              right={<Chevron />}
+              isLast
+              onPress={() => router.push('/admin/setup' as any)}
+            />
+          ) : null}
         </Card>
 
         {/* Sign out button */}

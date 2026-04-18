@@ -2,6 +2,14 @@ name = "quidsafe-api"
 main = "worker/index.ts"
 compatibility_date = "2025-04-01"
 
+# ─── Admin dashboard ──────────────────────────────────────
+# ADMIN_EMAILS is a comma-separated allowlist for /admin/* routes.
+# It's treated as a secret (contains PII) - set per env via:
+#   wrangler secret put ADMIN_EMAILS --config wrangler.worker.toml --env dev
+#   wrangler secret put ADMIN_EMAILS --config wrangler.worker.toml --env staging
+#   wrangler secret put ADMIN_EMAILS --config wrangler.worker.toml --env production
+# Value example: "you@example.com,cofounder@example.com"
+
 # Daily bank transaction sync at 6:00 AM UTC
 [triggers]
 crons = ["0 6 * * *"]
