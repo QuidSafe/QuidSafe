@@ -197,9 +197,13 @@ app.use(
   cors({
     origin: (origin: string, c: { env: Env }) => {
       const isProd = c.env.ENVIRONMENT === 'production';
+      // staging.quidsafe.uk is a Cloudflare-Access-gated preview of prod code.
+      // It hits the prod API (same build, same env baked in), so we whitelist
+      // the staging origin in prod too. Safe because CF Access already gates
+      // who can be on that origin at all - only allowlisted admins.
       const allowed = isProd
-        ? ['https://quidsafe.uk', 'https://app.quidsafe.uk']
-        : ['http://localhost:8081', 'http://127.0.0.1:4173', 'https://quidsafe.uk', 'https://app.quidsafe.uk'];
+        ? ['https://quidsafe.uk', 'https://app.quidsafe.uk', 'https://staging.quidsafe.uk']
+        : ['http://localhost:8081', 'http://127.0.0.1:4173', 'https://quidsafe.uk', 'https://app.quidsafe.uk', 'https://staging.quidsafe.uk'];
       // Pages preview deployments only allowed against non-production API
       if (allowed.includes(origin)) return origin;
       if (!isProd && /^https:\/\/[a-z0-9-]+\.quidsafe\.pages\.dev$/.test(origin)) return origin;
