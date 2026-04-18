@@ -699,7 +699,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, alignSelf: 'flex-start',
     marginBottom: Spacing.lg,
   },
-  urgencyText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.warning, letterSpacing: 0.3 },
+  urgencyText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.warning, letterSpacing: 0.3 },
 
   heroTitle: {
     fontFamily: Fonts.lexend.semiBold, fontSize: 56, lineHeight: 60, letterSpacing: -1.5,
@@ -713,7 +713,7 @@ const s = StyleSheet.create({
   heroSubtitleMobile: { fontSize: 15, lineHeight: 22 },
 
   ctaRow: { gap: 10, marginBottom: Spacing.xl },
-  ctaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: colors.textMuted },
+  ctaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary },
 
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -729,38 +729,38 @@ const s = StyleSheet.create({
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999,
   },
-  trustText: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, color: colors.textSecondary },
+  trustText: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
 
   mockup: {
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border,
     borderRadius: 16, padding: 24,
   },
   mockupTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  mockupLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1 },
+  mockupLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1 },
   mockupDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success },
   mockupBig: { fontFamily: Fonts.mono.semiBold, fontSize: 44, color: Colors.white, letterSpacing: -1, marginTop: 8 },
-  mockupCaption: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  mockupCaption: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, marginTop: 4 },
   mockupSetAside: {
     marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.blueGlow, borderRadius: 10, padding: 14,
   },
-  mockupSetLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 0.6 },
+  mockupSetLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 0.6 },
   mockupSetVal: { fontFamily: Fonts.mono.semiBold, fontSize: 22, color: Colors.electricBlue, marginTop: 2 },
   mockupBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(0,200,83,0.12)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
   },
-  mockupBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.success },
+  mockupBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 14, color: Colors.success },
   mockupBreakdown: { marginTop: 16, gap: 6 },
   mockupRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  mockupRowLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: colors.textSecondary },
-  mockupRowVal: { fontFamily: Fonts.mono.regular, fontSize: 12, color: colors.text },
+  mockupRowLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  mockupRowVal: { fontFamily: Fonts.mono.regular, fontSize: 13, lineHeight: 18, color: colors.text },
 
   section: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xxl,
     maxWidth: 1200, width: '100%', alignSelf: 'center',
   },
-  sectionEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.electricBlue, letterSpacing: 1.4, marginBottom: 10 },
+  sectionEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 10 },
   sectionTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6, color: Colors.white, marginBottom: Spacing.sm, maxWidth: 720 },
   sectionSubtitle: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, lineHeight: 22, color: colors.textSecondary, maxWidth: 620, marginBottom: Spacing.lg },
 
@@ -773,8 +773,8 @@ const s = StyleSheet.create({
     width: 32, height: 32, borderRadius: 8, backgroundColor: Colors.blueGlow,
     alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
-  personaLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: Colors.white },
-  personaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  personaLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, lineHeight: 18, color: Colors.white },
+  personaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 4 },
 
   mtdBanner: {
     flexDirection: 'row', gap: Spacing.md, maxWidth: 1200, width: '100%',
@@ -804,8 +804,8 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,200,83,0.12)',
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  psLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: Colors.error, letterSpacing: 1, marginBottom: 4 },
-  psLabelGood: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: Colors.success, letterSpacing: 1, marginBottom: 4 },
+  psLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: Colors.error, letterSpacing: 1, marginBottom: 6 },
+  psLabelGood: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: Colors.success, letterSpacing: 1, marginBottom: 6 },
   psTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 18, color: Colors.white, marginBottom: 6 },
   psBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 
@@ -815,7 +815,7 @@ const s = StyleSheet.create({
   calcInputs: { gap: Spacing.md },
   calcInputsDesktop: { flex: 1 },
   calcField: { gap: 6 },
-  calcLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 },
+  calcLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 },
   calcInputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.darkGrey, borderWidth: 1, borderColor: colors.border,
@@ -826,19 +826,19 @@ const s = StyleSheet.create({
     flex: 1, fontFamily: Fonts.mono.semiBold, fontSize: 20, color: Colors.white, padding: 0,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' as unknown as undefined } : {}),
   },
-  calcHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, color: colors.textMuted },
+  calcHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
   calcOutput: {
     backgroundColor: Colors.black, borderWidth: 1, borderColor: Colors.electricBlue,
     borderRadius: 12, padding: Spacing.lg,
   },
   calcOutputDesktop: { flex: 1 },
-  calcOutLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 10, color: colors.textSecondary, letterSpacing: 1.2 },
+  calcOutLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1.2 },
   calcOutBig: { fontFamily: Fonts.mono.semiBold, fontSize: 52, color: Colors.white, letterSpacing: -1.5, marginTop: 4 },
-  calcOutHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  calcOutHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 8 },
   calcBreakdown: { marginTop: Spacing.md, gap: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: Spacing.md },
   calcBrRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  calcBrLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary },
-  calcBrVal: { fontFamily: Fonts.mono.regular, fontSize: 13, color: Colors.white },
+  calcBrLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  calcBrVal: { fontFamily: Fonts.mono.regular, fontSize: 13, lineHeight: 18, color: Colors.white },
   calcCta: { marginTop: Spacing.lg, alignSelf: 'stretch' },
 
   featuresSection: { backgroundColor: Colors.charcoal },
@@ -854,7 +854,7 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
   featureTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white, marginBottom: 4 },
-  featureBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary },
+  featureBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 
   cmpTable: {
     marginTop: Spacing.md, backgroundColor: Colors.charcoal,
@@ -864,7 +864,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: Colors.darkGrey,
   },
-  cmpHeadCell: { flex: 1, fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, color: colors.textSecondary, letterSpacing: 0.5 },
+  cmpHeadCell: { flex: 1, fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, lineHeight: 18, color: colors.textSecondary, letterSpacing: 0.5 },
   cmpHeadCellHighlight: { color: Colors.electricBlue },
   cmpTableRow: { flexDirection: 'row', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, alignItems: 'center' },
   cmpTableRowLast: { borderBottomWidth: 0 },
@@ -905,17 +905,17 @@ const s = StyleSheet.create({
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: Colors.electricBlue,
     borderRadius: 16, padding: Spacing.xl, maxWidth: 480,
   },
-  priceEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.electricBlue, letterSpacing: 1.2, marginBottom: 12 },
+  priceEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1.2, marginBottom: 12 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   priceCurrency: { fontFamily: Fonts.lexend.semiBold, fontSize: 28, color: Colors.white, marginRight: 2 },
   priceBig: { fontFamily: Fonts.mono.semiBold, fontSize: 64, color: Colors.white, letterSpacing: -2 },
   priceInterval: { fontFamily: Fonts.sourceSans.regular, fontSize: 16, color: colors.textSecondary },
-  priceSave: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, color: Colors.success, marginTop: 4 },
+  priceSave: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, lineHeight: 18, color: Colors.success, marginTop: 6 },
   priceIncludes: { marginTop: Spacing.lg, gap: 10 },
   priceIncludeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   priceIncludeText: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: colors.text },
   priceCta: { marginTop: Spacing.lg, alignSelf: 'stretch' },
-  priceFinePrint: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, lineHeight: 16, color: colors.textMuted, marginTop: Spacing.md, textAlign: 'center' },
+  priceFinePrint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary, marginTop: Spacing.md, textAlign: 'center' },
 
   objGrid: { gap: Spacing.md, marginTop: Spacing.md },
   objGridDesktop: { flexDirection: 'row', gap: Spacing.md },
@@ -936,13 +936,13 @@ const s = StyleSheet.create({
     paddingVertical: Spacing.lg, paddingHorizontal: Spacing.lg,
     borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border,
   },
-  proofText: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: colors.textSecondary },
+  proofText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
 
   finalCta: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xxl,
     alignItems: 'center', maxWidth: 720, width: '100%', alignSelf: 'center',
   },
-  finalEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, color: Colors.electricBlue, letterSpacing: 1.4, marginBottom: 12 },
+  finalEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 12 },
   finalTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 36, lineHeight: 42, letterSpacing: -0.8, color: Colors.white, textAlign: 'center', marginBottom: Spacing.md },
   finalBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 520 },
 
@@ -950,9 +950,9 @@ const s = StyleSheet.create({
   footerInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, width: '100%', alignSelf: 'center', marginBottom: Spacing.lg },
   footerInnerMobile: { flexDirection: 'column', alignItems: 'flex-start', gap: Spacing.lg },
   footerBrand: { gap: 6 },
-  footerTagline: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, color: colors.textMuted },
+  footerTagline: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
   footerLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.lg },
   footerLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary },
   footerBottom: { maxWidth: 1200, width: '100%', alignSelf: 'center', gap: 6, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  footerFine: { fontFamily: Fonts.sourceSans.regular, fontSize: 11, lineHeight: 16, color: colors.textMuted },
+  footerFine: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary },
 });

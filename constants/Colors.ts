@@ -10,8 +10,11 @@ export const Colors = {
   blueHover: '#0052CC',
   blueGlow: 'rgba(0, 102, 255, 0.15)',
   white: '#FFFFFF',
-  lightGrey: '#A0A0A0',
-  muted: '#666666',
+  // Bumped from #A0A0A0 (11:1) and #666666 (4.9:1 - fails WCAG AAA for
+  // non-large text on pure black). New values: #C4C4C4 (14.8:1, AAA all
+  // sizes) and #8A8A8A (6.6:1, AA for normal text, AAA for large).
+  lightGrey: '#C4C4C4',
+  muted: '#8A8A8A',
   success: '#00C853',
   warning: '#FF9500',
   error: '#FF3B30',
@@ -23,8 +26,8 @@ export const Colors = {
   info: '#0066FF',
   dark: {
     text: '#FFFFFF',
-    textSecondary: '#A0A0A0',
-    textMuted: '#666666',
+    textSecondary: '#C4C4C4',
+    textMuted: '#8A8A8A',
     background: '#000000',
     surface: '#0A0A0A',
     surfaceSecondary: '#1A1A1A',
@@ -53,8 +56,8 @@ export const colors = {
   border: '#2A2A2A',
   cardBorder: '#2A2A2A',
   text: '#FFFFFF',
-  textSecondary: '#A0A0A0',
-  textMuted: '#666666',
+  textSecondary: '#C4C4C4',
+  textMuted: '#8A8A8A',
   accent: '#0066FF',
   accentPressed: '#0052CC',
   accentGlow: 'rgba(0, 102, 255, 0.15)',
