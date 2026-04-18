@@ -21,6 +21,7 @@ import ExpenseRow, { HMRC_CATEGORY_LABELS, getCategoryMeta, formatDate, expenseR
 import AddExpenseModal from '@/components/ui/AddExpenseModal';
 import AddRecurringExpenseModal, { FREQUENCY_LABELS, FREQUENCY_COLORS } from '@/components/ui/AddRecurringExpenseModal';
 import ExpenseMetrics from '@/components/ui/ExpenseMetrics';
+import { TabHeader } from '@/components/ui/TabHeader';
 import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useExpenses, useDeleteExpense, useDashboard, useRecurringExpenses, useDeleteRecurringExpense } from '@/lib/hooks/useApi';
@@ -172,18 +173,20 @@ export default function ExpensesScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Expenses</Text>
-          <Pressable
-            style={({ pressed }) => [styles.fabButton, pressed && styles.pressed]}
-            onPress={() => setShowForm(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Add new expense"
-            accessibilityHint="Tap to open the add expense form"
-          >
-            <Plus size={16} color={Colors.white} strokeWidth={1.5} />
-          </Pressable>
-        </View>
+        <TabHeader
+          title="Expenses"
+          rightAction={
+            <Pressable
+              style={({ pressed }) => [styles.fabButton, pressed && styles.pressed]}
+              onPress={() => setShowForm(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Add new expense"
+              accessibilityHint="Tap to open the add expense form"
+            >
+              <Plus size={16} color={Colors.white} strokeWidth={1.5} />
+            </Pressable>
+          }
+        />
 
         {/* Metric Cards */}
         <ExpenseMetrics
@@ -410,15 +413,6 @@ const styles = StyleSheet.create({
   },
 
   /* Header */
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: Fonts.lexend.bold,
-    fontSize: 24,
-  },
   fabButton: {
     width: 40,
     height: 40,

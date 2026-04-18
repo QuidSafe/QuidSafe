@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { Shield, Lock, ChevronRight, ChevronDown, Check, Plus, User, LogOut, CreditCard, Bell, Landmark, RefreshCw, Eye, Trash2, Moon, Zap, Globe, PoundSterling, FileText, Download, Info, Clock, TrendingUp } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Card } from '@/components/ui/Card';
+import { TabHeader } from '@/components/ui/TabHeader';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import * as WebBrowser from 'expo-web-browser';
@@ -514,7 +515,9 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Settings</Text>
+        <View style={styles.headerSpacer}>
+          <TabHeader title="Settings" />
+        </View>
 
         {/* SECURITY */}
         <SectionLabel label="SECURITY" />
@@ -918,9 +921,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingBottom: Spacing.xxl + Spacing.lg,
   },
-  title: {
-    fontFamily: Fonts.lexend.bold,
-    fontSize: 28,
+  headerSpacer: {
     marginBottom: Spacing.xs,
   },
   sectionLabel: {

@@ -1,23 +1,41 @@
-import { View, Platform } from 'react-native';
+import type { FC } from 'react';
+import { View, Platform, StyleSheet } from 'react-native';
 import { Home, PoundSterling, CreditCard, BookOpen, Settings } from 'lucide-react-native';
 import { Tabs } from 'expo-router';
-import { colors } from '@/constants/Colors';
+import { colors, Colors } from '@/constants/Colors';
 import { useResponsiveLayout } from '@/lib/useResponsiveLayout';
 import { SidebarNav } from '@/components/ui/SidebarNav';
 import { Fonts } from '@/constants/Typography';
 
+type LucideIcon = FC<{ size?: number; color?: string; strokeWidth?: number }>;
+
+function TabIcon({ Icon, color, focused }: { Icon: LucideIcon; color: string; focused: boolean }) {
+  return (
+    <View style={iconStyles.wrap}>
+      <View style={[iconStyles.indicator, focused && iconStyles.indicatorActive]} />
+      <Icon size={22} color={color} strokeWidth={focused ? 2 : 1.5} />
+    </View>
+  );
+}
+
 export default function TabLayout() {
-  const { isDesktop, isWeb } = useResponsiveLayout();
+  const { isDesktop, isWeb, contentMaxWidth } = useResponsiveLayout();
 
   // On web desktop: sidebar navigation replaces the bottom tab bar
   const showSidebar = isWeb && isDesktop;
   const hideTabBar = showSidebar;
 
+  // On web desktop, cap content column width so wide monitors don't stretch
+  // screens edge-to-edge next to the 240px sidebar.
+  const columnStyle = showSidebar
+    ? { flex: 1, marginLeft: 240, maxWidth: contentMaxWidth, width: '100%' as const }
+    : { flex: 1 };
+
   return (
-    <View style={{ flex: 1, flexDirection: 'row' }}>
+    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.background }}>
       {showSidebar && <SidebarNav />}
 
-      <View style={{ flex: 1, marginLeft: showSidebar ? 240 : 0 }}>
+      <View style={columnStyle}>
         <Tabs
           screenOptions={{
             lazy: true,
@@ -27,19 +45,27 @@ export default function TabLayout() {
               ? { display: 'none' }
               : {
                   position: 'absolute' as const,
-                  backgroundColor: 'rgba(10,10,15,0.95)',
-                  borderTopColor: 'rgba(30,41,59,0.5)',
-                  paddingBottom: Platform.OS === 'web' ? 6 : 4,
-                  height: 60,
+                  borderTopColor: colors.border,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  paddingTop: 6,
+                  paddingBottom: Platform.OS === 'web' ? 8 : 6,
+                  height: 64,
                   elevation: 0,
-                  ...(Platform.OS === 'web' ? {
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                  } : {}),
+                  ...(Platform.OS === 'web'
+                    ? {
+                        backgroundColor: 'rgba(10,10,10,0.85)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                      }
+                    : {
+                        backgroundColor: colors.surface,
+                      }),
                 },
             tabBarLabelStyle: {
-              fontFamily: Fonts.sourceSans.regular,
-              fontSize: 10,
+              fontFamily: Fonts.sourceSans.semiBold,
+              fontSize: 11,
+              letterSpacing: 0.2,
+              marginTop: 2,
             },
             headerStyle: {
               backgroundColor: colors.surface,
@@ -56,7 +82,7 @@ export default function TabLayout() {
             options={{
               title: 'Home',
               tabBarAccessibilityLabel: 'Home tab - Dashboard overview',
-              tabBarIcon: ({ color }) => <Home size={22} color={color} strokeWidth={1.5} />,
+              tabBarIcon: ({ color, focused }) => <TabIcon Icon={Home} color={color} focused={focused} />,
             }}
           />
           <Tabs.Screen
@@ -64,7 +90,7 @@ export default function TabLayout() {
             options={{
               title: 'Income',
               tabBarAccessibilityLabel: 'Income tab - Track your earnings',
-              tabBarIcon: ({ color }) => <PoundSterling size={22} color={color} strokeWidth={1.5} />,
+              tabBarIcon: ({ color, focused }) => <TabIcon Icon={PoundSterling} color={color} focused={focused} />,
             }}
           />
           <Tabs.Screen
@@ -72,7 +98,7 @@ export default function TabLayout() {
             options={{
               title: 'Expenses',
               tabBarAccessibilityLabel: 'Expenses tab - Track your business expenses',
-              tabBarIcon: ({ color }) => <CreditCard size={22} color={color} strokeWidth={1.5} />,
+              tabBarIcon: ({ color, focused }) => <TabIcon Icon={CreditCard} color={color} focused={focused} />,
             }}
           />
           <Tabs.Screen
@@ -80,7 +106,7 @@ export default function TabLayout() {
             options={{
               title: 'Learn',
               tabBarAccessibilityLabel: 'Learn tab - Tax guides and tips',
-              tabBarIcon: ({ color }) => <BookOpen size={22} color={color} strokeWidth={1.5} />,
+              tabBarIcon: ({ color, focused }) => <TabIcon Icon={BookOpen} color={color} focused={focused} />,
             }}
           />
           <Tabs.Screen
@@ -88,7 +114,7 @@ export default function TabLayout() {
             options={{
               title: 'Settings',
               tabBarAccessibilityLabel: 'Settings tab - App preferences and account',
-              tabBarIcon: ({ color }) => <Settings size={22} color={color} strokeWidth={1.5} />,
+              tabBarIcon: ({ color, focused }) => <TabIcon Icon={Settings} color={color} focused={focused} />,
             }}
           />
         </Tabs>
@@ -96,3 +122,20 @@ export default function TabLayout() {
     </View>
   );
 }
+
+const iconStyles = StyleSheet.create({
+  wrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indicator: {
+    height: 3,
+    width: 18,
+    borderRadius: 2,
+    backgroundColor: 'transparent',
+    marginBottom: 4,
+  },
+  indicatorActive: {
+    backgroundColor: Colors.electricBlue,
+  },
+});
