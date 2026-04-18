@@ -137,8 +137,21 @@ app.use('*', async (c, next) => {
       validateEnv(c.env);
       envValidated = true;
     } catch (err) {
-      console.error('[Worker startup]', err);
-      return c.json({ error: { code: 'CONFIG_ERROR', message: 'Server misconfigured' } }, 500);
+      const msg = err instanceof Error ? err.message : String(err);
+      // Always log the specific missing vars so `wrangler tail` and the
+      // Cloudflare dashboard show exactly what to fix. Log twice so the
+      // message is impossible to miss - the opaque "Server misconfigured"
+      // response wasted real debugging time in the past.
+      console.error('[Worker startup] CONFIG_ERROR:', msg);
+      console.error('[Worker startup] Set missing secrets via: wrangler secret put <NAME> --config wrangler.worker.toml --env <env>');
+
+      // In non-production envs, return the actual missing-vars list so
+      // local/staging diagnosis is instant. Keep the generic message in
+      // production so we don't leak infra structure to scanners.
+      const body = c.env.ENVIRONMENT === 'production'
+        ? { error: { code: 'CONFIG_ERROR', message: 'Server misconfigured' } }
+        : { error: { code: 'CONFIG_ERROR', message: msg } };
+      return c.json(body, 500);
     }
   }
   await next();
