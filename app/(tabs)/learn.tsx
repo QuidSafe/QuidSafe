@@ -18,6 +18,7 @@ import { colors, Colors, Shadows, Spacing, BorderRadius } from '@/constants/Colo
 import { Fonts } from '@/constants/Typography';
 import { useArticles } from '@/lib/hooks/useApi';
 import type { Article, ArticleCategory } from '@/lib/types';
+import { TabHeader } from '@/components/ui/TabHeader';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -141,11 +142,11 @@ export default function LearnScreen() {
         <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
           <View style={styles.headingRow}>
             <View style={styles.goldAccentBar} />
-            <View>
-              <Text style={[styles.heading, { color: colors.text }]} accessibilityRole="header">Learn</Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Tax doesn&apos;t have to be scary. Quick reads to keep you confident.
-              </Text>
+            <View style={styles.headingText}>
+              <TabHeader
+                title="Learn"
+                subtitle="Tax doesn't have to be scary. Quick reads to keep you confident."
+              />
             </View>
           </View>
         </Animated.View>
@@ -335,16 +336,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.electricBlue,
     marginTop: 2,
   },
-  heading: {
-    fontSize: 24,
-    fontFamily: Fonts.lexend.semiBold,
-    lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 12,
-    fontFamily: Fonts.sourceSans.regular,
-    marginBottom: 4,
-    marginTop: 2,
+  headingText: {
+    flex: 1,
   },
   searchContainer: {
     flexDirection: 'row',

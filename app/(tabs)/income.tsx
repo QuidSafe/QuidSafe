@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/Card';
 import { IncomeSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CreateInvoiceModal } from '@/components/ui/CreateInvoiceModal';
+import { TabHeader } from '@/components/ui/TabHeader';
 import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
@@ -143,7 +144,9 @@ export default function IncomeScreen() {
         }
       >
         {/* Heading */}
-        <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">Income</Text>
+        <View style={styles.headerSpacer}>
+          <TabHeader title="Income" />
+        </View>
 
         {isLoading ? (
           <IncomeSkeleton />
@@ -412,10 +415,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl + Spacing.lg,
   },
 
-  // Heading
-  title: {
-    fontFamily: Fonts.lexend.semiBold,
-    fontSize: 24,
+  headerSpacer: {
     marginBottom: Spacing.md,
   },
 
