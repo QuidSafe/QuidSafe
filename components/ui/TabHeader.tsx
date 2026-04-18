@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
@@ -5,7 +6,7 @@ import { Fonts } from '@/constants/Typography';
 interface TabHeaderProps {
   title: string;
   subtitle?: string;
-  rightAction?: React.ReactNode;
+  rightAction?: ReactNode;
 }
 
 export function TabHeader({ title, subtitle, rightAction }: TabHeaderProps) {

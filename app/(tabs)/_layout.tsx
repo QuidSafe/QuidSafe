@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { View, Platform, StyleSheet } from 'react-native';
 import { Home, PoundSterling, CreditCard, BookOpen, Settings } from 'lucide-react-native';
 import { Tabs } from 'expo-router';
@@ -6,7 +7,7 @@ import { useResponsiveLayout } from '@/lib/useResponsiveLayout';
 import { SidebarNav } from '@/components/ui/SidebarNav';
 import { Fonts } from '@/constants/Typography';
 
-type LucideIcon = React.FC<{ size?: number; color?: string; strokeWidth?: number }>;
+type LucideIcon = FC<{ size?: number; color?: string; strokeWidth?: number }>;
 
 function TabIcon({ Icon, color, focused }: { Icon: LucideIcon; color: string; focused: boolean }) {
   return (
@@ -44,27 +45,27 @@ export default function TabLayout() {
               ? { display: 'none' }
               : {
                   position: 'absolute' as const,
-                  backgroundColor: colors.surface,
                   borderTopColor: colors.border,
                   borderTopWidth: StyleSheet.hairlineWidth,
                   paddingTop: 6,
                   paddingBottom: Platform.OS === 'web' ? 8 : 6,
                   height: 64,
                   elevation: 0,
-                  ...(Platform.OS === 'web' ? {
-                    backgroundColor: 'rgba(10,10,10,0.85)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                  } : {}),
+                  ...(Platform.OS === 'web'
+                    ? {
+                        backgroundColor: 'rgba(10,10,10,0.85)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                      }
+                    : {
+                        backgroundColor: colors.surface,
+                      }),
                 },
             tabBarLabelStyle: {
               fontFamily: Fonts.sourceSans.semiBold,
               fontSize: 11,
               letterSpacing: 0.2,
               marginTop: 2,
-            },
-            tabBarItemStyle: {
-              paddingTop: 2,
             },
             headerStyle: {
               backgroundColor: colors.surface,
