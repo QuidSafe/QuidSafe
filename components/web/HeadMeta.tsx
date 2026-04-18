@@ -4,7 +4,7 @@ export function HeadMeta() {
   return (
     <Head>
       <title>QuidSafe - Tax Tracking for UK Sole Traders | MTD Compliant</title>
-      <meta name="description" content="QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly what to set aside for HMRC. Making Tax Digital compliant. Free 14-day trial. £7.99/month." />
+      <meta name="description" content="QuidSafe connects to your bank via Open Banking, auto-categorises transactions with AI, and tells you exactly what to set aside for HMRC. Making Tax Digital compliant. Free 30-day trial. £7.99/month." />
       <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, TrueLayer, sole trader accounting" />
       <meta name="author" content="QuidSafe Ltd" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -14,7 +14,7 @@ export function HeadMeta() {
 
       <meta property="og:site_name" content="QuidSafe" />
       <meta property="og:title" content="QuidSafe - Smart Tax Tracking for UK Sole Traders" />
-      <meta property="og:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant. Free 14-day trial." />
+      <meta property="og:description" content="Connect your bank, auto-categorise expenses with AI, and know exactly what to set aside for HMRC. MTD compliant. Free 30-day trial." />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://quidsafe.uk" />
       <meta property="og:locale" content="en_GB" />
@@ -74,7 +74,7 @@ export function HeadMeta() {
           { "@type": "Question", "name": "What is QuidSafe?", "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is a tax tracking app built specifically for UK sole traders. It connects to your bank via Open Banking, auto-categorises your transactions with AI, and tells you exactly how much to set aside for HMRC - updated in real time." } },
           { "@type": "Question", "name": "Is my bank data safe with QuidSafe?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. QuidSafe uses AES-256 encryption (the same standard used by banks), Open Banking is regulated by the FCA, and we only ever have read-only access to your transactions. We can never move money or make payments from your account." } },
           { "@type": "Question", "name": "What is Making Tax Digital and do I need it?", "acceptedAnswer": { "@type": "Answer", "text": "Making Tax Digital (MTD) for Income Tax requires sole traders to keep digital records and submit quarterly updates to HMRC. It becomes mandatory from April 2026 for income over £50,000 and April 2027 for income over £30,000. QuidSafe handles this automatically." } },
-          { "@type": "Question", "name": "How much does QuidSafe cost?", "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £79.99/year (save 17%) - all prices include VAT. Every plan includes all features - AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT. Start with a free 14-day trial, no credit card required." } },
+          { "@type": "Question", "name": "How much does QuidSafe cost?", "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe is £7.99/month or £79.99/year (save 17%) - all prices include VAT. Every plan includes all features - AI categorisation, MTD submissions, unlimited bank accounts, and more. VAT-registered sole traders can reclaim VAT. Start with a free 30-day trial, no credit card required." } },
           { "@type": "Question", "name": "What banks does QuidSafe support?", "acceptedAnswer": { "@type": "Answer", "text": "QuidSafe supports all major UK banks through TrueLayer Open Banking, including Barclays, HSBC, Lloyds, NatWest, Monzo, Starling, Nationwide, Revolut, and many more." } }
         ]
       }) }} />
