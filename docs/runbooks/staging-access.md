@@ -1,11 +1,13 @@
 # Staging Access — Cloudflare Zero Trust
 
-Staging is gated by Cloudflare Access. Anyone hitting `staging.quidsafe.uk` or `api-staging.quidsafe.uk` gets a one-time-PIN login prompt **before** the request touches Pages or the Worker.
+The staging **web frontend** (`staging.quidsafe.uk`) is gated by Cloudflare Access. Anyone hitting it gets a one-time-PIN login prompt before Pages serves anything.
+
+The staging **API** (`api-staging.quidsafe.uk`) is NOT behind Access — it's protected the same way production is, via Clerk JWT verification in [worker/middleware/auth.ts](../../worker/middleware/auth.ts). We tried putting Access in front of the API too but it breaks browser `fetch()` calls from the staging web app (different hostname = no shared session cookie, cross-origin redirect to login can't be followed by JS). Keeping Access on the web only + Clerk on the API matches how real fintechs usually do this.
 
 ## Access policy
 
 - **Application**: QuidSafe Staging (type: self-hosted)
-- **Hostnames**: `staging.quidsafe.uk`, `api-staging.quidsafe.uk`
+- **Hostname**: `staging.quidsafe.uk`
 - **Identity provider**: One-time PIN (code emailed to the allowed address)
 - **Session duration**: 24h
 - **Allowlist**: single email, `nathanlufc@gmail.com`
@@ -37,12 +39,10 @@ Don't. If something's urgent and the Access gate is in the way, add your seconda
 
 ## DNS records
 
-Both hostnames' DNS records are auto-created:
+- `api-staging.quidsafe.uk` - auto-created by wrangler on `deploy --env staging` (via `custom_domain = true` in [wrangler.worker.toml](../../wrangler.worker.toml))
+- `staging.quidsafe.uk` - CNAME → `quidsafe.pages.dev`, proxied. Pages needs this to validate the custom domain before it'll serve SSL. If you add the custom domain via API rather than dashboard, create the CNAME manually.
 
-- `api-staging.quidsafe.uk` - created by wrangler on `deploy --env staging` (via `custom_domain = true` in [wrangler.worker.toml](../../wrangler.worker.toml))
-- `staging.quidsafe.uk` - created by Cloudflare Pages when you attach the custom domain in the Pages dashboard
-
-If either record is missing, the Access gate has nothing to gate in front of, so the hostname just 404s.
+If either record is missing, the hostname just 404s.
 
 ## Rotating the Cloudflare API token
 
