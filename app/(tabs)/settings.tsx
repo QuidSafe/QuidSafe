@@ -973,12 +973,14 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12.5,
+    fontSize: 14,
+    lineHeight: 20,
   },
   rowSubtitle: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 10.5,
-    marginTop: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 4,
   },
   activeBadge: {
     backgroundColor: 'rgba(0,200,83,0.15)',
@@ -1145,7 +1147,8 @@ const styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12.5,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },

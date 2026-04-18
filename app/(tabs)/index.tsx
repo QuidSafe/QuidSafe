@@ -378,11 +378,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12.5,
+    fontSize: 14,
+    lineHeight: 20,
   },
   name: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 28,
+    lineHeight: 34,
     marginTop: 2,
     letterSpacing: -0.3,
   },
@@ -413,7 +415,8 @@ const styles = StyleSheet.create({
   },
   healthText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 11.5,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   // Press state for interactive cards
@@ -441,8 +444,8 @@ const styles = StyleSheet.create({
   },
   insightText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12.5,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     flex: 1,
   },
 
@@ -516,8 +519,9 @@ const styles = StyleSheet.create({
   },
   chartSubtitle: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
   },
 
   taxHistoryLink: {
