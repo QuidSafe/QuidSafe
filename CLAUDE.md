@@ -239,6 +239,16 @@ QuidSafe/
 | `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_Y2xlcmsucXVpZHNhZmUudWsk` |
 | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` |
 
+## Staging Access Protection
+
+`staging.quidsafe.uk` and `api-staging.quidsafe.uk` are gated by **Cloudflare Access** (Zero Trust). Requests get a one-time-PIN prompt before reaching Pages or the Worker. Allowlist is managed in the Cloudflare dashboard (Zero Trust → Access → Applications → "QuidSafe Staging").
+
+- **DO NOT** disable the Access application to "unblock" something - add the email to the allowlist instead.
+- **DO NOT** put real customer data in the staging D1 database - use synthetic / reset at will.
+- Full runbook: [docs/runbooks/staging-access.md](docs/runbooks/staging-access.md).
+
+Web shows a yellow banner on non-prod builds via [components/ui/EnvBanner.tsx](components/ui/EnvBanner.tsx) - visual insurance against ever treating staging UI as real.
+
 ## Admin Surface
 
 Owner-only read-only dashboard at [`/admin/setup`](app/admin/setup.tsx) showing env-var presence, D1 migration status, and external service wiring. Worker gates `/admin/*` via an `ADMIN_EMAILS` allowlist and returns **404** (not 403) to non-admins so the surface isn't enumerable.
