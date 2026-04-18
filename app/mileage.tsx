@@ -113,7 +113,7 @@ export default function MileageScreen() {
           <View style={s.emptyCard}>
             <Car size={32} color={colors.textMuted} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>No trips logged yet</Text>
-            <Text style={s.emptyBody}>Tap "Log trip" to start tracking your business miles. HMRC approved rates applied automatically.</Text>
+            <Text style={s.emptyBody}>Tap &ldquo;Log trip&rdquo; to start tracking your business miles. HMRC approved rates applied automatically.</Text>
           </View>
         ) : (
           <View style={s.listCard}>
