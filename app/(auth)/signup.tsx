@@ -474,7 +474,8 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   // Fields
@@ -484,9 +485,10 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
+    lineHeight: 16,
     textTransform: 'uppercase' as const,
-    letterSpacing: 0.6,
-    marginBottom: 6,
+    letterSpacing: 0.8,
+    marginBottom: 8,
   },
   inputWrap: {
     flexDirection: 'row' as const,
@@ -506,7 +508,8 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     marginTop: 6,
   },
 
@@ -545,6 +548,7 @@ const styles = StyleSheet.create({
   error: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
+    lineHeight: 18,
     color: Colors.error,
     marginBottom: 8,
   },
@@ -559,16 +563,19 @@ const styles = StyleSheet.create({
   switchText: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
+    lineHeight: 20,
   },
   switchLink: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    lineHeight: 20,
   },
 
   // Footer
   legalText: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 12,
+    lineHeight: 18,
     textAlign: 'center' as const,
     marginTop: 32,
     maxWidth: 400,
