@@ -149,7 +149,8 @@ const styles = StyleSheet.create({
   },
   monthlyLabel: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     color: Colors.lightGrey,
     marginBottom: 4,
   },
@@ -178,7 +179,8 @@ const styles = StyleSheet.create({
   },
   monthlyBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
     color: Colors.success,
   },
 
