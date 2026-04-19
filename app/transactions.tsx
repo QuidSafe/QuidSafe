@@ -16,12 +16,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
-import { Wand2, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { Wand2, AlertCircle, CheckCircle, Lightbulb, Landmark } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { colors, Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
+import { useTransactions, useUncategorised, useOverrideCategory, useBankConnections } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useToast } from '@/components/ui/Toast';
@@ -156,6 +157,37 @@ export default function TransactionsScreen() {
   );
   const uncategorisedQuery = useUncategorised();
   const overrideMutation = useOverrideCategory();
+  const { data: connectionsData } = useBankConnections();
+  const hasBankConnection = (connectionsData?.connections?.length ?? 0) > 0;
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnectBank = useCallback(async () => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    try {
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
+    } catch {
+      Alert.alert('Connection error', 'Could not start bank connection. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [isConnecting]);
+
+  const handleSyncNow = useCallback(async () => {
+    const connections = connectionsData?.connections ?? [];
+    if (connections.length === 0) return;
+    try {
+      await api.syncBank(connections[0].id);
+      transactionsQuery.refetch();
+    } catch {
+      Alert.alert('Sync error', 'Could not sync transactions. Please try again.');
+    }
+  }, [connectionsData, transactionsQuery]);
 
   const isUncategorisedFilter = activeFilter === 'uncategorised';
   const isLoading = isUncategorisedFilter ? uncategorisedQuery.isLoading : transactionsQuery.isLoading;
@@ -395,9 +427,40 @@ export default function TransactionsScreen() {
             }
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                  No transactions found for this filter.
-                </Text>
+                {activeFilter === 'all' ? (
+                  <>
+                    <View style={[styles.emptyIcon, { backgroundColor: Colors.accent + '15' }]}>
+                      <Landmark size={40} color={Colors.accent} strokeWidth={1.5} />
+                    </View>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                      {hasBankConnection ? 'No transactions yet' : 'Connect your bank to see transactions'}
+                    </Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                      {hasBankConnection
+                        ? 'Your bank is connected. Sync to pull in the latest transactions.'
+                        : 'Link your bank via Open Banking and transactions import automatically.'}
+                    </Text>
+                    <Pressable
+                      onPress={hasBankConnection ? handleSyncNow : handleConnectBank}
+                      disabled={isConnecting}
+                      style={({ pressed }) => [
+                        styles.emptyCtaButton,
+                        { backgroundColor: Colors.accent },
+                        pressed && PressedState,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={hasBankConnection ? 'Sync now' : 'Connect your bank'}
+                    >
+                      <Text style={styles.emptyCtaButtonText}>
+                        {isConnecting ? 'Connecting...' : hasBankConnection ? 'Sync now' : 'Connect bank'}
+                      </Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                    No transactions found for this filter.
+                  </Text>
+                )}
               </View>
             }
           />
@@ -718,6 +781,19 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     textAlign: 'center',
+    maxWidth: 300,
+    lineHeight: 21,
+  },
+  emptyCtaButton: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    marginTop: Spacing.md,
+  },
+  emptyCtaButtonText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 15,
+    color: Colors.white,
   },
 
   // Modal

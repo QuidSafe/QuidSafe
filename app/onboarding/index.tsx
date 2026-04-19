@@ -26,6 +26,7 @@ import {
   BusinessIllustration,
   BankIllustration,
 } from '@/components/ui/OnboardingIllustrations';
+import { hapticSuccess } from '@/lib/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAX_SLIDE_WIDTH = 480;
@@ -383,6 +384,7 @@ export default function OnboardingScreen() {
 
   const handleSkip = async () => {
     await api.completeOnboarding().catch(() => {});
+    hapticSuccess();
     router.replace('/(tabs)');
   };
 

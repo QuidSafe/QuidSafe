@@ -7,8 +7,11 @@ import {
   RefreshControl,
   TextInput,
   Pressable,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 import { ArrowUp, ArrowDown, Search, FileText, ChevronRight, Plus, Wallet } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card } from '@/components/ui/Card';
@@ -20,6 +23,7 @@ import { colors, Colors, Spacing, BorderRadius, Shadows } from '@/constants/Colo
 import { Fonts } from '@/constants/Typography';
 import { Car, Paintbrush, Laptop, Briefcase, PoundSterling } from 'lucide-react-native';
 import { useDashboard, useQuarterlyBreakdown } from '@/lib/hooks/useApi';
+import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
 
 type FilterKey = 'all' | 'income' | 'expenses' | 'this_month';
@@ -81,6 +85,24 @@ export default function IncomeScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
   const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnectBank = useCallback(async () => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    try {
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
+    } catch {
+      Alert.alert('Connection error', 'Could not start bank connection. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [isConnecting]);
 
   const income = dashboard?.income;
   const tax = dashboard?.tax;
@@ -151,13 +173,23 @@ export default function IncomeScreen() {
         {isLoading ? (
           <IncomeSkeleton />
         ) : grossIncome === 0 && sources.length === 0 ? (
-          <EmptyState
-            icon={Wallet}
-            title="No income recorded yet"
-            subtitle="Connect your bank account or create your first invoice to start tracking income."
-            actionLabel="Create Invoice"
-            onAction={() => setInvoiceModalVisible(true)}
-          />
+          <View>
+            <EmptyState
+              icon={Wallet}
+              title="No income recorded yet"
+              subtitle="Connect your bank and transactions will import automatically. Or create an invoice to log income manually."
+              actionLabel={isConnecting ? 'Connecting...' : 'Connect Bank'}
+              onAction={handleConnectBank}
+            />
+            <Pressable
+              style={({ pressed }) => [styles.secondaryCtaLink, pressed && { opacity: 0.7 }]}
+              onPress={() => setInvoiceModalVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Create an invoice instead"
+            >
+              <Text style={styles.secondaryCtaLinkText}>Or create an invoice</Text>
+            </Pressable>
+          </View>
         ) : (
           <>
             {/* Top summary card */}
@@ -676,6 +708,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.large,
+  },
+
+  // Secondary CTA link under EmptyState
+  secondaryCtaLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    marginTop: -Spacing.md,
+  },
+  secondaryCtaLinkText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+    color: Colors.electricBlue,
+    textDecorationLine: 'underline',
   },
 
   // View Invoices button
