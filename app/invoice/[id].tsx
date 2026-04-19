@@ -421,11 +421,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   amountLabel: {
-    fontFamily: Fonts.sourceSans.regular,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
+    lineHeight: 16,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
   amountValue: {
     fontFamily: Fonts.mono.semiBold,
@@ -444,15 +445,17 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   detailLabel: {
-    fontFamily: Fonts.sourceSans.regular,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
+    lineHeight: 14,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
   detailValue: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 15,
+    lineHeight: 20,
   },
 
   // Actions

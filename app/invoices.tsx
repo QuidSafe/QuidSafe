@@ -378,8 +378,9 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
-    color: '#666666',
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSecondary,
   },
   filterPillTextActive: {
     color: Colors.white,
@@ -397,11 +398,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontFamily: Fonts.sourceSans.regular,
-    fontSize: 10,
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    lineHeight: 14,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
+    letterSpacing: 0.8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   statValue: {
@@ -438,6 +440,7 @@ const styles = StyleSheet.create({
   invoiceDesc: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 13,
+    lineHeight: 18,
   },
   invoiceAmount: {
     fontFamily: Fonts.mono.semiBold,
@@ -452,6 +455,8 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.4,
   },
   invoiceBottomRow: {
     flexDirection: 'row' as const,
@@ -460,7 +465,8 @@ const styles = StyleSheet.create({
   },
   dueDate: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
   rowActions: {
     flexDirection: 'row' as const,
