@@ -455,6 +455,7 @@ const styles = StyleSheet.create({
   yoyText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
+    lineHeight: 16,
   },
   netAmount: {
     fontFamily: Fonts.mono.semiBold,
@@ -464,7 +465,8 @@ const styles = StyleSheet.create({
   },
   afterExpenses: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   // Chart
@@ -497,8 +499,9 @@ const styles = StyleSheet.create({
   },
   chartLabel: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 9,
-    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 14,
+    marginTop: 6,
   },
 
   // Legend
@@ -520,19 +523,23 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
-  // Section header
+  // Section header - more air, bigger title matches dashboard pattern
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    marginTop: Spacing.md + 4,
     marginBottom: Spacing.sm,
   },
   sectionTitle: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 16,
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   sourceBadge: {
     backgroundColor: Colors.midGrey,
@@ -542,7 +549,8 @@ const styles = StyleSheet.create({
   },
   sourceBadgeText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   // Search
@@ -585,7 +593,8 @@ const styles = StyleSheet.create({
   },
   filterPillText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     color: Colors.muted,
   },
   filterPillTextActive: {
@@ -629,7 +638,8 @@ const styles = StyleSheet.create({
   },
   sourceSubtitle: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
   sourceAmounts: {
     alignItems: 'flex-end',
@@ -637,11 +647,13 @@ const styles = StyleSheet.create({
   sourceAmount: {
     fontFamily: Fonts.lexend.semiBold,
     fontSize: 14,
+    lineHeight: 18,
     marginBottom: 2,
   },
   sourcePercent: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   // Empty state
