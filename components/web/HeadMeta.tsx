@@ -9,7 +9,7 @@ export function HeadMeta() {
       <meta name="author" content="QuidSafe Ltd" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="theme-color" content="#FFFFFF" />
-      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
       <link rel="canonical" href="https://quidsafe.uk" />
 
       <meta property="og:site_name" content="QuidSafe" />
@@ -95,7 +95,7 @@ export function HeadMeta() {
       <script defer data-domain="quidsafe.uk" src="https://plausible.io/js/script.js" />
 
       <link
-        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet"
       />
     </Head>

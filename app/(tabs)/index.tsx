@@ -128,10 +128,12 @@ export default function DashboardScreen() {
     }
   };
 
+  const isMobileWeb = Platform.OS === 'web' && width < 768;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, isMobileWeb && styles.scrollMobileWeb]}
         showsVerticalScrollIndicator={false}
         accessibilityRole="list"
         accessibilityLabel="Dashboard"
@@ -373,6 +375,13 @@ const styles = StyleSheet.create({
     maxWidth: 1400,
     width: '100%',
     alignSelf: 'center',
+  },
+  // Mobile Safari: its dynamic URL bar overlays the top of the viewport,
+  // and the bottom chrome clips the tab bar. Add breathing room so the
+  // greeting and the last tab row stay fully visible.
+  scrollMobileWeb: {
+    paddingTop: Spacing.lg + 24,
+    paddingBottom: Spacing.xxl + Spacing.xxl,
   },
 
   // Desktop two-column grid (activated at >=1024px viewport)
