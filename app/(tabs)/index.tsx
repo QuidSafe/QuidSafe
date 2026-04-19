@@ -289,20 +289,18 @@ export default function DashboardScreen() {
               {/* Quarter Timeline */}
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Tax year quarters</Text>
+                <Pressable
+                  onPress={() => router.push('/tax-history')}
+                  accessibilityRole="link"
+                  accessibilityLabel="View full tax history"
+                  hitSlop={8}
+                >
+                  <Text style={styles.sectionLink}>View history →</Text>
+                </Pressable>
               </View>
               <Card>
                 <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
               </Card>
-              <Pressable
-                style={({ pressed }) => [styles.taxHistoryLink, { borderColor: colors.border }, pressed && styles.pressedCard]}
-                onPress={() => router.push('/tax-history')}
-                accessibilityRole="button"
-                accessibilityLabel="View full tax history"
-              >
-                <Clock size={14} color="#0066FF" strokeWidth={1.5} style={{ marginRight: 8 }} />
-                <Text style={[styles.taxHistoryText, { color: colors.text }]}>View Tax History</Text>
-                <ChevronRight size={11} color={colors.textSecondary} strokeWidth={1.5} />
-              </Pressable>
 
               {/* Quick links to tools */}
               <View style={styles.sectionHeader}>
@@ -495,17 +493,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  // Section headers
+  // Section headers - room to breathe between groups
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.sm,
+    alignItems: 'baseline',
+    marginTop: Spacing.md + 4,
+    marginBottom: 4,
   },
   sectionHeading: {
     fontFamily: Fonts.lexend.semiBold,
-    fontSize: 16,
-    letterSpacing: -0.2,
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: -0.3,
+  },
+  sectionLink: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: Colors.electricBlue,
   },
 
   // Income trend chart
@@ -524,37 +530,31 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  taxHistoryLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    marginTop: 8,
-    borderWidth: 1,
-    borderRadius: BorderRadius.card,
-  },
-  taxHistoryText: {
-    fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 13,
-    flex: 1,
-  },
+  // Quick links - 2-column grid so it feels like a dashboard,
+  // not a list. On narrow widths, flexWrap keeps things readable.
   quickLinks: {
-    gap: 4,
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: Spacing.sm,
   },
   quickLink: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    gap: 12,
+    gap: 10,
     backgroundColor: Colors.charcoal,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: Spacing.md,
+    flexBasis: '48%',
+    flexGrow: 1,
+    minWidth: 160,
   },
   quickLinkText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    lineHeight: 18,
     color: colors.text,
     flex: 1,
   },
