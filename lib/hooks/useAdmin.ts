@@ -11,7 +11,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
-import type { AdminSetupPayload } from '../types';
+import type { AdminSetupPayload, AdminHubPayload } from '../types';
 
 export type EnvKey = 'production' | 'staging' | 'dev';
 
@@ -82,6 +82,39 @@ export function useEnvSetup(env: EnvDescriptor) {
           return { status: 'not-admin' } as const;
         }
         // Sanitise before surfacing to the UI: first line only, max 200 chars.
+        const msg = rawMsg.split('\n')[0].slice(0, 200);
+        return { status: 'unreachable', message: msg } as const;
+      }
+    },
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+export type EnvHubResult =
+  | { status: 'ok'; payload: AdminHubPayload }
+  | { status: 'not-admin' }
+  | { status: 'unreachable'; message: string }
+  | { status: 'loading' };
+
+/** Business-at-a-glance snapshot for a specific env. Same error-state
+ *  contract as useEnvSetup so the UI can handle them identically. */
+export function useEnvHub(env: EnvDescriptor) {
+  const { getToken, isSignedIn } = useAuth();
+  return useQuery<EnvHubResult>({
+    queryKey: ['admin', 'hub', env.key],
+    enabled: isSignedIn === true,
+    queryFn: async () => {
+      try {
+        const token = await getToken();
+        const payload = await fetchAdmin<AdminHubPayload>(env.apiUrl, '/admin/hub', token);
+        return { status: 'ok', payload } as const;
+      } catch (err) {
+        const rawMsg = err instanceof Error ? err.message : String(err);
+        const status = (err as Error & { status?: number }).status;
+        if (status === 404 || /not found/i.test(rawMsg)) {
+          return { status: 'not-admin' } as const;
+        }
         const msg = rawMsg.split('\n')[0].slice(0, 200);
         return { status: 'unreachable', message: msg } as const;
       }

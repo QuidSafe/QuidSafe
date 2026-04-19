@@ -259,3 +259,56 @@ export interface AdminSetupPayload {
     sandboxBanking: boolean;
   };
 }
+
+// ─── Admin hub (business-at-a-glance) ───────────────────────
+// Server shape is the source of truth. See worker/admin/hub.ts.
+
+export interface AdminHubKpi {
+  label: string;
+  value: number;
+  unitPrefix?: string;
+  unitSuffix?: string;
+}
+
+export interface AdminHubIncident {
+  severity: 'critical' | 'warning';
+  label: string;
+  detail: string;
+}
+
+export interface AdminHubFunnelStep {
+  label: string;
+  count: number;
+}
+
+export interface AdminHubJobStatus {
+  name: string;
+  lastStartedAt: string | null;
+  lastFinishedAt: string | null;
+  lastDurationMs: number | null;
+  lastStatus: 'success' | 'failed' | 'running' | null;
+  lastError: string | null;
+  staleHours: number | null;
+}
+
+export interface AdminHubPayload {
+  environment: string;
+  generatedAt: string;
+  kpis: AdminHubKpi[];
+  incidents: AdminHubIncident[];
+  funnel: AdminHubFunnelStep[];
+  subsByStatus: { status: string; count: number }[];
+  bankHealth: {
+    activeCount: number;
+    expiredCount: number;
+    neverSyncedCount: number;
+    stale24hCount: number;
+  };
+  mtdHealth: {
+    submittedCount: number;
+    draftCount: number;
+    rejectedCount: number;
+  };
+  jobs: AdminHubJobStatus[];
+  opex: { service: string; monthlyPence: number; note: string }[];
+}

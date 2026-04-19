@@ -62,6 +62,7 @@ export const MIGRATION_FILES: string[] = [
   '019_invoice_numbers.sql',
   '020_clients.sql',
   '021_admin_access_log.sql',
+  '022_admin_hub_metrics.sql',
 ];
 
 export interface ExternalService {

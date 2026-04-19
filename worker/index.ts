@@ -5,6 +5,7 @@ import { clerkAuth } from './middleware/auth';
 import { adminAuth } from './middleware/adminAuth';
 import { rateLimit, purgeExpiredRateLimits } from './middleware/rateLimit';
 import { getSetupPayload } from './admin/setup';
+import { getHubPayload } from './admin/hub';
 import {
   getConnectUrl,
   exchangeCode,
@@ -1908,6 +1909,10 @@ authed.get('/admin/setup', async (c) => {
   const payload = await getSetupPayload(c.env);
   return c.json(payload);
 });
+authed.get('/admin/hub', async (c) => {
+  const payload = await getHubPayload(c.env);
+  return c.json(payload);
+});
 
 app.route('/', authed);
 
@@ -1927,7 +1932,50 @@ app.onError((err, c) => {
 
 // ─── Scheduled Handler (Cron) ────────────────────────────
 // Daily sync at 6:00 AM - configured in wrangler.toml [triggers]
+//
+// Wrapped in a scheduled_jobs logger so the admin hub can show the last
+// successful run. We don't instrument every internal phase (bank sync,
+// reminders, grace-period, etc.) - one row for the whole run is enough
+// to detect "cron hasn't fired in 26h" which is the only signal we act on.
 async function scheduled(_event: { scheduledTime: number; cron: string }, env: Env) {
+  const jobName = 'daily_cron';
+  const startMs = Date.now();
+  const startedAtIso = new Date(startMs).toISOString();
+  try {
+    await env.DB.prepare(
+      `INSERT INTO scheduled_jobs (job_name, last_started_at, last_status, run_count, updated_at)
+       VALUES (?, ?, 'running', 1, datetime('now'))
+       ON CONFLICT(job_name) DO UPDATE SET
+         last_started_at = excluded.last_started_at,
+         last_status = 'running',
+         run_count = scheduled_jobs.run_count + 1,
+         updated_at = datetime('now')`
+    ).bind(jobName, startedAtIso).run();
+  } catch (logErr) {
+    console.warn('[Cron] scheduled_jobs start log skipped:', logErr instanceof Error ? logErr.message : logErr);
+  }
+
+  let jobStatus: 'success' | 'failed' = 'success';
+  let jobError: string | null = null;
+  try {
+    await runScheduledWork(env);
+  } catch (err) {
+    jobStatus = 'failed';
+    jobError = err instanceof Error ? err.message : String(err);
+    console.error('[Cron] Unhandled failure:', err);
+  } finally {
+    const durationMs = Date.now() - startMs;
+    try {
+      await env.DB.prepare(
+        `UPDATE scheduled_jobs SET last_finished_at = datetime('now'), last_duration_ms = ?, last_status = ?, last_error = ?, updated_at = datetime('now') WHERE job_name = ?`
+      ).bind(durationMs, jobStatus, jobError, jobName).run();
+    } catch (logErr) {
+      console.warn('[Cron] scheduled_jobs end log skipped:', logErr instanceof Error ? logErr.message : logErr);
+    }
+  }
+}
+
+async function runScheduledWork(env: Env) {
   console.log(`[Cron] Daily sync triggered at ${new Date().toISOString()}`);
   const config = getTrueLayerConfig(env);
 
