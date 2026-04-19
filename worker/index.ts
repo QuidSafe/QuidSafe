@@ -660,6 +660,7 @@ authed.get('/dashboard', async (c) => {
     bankCount,
     overdueInvoices,
     byMonthRows,
+    lastSync,
   ] = await Promise.all([
     queryOne<{ name: string; subscription_tier: string }>(
       c.env.DB,
@@ -699,6 +700,11 @@ authed.get('/dashboard', async (c) => {
     query<{ month: string; income: number }>(
       c.env.DB,
       'SELECT strftime(\'%Y-%m\', transaction_date) as month, SUM(amount) as income FROM transactions WHERE user_id = ? AND is_income = 1 AND transaction_date >= date(\'now\', \'-12 months\') GROUP BY month ORDER BY month',
+      [userId],
+    ),
+    queryOne<{ last_synced_at: string | null }>(
+      c.env.DB,
+      'SELECT MAX(last_synced_at) as last_synced_at FROM bank_connections WHERE user_id = ? AND active = 1',
       [userId],
     ),
   ]);
@@ -774,6 +780,7 @@ authed.get('/dashboard', async (c) => {
     income: { total: totalIncome, bySource, byMonth },
     quarters: { current: { taxYear, quarter } },
     actions,
+    lastSyncedAt: lastSync?.last_synced_at ?? null,
   });
 });
 

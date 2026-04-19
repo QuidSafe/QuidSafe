@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, type ComponentRef } from 'react';
 import {
   StyleSheet, View, Text, Pressable, Animated, Platform, useWindowDimensions, TextInput, ScrollView,
 } from 'react-native';
@@ -98,9 +98,10 @@ const numericOnly = (v: string) => v.replace(/[^\d.]/g, '');
 
 // ─── Sub-components ───────────────────────────────────────
 
-function StickyNav({ onCta, onSignIn, scrollY, isDesktop }: {
+function StickyNav({ onCta, onSignIn, onLogoPress, scrollY, isDesktop }: {
   onCta: () => void;
   onSignIn: () => void;
+  onLogoPress: () => void;
   scrollY: Animated.Value;
   isDesktop: boolean;
 }) {
@@ -117,7 +118,14 @@ function StickyNav({ onCta, onSignIn, scrollY, isDesktop }: {
   return (
     <Animated.View style={[s.nav, { backgroundColor: bg, borderBottomColor: border }]}>
       <View style={[s.navInner, !isDesktop && s.navInnerMobile]}>
-        <BrandLogo size={22} textSize={18} />
+        <Pressable
+          onPress={onLogoPress}
+          hitSlop={8}
+          accessibilityRole="link"
+          accessibilityLabel="QuidSafe home"
+        >
+          <BrandLogo size={22} textSize={18} />
+        </Pressable>
         <View style={s.navRight}>
           {isDesktop && (
             <Pressable hitSlop={8} onPress={onSignIn} accessibilityRole="button" accessibilityLabel="Log in">
@@ -637,16 +645,23 @@ export default function LandingScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
+  const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [annual, setAnnual] = useState(true);
 
   const handleCta = useCallback(() => router.push('/(auth)/signup'), [router]);
   const handleSignIn = useCallback(() => router.push('/(auth)/login'), [router]);
+  const handleLogoPress = useCallback(() => {
+    // Animated.ScrollView's ref exposes the native component; scrollTo lives on it.
+    const node = scrollRef.current as unknown as { scrollTo?: (opts: { y: number; animated: boolean }) => void };
+    node?.scrollTo?.({ y: 0, animated: true });
+  }, []);
 
   return (
     <View style={s.root}>
-      <StickyNav onCta={handleCta} onSignIn={handleSignIn} scrollY={scrollY} isDesktop={isDesktop} />
+      <StickyNav onCta={handleCta} onSignIn={handleSignIn} onLogoPress={handleLogoPress} scrollY={scrollY} isDesktop={isDesktop} />
       <Animated.ScrollView
+        ref={scrollRef}
         contentContainerStyle={[s.scroll, isDesktop && s.scrollDesktop]}
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}

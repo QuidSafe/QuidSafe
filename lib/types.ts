@@ -185,6 +185,8 @@ export interface DashboardData {
   income: IncomeBreakdown;
   actions: ActionItem[];
   quarters: QuarterTimeline;
+  /** Most recent bank_connections.last_synced_at across all active connections (ISO 8601), or null when no active connection. */
+  lastSyncedAt: string | null;
 }
 
 export interface Settings {

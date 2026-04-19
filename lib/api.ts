@@ -98,6 +98,7 @@ class ApiClient {
       };
       quarters: { current: { taxYear: string; quarter: number } };
       actions: { id: string; type: string; title: string; subtitle: string; priority: number }[];
+      lastSyncedAt: string | null;
     }>('/dashboard');
   }
 

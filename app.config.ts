@@ -48,8 +48,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     shortName: "QuidSafe",
     description:
       "Connect your bank, auto-categorise expenses, and know exactly what to set aside for HMRC. The smart tax tracker for UK sole traders.",
-    themeColor: "#000000",
-    backgroundColor: "#000000",
+    // Web uses the light palette - keep address bar and splash in sync.
+    themeColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     lang: "en-GB",
   },
   plugins: ["expo-router", "expo-secure-store"],

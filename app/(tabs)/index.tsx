@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform, BackHandler } from 'react-native';
+import { useState, useEffect, useMemo } from 'react';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Platform, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
@@ -13,6 +13,7 @@ import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { TaxHeroCard } from '@/components/ui/TaxHeroCard';
 import { WelcomeState } from '@/components/ui/WelcomeState';
 import { IncomeBySource } from '@/components/ui/IncomeBySource';
+import { FadeIn } from '@/components/ui/FadeIn';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard } from '@/lib/hooks/useApi';
@@ -58,20 +59,13 @@ export default function DashboardScreen() {
 
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Single subtle fade-in for the whole page (200ms, not 1.5s stagger)
-  const pageFade = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (isLoading) return;
-    Animated.timing(pageFade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
   const income = data?.income;
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
+  const lastSyncedAt = data?.lastSyncedAt ?? null;
   const isWelcome = (income?.total ?? 0) === 0 && (!actions || actions.length === 0);
 
   // Memoise derived income chart data - was recomputing on every render
@@ -140,11 +134,7 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />}
       >
         {/* Header / Greeting */}
-        <Animated.View
-          style={[styles.header, { opacity: pageFade }]}
-          accessible={true}
-          accessibilityRole="header"
-        >
+        <FadeIn style={styles.header} translateY={4} duration={220}>
           <View style={styles.headerLeft}>
             {firstName ? (
               <>
@@ -183,7 +173,7 @@ export default function DashboardScreen() {
               </View>
             ) : null}
           </View>
-        </Animated.View>
+        </FadeIn>
 
         {isLoading ? (
           <DashboardSkeleton />
@@ -192,13 +182,13 @@ export default function DashboardScreen() {
         ) : (
           <>
             {/* Hero Tax Card */}
-            <View>
-              <TaxHeroCard tax={tax} />
-            </View>
+            <FadeIn delay={40}>
+              <TaxHeroCard tax={tax} lastSyncedAt={lastSyncedAt} />
+            </FadeIn>
 
             {/* Income Trend Chart */}
             {incomeChart && (
-              <View>
+              <FadeIn delay={120}>
                 <Card>
                   <View style={styles.chartHeader}>
                     <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
@@ -208,10 +198,10 @@ export default function DashboardScreen() {
                   </View>
                   <MiniChart data={incomeChart.data} color="#00C853" height={72} />
                 </Card>
-              </View>
+              </FadeIn>
             )}
 
-            <View>
+            <FadeIn delay={200}>
               {/* Plain English Insight */}
               {tax?.plainEnglish ? (
                 <Pressable
@@ -340,7 +330,7 @@ export default function DashboardScreen() {
                   </Card>
                 </>
               )}
-            </View>
+            </FadeIn>
           </>
         )}
       </ScrollView>

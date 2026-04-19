@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 120,
     borderRadius: BorderRadius.input,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: Colors.charcoal,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,

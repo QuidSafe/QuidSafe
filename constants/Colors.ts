@@ -1,75 +1,93 @@
-// QuidSafe Design System - Dark-only palette
+// QuidSafe Design System
+//
+// Web uses a light palette, native (iOS/Android) uses dark. Token names are
+// kept for backwards compatibility - e.g. `Colors.charcoal` still means "card
+// background" semantically, which resolves to near-white on web. When adding
+// new code, prefer the semantic `colors` export (e.g. `colors.surface`) over
+// the flat `Colors.*` tokens.
+
+import { Platform } from 'react-native';
+
+const IS_WEB = Platform.OS === 'web';
 
 // ── Flat tokens ──────────────────────────────────────────
+// These names describe their role in the dark palette. The values resolve
+// platform-appropriately so screens using them directly still look right.
 export const Colors = {
-  black: '#000000',
-  charcoal: '#0A0A0A',
-  darkGrey: '#1A1A1A',
-  midGrey: '#2A2A2A',
+  // Role: app background / page chrome
+  black: IS_WEB ? '#FFFFFF' : '#000000',
+  // Role: card and primary surfaces
+  charcoal: IS_WEB ? '#FFFFFF' : '#0A0A0A',
+  // Role: elevated / secondary surfaces
+  darkGrey: IS_WEB ? '#F2F2F7' : '#1A1A1A',
+  // Role: borders and dividers
+  midGrey: IS_WEB ? '#E5E5EA' : '#2A2A2A',
+  // Accent (same on both themes)
   electricBlue: '#0066FF',
   blueHover: '#0052CC',
-  blueGlow: 'rgba(0, 102, 255, 0.15)',
-  white: '#FFFFFF',
-  // Bumped from #A0A0A0 (11:1) and #666666 (4.9:1 - fails WCAG AAA for
-  // non-large text on pure black). New values: #C4C4C4 (14.8:1, AAA all
-  // sizes) and #8A8A8A (6.6:1, AA for normal text, AAA for large).
-  lightGrey: '#C4C4C4',
-  muted: '#8A8A8A',
-  success: '#00C853',
-  warning: '#FF9500',
-  error: '#FF3B30',
+  blueGlow: IS_WEB ? 'rgba(0, 102, 255, 0.08)' : 'rgba(0, 102, 255, 0.15)',
+  // Role: primary text
+  white: IS_WEB ? '#0A0A0A' : '#FFFFFF',
+  // Role: secondary text - AAA on both themes
+  lightGrey: IS_WEB ? '#3A3A3C' : '#C4C4C4',
+  // Role: tertiary text - AA normal / AAA large on both themes
+  muted: IS_WEB ? '#6B6B70' : '#8A8A8A',
+  // Status colours - darker on light mode for contrast against #FFF
+  success: IS_WEB ? '#00A342' : '#00C853',
+  warning: IS_WEB ? '#E88600' : '#FF9500',
+  error: IS_WEB ? '#D70015' : '#FF3B30',
 
   // Legacy aliases - screens still reference these; remove when migrated
-  primary: '#000000',
+  primary: IS_WEB ? '#FFFFFF' : '#000000',
   secondary: '#0066FF',
   accent: '#0066FF',
   info: '#0066FF',
   dark: {
-    text: '#FFFFFF',
-    textSecondary: '#C4C4C4',
-    textMuted: '#8A8A8A',
-    background: '#000000',
-    surface: '#0A0A0A',
-    surfaceSecondary: '#1A1A1A',
+    text: IS_WEB ? '#0A0A0A' : '#FFFFFF',
+    textSecondary: IS_WEB ? '#3A3A3C' : '#C4C4C4',
+    textMuted: IS_WEB ? '#6B6B70' : '#8A8A8A',
+    background: IS_WEB ? '#FFFFFF' : '#000000',
+    surface: IS_WEB ? '#FFFFFF' : '#0A0A0A',
+    surfaceSecondary: IS_WEB ? '#F2F2F7' : '#1A1A1A',
     tint: '#0066FF',
-    tabIconDefault: '#666666',
+    tabIconDefault: IS_WEB ? '#8A8A8E' : '#666666',
     tabIconSelected: '#0066FF',
-    border: '#2A2A2A',
-    surfaceGlass: 'rgba(255,255,255,0.05)',
-    shadowColor: 'rgba(0,0,0,0.3)',
-    cardBorder: '#2A2A2A',
+    border: IS_WEB ? '#E5E5EA' : '#2A2A2A',
+    surfaceGlass: IS_WEB ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
+    shadowColor: IS_WEB ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.3)',
+    cardBorder: IS_WEB ? '#E5E5EA' : '#2A2A2A',
     accent: '#0066FF',
     accentPressed: '#0052CC',
-    accentGlow: 'rgba(0, 102, 255, 0.15)',
-    success: '#00C853',
-    successGlow: 'rgba(0, 200, 83, 0.15)',
-    warning: '#FF9500',
-    error: '#FF3B30',
+    accentGlow: IS_WEB ? 'rgba(0, 102, 255, 0.08)' : 'rgba(0, 102, 255, 0.15)',
+    success: IS_WEB ? '#00A342' : '#00C853',
+    successGlow: IS_WEB ? 'rgba(0, 200, 83, 0.08)' : 'rgba(0, 200, 83, 0.15)',
+    warning: IS_WEB ? '#E88600' : '#FF9500',
+    error: IS_WEB ? '#D70015' : '#FF3B30',
   },
 };
 
-// ── Semantic tokens (single dark theme) ──────────────────
+// ── Semantic tokens ──────────────────────────────────────
 export const colors = {
-  background: '#000000',
-  surface: '#0A0A0A',
-  surfaceSecondary: '#1A1A1A',
-  border: '#2A2A2A',
-  cardBorder: '#2A2A2A',
-  text: '#FFFFFF',
-  textSecondary: '#C4C4C4',
-  textMuted: '#8A8A8A',
+  background: IS_WEB ? '#FFFFFF' : '#000000',
+  surface: IS_WEB ? '#FFFFFF' : '#0A0A0A',
+  surfaceSecondary: IS_WEB ? '#F2F2F7' : '#1A1A1A',
+  border: IS_WEB ? '#E5E5EA' : '#2A2A2A',
+  cardBorder: IS_WEB ? '#E5E5EA' : '#2A2A2A',
+  text: IS_WEB ? '#0A0A0A' : '#FFFFFF',
+  textSecondary: IS_WEB ? '#3A3A3C' : '#C4C4C4',
+  textMuted: IS_WEB ? '#6B6B70' : '#8A8A8A',
   accent: '#0066FF',
   accentPressed: '#0052CC',
-  accentGlow: 'rgba(0, 102, 255, 0.15)',
+  accentGlow: IS_WEB ? 'rgba(0, 102, 255, 0.08)' : 'rgba(0, 102, 255, 0.15)',
   tint: '#0066FF',
-  tabIconDefault: '#666666',
+  tabIconDefault: IS_WEB ? '#8A8A8E' : '#666666',
   tabIconSelected: '#0066FF',
-  surfaceGlass: 'rgba(255,255,255,0.05)',
-  shadowColor: 'rgba(0,0,0,0.3)',
-  success: '#00C853',
-  successGlow: 'rgba(0, 200, 83, 0.15)',
-  warning: '#FF9500',
-  error: '#FF3B30',
+  surfaceGlass: IS_WEB ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
+  shadowColor: IS_WEB ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.3)',
+  success: IS_WEB ? '#00A342' : '#00C853',
+  successGlow: IS_WEB ? 'rgba(0, 200, 83, 0.08)' : 'rgba(0, 200, 83, 0.15)',
+  warning: IS_WEB ? '#E88600' : '#FF9500',
+  error: IS_WEB ? '#D70015' : '#FF3B30',
 };
 
 // ── Layout tokens ────────────────────────────────────────
@@ -90,50 +108,36 @@ export const Spacing = {
   xxl: 48,
 };
 
-// ── Legacy compat - remove when screens migrate ─────────
+// ── Shadows - subtle on web, off on native (dark bg makes them invisible) ─
+const webSoftShadow = {
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 1,
+  shadowRadius: 2,
+  elevation: 0,
+};
+const webMediumShadow = {
+  shadowColor: 'rgba(0,0,0,0.1)',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 1,
+  shadowRadius: 6,
+  elevation: 0,
+};
+const noShadow = {
+  shadowColor: 'transparent',
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0,
+  shadowRadius: 0,
+  elevation: 0,
+};
+
 export const Shadows = {
-  soft: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  medium: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  large: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  darkSoft: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  darkMedium: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  darkLarge: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
+  soft: IS_WEB ? webSoftShadow : noShadow,
+  medium: IS_WEB ? webMediumShadow : noShadow,
+  large: IS_WEB ? webMediumShadow : noShadow,
+  darkSoft: noShadow,
+  darkMedium: noShadow,
+  darkLarge: noShadow,
 };
 
 export const PressedState = {
@@ -142,11 +146,11 @@ export const PressedState = {
 };
 
 export const CategoryTints = {
-  blue: { bg: 'rgba(0,102,255,0.15)', color: '#0066FF' },
-  green: { bg: 'rgba(0,200,83,0.15)', color: '#00C853' },
-  orange: { bg: 'rgba(255,149,0,0.15)', color: '#FF9500' },
-  red: { bg: 'rgba(255,59,48,0.15)', color: '#FF3B30' },
-  grey: { bg: 'rgba(160,160,160,0.12)', color: '#666666' },
+  blue: { bg: IS_WEB ? 'rgba(0,102,255,0.08)' : 'rgba(0,102,255,0.15)', color: '#0066FF' },
+  green: { bg: IS_WEB ? 'rgba(0,200,83,0.08)' : 'rgba(0,200,83,0.15)', color: IS_WEB ? '#00A342' : '#00C853' },
+  orange: { bg: IS_WEB ? 'rgba(255,149,0,0.1)' : 'rgba(255,149,0,0.15)', color: IS_WEB ? '#E88600' : '#FF9500' },
+  red: { bg: IS_WEB ? 'rgba(255,59,48,0.08)' : 'rgba(255,59,48,0.15)', color: IS_WEB ? '#D70015' : '#FF3B30' },
+  grey: { bg: IS_WEB ? 'rgba(0,0,0,0.05)' : 'rgba(160,160,160,0.12)', color: IS_WEB ? '#6B6B70' : '#666666' },
 };
 
 export default Colors;

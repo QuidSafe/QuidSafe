@@ -318,7 +318,7 @@ export default function TransactionsScreen() {
                   {
                     backgroundColor: isActive
                       ? Colors.accent
-                      : '#0A0A0A',
+                      : Colors.charcoal,
                     borderColor: isActive
                       ? 'transparent'
                       : colors.border,
@@ -456,7 +456,7 @@ export default function TransactionsScreen() {
                 )}
 
                 {/* AI suggestion */}
-                <View style={[styles.aiSuggestion, { backgroundColor: '#0A0A0A' }]}>
+                <View style={[styles.aiSuggestion, { backgroundColor: Colors.charcoal }]}>
                   <View style={styles.aiSuggestionHeader}>
                     <Lightbulb size={14} color={Colors.accent} strokeWidth={1.5} />
                     <Text style={[styles.aiSuggestionTitle, { color: colors.text }]}>
@@ -499,7 +499,7 @@ export default function TransactionsScreen() {
                         style={[
                           styles.categoryButton,
                           {
-                            backgroundColor: isSelected ? cat.color + '20' : '#0A0A0A',
+                            backgroundColor: isSelected ? cat.color + '20' : Colors.charcoal,
                             borderColor: isSelected ? cat.color : colors.border,
                           },
                         ]}
@@ -533,7 +533,7 @@ export default function TransactionsScreen() {
                             style={[
                               styles.incomeSourcePill,
                               {
-                                backgroundColor: isSelected ? Colors.accent + '20' : '#0A0A0A',
+                                backgroundColor: isSelected ? Colors.accent + '20' : Colors.charcoal,
                                 borderColor: isSelected ? Colors.accent : colors.border,
                               },
                             ]}

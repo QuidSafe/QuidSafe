@@ -29,26 +29,11 @@ import {
   useSyncBank,
 } from '@/lib/hooks/useApi';
 import { formatCurrency } from '@/lib/tax-engine';
+import { formatRelativeTime } from '@/lib/formatRelativeTime';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8787';
 
 // -------- Helpers --------
-
-function formatRelativeTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return 'Never';
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diffMs = now - then;
-  if (diffMs < 0) return 'Just now';
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-}
 
 function getSyncHealthColor(lastSyncedAt: string | undefined): string {
   if (!lastSyncedAt) return Colors.error;
