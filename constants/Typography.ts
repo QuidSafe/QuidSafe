@@ -37,6 +37,17 @@ export const Fonts = {
     regular: monoFamily,
     semiBold: monoFamilySemiBold,
   },
+  // Marketing / landing typography. Fraunces for editorial headlines,
+  // Inter for crisp body copy. Not used inside the authenticated app.
+  display: {
+    medium: webFont('Fraunces_500Medium', 'Fraunces'),
+    semiBold: webFont('Fraunces_600SemiBold', 'Fraunces'),
+  },
+  inter: {
+    regular: webFont('Inter_400Regular', 'Inter'),
+    medium: webFont('Inter_500Medium', 'Inter'),
+    semiBold: webFont('Inter_600SemiBold', 'Inter'),
+  },
 };
 
 export default Fonts;

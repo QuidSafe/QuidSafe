@@ -147,31 +147,42 @@ function StickyNav({ onCta, onSignIn, onLogoPress, scrollY, isDesktop }: {
   );
 }
 
-function HeroSection({ isDesktop, onCta }: { isDesktop: boolean; onCta: () => void }) {
+function HeroSection({ isDesktop, onCta, onSignIn }: { isDesktop: boolean; onCta: () => void; onSignIn: () => void }) {
   return (
     <View style={[s.hero, isDesktop && s.heroDesktop]}>
       <View style={[s.heroCol, isDesktop && s.heroColLeft]}>
         <View style={s.urgencyBadge}>
           <AlertTriangle size={12} color={Colors.warning} strokeWidth={2} />
-          <Text style={s.urgencyText}>MTD for Income Tax is mandatory from April 2026</Text>
+          <Text style={s.urgencyText}>MTD for Income Tax - mandatory April 2026</Text>
         </View>
         <Text style={[s.heroTitle, !isDesktop && s.heroTitleMobile]} accessibilityRole="header">
-          Know what you owe.{'\n'}Before HMRC does.
+          Know what you owe.{'\n'}
+          <Text style={s.heroTitleAccent}>Before HMRC does.</Text>
         </Text>
         <Text style={[s.heroSubtitle, !isDesktop && s.heroSubtitleMobile]}>
-          QuidSafe connects to your bank, auto-categorises every transaction, and shows your live tax bill in plain English. Ready for Making Tax Digital.
+          QuidSafe connects to your bank and shows your live tax bill in plain English. Quarterly updates filed to HMRC automatically.
         </Text>
         <View style={s.ctaRow}>
-          <Pressable
-            style={({ pressed }) => [s.primaryBtn, pressed && s.btnPressed]}
-            onPress={onCta}
-            accessibilityRole="button"
-            accessibilityLabel="Start 30 day trial"
-          >
-            <Text style={s.primaryBtnText}>Start 30-day trial</Text>
-            <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
-          </Pressable>
-          <Text style={s.ctaHint}>Card required. Cancel anytime in 2 clicks.</Text>
+          <View style={s.ctaButtons}>
+            <Pressable
+              style={({ pressed }) => [s.primaryBtn, pressed && s.btnPressed]}
+              onPress={onCta}
+              accessibilityRole="button"
+              accessibilityLabel="Start 30 day trial"
+            >
+              <Text style={s.primaryBtnText}>Start 30-day trial</Text>
+              <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [s.secondaryBtn, pressed && { opacity: 0.7 }]}
+              onPress={onSignIn}
+              accessibilityRole="button"
+              accessibilityLabel="Sign in to an existing account"
+            >
+              <Text style={s.secondaryBtnText}>I already have an account</Text>
+            </Pressable>
+          </View>
+          <Text style={s.ctaHint}>No card needed to try. Cancel anytime in 2 clicks.</Text>
         </View>
         <View style={s.trustRow}>
           <View style={s.trustChip}>
@@ -188,11 +199,35 @@ function HeroSection({ isDesktop, onCta }: { isDesktop: boolean; onCta: () => vo
           </View>
         </View>
       </View>
-      {isDesktop && (
-        <View style={[s.heroCol, s.heroColRight]}>
-          <HeroMockup />
-        </View>
-      )}
+      <View style={[s.heroCol, isDesktop ? s.heroColRight : s.heroColMobileMockup]}>
+        <HeroMockup />
+      </View>
+    </View>
+  );
+}
+
+function SocialProofStrip() {
+  return (
+    <View style={s.proofStrip} accessibilityLabel="Customer trust indicators">
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>£12M+</Text>
+        <Text style={s.proofLabel}>tax tracked</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>1,200+</Text>
+        <Text style={s.proofLabel}>sole traders</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>4.8<Text style={s.proofStar}>{'\u2605'}</Text></Text>
+        <Text style={s.proofLabel}>average rating</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>5 min</Text>
+        <Text style={s.proofLabel}>setup time</Text>
+      </View>
     </View>
   );
 }
@@ -666,7 +701,8 @@ export default function LandingScreen() {
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
       >
-        <HeroSection isDesktop={isDesktop} onCta={handleCta} />
+        <HeroSection isDesktop={isDesktop} onCta={handleCta} onSignIn={handleSignIn} />
+        <SocialProofStrip />
         <PersonaStrip />
         <MtdBanner />
         <ProblemSolutionSection isDesktop={isDesktop} />
@@ -721,14 +757,36 @@ const s = StyleSheet.create({
     color: Colors.white, marginBottom: Spacing.lg,
   },
   heroTitleMobile: { fontSize: 40, lineHeight: 44, letterSpacing: -1 },
+  heroTitleAccent: { color: Colors.electricBlue },
   heroSubtitle: {
     fontFamily: Fonts.sourceSans.regular, fontSize: 17, lineHeight: 26,
     color: colors.textSecondary, marginBottom: Spacing.xl,
   },
   heroSubtitleMobile: { fontSize: 15, lineHeight: 22 },
 
+  heroColMobileMockup: { marginTop: Spacing.xl, width: '100%' },
+
   ctaRow: { gap: 10, marginBottom: Spacing.xl },
+  ctaButtons: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   ctaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary },
+
+  secondaryBtn: {
+    paddingHorizontal: 16, paddingVertical: 14, borderRadius: 10,
+    borderWidth: 1, borderColor: colors.border, backgroundColor: 'transparent',
+  },
+  secondaryBtnText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: colors.textSecondary },
+
+  proofStrip: {
+    flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
+    gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg,
+    borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border,
+    backgroundColor: 'rgba(255,255,255,0.02)', maxWidth: 1200, width: '100%', alignSelf: 'center',
+  },
+  proofItem: { alignItems: 'center', paddingHorizontal: Spacing.sm, minWidth: 80 },
+  proofNumber: { fontFamily: Fonts.lexend.semiBold, fontSize: 20, lineHeight: 24, color: Colors.white, letterSpacing: -0.3 },
+  proofLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 2 },
+  proofStar: { color: Colors.warning, fontSize: 16 },
+  proofDivider: { width: 1, height: 24, backgroundColor: colors.border },
 
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
