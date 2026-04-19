@@ -761,11 +761,12 @@ const styles = StyleSheet.create({
   infoBoxTitle: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    lineHeight: 20,
     marginBottom: 2,
   },
   infoBoxSub: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
     lineHeight: 18,
   },
 
@@ -814,7 +815,8 @@ const styles = StyleSheet.create({
   },
   trustBadgeText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   /* Step 3 info note */
@@ -830,8 +832,8 @@ const styles = StyleSheet.create({
   infoNoteText: {
     flex: 1,
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 21,
   },
 
   /* Set up time badge */
@@ -846,7 +848,8 @@ const styles = StyleSheet.create({
   },
   setupTimeBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   /* Bank strip */
@@ -856,8 +859,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   bankStripLabel: {
-    fontFamily: Fonts.sourceSans.regular,
+    fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
     marginBottom: Spacing.sm,
   },
   bankStripRow: {
@@ -874,7 +880,8 @@ const styles = StyleSheet.create({
   },
   bankPillText: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
   },
 
   /* HMRC badge */
@@ -889,7 +896,8 @@ const styles = StyleSheet.create({
   },
   hmrcBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   /* CTA Button (gold gradient) */
