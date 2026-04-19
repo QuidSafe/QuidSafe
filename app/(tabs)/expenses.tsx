@@ -461,16 +461,19 @@ const styles = StyleSheet.create({
     color: Colors.secondary,
   },
 
-  /* Section Header */
+  /* Section Header - matches dashboard + income */
   sectionHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     gap: Spacing.sm,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md + 4,
+    marginBottom: 4,
   },
   sectionTitle: {
-    fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 16,
+    fontFamily: Fonts.lexend.semiBold,
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: -0.3,
   },
   itemsBadge: {
     backgroundColor: 'rgba(0,200,83,0.08)',
@@ -481,6 +484,7 @@ const styles = StyleSheet.create({
   itemsBadgeText: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 12,
+    lineHeight: 16,
     color: Colors.success,
   },
 
@@ -507,9 +511,9 @@ const styles = StyleSheet.create({
   insightText: {
     flex: 1,
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 20,
     color: Colors.accent,
-    lineHeight: 19,
   },
   insightBold: {
     fontFamily: Fonts.lexend.bold,
@@ -534,10 +538,12 @@ const styles = StyleSheet.create({
   comingSoonTitle: {
     fontFamily: Fonts.sourceSans.semiBold,
     fontSize: 14,
+    lineHeight: 20,
   },
   comingSoonSub: {
     fontFamily: Fonts.sourceSans.regular,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     marginTop: 2,
   },
   soonBadge: {
@@ -549,6 +555,8 @@ const styles = StyleSheet.create({
   soonBadgeText: {
     fontFamily: Fonts.lexend.bold,
     fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.5,
     color: Colors.secondary,
   },
 
@@ -564,7 +572,8 @@ const styles = StyleSheet.create({
   },
   addRecurringText: {
     fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     color: Colors.white,
   },
 
