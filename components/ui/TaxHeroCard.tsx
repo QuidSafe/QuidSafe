@@ -4,6 +4,7 @@ import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
 import { formatRelativeTime } from '@/lib/formatRelativeTime';
+import { ProgressRing } from '@/components/ui/ProgressRing';
 import type { TaxCalculation } from '@/lib/types';
 
 export interface TaxHeroCardProps {
@@ -50,6 +51,20 @@ function useCountUp(target: number, durationMs: number): number {
   }, [target, durationMs]);
 
   return displayed;
+}
+
+/**
+ * UK tax year runs 6 Apr to 5 Apr. Returns 0..1 fraction of the year elapsed.
+ */
+function taxYearProgress(now: Date = new Date()): number {
+  const y = now.getUTCFullYear();
+  // If we're past April 5 this year, current tax year started this April 6.
+  const pastApril = now.getUTCMonth() > 3 || (now.getUTCMonth() === 3 && now.getUTCDate() >= 6);
+  const startYear = pastApril ? y : y - 1;
+  const start = Date.UTC(startYear, 3, 6);
+  const end = Date.UTC(startYear + 1, 3, 6);
+  const t = (now.getTime() - start) / (end - start);
+  return Math.max(0, Math.min(1, t));
 }
 
 /**
@@ -114,9 +129,10 @@ export function TaxHeroCard({ tax, lastSyncedAt }: TaxHeroCardProps) {
           <Text style={styles.monthlyLabel}>Set aside each month</Text>
           <Text style={styles.monthlyAmount}>{formatCurrency(Math.round(animatedMonthly))}</Text>
         </View>
-        <View style={styles.monthlyBadge}>
-          <View style={styles.monthlyBadgeDot} />
-          <Text style={styles.monthlyBadgeText}>On track</Text>
+        <View style={styles.yearRing} accessibilityLabel={`Tax year ${Math.round(taxYearProgress() * 100)} percent elapsed`}>
+          <ProgressRing progress={taxYearProgress()} size={56} strokeWidth={4} durationMs={900}>
+            <Text style={styles.yearRingText}>{Math.round(taxYearProgress() * 100)}%</Text>
+          </ProgressRing>
         </View>
       </View>
 
@@ -244,28 +260,16 @@ const styles = StyleSheet.create({
     color: Colors.electricBlue,
     letterSpacing: -0.5,
   },
-  monthlyBadge: {
-    flexDirection: 'row',
+  yearRing: {
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0, 200, 83, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 200, 83, 0.25)',
+    justifyContent: 'center',
   },
-  monthlyBadgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.success,
-  },
-  monthlyBadgeText: {
-    fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
-    lineHeight: 16,
-    color: Colors.success,
+  yearRingText: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 11,
+    lineHeight: 14,
+    color: Colors.electricBlue,
+    letterSpacing: -0.2,
   },
 
   // Breakdown

@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,6 +19,7 @@ import { DonutChart, CATEGORY_COLORS } from '@/components/ui/DonutChart';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import ExpenseRow, { HMRC_CATEGORY_LABELS, getCategoryMeta, formatDate, expenseRowStyles } from '@/components/ui/ExpenseRow';
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import AddExpenseModal from '@/components/ui/AddExpenseModal';
 import AddRecurringExpenseModal, { FREQUENCY_LABELS, FREQUENCY_COLORS } from '@/components/ui/AddRecurringExpenseModal';
 import ExpenseMetrics from '@/components/ui/ExpenseMetrics';
@@ -30,6 +32,8 @@ import { hapticMedium } from '@/lib/haptics';
 
 export default function ExpensesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
   const { data, isLoading, refetch, isRefetching } = useExpenses();
   const { data: dashboardData } = useDashboard();
   const deleteExpense = useDeleteExpense();
@@ -257,19 +261,76 @@ export default function ExpensesScreen() {
               </View>
             </View>
 
-            <Card style={styles.listCard}>
-              {filteredExpenses.map((item, index) => (
-                <ExpenseRow
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  totalCount={filteredExpenses.length}
-                  onPress={(id) => router.push(`/expense/${id}`)}
-                  onDelete={handleDelete}
-                  colors={colors}
-                />
-              ))}
-            </Card>
+            {isDesktop ? (
+              <DataTable
+                rows={filteredExpenses}
+                keyExtractor={(e) => e.id}
+                initialSort={{ key: 'date', direction: 'desc' }}
+                onRowPress={(e) => router.push(`/expense/${e.id}`)}
+                rowHeight={52}
+                columns={[
+                  {
+                    key: 'date',
+                    label: 'Date',
+                    width: 120,
+                    sort: (a, b) => a.date.localeCompare(b.date),
+                    render: (e) => <Text style={styles.tableCellText}>{formatDate(e.date)}</Text>,
+                  },
+                  {
+                    key: 'description',
+                    label: 'Description',
+                    flex: 2,
+                    sort: (a, b) => a.description.localeCompare(b.description),
+                    render: (e) => (
+                      <Text style={styles.tableCellTextStrong} numberOfLines={1}>
+                        {e.description}
+                      </Text>
+                    ),
+                  },
+                  {
+                    key: 'category',
+                    label: 'Category',
+                    flex: 1,
+                    sort: (a, b) => (a.hmrc_category ?? '').localeCompare(b.hmrc_category ?? ''),
+                    render: (e) => {
+                      const meta = getCategoryMeta(e.hmrc_category);
+                      return (
+                        <View style={[styles.tableCategoryPill, { borderColor: meta.color }]}>
+                          <View style={[styles.tableCategoryDot, { backgroundColor: meta.color }]} />
+                          <Text style={styles.tableCategoryText} numberOfLines={1}>
+                            {HMRC_CATEGORY_LABELS[e.hmrc_category ?? ''] ?? 'Uncategorised'}
+                          </Text>
+                        </View>
+                      );
+                    },
+                  },
+                  {
+                    key: 'amount',
+                    label: 'Amount',
+                    width: 130,
+                    align: 'right',
+                    sort: (a, b) => a.amount - b.amount,
+                    render: (e) => (
+                      <Text style={styles.tableAmount}>{formatCurrency(e.amount)}</Text>
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <Card style={styles.listCard}>
+                {filteredExpenses.map((item, index) => (
+                  <ExpenseRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    totalCount={filteredExpenses.length}
+                    onPress={(id) => router.push(`/expense/${id}`)}
+                    onDelete={handleDelete}
+                    colors={colors}
+                  />
+                ))}
+              </Card>
+            )}
           </>
         ) : (
           <EmptyState
@@ -413,6 +474,44 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+
+  // Desktop table cells
+  tableCellText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 13,
+    color: colors.text,
+  },
+  tableCellTextStrong: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  tableCategoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  tableCategoryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  tableCategoryText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    color: colors.text,
+  },
+  tableAmount: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 14,
+    color: colors.text,
+    letterSpacing: -0.2,
   },
 
   /* Header */

@@ -27,6 +27,8 @@ import {
   BankIllustration,
 } from '@/components/ui/OnboardingIllustrations';
 import { hapticSuccess } from '@/lib/haptics';
+import { OnboardingCompleteReveal } from '@/components/ui/OnboardingCompleteReveal';
+import { useUser } from '@clerk/clerk-expo';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAX_SLIDE_WIDTH = 480;
@@ -348,6 +350,7 @@ function StepConnectBank() {
 /*  Main Screen                                                       */
 /* ================================================================== */
 export default function OnboardingScreen() {
+  const { user } = useUser();
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const { width: windowWidth } = useWindowDimensions();
@@ -356,6 +359,7 @@ export default function OnboardingScreen() {
   // Step 2 form state
   const [businessName, setBusinessName] = useState('');
   const [disclaimerChecked, setDisclaimerChecked] = useState(false);
+  const [revealing, setRevealing] = useState(false);
 
   const animateTo = useCallback(
     (nextStep: number) => {
@@ -383,10 +387,17 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = async () => {
-    await api.completeOnboarding().catch(() => {});
+    // Premium completion moment: ring-fill reveal + shimmered headline +
+    // haptic pulse play while the API call happens in the background. The
+    // reveal's onDone routes to the dashboard.
+    setRevealing(true);
     hapticSuccess();
-    router.replace('/(tabs)');
+    await api.completeOnboarding().catch(() => {});
   };
+
+  const handleRevealDone = useCallback(() => {
+    router.replace('/(tabs)');
+  }, []);
 
   const canContinueStep2 = disclaimerChecked;
 
@@ -484,6 +495,12 @@ export default function OnboardingScreen() {
         )}
       </View>
       </View>
+      {revealing ? (
+        <OnboardingCompleteReveal
+          onDone={handleRevealDone}
+          firstName={user?.firstName ?? undefined}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

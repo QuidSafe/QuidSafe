@@ -13,6 +13,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
@@ -20,6 +21,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Wand2, AlertCircle, CheckCircle, Lightbulb, Landmark } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import { colors, Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useTransactions, useUncategorised, useOverrideCategory, useBankConnections } from '@/lib/hooks/useApi';
@@ -139,6 +141,8 @@ export default function TransactionsScreen() {
   const params = useLocalSearchParams<{ filter?: string }>();
   const initialFilter = (params.filter as FilterType) || 'all';
   const [activeFilter, setActiveFilter] = useState<FilterType>(initialFilter);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TransactionCategory | null>(null);
   const [selectedIncomeSource, setSelectedIncomeSource] = useState<string | null>(null);
@@ -204,6 +208,56 @@ export default function TransactionsScreen() {
       transactionsQuery.refetch();
     }
   }, [isUncategorisedFilter, uncategorisedQuery, transactionsQuery]);
+
+  const desktopColumns: DataTableColumn<Transaction>[] = [
+    {
+      key: 'date',
+      label: 'Date',
+      width: 120,
+      sort: (a, b) => a.transactionDate.localeCompare(b.transactionDate),
+      render: (tx) => <Text style={styles.tableCellText}>{formatDate(tx.transactionDate)}</Text>,
+    },
+    {
+      key: 'description',
+      label: 'Merchant / Description',
+      flex: 2,
+      sort: (a, b) => (a.merchantName || a.description).localeCompare(b.merchantName || b.description),
+      render: (tx) => (
+        <View>
+          <Text style={styles.tableCellTextStrong} numberOfLines={1}>
+            {tx.merchantName || tx.description}
+          </Text>
+          {tx.merchantName && tx.description ? (
+            <Text style={styles.tableCellTextMuted} numberOfLines={1}>{tx.description}</Text>
+          ) : null}
+        </View>
+      ),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      width: 140,
+      sort: (a, b) => getCategoryLabel(a.aiCategory).localeCompare(getCategoryLabel(b.aiCategory)),
+      render: (tx) => (
+        <View style={[styles.tableCategoryPill, { borderColor: getCategoryColor(tx.aiCategory) }]}>
+          <View style={[styles.tableCategoryDot, { backgroundColor: getCategoryColor(tx.aiCategory) }]} />
+          <Text style={styles.tableCategoryText}>{getCategoryLabel(tx.aiCategory)}</Text>
+        </View>
+      ),
+    },
+    {
+      key: 'amount',
+      label: 'Amount',
+      width: 140,
+      align: 'right',
+      sort: (a, b) => a.amount - b.amount,
+      render: (tx) => (
+        <Text style={[styles.tableAmount, tx.isIncome ? styles.tableAmountIncome : undefined]}>
+          {tx.isIncome ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+        </Text>
+      ),
+    },
+  ];
 
   // Entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -404,6 +458,27 @@ export default function TransactionsScreen() {
             </Text>
           </Animated.View>
         </ScrollView>
+      ) : isDesktop ? (
+        <Animated.View style={[styles.flatListWrapper, styles.desktopTableWrapper, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <DataTable
+            rows={transactions}
+            keyExtractor={(tx) => tx.id}
+            columns={desktopColumns}
+            onRowPress={handleTransactionPress}
+            initialSort={{ key: 'date', direction: 'desc' }}
+            rowHeight={56}
+            empty={
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No transactions for this filter
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                  Try a different category or sync your bank.
+                </Text>
+              </View>
+            }
+          />
+        </Animated.View>
       ) : (
         <Animated.View style={[styles.flatListWrapper, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <FlatList
@@ -649,6 +724,56 @@ const styles = StyleSheet.create({
   },
   flatListWrapper: {
     flex: 1,
+  },
+  desktopTableWrapper: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
+  },
+  tableCellText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 13,
+    color: colors.text,
+  },
+  tableCellTextStrong: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  tableCellTextMuted: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  tableCategoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  tableCategoryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  tableCategoryText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    color: colors.text,
+  },
+  tableAmount: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 14,
+    color: colors.text,
+    letterSpacing: -0.2,
+  },
+  tableAmountIncome: {
+    color: Colors.success,
   },
   headerContainer: {
     paddingHorizontal: Spacing.lg,
