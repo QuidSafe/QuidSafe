@@ -267,12 +267,21 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
       // Denormalise monthly-equivalent price for the admin MRR aggregation.
       // Annual plans get divided by 12; anything without unit_amount (shouldn't
       // happen on a real sub) falls back to null so we don't invent numbers.
+      //
+      // Defence in depth: clamp to the two prices we actually charge. A
+      // compromised Stripe key could otherwise write arbitrary (or negative)
+      // values into MRR. Anything off-menu falls to null and stays out of
+      // the aggregate until a human reconciles.
       const unitPence = typeof price?.unit_amount === 'number' ? price.unit_amount : null;
-      const monthlyPence = unitPence === null
+      const computedMonthlyPence = unitPence === null
         ? null
         : interval === 'year'
           ? Math.round(unitPence / 12)
           : unitPence;
+      const KNOWN_MONTHLY_PENCE = new Set<number>([799, 666]);
+      const monthlyPence = computedMonthlyPence !== null && KNOWN_MONTHLY_PENCE.has(computedMonthlyPence)
+        ? computedMonthlyPence
+        : null;
 
       const periodStart = obj.current_period_start ? new Date(obj.current_period_start * 1000).toISOString() : null;
       const periodEnd = obj.current_period_end ? new Date(obj.current_period_end * 1000).toISOString() : null;
