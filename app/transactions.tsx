@@ -13,15 +13,18 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
-import { Wand2, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { Wand2, AlertCircle, CheckCircle, Lightbulb, Landmark } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { SkeletonCard } from '@/components/ui/Skeleton';
+import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
 import { colors, Colors, Spacing, BorderRadius, PressedState } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
-import { useTransactions, useUncategorised, useOverrideCategory } from '@/lib/hooks/useApi';
+import { useTransactions, useUncategorised, useOverrideCategory, useBankConnections } from '@/lib/hooks/useApi';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/tax-engine';
 import { useToast } from '@/components/ui/Toast';
@@ -138,6 +141,8 @@ export default function TransactionsScreen() {
   const params = useLocalSearchParams<{ filter?: string }>();
   const initialFilter = (params.filter as FilterType) || 'all';
   const [activeFilter, setActiveFilter] = useState<FilterType>(initialFilter);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TransactionCategory | null>(null);
   const [selectedIncomeSource, setSelectedIncomeSource] = useState<string | null>(null);
@@ -156,6 +161,37 @@ export default function TransactionsScreen() {
   );
   const uncategorisedQuery = useUncategorised();
   const overrideMutation = useOverrideCategory();
+  const { data: connectionsData } = useBankConnections();
+  const hasBankConnection = (connectionsData?.connections?.length ?? 0) > 0;
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnectBank = useCallback(async () => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    try {
+      const { url } = await api.getConnectUrl(Platform.OS !== 'web' ? 'native' : undefined);
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        await WebBrowser.openBrowserAsync(url);
+      }
+    } catch {
+      Alert.alert('Connection error', 'Could not start bank connection. Please try again.');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [isConnecting]);
+
+  const handleSyncNow = useCallback(async () => {
+    const connections = connectionsData?.connections ?? [];
+    if (connections.length === 0) return;
+    try {
+      await api.syncBank(connections[0].id);
+      transactionsQuery.refetch();
+    } catch {
+      Alert.alert('Sync error', 'Could not sync transactions. Please try again.');
+    }
+  }, [connectionsData, transactionsQuery]);
 
   const isUncategorisedFilter = activeFilter === 'uncategorised';
   const isLoading = isUncategorisedFilter ? uncategorisedQuery.isLoading : transactionsQuery.isLoading;
@@ -172,6 +208,56 @@ export default function TransactionsScreen() {
       transactionsQuery.refetch();
     }
   }, [isUncategorisedFilter, uncategorisedQuery, transactionsQuery]);
+
+  const desktopColumns: DataTableColumn<Transaction>[] = [
+    {
+      key: 'date',
+      label: 'Date',
+      width: 120,
+      sort: (a, b) => a.transactionDate.localeCompare(b.transactionDate),
+      render: (tx) => <Text style={styles.tableCellText}>{formatDate(tx.transactionDate)}</Text>,
+    },
+    {
+      key: 'description',
+      label: 'Merchant / Description',
+      flex: 2,
+      sort: (a, b) => (a.merchantName || a.description).localeCompare(b.merchantName || b.description),
+      render: (tx) => (
+        <View>
+          <Text style={styles.tableCellTextStrong} numberOfLines={1}>
+            {tx.merchantName || tx.description}
+          </Text>
+          {tx.merchantName && tx.description ? (
+            <Text style={styles.tableCellTextMuted} numberOfLines={1}>{tx.description}</Text>
+          ) : null}
+        </View>
+      ),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      width: 140,
+      sort: (a, b) => getCategoryLabel(a.aiCategory).localeCompare(getCategoryLabel(b.aiCategory)),
+      render: (tx) => (
+        <View style={[styles.tableCategoryPill, { borderColor: getCategoryColor(tx.aiCategory) }]}>
+          <View style={[styles.tableCategoryDot, { backgroundColor: getCategoryColor(tx.aiCategory) }]} />
+          <Text style={styles.tableCategoryText}>{getCategoryLabel(tx.aiCategory)}</Text>
+        </View>
+      ),
+    },
+    {
+      key: 'amount',
+      label: 'Amount',
+      width: 140,
+      align: 'right',
+      sort: (a, b) => a.amount - b.amount,
+      render: (tx) => (
+        <Text style={[styles.tableAmount, tx.isIncome ? styles.tableAmountIncome : undefined]}>
+          {tx.isIncome ? '+' : '-'}{formatCurrency(Math.abs(tx.amount))}
+        </Text>
+      ),
+    },
+  ];
 
   // Entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -318,7 +404,7 @@ export default function TransactionsScreen() {
                   {
                     backgroundColor: isActive
                       ? Colors.accent
-                      : '#0A0A0A',
+                      : Colors.charcoal,
                     borderColor: isActive
                       ? 'transparent'
                       : colors.border,
@@ -372,6 +458,27 @@ export default function TransactionsScreen() {
             </Text>
           </Animated.View>
         </ScrollView>
+      ) : isDesktop ? (
+        <Animated.View style={[styles.flatListWrapper, styles.desktopTableWrapper, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <DataTable
+            rows={transactions}
+            keyExtractor={(tx) => tx.id}
+            columns={desktopColumns}
+            onRowPress={handleTransactionPress}
+            initialSort={{ key: 'date', direction: 'desc' }}
+            rowHeight={56}
+            empty={
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  No transactions for this filter
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                  Try a different category or sync your bank.
+                </Text>
+              </View>
+            }
+          />
+        </Animated.View>
       ) : (
         <Animated.View style={[styles.flatListWrapper, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <FlatList
@@ -395,9 +502,40 @@ export default function TransactionsScreen() {
             }
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-                  No transactions found for this filter.
-                </Text>
+                {activeFilter === 'all' ? (
+                  <>
+                    <View style={[styles.emptyIcon, { backgroundColor: Colors.accent + '15' }]}>
+                      <Landmark size={40} color={Colors.accent} strokeWidth={1.5} />
+                    </View>
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                      {hasBankConnection ? 'No transactions yet' : 'Connect your bank to see transactions'}
+                    </Text>
+                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                      {hasBankConnection
+                        ? 'Your bank is connected. Sync to pull in the latest transactions.'
+                        : 'Link your bank via Open Banking and transactions import automatically.'}
+                    </Text>
+                    <Pressable
+                      onPress={hasBankConnection ? handleSyncNow : handleConnectBank}
+                      disabled={isConnecting}
+                      style={({ pressed }) => [
+                        styles.emptyCtaButton,
+                        { backgroundColor: Colors.accent },
+                        pressed && PressedState,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={hasBankConnection ? 'Sync now' : 'Connect your bank'}
+                    >
+                      <Text style={styles.emptyCtaButtonText}>
+                        {isConnecting ? 'Connecting...' : hasBankConnection ? 'Sync now' : 'Connect bank'}
+                      </Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                    No transactions found for this filter.
+                  </Text>
+                )}
               </View>
             }
           />
@@ -456,7 +594,7 @@ export default function TransactionsScreen() {
                 )}
 
                 {/* AI suggestion */}
-                <View style={[styles.aiSuggestion, { backgroundColor: '#0A0A0A' }]}>
+                <View style={[styles.aiSuggestion, { backgroundColor: Colors.charcoal }]}>
                   <View style={styles.aiSuggestionHeader}>
                     <Lightbulb size={14} color={Colors.accent} strokeWidth={1.5} />
                     <Text style={[styles.aiSuggestionTitle, { color: colors.text }]}>
@@ -499,7 +637,7 @@ export default function TransactionsScreen() {
                         style={[
                           styles.categoryButton,
                           {
-                            backgroundColor: isSelected ? cat.color + '20' : '#0A0A0A',
+                            backgroundColor: isSelected ? cat.color + '20' : Colors.charcoal,
                             borderColor: isSelected ? cat.color : colors.border,
                           },
                         ]}
@@ -533,7 +671,7 @@ export default function TransactionsScreen() {
                             style={[
                               styles.incomeSourcePill,
                               {
-                                backgroundColor: isSelected ? Colors.accent + '20' : '#0A0A0A',
+                                backgroundColor: isSelected ? Colors.accent + '20' : Colors.charcoal,
                                 borderColor: isSelected ? Colors.accent : colors.border,
                               },
                             ]}
@@ -586,6 +724,56 @@ const styles = StyleSheet.create({
   },
   flatListWrapper: {
     flex: 1,
+  },
+  desktopTableWrapper: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
+  },
+  tableCellText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 13,
+    color: colors.text,
+  },
+  tableCellTextStrong: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  tableCellTextMuted: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  tableCategoryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  tableCategoryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  tableCategoryText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 11,
+    color: colors.text,
+  },
+  tableAmount: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 14,
+    color: colors.text,
+    letterSpacing: -0.2,
+  },
+  tableAmountIncome: {
+    color: Colors.success,
   },
   headerContainer: {
     paddingHorizontal: Spacing.lg,
@@ -718,6 +906,19 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 15,
     textAlign: 'center',
+    maxWidth: 300,
+    lineHeight: 21,
+  },
+  emptyCtaButton: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.button,
+    marginTop: Spacing.md,
+  },
+  emptyCtaButtonText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 15,
+    color: Colors.white,
   },
 
   // Modal

@@ -123,7 +123,7 @@ QuidSafe/
 │   └── CreateInvoiceModal.tsx              # Create invoice modal
 │
 ├── constants/                              # Design tokens
-│   ├── Colors.ts                           # Dark-only colour palette
+│   ├── Colors.ts                           # Colour palette (native dark, web light)
 │   └── Typography.ts                       # Font families + sizes
 │
 ├── lib/                                    # Shared frontend utilities
@@ -285,7 +285,7 @@ wrangler secret put ADMIN_EMAILS --config wrangler.worker.toml --env production
 
 ## Design System
 
-### Colours (dark-only)
+### Colours (native: dark / web: light)
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -339,7 +339,7 @@ Web layouts should differ from mobile - wider content areas, hover states, deskt
 6. **Design system** - Follow [constants/Colors.ts](constants/Colors.ts) for all UI work.
 7. **Fonts** - Use `Lexend_*` for headings, `SourceSans3_*` for body, `JetBrainsMono_*` for monetary amounts. Never use system fonts.
 8. **Icons** - Use `lucide-react-native` only. No FontAwesome. Always `strokeWidth={1.5}`.
-9. **Dark only** - No light mode. No `isDark` conditionals. All colours from the dark palette.
+9. **Native dark, web light** - Native (iOS/Android) uses the dark palette. Web uses a light palette. Colour tokens in [constants/Colors.ts](constants/Colors.ts) branch on `Platform.OS === 'web'` at module scope, so most screens get the right palette automatically. Never add an `isDark` runtime conditional and never hardcode `#000000` / `#0A0A0A` as a background - use `Colors.charcoal` / `colors.surface` so it flips correctly on web.
 10. **Platform checks** - Use `Platform.OS` for native-only features (e.g., SecureStore, biometrics).
 11. **Responsive design** - Web layout must differ from mobile. See breakpoints above.
 12. **Not FCA regulated** - QuidSafe is a tax tracking tool, not a financial adviser. TrueLayer (Open Banking) is FCA regulated. Never claim QuidSafe itself is.

@@ -83,6 +83,15 @@ export default function ClientsScreen() {
             <Users size={32} color={colors.textMuted} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>No clients yet</Text>
             <Text style={s.emptyBody}>Add your clients to track invoices and payments per customer.</Text>
+            <Pressable
+              style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]}
+              onPress={() => setShowAdd(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Add your first client"
+            >
+              <Plus size={14} color={Colors.white} strokeWidth={2} />
+              <Text style={s.emptyCtaText}>Add client</Text>
+            </Pressable>
           </View>
         ) : (
           <View style={s.listCard}>
@@ -146,6 +155,8 @@ const s = StyleSheet.create({
   emptyCard: { backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: Spacing.xl, alignItems: 'center', gap: 10 },
   emptyTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white },
   emptyBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary, textAlign: 'center', maxWidth: 300 },
+  emptyCta: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.electricBlue, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8, marginTop: 6 },
+  emptyCtaText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: Colors.white },
 
   listCard: { backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border, borderRadius: 12, overflow: 'hidden' },
   clientRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: Spacing.md },

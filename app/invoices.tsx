@@ -368,9 +368,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: Colors.charcoal,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: Colors.midGrey,
   },
   filterPillActive: {
     backgroundColor: Colors.primary,

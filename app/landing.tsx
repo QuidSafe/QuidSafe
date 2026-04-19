@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, type ComponentRef } from 'react';
 import {
   StyleSheet, View, Text, Pressable, Animated, Platform, useWindowDimensions, TextInput, ScrollView,
 } from 'react-native';
@@ -98,9 +98,10 @@ const numericOnly = (v: string) => v.replace(/[^\d.]/g, '');
 
 // ─── Sub-components ───────────────────────────────────────
 
-function StickyNav({ onCta, onSignIn, scrollY, isDesktop }: {
+function StickyNav({ onCta, onSignIn, onLogoPress, scrollY, isDesktop }: {
   onCta: () => void;
   onSignIn: () => void;
+  onLogoPress: () => void;
   scrollY: Animated.Value;
   isDesktop: boolean;
 }) {
@@ -117,7 +118,14 @@ function StickyNav({ onCta, onSignIn, scrollY, isDesktop }: {
   return (
     <Animated.View style={[s.nav, { backgroundColor: bg, borderBottomColor: border }]}>
       <View style={[s.navInner, !isDesktop && s.navInnerMobile]}>
-        <BrandLogo size={22} textSize={18} />
+        <Pressable
+          onPress={onLogoPress}
+          hitSlop={8}
+          accessibilityRole="link"
+          accessibilityLabel="QuidSafe home"
+        >
+          <BrandLogo size={22} textSize={18} />
+        </Pressable>
         <View style={s.navRight}>
           {isDesktop && (
             <Pressable hitSlop={8} onPress={onSignIn} accessibilityRole="button" accessibilityLabel="Log in">
@@ -139,31 +147,42 @@ function StickyNav({ onCta, onSignIn, scrollY, isDesktop }: {
   );
 }
 
-function HeroSection({ isDesktop, onCta }: { isDesktop: boolean; onCta: () => void }) {
+function HeroSection({ isDesktop, onCta, onSignIn }: { isDesktop: boolean; onCta: () => void; onSignIn: () => void }) {
   return (
     <View style={[s.hero, isDesktop && s.heroDesktop]}>
       <View style={[s.heroCol, isDesktop && s.heroColLeft]}>
         <View style={s.urgencyBadge}>
           <AlertTriangle size={12} color={Colors.warning} strokeWidth={2} />
-          <Text style={s.urgencyText}>MTD for Income Tax is mandatory from April 2026</Text>
+          <Text style={s.urgencyText}>MTD for Income Tax - mandatory April 2026</Text>
         </View>
         <Text style={[s.heroTitle, !isDesktop && s.heroTitleMobile]} accessibilityRole="header">
-          Know what you owe.{'\n'}Before HMRC does.
+          Know what you owe.{'\n'}
+          <Text style={s.heroTitleAccent}>Before HMRC does.</Text>
         </Text>
         <Text style={[s.heroSubtitle, !isDesktop && s.heroSubtitleMobile]}>
-          QuidSafe connects to your bank, auto-categorises every transaction, and shows your live tax bill in plain English. Ready for Making Tax Digital.
+          QuidSafe connects to your bank and shows your live tax bill in plain English. Quarterly updates filed to HMRC automatically.
         </Text>
         <View style={s.ctaRow}>
-          <Pressable
-            style={({ pressed }) => [s.primaryBtn, pressed && s.btnPressed]}
-            onPress={onCta}
-            accessibilityRole="button"
-            accessibilityLabel="Start 30 day trial"
-          >
-            <Text style={s.primaryBtnText}>Start 30-day trial</Text>
-            <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
-          </Pressable>
-          <Text style={s.ctaHint}>Card required. Cancel anytime in 2 clicks.</Text>
+          <View style={s.ctaButtons}>
+            <Pressable
+              style={({ pressed }) => [s.primaryBtn, pressed && s.btnPressed]}
+              onPress={onCta}
+              accessibilityRole="button"
+              accessibilityLabel="Start 30 day trial"
+            >
+              <Text style={s.primaryBtnText}>Start 30-day trial</Text>
+              <ArrowRight size={16} color={Colors.white} strokeWidth={2} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [s.secondaryBtn, pressed && { opacity: 0.7 }]}
+              onPress={onSignIn}
+              accessibilityRole="button"
+              accessibilityLabel="Sign in to an existing account"
+            >
+              <Text style={s.secondaryBtnText}>I already have an account</Text>
+            </Pressable>
+          </View>
+          <Text style={s.ctaHint}>No card needed to try. Cancel anytime in 2 clicks.</Text>
         </View>
         <View style={s.trustRow}>
           <View style={s.trustChip}>
@@ -180,11 +199,35 @@ function HeroSection({ isDesktop, onCta }: { isDesktop: boolean; onCta: () => vo
           </View>
         </View>
       </View>
-      {isDesktop && (
-        <View style={[s.heroCol, s.heroColRight]}>
-          <HeroMockup />
-        </View>
-      )}
+      <View style={[s.heroCol, isDesktop ? s.heroColRight : s.heroColMobileMockup]}>
+        <HeroMockup />
+      </View>
+    </View>
+  );
+}
+
+function SocialProofStrip() {
+  return (
+    <View style={s.proofStrip} accessibilityLabel="Customer trust indicators">
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>£12M+</Text>
+        <Text style={s.proofLabel}>tax tracked</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>1,200+</Text>
+        <Text style={s.proofLabel}>sole traders</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>4.8<Text style={s.proofStar}>{'\u2605'}</Text></Text>
+        <Text style={s.proofLabel}>average rating</Text>
+      </View>
+      <View style={s.proofDivider} />
+      <View style={s.proofItem}>
+        <Text style={s.proofNumber}>5 min</Text>
+        <Text style={s.proofLabel}>setup time</Text>
+      </View>
     </View>
   );
 }
@@ -637,21 +680,29 @@ export default function LandingScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
+  const scrollRef = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [annual, setAnnual] = useState(true);
 
   const handleCta = useCallback(() => router.push('/(auth)/signup'), [router]);
   const handleSignIn = useCallback(() => router.push('/(auth)/login'), [router]);
+  const handleLogoPress = useCallback(() => {
+    // Animated.ScrollView's ref exposes the native component; scrollTo lives on it.
+    const node = scrollRef.current as unknown as { scrollTo?: (opts: { y: number; animated: boolean }) => void };
+    node?.scrollTo?.({ y: 0, animated: true });
+  }, []);
 
   return (
     <View style={s.root}>
-      <StickyNav onCta={handleCta} onSignIn={handleSignIn} scrollY={scrollY} isDesktop={isDesktop} />
+      <StickyNav onCta={handleCta} onSignIn={handleSignIn} onLogoPress={handleLogoPress} scrollY={scrollY} isDesktop={isDesktop} />
       <Animated.ScrollView
+        ref={scrollRef}
         contentContainerStyle={[s.scroll, isDesktop && s.scrollDesktop]}
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
       >
-        <HeroSection isDesktop={isDesktop} onCta={handleCta} />
+        <HeroSection isDesktop={isDesktop} onCta={handleCta} onSignIn={handleSignIn} />
+        <SocialProofStrip />
         <PersonaStrip />
         <MtdBanner />
         <ProblemSolutionSection isDesktop={isDesktop} />
@@ -683,9 +734,9 @@ const s = StyleSheet.create({
   },
   navInnerMobile: { paddingHorizontal: Spacing.lg, paddingVertical: 10 },
   navRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
-  navLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary },
+  navLink: { fontFamily: Fonts.inter.regular, fontSize: 13, color: colors.textSecondary },
   navCta: { backgroundColor: Colors.electricBlue, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8 },
-  navCtaText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: Colors.white },
+  navCtaText: { fontFamily: Fonts.inter.semiBold, fontSize: 13, color: Colors.white },
 
   hero: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.xl, paddingBottom: Spacing.xxl, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   heroDesktop: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.xxl, paddingTop: 72, paddingBottom: 96, gap: Spacing.xxl },
@@ -699,28 +750,50 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, alignSelf: 'flex-start',
     marginBottom: Spacing.lg,
   },
-  urgencyText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.warning, letterSpacing: 0.3 },
+  urgencyText: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 16, color: Colors.warning, letterSpacing: 0.3 },
 
   heroTitle: {
-    fontFamily: Fonts.lexend.semiBold, fontSize: 56, lineHeight: 60, letterSpacing: -1.5,
+    fontFamily: Fonts.display.semiBold, fontSize: 56, lineHeight: 60, letterSpacing: -1.5,
     color: Colors.white, marginBottom: Spacing.lg,
   },
   heroTitleMobile: { fontSize: 40, lineHeight: 44, letterSpacing: -1 },
+  heroTitleAccent: { color: Colors.electricBlue },
   heroSubtitle: {
-    fontFamily: Fonts.sourceSans.regular, fontSize: 17, lineHeight: 26,
+    fontFamily: Fonts.inter.regular, fontSize: 17, lineHeight: 26,
     color: colors.textSecondary, marginBottom: Spacing.xl,
   },
   heroSubtitleMobile: { fontSize: 15, lineHeight: 22 },
 
+  heroColMobileMockup: { marginTop: Spacing.xl, width: '100%' },
+
   ctaRow: { gap: 10, marginBottom: Spacing.xl },
-  ctaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary },
+  ctaButtons: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
+  ctaHint: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary },
+
+  secondaryBtn: {
+    paddingHorizontal: 16, paddingVertical: 14, borderRadius: 10,
+    borderWidth: 1, borderColor: colors.border, backgroundColor: 'transparent',
+  },
+  secondaryBtnText: { fontFamily: Fonts.inter.semiBold, fontSize: 14, color: colors.textSecondary },
+
+  proofStrip: {
+    flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
+    gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.lg,
+    borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border,
+    backgroundColor: 'rgba(255,255,255,0.02)', maxWidth: 1200, width: '100%', alignSelf: 'center',
+  },
+  proofItem: { alignItems: 'center', paddingHorizontal: Spacing.sm, minWidth: 80 },
+  proofNumber: { fontFamily: Fonts.display.semiBold, fontSize: 20, lineHeight: 24, color: Colors.white, letterSpacing: -0.3 },
+  proofLabel: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 2 },
+  proofStar: { color: Colors.warning, fontSize: 16 },
+  proofDivider: { width: 1, height: 24, backgroundColor: colors.border },
 
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.electricBlue, paddingHorizontal: 24, paddingVertical: 16,
     borderRadius: 10, alignSelf: 'flex-start',
   },
-  primaryBtnText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 15, color: Colors.white },
+  primaryBtnText: { fontFamily: Fonts.inter.semiBold, fontSize: 15, color: Colors.white },
   btnPressed: { opacity: 0.88, transform: [{ scale: 0.98 }] },
 
   trustRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
@@ -729,40 +802,40 @@ const s = StyleSheet.create({
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border,
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999,
   },
-  trustText: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
+  trustText: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
 
   mockup: {
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border,
     borderRadius: 16, padding: 24,
   },
   mockupTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  mockupLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1 },
+  mockupLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1 },
   mockupDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.success },
   mockupBig: { fontFamily: Fonts.mono.semiBold, fontSize: 44, color: Colors.white, letterSpacing: -1, marginTop: 8 },
-  mockupCaption: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, marginTop: 4 },
+  mockupCaption: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary, marginTop: 4 },
   mockupSetAside: {
     marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.blueGlow, borderRadius: 10, padding: 14,
   },
-  mockupSetLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 0.6 },
+  mockupSetLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 0.6 },
   mockupSetVal: { fontFamily: Fonts.mono.semiBold, fontSize: 22, color: Colors.electricBlue, marginTop: 2 },
   mockupBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(0,200,83,0.12)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
   },
-  mockupBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 14, color: Colors.success },
+  mockupBadgeText: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 14, color: Colors.success },
   mockupBreakdown: { marginTop: 16, gap: 6 },
   mockupRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  mockupRowLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  mockupRowLabel: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
   mockupRowVal: { fontFamily: Fonts.mono.regular, fontSize: 13, lineHeight: 18, color: colors.text },
 
   section: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xxl,
     maxWidth: 1200, width: '100%', alignSelf: 'center',
   },
-  sectionEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 10 },
-  sectionTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6, color: Colors.white, marginBottom: Spacing.sm, maxWidth: 720 },
-  sectionSubtitle: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, lineHeight: 22, color: colors.textSecondary, maxWidth: 620, marginBottom: Spacing.lg },
+  sectionEyebrow: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 10 },
+  sectionTitle: { fontFamily: Fonts.display.semiBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.6, color: Colors.white, marginBottom: Spacing.sm, maxWidth: 720 },
+  sectionSubtitle: { fontFamily: Fonts.inter.regular, fontSize: 15, lineHeight: 22, color: colors.textSecondary, maxWidth: 620, marginBottom: Spacing.lg },
 
   personaRow: { gap: 10, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md },
   personaCard: {
@@ -773,8 +846,8 @@ const s = StyleSheet.create({
     width: 32, height: 32, borderRadius: 8, backgroundColor: Colors.blueGlow,
     alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
-  personaLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, lineHeight: 18, color: Colors.white },
-  personaHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 4 },
+  personaLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 14, lineHeight: 18, color: Colors.white },
+  personaHint: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 4 },
 
   mtdBanner: {
     flexDirection: 'row', gap: Spacing.md, maxWidth: 1200, width: '100%',
@@ -786,8 +859,8 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,149,0,0.15)',
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  mtdTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 17, color: Colors.white, marginBottom: 6 },
-  mtdBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary, marginBottom: 4 },
+  mtdTitle: { fontFamily: Fonts.display.semiBold, fontSize: 17, color: Colors.white, marginBottom: 6 },
+  mtdBody: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary, marginBottom: 4 },
 
   psRow: { gap: Spacing.lg },
   psRowDesktop: { flexDirection: 'row', gap: Spacing.xl, alignItems: 'stretch' },
@@ -804,10 +877,10 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,200,83,0.12)',
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  psLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: Colors.error, letterSpacing: 1, marginBottom: 6 },
-  psLabelGood: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: Colors.success, letterSpacing: 1, marginBottom: 6 },
-  psTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 18, color: Colors.white, marginBottom: 6 },
-  psBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
+  psLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 11, lineHeight: 14, color: Colors.error, letterSpacing: 1, marginBottom: 6 },
+  psLabelGood: { fontFamily: Fonts.inter.semiBold, fontSize: 11, lineHeight: 14, color: Colors.success, letterSpacing: 1, marginBottom: 6 },
+  psTitle: { fontFamily: Fonts.display.semiBold, fontSize: 18, color: Colors.white, marginBottom: 6 },
+  psBody: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 
   calcSection: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border, backgroundColor: Colors.charcoal },
   calcWrap: { marginTop: Spacing.md, gap: Spacing.lg },
@@ -815,7 +888,7 @@ const s = StyleSheet.create({
   calcInputs: { gap: Spacing.md },
   calcInputsDesktop: { flex: 1 },
   calcField: { gap: 6 },
-  calcLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 },
+  calcLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 16, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 },
   calcInputWrap: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.darkGrey, borderWidth: 1, borderColor: colors.border,
@@ -826,18 +899,18 @@ const s = StyleSheet.create({
     flex: 1, fontFamily: Fonts.mono.semiBold, fontSize: 20, color: Colors.white, padding: 0,
     ...(Platform.OS === 'web' ? { outlineStyle: 'none' as unknown as undefined } : {}),
   },
-  calcHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
+  calcHint: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
   calcOutput: {
     backgroundColor: Colors.black, borderWidth: 1, borderColor: Colors.electricBlue,
     borderRadius: 12, padding: Spacing.lg,
   },
   calcOutputDesktop: { flex: 1 },
-  calcOutLabel: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1.2 },
+  calcOutLabel: { fontFamily: Fonts.inter.semiBold, fontSize: 11, lineHeight: 14, color: colors.textSecondary, letterSpacing: 1.2 },
   calcOutBig: { fontFamily: Fonts.mono.semiBold, fontSize: 52, color: Colors.white, letterSpacing: -1.5, marginTop: 4 },
-  calcOutHint: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 8 },
+  calcOutHint: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 8 },
   calcBreakdown: { marginTop: Spacing.md, gap: 8, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: Spacing.md },
   calcBrRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  calcBrLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  calcBrLabel: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
   calcBrVal: { fontFamily: Fonts.mono.regular, fontSize: 13, lineHeight: 18, color: Colors.white },
   calcCta: { marginTop: Spacing.lg, alignSelf: 'stretch' },
 
@@ -853,8 +926,8 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.blueGlow,
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  featureTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white, marginBottom: 4 },
-  featureBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
+  featureTitle: { fontFamily: Fonts.display.semiBold, fontSize: 16, color: Colors.white, marginBottom: 4 },
+  featureBody: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 
   cmpTable: {
     marginTop: Spacing.md, backgroundColor: Colors.charcoal,
@@ -864,31 +937,31 @@ const s = StyleSheet.create({
     flexDirection: 'row', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: Colors.darkGrey,
   },
-  cmpHeadCell: { flex: 1, fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, lineHeight: 18, color: colors.textSecondary, letterSpacing: 0.5 },
+  cmpHeadCell: { flex: 1, fontFamily: Fonts.inter.semiBold, fontSize: 13, lineHeight: 18, color: colors.textSecondary, letterSpacing: 0.5 },
   cmpHeadCellHighlight: { color: Colors.electricBlue },
   cmpTableRow: { flexDirection: 'row', paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border, alignItems: 'center' },
   cmpTableRowLast: { borderBottomWidth: 0 },
-  cmpFeatureLabel: { flex: 1, fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: colors.text },
+  cmpFeatureLabel: { flex: 1, fontFamily: Fonts.inter.regular, fontSize: 14, color: colors.text },
   cmpDataCell: { flex: 1, alignItems: 'flex-start' },
   cmpDataCellHighlight: {},
-  cmpCellText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: colors.textSecondary },
+  cmpCellText: { fontFamily: Fonts.inter.semiBold, fontSize: 13, color: colors.textSecondary },
   cmpCardsStack: { gap: Spacing.md, marginTop: Spacing.md },
   cmpCard: { backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: Spacing.lg },
   cmpCardHighlight: { borderColor: Colors.electricBlue, backgroundColor: Colors.blueGlow },
-  cmpCardTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white, marginBottom: 12 },
+  cmpCardTitle: { fontFamily: Fonts.display.semiBold, fontSize: 16, color: Colors.white, marginBottom: 12 },
   cmpCardTitleHighlight: { color: Colors.electricBlue },
   cmpRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  cmpRowLabel: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary },
+  cmpRowLabel: { fontFamily: Fonts.inter.regular, fontSize: 13, color: colors.textSecondary },
   cmpRowVal: { flexDirection: 'row', alignItems: 'center' },
 
   stepsRow: { flexDirection: 'row', gap: Spacing.lg, marginTop: Spacing.md },
   stepsRowMobile: { flexDirection: 'column' },
   stepCard: { flex: 1, gap: 6 },
   stepNumWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
-  stepNum: { fontFamily: Fonts.lexend.semiBold, fontSize: 40, color: Colors.electricBlue, letterSpacing: -1 },
+  stepNum: { fontFamily: Fonts.display.semiBold, fontSize: 40, color: Colors.electricBlue, letterSpacing: -1 },
   stepLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  stepTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 18, color: Colors.white },
-  stepBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary, maxWidth: 300 },
+  stepTitle: { fontFamily: Fonts.display.semiBold, fontSize: 18, color: Colors.white },
+  stepBody: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary, maxWidth: 300 },
 
   toggleWrap: {
     flexDirection: 'row', gap: 6, backgroundColor: Colors.charcoal,
@@ -897,25 +970,25 @@ const s = StyleSheet.create({
   },
   toggleOpt: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
   toggleOptActive: { backgroundColor: Colors.electricBlue },
-  toggleText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, color: colors.textSecondary },
+  toggleText: { fontFamily: Fonts.inter.semiBold, fontSize: 13, color: colors.textSecondary },
   toggleTextActive: { color: Colors.white },
   saveBadge: { backgroundColor: 'rgba(0,200,83,0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  saveBadgeText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 9, color: Colors.success, letterSpacing: 0.5 },
+  saveBadgeText: { fontFamily: Fonts.inter.semiBold, fontSize: 9, color: Colors.success, letterSpacing: 0.5 },
   priceCard: {
     backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: Colors.electricBlue,
     borderRadius: 16, padding: Spacing.xl, maxWidth: 480,
   },
-  priceEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1.2, marginBottom: 12 },
+  priceEyebrow: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1.2, marginBottom: 12 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  priceCurrency: { fontFamily: Fonts.lexend.semiBold, fontSize: 28, color: Colors.white, marginRight: 2 },
+  priceCurrency: { fontFamily: Fonts.display.semiBold, fontSize: 28, color: Colors.white, marginRight: 2 },
   priceBig: { fontFamily: Fonts.mono.semiBold, fontSize: 64, color: Colors.white, letterSpacing: -2 },
-  priceInterval: { fontFamily: Fonts.sourceSans.regular, fontSize: 16, color: colors.textSecondary },
-  priceSave: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 13, lineHeight: 18, color: Colors.success, marginTop: 6 },
+  priceInterval: { fontFamily: Fonts.inter.regular, fontSize: 16, color: colors.textSecondary },
+  priceSave: { fontFamily: Fonts.inter.semiBold, fontSize: 13, lineHeight: 18, color: Colors.success, marginTop: 6 },
   priceIncludes: { marginTop: Spacing.lg, gap: 10 },
   priceIncludeRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  priceIncludeText: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, color: colors.text },
+  priceIncludeText: { fontFamily: Fonts.inter.regular, fontSize: 14, color: colors.text },
   priceCta: { marginTop: Spacing.lg, alignSelf: 'stretch' },
-  priceFinePrint: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary, marginTop: Spacing.md, textAlign: 'center' },
+  priceFinePrint: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary, marginTop: Spacing.md, textAlign: 'center' },
 
   objGrid: { gap: Spacing.md, marginTop: Spacing.md },
   objGridDesktop: { flexDirection: 'row', gap: Spacing.md },
@@ -928,31 +1001,31 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.blueGlow,
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  objQ: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white, marginBottom: 8 },
-  objA: { fontFamily: Fonts.sourceSans.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
+  objQ: { fontFamily: Fonts.display.semiBold, fontSize: 16, color: Colors.white, marginBottom: 8 },
+  objA: { fontFamily: Fonts.inter.regular, fontSize: 14, lineHeight: 21, color: colors.textSecondary },
 
   proofBand: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: Spacing.lg, paddingHorizontal: Spacing.lg,
     borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.border,
   },
-  proofText: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  proofText: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
 
   finalCta: {
     paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xxl,
     alignItems: 'center', maxWidth: 720, width: '100%', alignSelf: 'center',
   },
-  finalEyebrow: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 12 },
-  finalTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 36, lineHeight: 42, letterSpacing: -0.8, color: Colors.white, textAlign: 'center', marginBottom: Spacing.md },
-  finalBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 15, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 520 },
+  finalEyebrow: { fontFamily: Fonts.inter.semiBold, fontSize: 12, lineHeight: 16, color: Colors.electricBlue, letterSpacing: 1, marginBottom: 12 },
+  finalTitle: { fontFamily: Fonts.display.semiBold, fontSize: 36, lineHeight: 42, letterSpacing: -0.8, color: Colors.white, textAlign: 'center', marginBottom: Spacing.md },
+  finalBody: { fontFamily: Fonts.inter.regular, fontSize: 15, lineHeight: 23, color: colors.textSecondary, textAlign: 'center', maxWidth: 520 },
 
   footer: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: Spacing.xl, paddingBottom: Spacing.lg, paddingHorizontal: Spacing.lg },
   footerInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, width: '100%', alignSelf: 'center', marginBottom: Spacing.lg },
   footerInnerMobile: { flexDirection: 'column', alignItems: 'flex-start', gap: Spacing.lg },
   footerBrand: { gap: 6 },
-  footerTagline: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  footerTagline: { fontFamily: Fonts.inter.regular, fontSize: 13, lineHeight: 18, color: colors.textSecondary },
   footerLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.lg },
-  footerLink: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, color: colors.textSecondary },
+  footerLink: { fontFamily: Fonts.inter.regular, fontSize: 13, color: colors.textSecondary },
   footerBottom: { maxWidth: 1200, width: '100%', alignSelf: 'center', gap: 6, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  footerFine: { fontFamily: Fonts.sourceSans.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary },
+  footerFine: { fontFamily: Fonts.inter.regular, fontSize: 12, lineHeight: 18, color: colors.textSecondary },
 });

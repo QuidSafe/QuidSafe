@@ -8,8 +8,8 @@ export function HeadMeta() {
       <meta name="keywords" content="sole trader tax, UK tax tracking, Making Tax Digital, MTD software, HMRC tax calculator, self-assessment tax, sole trader expenses, Open Banking tax app, auto categorise expenses, tax set aside calculator, National Insurance calculator, Class 4 NI, income tax calculator UK, quarterly tax submissions, TrueLayer, sole trader accounting" />
       <meta name="author" content="QuidSafe Ltd" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      <meta name="theme-color" content="#000000" />
-      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      <meta name="theme-color" content="#FFFFFF" />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
       <link rel="canonical" href="https://quidsafe.uk" />
 
       <meta property="og:site_name" content="QuidSafe" />
@@ -29,11 +29,11 @@ export function HeadMeta() {
       <meta name="twitter:image" content="https://quidsafe.uk/assets/images/icon.png" />
 
       <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       <meta name="apple-mobile-web-app-title" content="QuidSafe" />
       <meta name="application-name" content="QuidSafe" />
       <meta name="mobile-web-app-capable" content="yes" />
-      <meta name="msapplication-TileColor" content="#000000" />
+      <meta name="msapplication-TileColor" content="#FFFFFF" />
       <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
       <link rel="apple-touch-icon" href="/assets/images/icon.png" />
       <link rel="manifest" href="/manifest.json" />
@@ -95,7 +95,7 @@ export function HeadMeta() {
       <script defer data-domain="quidsafe.uk" src="https://plausible.io/js/script.js" />
 
       <link
-        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet"
       />
     </Head>

@@ -1,18 +1,77 @@
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, Text, Pressable, useWindowDimensions } from 'react-native';
-import { colors, Colors, Spacing } from '@/constants/Colors';
+import { Colors, Spacing } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { formatCurrency } from '@/lib/tax-engine';
+import { formatRelativeTime } from '@/lib/formatRelativeTime';
+import { ProgressRing } from '@/components/ui/ProgressRing';
 import type { TaxCalculation } from '@/lib/types';
 
 export interface TaxHeroCardProps {
   tax: TaxCalculation | undefined;
+  /** ISO 8601 timestamp of the most recent bank sync, or null when no bank is connected. Shown as a trust signal below the hero amount. */
+  lastSyncedAt?: string | null;
+}
+
+/**
+ * requestAnimationFrame-based count-up. Animates `displayed` from its current
+ * value to `target` using ease-out-cubic. Ref-based start avoids re-entry when
+ * parent re-renders mid-tween. Caller controls duration; 0ms renders instantly.
+ */
+function useCountUp(target: number, durationMs: number): number {
+  const [displayed, setDisplayed] = useState(target);
+  const fromRef = useRef(target);
+  const startedAtRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (durationMs <= 0 || !Number.isFinite(target)) {
+      setDisplayed(target);
+      return;
+    }
+    fromRef.current = displayed;
+    startedAtRef.current = null;
+
+    const tick = (now: number) => {
+      if (startedAtRef.current === null) startedAtRef.current = now;
+      const elapsed = now - startedAtRef.current;
+      const t = Math.min(1, elapsed / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayed(fromRef.current + (target - fromRef.current) * eased);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, durationMs]);
+
+  return displayed;
+}
+
+/**
+ * UK tax year runs 6 Apr to 5 Apr. Returns 0..1 fraction of the year elapsed.
+ */
+function taxYearProgress(now: Date = new Date()): number {
+  const y = now.getUTCFullYear();
+  // If we're past April 5 this year, current tax year started this April 6.
+  const pastApril = now.getUTCMonth() > 3 || (now.getUTCMonth() === 3 && now.getUTCDate() >= 6);
+  const startYear = pastApril ? y : y - 1;
+  const start = Date.UTC(startYear, 3, 6);
+  const end = Date.UTC(startYear + 1, 3, 6);
+  const t = (now.getTime() - start) / (end - start);
+  return Math.max(0, Math.min(1, t));
 }
 
 /**
  * Apple-style hero tax summary: dramatic typography, subtle glow, minimal chrome.
  * The primary number dominates. Secondary stats are quiet and tabular.
  */
-export function TaxHeroCard({ tax }: TaxHeroCardProps) {
+export function TaxHeroCard({ tax, lastSyncedAt }: TaxHeroCardProps) {
   const { width } = useWindowDimensions();
   const isNarrow = width < 400;
 
@@ -22,6 +81,9 @@ export function TaxHeroCard({ tax }: TaxHeroCardProps) {
   const incomeTax = tax?.incomeTax?.total ?? 0;
   const nationalInsurance = tax?.nationalInsurance?.total ?? 0;
   const totalExpenses = tax?.totalExpenses ?? 0;
+
+  const animatedOwed = useCountUp(totalOwed, 600);
+  const animatedMonthly = useCountUp(setAsideMonthly, 600);
 
   // Responsive hero type - 56-72px
   const heroFontSize = isNarrow ? 52 : 68;
@@ -48,22 +110,29 @@ export function TaxHeroCard({ tax }: TaxHeroCardProps) {
         numberOfLines={1}
         adjustsFontSizeToFit
       >
-        {formatCurrency(totalOwed)}
+        {formatCurrency(Math.round(animatedOwed))}
       </Text>
 
-      <Text style={styles.sub}>
-        On {formatCurrency(totalIncome)} of income
-      </Text>
+      <View style={styles.subRow}>
+        <Text style={styles.sub}>On {formatCurrency(totalIncome)} of income</Text>
+        {lastSyncedAt !== undefined && (
+          <View style={styles.syncPill}>
+            <View style={styles.syncDot} />
+            <Text style={styles.syncText}>Synced {formatRelativeTime(lastSyncedAt)}</Text>
+          </View>
+        )}
+      </View>
 
       {/* Monthly set-aside prominent CTA-style band */}
       <View style={styles.monthlyBand}>
         <View style={styles.monthlyLeft}>
           <Text style={styles.monthlyLabel}>Set aside each month</Text>
-          <Text style={styles.monthlyAmount}>{formatCurrency(setAsideMonthly)}</Text>
+          <Text style={styles.monthlyAmount}>{formatCurrency(Math.round(animatedMonthly))}</Text>
         </View>
-        <View style={styles.monthlyBadge}>
-          <View style={styles.monthlyBadgeDot} />
-          <Text style={styles.monthlyBadgeText}>On track</Text>
+        <View style={styles.yearRing} accessibilityLabel={`Tax year ${Math.round(taxYearProgress() * 100)} percent elapsed`}>
+          <ProgressRing progress={taxYearProgress()} size={56} strokeWidth={4} durationMs={900}>
+            <Text style={styles.yearRingText}>{Math.round(taxYearProgress() * 100)}%</Text>
+          </ProgressRing>
         </View>
       </View>
 
@@ -125,11 +194,42 @@ const styles = StyleSheet.create({
     color: Colors.white,
     letterSpacing: -2,
   },
+  subRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
   sub: {
     fontFamily: Fonts.sourceSans.regular,
     fontSize: 14,
     color: Colors.lightGrey,
-    marginTop: 8,
+    flexShrink: 1,
+  },
+  syncPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: Colors.midGrey,
+  },
+  syncDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.success,
+  },
+  syncText: {
+    fontFamily: Fonts.sourceSans.regular,
+    fontSize: 11,
+    color: Colors.lightGrey,
+    letterSpacing: 0.2,
   },
 
   // Monthly band
@@ -160,28 +260,16 @@ const styles = StyleSheet.create({
     color: Colors.electricBlue,
     letterSpacing: -0.5,
   },
-  monthlyBadge: {
-    flexDirection: 'row',
+  yearRing: {
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0, 200, 83, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 200, 83, 0.25)',
+    justifyContent: 'center',
   },
-  monthlyBadgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.success,
-  },
-  monthlyBadgeText: {
-    fontFamily: Fonts.sourceSans.semiBold,
-    fontSize: 12,
-    lineHeight: 16,
-    color: Colors.success,
+  yearRingText: {
+    fontFamily: Fonts.mono.semiBold,
+    fontSize: 11,
+    lineHeight: 14,
+    color: Colors.electricBlue,
+    letterSpacing: -0.2,
   },
 
   // Breakdown

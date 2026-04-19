@@ -13,6 +13,7 @@ import {
   Globe,
   GitBranch,
   RefreshCcw,
+  Activity,
 } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -382,6 +383,15 @@ export default function AdminSetupScreen() {
         >
           <ArrowLeft size={18} color={colors.text} strokeWidth={1.5} />
         </Pressable>
+        <Pressable
+          onPress={() => router.push('/admin/hub')}
+          style={({ pressed }) => [styles.topBarLink, pressed && styles.topBarLinkPressed]}
+          accessibilityRole="link"
+          accessibilityLabel="Open admin hub"
+        >
+          <Activity size={14} color={colors.textSecondary} strokeWidth={1.5} />
+          <Text style={styles.topBarLinkText}>Hub</Text>
+        </Pressable>
       </View>
 
       <View style={styles.headerPadding}>
@@ -445,6 +455,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  topBarLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  topBarLinkPressed: { opacity: 0.7 },
+  topBarLinkText: {
+    fontFamily: Fonts.sourceSans.semiBold,
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
   headerPadding: {
     paddingHorizontal: Spacing.lg,

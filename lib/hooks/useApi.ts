@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
 import { getCached, setCache } from '../offlineCache';
+import { hapticSuccess } from '../haptics';
 import type { TaxCalculation, Expense } from '../types';
 
 /** Sync Clerk token to API client - call once at root level.
@@ -280,6 +281,7 @@ export function useSyncBank() {
       queryClient.invalidateQueries({ queryKey: ['banking'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      hapticSuccess();
     },
   });
 }

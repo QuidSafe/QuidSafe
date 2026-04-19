@@ -228,7 +228,7 @@ interface StripeEvent {
       current_period_start?: number;
       current_period_end?: number;
       trial_end?: number | null;
-      items?: { data: { price: { recurring: { interval: string } } }[] };
+      items?: { data: { price: { unit_amount?: number | null; recurring: { interval: string } } }[] };
     };
   };
 }
@@ -259,9 +259,29 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
         }
       }
 
-      const interval = obj.items?.data[0]?.price?.recurring?.interval;
+      const price = obj.items?.data[0]?.price;
+      const interval = price?.recurring?.interval;
       const plan = interval === 'year' ? 'pro_annual' : 'pro_monthly';
       const status = obj.status === 'active' ? 'active' : obj.status === 'trialing' ? 'trialing' : obj.status === 'past_due' ? 'past_due' : 'cancelled';
+
+      // Denormalise monthly-equivalent price for the admin MRR aggregation.
+      // Annual plans get divided by 12; anything without unit_amount (shouldn't
+      // happen on a real sub) falls back to null so we don't invent numbers.
+      //
+      // Defence in depth: clamp to the two prices we actually charge. A
+      // compromised Stripe key could otherwise write arbitrary (or negative)
+      // values into MRR. Anything off-menu falls to null and stays out of
+      // the aggregate until a human reconciles.
+      const unitPence = typeof price?.unit_amount === 'number' ? price.unit_amount : null;
+      const computedMonthlyPence = unitPence === null
+        ? null
+        : interval === 'year'
+          ? Math.round(unitPence / 12)
+          : unitPence;
+      const KNOWN_MONTHLY_PENCE = new Set<number>([799, 666]);
+      const monthlyPence = computedMonthlyPence !== null && KNOWN_MONTHLY_PENCE.has(computedMonthlyPence)
+        ? computedMonthlyPence
+        : null;
 
       const periodStart = obj.current_period_start ? new Date(obj.current_period_start * 1000).toISOString() : null;
       const periodEnd = obj.current_period_end ? new Date(obj.current_period_end * 1000).toISOString() : null;
@@ -278,16 +298,17 @@ export async function handleWebhookEvent(event: StripeEvent, db: D1Database): Pr
       }
       await db.batch([
         db.prepare(
-          `INSERT INTO subscriptions (id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, trial_ends_at, current_period_start, current_period_end)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO subscriptions (id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, trial_ends_at, current_period_start, current_period_end, monthly_amount_pence)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(user_id) DO UPDATE SET
              stripe_subscription_id = excluded.stripe_subscription_id,
              plan = excluded.plan,
              status = excluded.status,
              trial_ends_at = excluded.trial_ends_at,
              current_period_start = excluded.current_period_start,
-             current_period_end = excluded.current_period_end`
-        ).bind(crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd),
+             current_period_end = excluded.current_period_end,
+             monthly_amount_pence = COALESCE(excluded.monthly_amount_pence, subscriptions.monthly_amount_pence)`
+        ).bind(crypto.randomUUID(), userId, obj.customer, obj.id, plan, status, trialEnd, periodStart, periodEnd, monthlyPence),
         db.prepare(
           'UPDATE users SET subscription_tier = ?, grace_period_ends = CASE WHEN ? IN (\'active\', \'trialing\') THEN NULL ELSE grace_period_ends END, updated_at = datetime(\'now\') WHERE id = ?'
         ).bind(tier, status, userId),

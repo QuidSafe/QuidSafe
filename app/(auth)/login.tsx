@@ -375,12 +375,18 @@ export default function LoginScreen() {
           >
             {/* Mobile brand header */}
             {!isDesktop && (
-              <View style={styles.mobileBrand}>
+              <Pressable
+                onPress={() => router.push('/landing')}
+                accessibilityRole="link"
+                accessibilityLabel="QuidSafe home"
+                style={styles.mobileBrand}
+                hitSlop={8}
+              >
                 <View style={styles.mobileIcon}>
                   <Shield size={24} color={Colors.electricBlue} strokeWidth={1.5} />
                 </View>
                 <Text style={[styles.mobileBrandText, { color: colors.text }]}>QuidSafe</Text>
-              </View>
+              </Pressable>
             )}
 
             <View style={styles.formContainer}>{renderForm()}</View>

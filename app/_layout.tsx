@@ -2,6 +2,11 @@ import { useFonts } from 'expo-font';
 import { Lexend_600SemiBold } from '@expo-google-fonts/lexend';
 import { SourceSans3_400Regular, SourceSans3_600SemiBold } from '@expo-google-fonts/source-sans-3';
 import { JetBrainsMono_400Regular, JetBrainsMono_600SemiBold } from '@expo-google-fonts/jetbrains-mono';
+// Landing-page typography. Fraunces (serif display) softens the tax-tool
+// headline; Inter gives body copy crisp readability. Loaded globally so
+// marketing pages can pull them via constants/Typography.
+import { Fraunces_500Medium, Fraunces_600SemiBold } from '@expo-google-fonts/fraunces';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -30,6 +35,11 @@ export default function RootLayout() {
     SourceSans3_600SemiBold,
     JetBrainsMono_400Regular,
     JetBrainsMono_600SemiBold,
+    Fraunces_500Medium,
+    Fraunces_600SemiBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
   });
 
   useEffect(() => { if (error) throw error; }, [error]);

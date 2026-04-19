@@ -113,7 +113,16 @@ export default function MileageScreen() {
           <View style={s.emptyCard}>
             <Car size={32} color={colors.textMuted} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>No trips logged yet</Text>
-            <Text style={s.emptyBody}>Tap &ldquo;Log trip&rdquo; to start tracking your business miles. HMRC approved rates applied automatically.</Text>
+            <Text style={s.emptyBody}>Log your first business trip - HMRC-approved rates are applied automatically.</Text>
+            <Pressable
+              style={({ pressed }) => [s.emptyCta, pressed && { opacity: 0.85 }]}
+              onPress={() => setShowAdd(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Log your first trip"
+            >
+              <Plus size={14} color={Colors.white} strokeWidth={2} />
+              <Text style={s.emptyCtaText}>Log trip</Text>
+            </Pressable>
           </View>
         ) : (
           <View style={s.listCard}>
@@ -178,6 +187,8 @@ const s = StyleSheet.create({
   emptyCard: { backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: Spacing.xl, alignItems: 'center', gap: 10 },
   emptyTitle: { fontFamily: Fonts.lexend.semiBold, fontSize: 16, color: Colors.white },
   emptyBody: { fontFamily: Fonts.sourceSans.regular, fontSize: 13, lineHeight: 20, color: colors.textSecondary, textAlign: 'center', maxWidth: 300 },
+  emptyCta: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.electricBlue, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8, marginTop: 6 },
+  emptyCtaText: { fontFamily: Fonts.sourceSans.semiBold, fontSize: 14, color: Colors.white },
 
   listCard: { backgroundColor: Colors.charcoal, borderWidth: 1, borderColor: colors.border, borderRadius: 12, overflow: 'hidden' },
   logRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: Spacing.md },

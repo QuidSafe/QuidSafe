@@ -462,7 +462,7 @@ export default function MTDScreen() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.dismissButton,
-                        { backgroundColor: '#0A0A0A' },
+                        { backgroundColor: Colors.charcoal },
                         pressed && styles.buttonPressed,
                       ]}
                       onPress={() => {

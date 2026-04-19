@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { View, Platform, StyleSheet } from 'react-native';
+import { View, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Home, PoundSterling, CreditCard, BookOpen, Settings } from 'lucide-react-native';
 import { Tabs } from 'expo-router';
 import { colors, Colors } from '@/constants/Colors';
@@ -20,6 +20,8 @@ function TabIcon({ Icon, color, focused }: { Icon: LucideIcon; color: string; fo
 
 export default function TabLayout() {
   const { isDesktop, isWeb, contentMaxWidth } = useResponsiveLayout();
+  const { width } = useWindowDimensions();
+  const isMobileWeb = isWeb && width < 768;
 
   // On web desktop: sidebar navigation replaces the bottom tab bar
   const showSidebar = isWeb && isDesktop;
@@ -48,17 +50,21 @@ export default function TabLayout() {
                   borderTopColor: colors.border,
                   borderTopWidth: StyleSheet.hairlineWidth,
                   paddingTop: 6,
-                  paddingBottom: Platform.OS === 'web' ? 8 : 6,
-                  height: 64,
+                  height: isMobileWeb ? 76 : 64,
                   elevation: 0,
+                  // Mobile Safari's bottom chrome overlays the viewport,
+                  // so the default 8px clips the labels. Use env() on web
+                  // to respect iOS home-indicator safe area.
                   ...(Platform.OS === 'web'
                     ? {
                         backgroundColor: 'rgba(10,10,10,0.85)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
+                        paddingBottom: `max(${isMobileWeb ? 20 : 8}px, env(safe-area-inset-bottom))` as unknown as number,
                       }
                     : {
                         backgroundColor: colors.surface,
+                        paddingBottom: 6,
                       }),
                 },
             tabBarLabelStyle: {

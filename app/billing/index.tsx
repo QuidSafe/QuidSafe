@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Pressable, ScrollView, RefreshControl, Linking, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ScrollView, RefreshControl, Linking, Alert } from 'react-native';
+import { BrandSpinner } from '@/components/ui/ProgressRing';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, ChevronUp, ChevronDown, Check, CheckCircle, Shield, Lock } from 'lucide-react-native';
@@ -175,7 +176,7 @@ export default function BillingScreen() {
 
           <Pressable style={({ pressed }) => [styles.manageButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]} onPress={handleManage} accessibilityRole="button" accessibilityLabel="Manage Subscription" accessibilityHint="Tap to manage your subscription in the Stripe portal">
             {portalLoading ? (
-              <ActivityIndicator color={colors.text} />
+              <BrandSpinner size={18} color={colors.text} />
             ) : (
               <Text style={[styles.manageText, { color: colors.text }]}>Manage Subscription</Text>
             )}
@@ -321,7 +322,7 @@ export default function BillingScreen() {
           accessibilityHint="Tap to start the checkout process for your free trial"
         >
           {checkoutMutation.isPending ? (
-            <ActivityIndicator color={Colors.white} />
+            <BrandSpinner size={20} color={Colors.white} />
           ) : (
             <View style={[styles.ctaGradient, { backgroundColor: '#0066FF' }]}>
               <Text style={styles.ctaText}>Start 30-day free trial</Text>

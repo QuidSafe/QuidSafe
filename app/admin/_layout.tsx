@@ -27,6 +27,7 @@ export default function AdminLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="hub" />
       <Stack.Screen name="setup" />
     </Stack>
   );

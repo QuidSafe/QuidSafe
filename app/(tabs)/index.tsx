@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Animated, Platform, BackHandler } from 'react-native';
+import { useState, useEffect, useMemo } from 'react';
+import { StyleSheet, View, Text, ScrollView, RefreshControl, Pressable, Alert, Platform, BackHandler, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '@clerk/clerk-expo';
@@ -11,8 +11,10 @@ import { MiniChart } from '@/components/ui/MiniChart';
 import { QuarterTimeline } from '@/components/ui/QuarterTimeline';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { TaxHeroCard } from '@/components/ui/TaxHeroCard';
+import { TaxWaterfall } from '@/components/ui/TaxWaterfall';
 import { WelcomeState } from '@/components/ui/WelcomeState';
 import { IncomeBySource } from '@/components/ui/IncomeBySource';
+import { FadeIn } from '@/components/ui/FadeIn';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
 import { useDashboard } from '@/lib/hooks/useApi';
@@ -55,16 +57,11 @@ export default function DashboardScreen() {
   const { user } = useUser();
   const router = useRouter();
   const { data, isLoading, refetch, isRefetching } = useDashboard();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
+  const isWide = width >= 1280;
 
   const [isConnecting, setIsConnecting] = useState(false);
-
-  // Single subtle fade-in for the whole page (200ms, not 1.5s stagger)
-  const pageFade = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (isLoading) return;
-    Animated.timing(pageFade, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const firstName = user?.firstName ?? data?.user?.name?.split(' ')[0] ?? '';
   const tax = data?.tax;
@@ -72,6 +69,7 @@ export default function DashboardScreen() {
   const quarter = data?.quarters?.current?.quarter ?? 1;
   const taxYear = data?.quarters?.current?.taxYear ?? '2026/27';
   const actions = data?.actions;
+  const lastSyncedAt = data?.lastSyncedAt ?? null;
   const isWelcome = (income?.total ?? 0) === 0 && (!actions || actions.length === 0);
 
   // Memoise derived income chart data - was recomputing on every render
@@ -130,21 +128,19 @@ export default function DashboardScreen() {
     }
   };
 
+  const isMobileWeb = Platform.OS === 'web' && width < 768;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, isMobileWeb && styles.scrollMobileWeb]}
         showsVerticalScrollIndicator={false}
         accessibilityRole="list"
         accessibilityLabel="Dashboard"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.tint} />}
       >
         {/* Header / Greeting */}
-        <Animated.View
-          style={[styles.header, { opacity: pageFade }]}
-          accessible={true}
-          accessibilityRole="header"
-        >
+        <FadeIn style={styles.header} translateY={4} duration={220}>
           <View style={styles.headerLeft}>
             {firstName ? (
               <>
@@ -183,7 +179,7 @@ export default function DashboardScreen() {
               </View>
             ) : null}
           </View>
-        </Animated.View>
+        </FadeIn>
 
         {isLoading ? (
           <DashboardSkeleton />
@@ -191,155 +187,175 @@ export default function DashboardScreen() {
           <WelcomeState isConnecting={isConnecting} onConnectBank={handleConnectBank} />
         ) : (
           <>
-            {/* Hero Tax Card */}
-            <View>
-              <TaxHeroCard tax={tax} />
-            </View>
+            {/* Hero Tax Card - always full width */}
+            <FadeIn delay={40}>
+              <TaxHeroCard tax={tax} lastSyncedAt={lastSyncedAt} />
+            </FadeIn>
 
-            {/* Income Trend Chart */}
-            {incomeChart && (
-              <View>
-                <Card>
-                  <View style={styles.chartHeader}>
-                    <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
-                    <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
-                      {formatCurrency(incomeChart.periodTotal)} over {incomeChart.monthCount} months
-                    </Text>
-                  </View>
-                  <MiniChart data={incomeChart.data} color="#00C853" height={72} />
-                </Card>
-              </View>
-            )}
-
-            <View>
-              {/* Plain English Insight */}
-              {tax?.plainEnglish ? (
-                <Pressable
-                  accessible={true}
-                  accessibilityRole="text"
-                  accessibilityLabel={`Tax insight: ${tax.plainEnglish}`}
-                  style={({ pressed }) => [
-                    styles.insightBanner,
-                    {
-                      backgroundColor: 'rgba(0,102,255,0.08)',
-                      borderColor: 'rgba(0,102,255,0.12)',
-                    },
-                    pressed && styles.pressedCard,
-                  ]}
-                >
-                  <View style={styles.insightIcon}>
-                    <Lightbulb size={14} color="#0066FF" strokeWidth={1.5} />
-                  </View>
-                  <Text style={[styles.insightText, { color: Colors.electricBlue }]}>
-                    {tax.plainEnglish}
-                  </Text>
-                </Pressable>
-              ) : null}
-
-              {/* Section heading */}
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">What needs doing</Text>
-              </View>
-
-              {/* Action Items */}
-              <View style={styles.actions} accessibilityRole="list" accessibilityLabel="Action items">
-                {actions && actions.length > 0 ? (
-                  actions.map((action) => (
-                    <ActionCard
-                      key={action.id}
-                      type={(action.type as 'warning' | 'info' | 'action') ?? 'info'}
-                      title={action.title}
-                      description={action.subtitle}
-                      onPress={
-                        action.id === 'uncategorised' || action.title.toLowerCase().includes('uncategorised')
-                          ? () => router.push('/transactions?filter=uncategorised')
-                          : undefined
-                      }
-                    />
-                  ))
-                ) : (
-                  <>
-                    {(income?.total ?? 0) === 0 && (
-                      <ActionCard
-                        type="action"
-                        title="Connect your bank"
-                        description="Link your bank account to automatically track income and expenses."
-                        icon={Landmark}
-                        onPress={handleConnectBank}
-                      />
-                    )}
-                    <ActionCard
-                      type="warning"
-                      title={`Q${quarter} payment due`}
-                      description="Submit your quarterly update to HMRC before the deadline."
-                      icon={Clock}
-                      onPress={() => router.push('/mtd')}
-                    />
-                    <ActionCard
-                      type="success"
-                      title="Tax pot on track"
-                      description="You're setting aside enough to cover your tax bill."
-                      icon={CheckCircle}
-                      onPress={() => router.push('/(tabs)/settings')}
-                    />
-                  </>
+            {/* Two-column layout on desktop (>=1024px); stacks on mobile */}
+            <View style={isDesktop ? styles.twoColumnGrid : undefined}>
+              {/* Left column (primary): chart, insight, actions, income-source */}
+              <View style={isDesktop ? styles.leftColumn : undefined}>
+                {/* Tax breakdown waterfall */}
+                {tax && (
+                  <FadeIn delay={100}>
+                    <Card>
+                      <TaxWaterfall tax={tax} />
+                    </Card>
+                  </FadeIn>
                 )}
-              </View>
 
-              {/* Quarter Timeline */}
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Tax year quarters</Text>
-                <Pressable
-                  onPress={() => router.push('/tax-history')}
-                  accessibilityRole="link"
-                  accessibilityLabel="View full tax history"
-                  hitSlop={8}
-                >
-                  <Text style={styles.sectionLink}>View history →</Text>
-                </Pressable>
-              </View>
-              <Card>
-                <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
-              </Card>
+                {/* Income Trend Chart */}
+                {incomeChart && (
+                  <FadeIn delay={140}>
+                    <Card>
+                      <View style={styles.chartHeader}>
+                        <Text style={[styles.chartTitle, { color: colors.text }]} accessibilityRole="header">Income Trend</Text>
+                        <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
+                          {formatCurrency(incomeChart.periodTotal)} over {incomeChart.monthCount} months
+                        </Text>
+                      </View>
+                      <MiniChart data={incomeChart.data} color="#00C853" height={isWide ? 96 : 72} />
+                    </Card>
+                  </FadeIn>
+                )}
 
-              {/* Quick links to tools */}
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Your tools</Text>
-              </View>
-              <View style={styles.quickLinks}>
-                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/invoices')} accessibilityRole="button">
-                  <Receipt size={16} color={Colors.electricBlue} strokeWidth={1.5} />
-                  <Text style={styles.quickLinkText}>Invoices</Text>
-                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
-                </Pressable>
-                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/clients' as any)} accessibilityRole="button">
-                  <Users size={16} color={Colors.electricBlue} strokeWidth={1.5} />
-                  <Text style={styles.quickLinkText}>Clients</Text>
-                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
-                </Pressable>
-                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/mileage' as any)} accessibilityRole="button">
-                  <Car size={16} color={Colors.electricBlue} strokeWidth={1.5} />
-                  <Text style={styles.quickLinkText}>Mileage</Text>
-                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
-                </Pressable>
-                <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/pnl-report' as any)} accessibilityRole="button">
-                  <TrendingUp size={16} color={Colors.electricBlue} strokeWidth={1.5} />
-                  <Text style={styles.quickLinkText}>P&L Report</Text>
-                  <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
-                </Pressable>
-              </View>
+                <FadeIn delay={200}>
+                  {/* Plain English Insight */}
+                  {tax?.plainEnglish ? (
+                    <Pressable
+                      accessible={true}
+                      accessibilityRole="text"
+                      accessibilityLabel={`Tax insight: ${tax.plainEnglish}`}
+                      style={({ pressed }) => [
+                        styles.insightBanner,
+                        {
+                          backgroundColor: 'rgba(0,102,255,0.08)',
+                          borderColor: 'rgba(0,102,255,0.12)',
+                        },
+                        pressed && styles.pressedCard,
+                      ]}
+                    >
+                      <View style={styles.insightIcon}>
+                        <Lightbulb size={14} color="#0066FF" strokeWidth={1.5} />
+                      </View>
+                      <Text style={[styles.insightText, { color: Colors.electricBlue }]}>
+                        {tax.plainEnglish}
+                      </Text>
+                    </Pressable>
+                  ) : null}
 
-              {/* Income by Source */}
-              {income && income.bySource.length > 0 && (
-                <>
+                  {/* Section heading */}
                   <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Income by Source</Text>
+                    <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">What needs doing</Text>
+                  </View>
+
+                  {/* Action Items */}
+                  <View style={styles.actions} accessibilityRole="list" accessibilityLabel="Action items">
+                    {actions && actions.length > 0 ? (
+                      actions.map((action) => (
+                        <ActionCard
+                          key={action.id}
+                          type={(action.type as 'warning' | 'info' | 'action') ?? 'info'}
+                          title={action.title}
+                          description={action.subtitle}
+                          onPress={
+                            action.id === 'uncategorised' || action.title.toLowerCase().includes('uncategorised')
+                              ? () => router.push('/transactions?filter=uncategorised')
+                              : undefined
+                          }
+                        />
+                      ))
+                    ) : (
+                      <>
+                        {(income?.total ?? 0) === 0 && (
+                          <ActionCard
+                            type="action"
+                            title="Connect your bank"
+                            description="Link your bank account to automatically track income and expenses."
+                            icon={Landmark}
+                            onPress={handleConnectBank}
+                          />
+                        )}
+                        <ActionCard
+                          type="warning"
+                          title={`Q${quarter} payment due`}
+                          description="Submit your quarterly update to HMRC before the deadline."
+                          icon={Clock}
+                          onPress={() => router.push('/mtd')}
+                        />
+                        <ActionCard
+                          type="success"
+                          title="Tax pot on track"
+                          description="You're setting aside enough to cover your tax bill."
+                          icon={CheckCircle}
+                          onPress={() => router.push('/(tabs)/settings')}
+                        />
+                      </>
+                    )}
+                  </View>
+
+                  {/* Income by Source */}
+                  {income && income.bySource.length > 0 && (
+                    <>
+                      <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Income by Source</Text>
+                      </View>
+                      <Card>
+                        <IncomeBySource sources={income.bySource} sourceColors={SOURCE_COLORS} />
+                      </Card>
+                    </>
+                  )}
+                </FadeIn>
+              </View>
+
+              {/* Right column (secondary): quarter timeline + tools */}
+              <View style={isDesktop ? styles.rightColumn : undefined}>
+                <FadeIn delay={isDesktop ? 160 : 260}>
+                  {/* Quarter Timeline */}
+                  <View style={styles.sectionHeader}>
+                    <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Tax year quarters</Text>
+                    <Pressable
+                      onPress={() => router.push('/tax-history')}
+                      accessibilityRole="link"
+                      accessibilityLabel="View full tax history"
+                      hitSlop={8}
+                    >
+                      <Text style={styles.sectionLink}>View history →</Text>
+                    </Pressable>
                   </View>
                   <Card>
-                    <IncomeBySource sources={income.bySource} sourceColors={SOURCE_COLORS} />
+                    <QuarterTimeline currentQuarter={quarter} taxYear={taxYear} />
                   </Card>
-                </>
-              )}
+
+                  {/* Quick links to tools */}
+                  <View style={styles.sectionHeader}>
+                    <Text style={[styles.sectionHeading, { color: colors.text }]} accessibilityRole="header">Your tools</Text>
+                  </View>
+                  <View style={styles.quickLinks}>
+                    <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/invoices')} accessibilityRole="button">
+                      <Receipt size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                      <Text style={styles.quickLinkText}>Invoices</Text>
+                      <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                    </Pressable>
+                    <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/clients' as any)} accessibilityRole="button">
+                      <Users size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                      <Text style={styles.quickLinkText}>Clients</Text>
+                      <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                    </Pressable>
+                    <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/mileage' as any)} accessibilityRole="button">
+                      <Car size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                      <Text style={styles.quickLinkText}>Mileage</Text>
+                      <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                    </Pressable>
+                    <Pressable style={({ pressed }) => [styles.quickLink, pressed && styles.pressedCard]} onPress={() => router.push('/pnl-report' as any)} accessibilityRole="button">
+                      <TrendingUp size={16} color={Colors.electricBlue} strokeWidth={1.5} />
+                      <Text style={styles.quickLinkText}>P&L Report</Text>
+                      <ChevronRight size={12} color={colors.textMuted} strokeWidth={1.5} />
+                    </Pressable>
+                  </View>
+                </FadeIn>
+              </View>
             </View>
           </>
         )}
@@ -356,6 +372,33 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.lg,
     paddingBottom: Spacing.xxl + Spacing.lg,
+    maxWidth: 1400,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  // Mobile Safari: its dynamic URL bar overlays the top of the viewport,
+  // and the bottom chrome clips the tab bar. Add breathing room so the
+  // greeting and the last tab row stay fully visible.
+  scrollMobileWeb: {
+    paddingTop: Spacing.lg + 24,
+    paddingBottom: Spacing.xxl + Spacing.xxl,
+  },
+
+  // Desktop two-column grid (activated at >=1024px viewport)
+  twoColumnGrid: {
+    flexDirection: 'row',
+    gap: Spacing.lg,
+    alignItems: 'flex-start',
+  },
+  leftColumn: {
+    flex: 1.4,
+    gap: Spacing.lg,
+    minWidth: 0,
+  },
+  rightColumn: {
+    flex: 1,
+    gap: Spacing.lg,
+    minWidth: 0,
   },
 
   // Header / Greeting
@@ -536,6 +579,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     flexWrap: 'wrap' as const,
     gap: Spacing.sm,
+  },
+  quickLinksDesktop: {
+    // In the right column the container is narrower, so one-per-row reads cleaner
+    flexDirection: 'column' as const,
   },
   quickLink: {
     flexDirection: 'row' as const,

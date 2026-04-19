@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle } from 'lucide-react-native';
 import { colors, Colors, Spacing, BorderRadius } from '@/constants/Colors';
 import { Fonts } from '@/constants/Typography';
+import { hapticSuccess } from '@/lib/haptics';
 
 // Stripe redirects here with ?session_id=... after a completed checkout.
 // We invalidate billing-related queries so the app picks up the new
@@ -20,6 +21,7 @@ export default function BillingSuccessScreen() {
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['billing'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    hapticSuccess();
     // Log session_id for support debugging - not sensitive on its own
     if (session_id) console.log('[billing] checkout success', session_id);
   }, [queryClient, session_id]);
