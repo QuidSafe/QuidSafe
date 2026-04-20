@@ -241,7 +241,7 @@ QuidSafe/
 
 ## Staging Access Protection
 
-`staging.quidsafe.uk` and `api-staging.quidsafe.uk` are gated by **Cloudflare Access** (Zero Trust). Requests get a one-time-PIN prompt before reaching Pages or the Worker. Allowlist is managed in the Cloudflare dashboard (Zero Trust → Access → Applications → "QuidSafe Staging").
+The staging **web frontend** (`staging.quidsafe.uk`) is gated by **Cloudflare Access** (Zero Trust) — one-time-PIN email login before Pages serves anything. The staging **API** (`api-staging.quidsafe.uk`) is not behind Access; it uses Clerk JWT auth like production (putting Access in front of a cross-host API breaks browser fetches). Allowlist is managed in the Cloudflare dashboard (Zero Trust → Access → Applications → "QuidSafe Staging").
 
 - **DO NOT** disable the Access application to "unblock" something - add the email to the allowlist instead.
 - **DO NOT** put real customer data in the staging D1 database - use synthetic / reset at will.
